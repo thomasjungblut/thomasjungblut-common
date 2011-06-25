@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class MergeLists {
+public class ListUtils {
 
 	public static List<Integer> merge(List<Integer> list1, List<Integer> list2) {
 		List<Integer> newList = new ArrayList<Integer>(list1.size()

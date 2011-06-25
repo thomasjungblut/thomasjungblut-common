@@ -1,4 +1,4 @@
-package de.jungblut.datastructure;
+package de.jungblut.similarity;
 
 import java.util.Arrays;
 import java.util.HashSet;

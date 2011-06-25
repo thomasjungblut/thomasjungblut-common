@@ -1,4 +1,4 @@
-package de.jungblut.datastructure;
+package de.jungblut.math.intersection;
 
 public class Intersection {
 
