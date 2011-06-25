@@ -2,6 +2,14 @@ package de.jungblut.datastructure;
 
 import java.util.LinkedList;
 
+/**
+ * Memory sparse hashtable implementation
+ * 
+ * @author thomas.jungblut
+ * 
+ * @param <K>
+ * @param <V>
+ */
 public final class HashTable<K, V> {
 
 	private LinkedList<Entry<K, V>>[] entries;
@@ -16,11 +24,17 @@ public final class HashTable<K, V> {
 		threshold = (int) (loadFactor * entries.length);
 	}
 
-	public void put(K key, V value) {
+	@SuppressWarnings("unchecked")
+	public HashTable(int size) {
+		entries = (LinkedList<Entry<K, V>>[]) new LinkedList[size];
+		threshold = (int) (loadFactor * entries.length);
+	}
+
+	public final void put(K key, V value) {
 		addInternal(new Entry<K, V>(key, value), entries);
 	}
 
-	public V get(K key) {
+	public final V get(K key) {
 		int bucket = getBucketIndexFor(key.hashCode(), entries.length);
 		LinkedList<Entry<K, V>> list = entries[bucket];
 		if (list == null) {
@@ -34,7 +48,7 @@ public final class HashTable<K, V> {
 		return null;
 	}
 
-	private void addInternal(Entry<K, V> entry,
+	private final void addInternal(Entry<K, V> entry,
 			LinkedList<Entry<K, V>>[] entryArray) {
 		int bucket = getBucketIndexFor(entry.getKey().hashCode(),
 				entryArray.length);
@@ -56,11 +70,11 @@ public final class HashTable<K, V> {
 		}
 	}
 
-	private int getIndexForKey(K key, LinkedList<Entry<K, V>> list) {
+	private final int getIndexForKey(K key, LinkedList<Entry<K, V>> list) {
 		int count = -1;
 		for (Entry<K, V> element : list) {
 			count++;
-			if (element.getKey().equals(key)){
+			if (element.getKey().equals(key)) {
 				return count;
 			}
 		}
@@ -68,7 +82,7 @@ public final class HashTable<K, V> {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void rehash() {
+	private final void rehash() {
 		// we're just doubling the size available now
 		LinkedList<Entry<K, V>>[] temp = (LinkedList<Entry<K, V>>[]) new LinkedList[entries.length * 2];
 		threshold = (int) (loadFactor * temp.length);
@@ -83,7 +97,7 @@ public final class HashTable<K, V> {
 		entries = temp;
 	}
 
-	public boolean contains(K key) {
+	public final boolean contains(K key) {
 		int bucket = getBucketIndexFor(key.hashCode(), entries.length);
 		if (entries[bucket] != null) {
 			for (Entry<K, V> s : entries[bucket]) {
@@ -94,7 +108,7 @@ public final class HashTable<K, V> {
 		return false;
 	}
 
-	private int getBucketIndexFor(int hash, int size) {
+	private final int getBucketIndexFor(int hash, int size) {
 		return Math.abs(hash % (size - 1));
 	}
 
@@ -142,40 +156,4 @@ public final class HashTable<K, V> {
 			return v;
 		}
 	}
-
-	public static void main(String[] args) {
-		HashTable<String, String> table = new HashTable<String, String>();
-		table.put("ABCDEa123abc", "1");
-		System.out.println(table.contains("ABCDEa123abc"));
-		table.put("ABCDFB123abc", "2");
-		System.out.println(table.contains("ABCDFB123abc"));
-		table.put("ABC", "ABC");
-		System.out.println(table.contains("ABC"));
-		table.put("CAB", "CAB");
-		System.out.println(table.contains("CAB"));
-		table.put("BD", "BD");
-		System.out.println(table.contains("BD"));
-
-		// testing the rehashing
-		table.put("ASDASDA", "ASDASDA");
-		table.put("ASDQWEAGGAS", "ASDASDA");
-		table.put("ASDHASLÖKA", "ASDASDA");
-		table.put("ASKZHO", "ASDASDA");
-		table.put("kfgkgk", "ASDASDA");
-		table.put("jdfjsj", "ASDASDA");
-
-		table.put("asdffdsferahhhh", "ASDASDA");
-		table.put("jkasjkaasdf", "ASDASDA");
-		table.put("adsjklöajka", "asd");
-		table.put("ASsdjksjksjkKZHO", "ASDASDA");
-		table.put("fgajknanaöjk", "ASDASDA");
-		System.out.println(table.contains("fgajknanaöjk"));
-		System.out.println(table.get("adsjklöajka"));
-		System.out.println(table.contains("CAB"));
-		table.put("jdfjshhhhhhhhj", "ASDASDA");
-
-		System.out.println(table.get("fgajknanaöjk"));
-
-	}
-
 }
