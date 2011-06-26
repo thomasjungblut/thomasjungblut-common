@@ -10,8 +10,7 @@ public class NumberType implements Type {
 	List<Double> inputList = new LinkedList<Double>();
 
 	private double mean;
-
-	// private double variance;
+	private double variance;
 
 	@Override
 	public void addInput(String input) {
@@ -21,9 +20,11 @@ public class NumberType implements Type {
 	@Override
 	public double getProbability(String input, double aprioriProbability) {
 		double in = Double.valueOf(input);
-		// use log likelihood
-		double beta = in / mean;
-		return beta / aprioriProbability;
+		// using normal density distribution
+		double x = (1.0 / (Math.sqrt(2 * Math.PI * variance)))
+				* Math.pow(Math.E, (-(Math.pow((in - mean), 2)))
+						/ (2 * variance));
+		return x;
 	}
 
 	@Override
@@ -48,7 +49,7 @@ public class NumberType implements Type {
 		for (Double d : inputList)
 			squaredVarianceSum += Math.pow((d.doubleValue() - mean), 2);
 
-		// variance = squaredVarianceSum / inputList.size();
+		variance = squaredVarianceSum / inputList.size();
 
 		inputList = null;
 	}

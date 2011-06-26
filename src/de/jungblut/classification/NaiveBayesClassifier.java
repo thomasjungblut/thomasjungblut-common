@@ -108,8 +108,8 @@ public class NaiveBayesClassifier {
 	public static void main(String[] args) {
 		NaiveBayesClassifier classifier = new NaiveBayesClassifier(
 				TrainingSet.getWikipediaTrainingsSet());
-		System.out.println(classifier.measureProbability(new String[] { "6",
-				"130", "8" }));
+		System.out.println(classifier.measureProbability(new String[] { "150",
+				"50", "6" }));
 	}
 
 }
