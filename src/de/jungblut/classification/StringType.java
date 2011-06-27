@@ -24,13 +24,17 @@ public class StringType implements Type {
 	public double getProbability(String input, double aprioriProbability) {
 		// measure the mean similarity of all terms in the input list to the
 		// input string
-		double meanSim = 0.0;
-		Set<String> inputTokens = Tokenizer.tokenize(input, 3);
+		double bestMatch = 0.0;
+		final Set<String> inputTokens = Tokenizer.tokenize(input, 3);
 		for (Set<String> term : inputList) {
-			meanSim += similarity.measureDistance(term, inputTokens);
+			final double distance = similarity.measureDistance(term,
+					inputTokens);
+			if (distance > bestMatch)
+				bestMatch = distance;
 		}
 
-		return meanSim / inputTokens.size() * aprioriProbability;
+		// maybe measure against the apriorityProbability
+		return bestMatch;
 
 	}
 
