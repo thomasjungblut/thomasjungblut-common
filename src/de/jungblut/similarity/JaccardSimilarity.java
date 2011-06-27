@@ -2,22 +2,12 @@ package de.jungblut.similarity;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Set;
 
-public class JaccardSimilarity {
+public class JaccardSimilarity implements Similarity {
 
-	public static Set<String> tokenize(String key, int size) {
-		Set<String> set = new LinkedHashSet<String>();
-		for (int i = 0; i < key.length() - size + 1; i++) {
-			int upperBound = i + size;
-			set.add(key.substring(i, upperBound));
-		}
-		System.out.println(set);
-		return set;
-	}
-
-	public static double distance(Set<String> set1, Set<String> set2) {
+	@Override
+	public double measureDistance(Set<String> set1, Set<String> set2) {
 		double size = set1.size() + set2.size();
 		if (size == 0)
 			return 0;
@@ -32,8 +22,7 @@ public class JaccardSimilarity {
 				"xyz"));
 		Set<String> set2 = new HashSet<String>(Arrays.asList("xyz", "def",
 				"abc"));
-		System.out.println(distance(set1, set2));
-		tokenize("Canon eos 500d", 3);
+		System.out.println(new JaccardSimilarity().measureDistance(set1, set2));
 	}
 
 }

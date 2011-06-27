@@ -53,7 +53,7 @@ public class NaiveBayesClassifier {
 
 		@Override
 		public int compareTo(ProbabilityResult o) {
-			return Double.compare(o.probability,probability);
+			return Double.compare(o.probability, probability);
 		}
 
 		@Override
@@ -110,6 +110,11 @@ public class NaiveBayesClassifier {
 				TrainingSet.getWikipediaTrainingsSet());
 		System.out.println(classifier.measureProbability(new String[] { "150",
 				"50", "6" }));
+
+		NaiveBayesClassifier c = new NaiveBayesClassifier(
+				TrainingSet.getTextExample());
+		System.out.println(c.measureProbability(new String[] { "prdkname" }));
+
 	}
 
 }

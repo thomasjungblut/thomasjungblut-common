@@ -32,7 +32,7 @@ public class TrainingSet {
 		}
 		set[0][0] = classString;
 		for (int i = 0; i < attributes.length; i++) {
-			set[0][i+1] = attributes[i];
+			set[0][i + 1] = attributes[i];
 		}
 	}
 
@@ -63,6 +63,20 @@ public class TrainingSet {
 				{ "male", "195", "85", "10" }, { "female", "165", "60", "6" },
 				{ "female", "150", "55", "8" }, { "female", "156", "56", "7" },
 				{ "female", "160", "62", "9" } });
+
+		return set;
+	}
+
+	public static TrainingSet getTextExample() {
+		TrainingSet set = new TrainingSet(1, 8);
+
+		set.setHeader(new String[] { "ID", "NAME" }, new String[] { "input" });
+
+		set.setDataTypes(new String[] { "s" });
+		set.setTrainingInput(new String[][] { { "ID", "productId" },
+				{ "ID", "pid" }, { "ID", "produkt-id" }, { "ID", "p_id" },
+				{ "NAME", "produktname" }, { "NAME", "name" },
+				{ "NAME", "product-name" }, { "NAME", "pname" } });
 
 		return set;
 	}
