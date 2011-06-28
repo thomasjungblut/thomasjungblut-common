@@ -1,6 +1,13 @@
 package de.jungblut.classification;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.LinkedList;
 
 public class TrainingSet {
 
@@ -54,8 +61,8 @@ public class TrainingSet {
 	public static TrainingSet getWikipediaTrainingsSet() {
 		TrainingSet set = new TrainingSet(3, 8);
 
-		set.setHeader(new String[] { "male", "female" }, new String[] {
-				"height (cm)", "weight (kg)", "foot size(cm)" });
+		set.setHeader(new String[] { "male", "female" }, new String[] { "height (cm)",
+				"weight (kg)", "foot size(cm)" });
 
 		set.setDataTypes(new String[] { "n", "n", "n" });
 		set.setTrainingInput(new String[][] { { "male", "180", "90", "12" },
@@ -73,12 +80,46 @@ public class TrainingSet {
 		set.setHeader(new String[] { "ID", "NAME" }, new String[] { "input" });
 
 		set.setDataTypes(new String[] { "s" });
-		set.setTrainingInput(new String[][] { { "ID", "productId" },
-				{ "ID", "pid" }, { "ID", "produkt-id" }, { "ID", "p_id" },
-				{ "NAME", "produktname" }, { "NAME", "name" },
-				{ "NAME", "product-name" }, { "NAME", "pname" } });
+		set.setTrainingInput(new String[][] { { "ID", "productId" }, { "ID", "pid" },
+				{ "ID", "produkt-id" }, { "ID", "p_id" }, { "NAME", "produktname" },
+				{ "NAME", "name" }, { "NAME", "product-name" }, { "NAME", "pname" } });
 
 		return set;
+	}
+
+	public static TrainingSet readCSVTrainingsSet() {
+
+		LinkedList<String[]> file = new LinkedList<String[]>();
+		HashSet<String> types = new HashSet<String>();
+
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(new File(
+					"res/csv_import_token.csv")));
+
+			String line = null;
+			while ((line = reader.readLine()) != null) {
+				String[] arr = line.split(";");
+				file.add(arr);
+				types.add(arr[0]);
+			}
+			// remove the header of the CSV
+			file.remove(0);
+
+			TrainingSet set = new TrainingSet(1, file.size());
+
+			set.setHeader(types.toArray(new String[types.size()]), new String[] { "NAME" });
+			set.setDataTypes(new String[] { "s" });
+
+			set.setTrainingInput(file.toArray(new String[file.size()][]));
+			return set;
+
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return null;
 	}
 
 	@Override
