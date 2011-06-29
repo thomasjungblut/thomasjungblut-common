@@ -29,7 +29,7 @@ public class NaiveBayesClassifier {
 			String[] inputAttributes) {
 		PriorityQueue<ProbabilityResult> posterior = new PriorityQueue<ProbabilityResult>();
 		for (Entry<String, ArrayList<Type>> entry : classTypeMap.entrySet()) {
-			double p = equalProbability;
+			double p = 1.0;
 			for (int i = 0; i < inputAttributes.length; i++) {
 				double probability = entry.getValue().get(i)
 						.getProbability(inputAttributes[i], equalProbability);
@@ -117,7 +117,7 @@ public class NaiveBayesClassifier {
 
 		NaiveBayesClassifier c = new NaiveBayesClassifier(
 				TrainingSet.readCSVTrainingsSet());
-		System.out.println(c.measureProbability(new String[] { "id" }));
+		System.out.println(c.measureProbability(new String[] { "prdkname" }));
 		
 	}
 
