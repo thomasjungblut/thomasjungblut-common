@@ -7,6 +7,8 @@ public class TypeHelper {
 			return new NumberType();
 		} else if (type.equals("s")) {
 			return new StringType();
+		} else if (type.equals("b")) {
+			return new BooleanType();
 		} else {
 			return null;
 		}
