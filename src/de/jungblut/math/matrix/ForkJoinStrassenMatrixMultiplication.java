@@ -4,6 +4,7 @@ import static de.jungblut.math.matrix.StrassenMatrixMultiplication.add;
 import static de.jungblut.math.matrix.StrassenMatrixMultiplication.checkInput;
 import static de.jungblut.math.matrix.StrassenMatrixMultiplication.copy;
 import static de.jungblut.math.matrix.StrassenMatrixMultiplication.reconstructMatrix;
+import static de.jungblut.math.matrix.StrassenMatrixMultiplication.printMatrix;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
@@ -104,6 +105,17 @@ public class ForkJoinStrassenMatrixMultiplication {
 			return reconstructMatrix(r, s, t, u);
 
 		}
+	}
+
+	public static void main(String[] args) throws InterruptedException, ExecutionException {
+
+		double[][] a = new double[][] { { 8, 9 }, { 5, -1 } };
+		double[][] b = new double[][] { { -2, 3 }, { 4, 0 } };
+
+		/*
+		 * Answer: [20.0, 24.0] [-14.0, 15.0]
+		 */
+		printMatrix(multiply(a, b));
 	}
 
 }
