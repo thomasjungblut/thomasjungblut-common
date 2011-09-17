@@ -1,6 +1,7 @@
 Hey all,
 
 this is my code-sink for mainly java files.
+
 Have fun to browse through many things for:
 
 - Datastructures
@@ -9,5 +10,6 @@ Have fun to browse through many things for:
 - Graph algorithms
 - Clustering
 - Machine learning
+- Matrix Multiplication
 
 For the math.matrix package you'll need Java7, because it uses the fork/join framework.
