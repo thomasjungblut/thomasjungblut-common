@@ -9,3 +9,5 @@ Have fun to browse through many things for:
 - Graph algorithms
 - Clustering
 - Machine learning
+
+For the math.matrix package you'll need Java7, because it uses the fork/join framework.
