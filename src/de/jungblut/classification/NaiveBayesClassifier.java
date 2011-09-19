@@ -106,19 +106,11 @@ public class NaiveBayesClassifier {
 	}
 
 	public static void main(String[] args) {
-//		NaiveBayesClassifier classifier = new NaiveBayesClassifier(
-//				TrainingSet.getWikipediaTrainingsSet());
-//		System.out.println(classifier.measureProbability(new String[] { "150",
-//				"50", "6" }));
-//
-//		NaiveBayesClassifier c = new NaiveBayesClassifier(
-//				TrainingSet.getTextExample());
-//		System.out.println(c.measureProbability(new String[] { "prdkname" }));
+		NaiveBayesClassifier classifier = new NaiveBayesClassifier(
+				TrainingSet.getWikipediaTrainingsSet());
+		System.out.println(classifier.measureProbability(new String[] { "150",
+				"50", "6" }));
 
-		NaiveBayesClassifier c = new NaiveBayesClassifier(
-				TrainingSet.readCSVTrainingsSet());
-		System.out.println(c.measureProbability(new String[] { "prdkname" }));
-		
 	}
 
 }

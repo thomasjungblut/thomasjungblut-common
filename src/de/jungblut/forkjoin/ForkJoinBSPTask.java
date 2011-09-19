@@ -1,7 +1,12 @@
 package de.jungblut.forkjoin;
 
-public abstract class ForkJoinBSPTask<T> {
+import java.util.concurrent.Callable;
 
+import org.apache.hadoop.io.Writable;
+
+public abstract class ForkJoinBSPTask<T> implements Callable<T>, Writable {
+
+	// TODO context could be static
 	ForkJoinBSP context;
 	boolean finished;
 	int id;
@@ -11,15 +16,29 @@ public abstract class ForkJoinBSPTask<T> {
 
 	@SuppressWarnings("unchecked")
 	public ForkJoinBSPTask<T> fork(ForkJoinBSPTask<T> parent) {
+		this.parent = parent;
+		if (this.context == null)
+			this.context = parent.context;
 		return (ForkJoinBSPTask<T>) context.submit(this, parent);
 	}
 
 	protected abstract T compute();
 
+	@Override
+	public T call() {
+		return compute();
+	}
+
 	public T join() {
-		// TODO don't busy wait, actually this won't work
-		while (!finished)
-			;
+		for (;;) {
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			if (result != null)
+				break;
+		}
 		return result;
 	}
 
