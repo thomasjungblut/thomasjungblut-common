@@ -30,20 +30,23 @@ public abstract class ForkJoinBSPTask<T> implements Callable<T>, Writable {
 	}
 
 	public T join() {
-		for (;;) {
-			try {
-				this.wait();
-			} catch (InterruptedException e) {
-				e.printStackTrace();
+		synchronized (this) {
+			for (;;) {
+				try {
+					wait();
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				if (result != null)
+					break;
 			}
-			if (result != null)
-				break;
 		}
 		return result;
 	}
 
-	void setResult(T res) {
-		this.result = res;
+	@SuppressWarnings("unchecked")
+	void setResult(Object res) {
+		this.result = (T) res;
 		this.finished = true;
 	}
 
@@ -65,4 +68,5 @@ public abstract class ForkJoinBSPTask<T> implements Callable<T>, Writable {
 			return false;
 		return true;
 	}
+
 }

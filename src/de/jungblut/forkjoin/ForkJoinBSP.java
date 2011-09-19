@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hama.HamaConfiguration;
@@ -16,7 +18,7 @@ import org.apache.zookeeper.KeeperException;
 public class ForkJoinBSP extends BSP {
 
 	private Configuration conf;
-	private int currentId = 0;
+	private AtomicInteger currentId = new AtomicInteger();
 	private boolean master = false;
 	private HashMap<ForkJoinBSPTask<?>, ForkJoinBSPTask<?>> taskMap;
 	private HashMap<String, ForkJoinBSPTask<?>> groomToTaskMap;
@@ -32,10 +34,12 @@ public class ForkJoinBSP extends BSP {
 			groomToTaskMap = new HashMap<String, ForkJoinBSPTask<?>>();
 
 			try {
-				ForkJoinFibonacci fib = new ForkJoinFibonacci(5);
+				ForkJoinFibonacci fib = new ForkJoinFibonacci(8);
 				fib.context = this;
-				executionTree.add(fib, null);
-				System.out.println(pool.submit(fib).get());
+				Future<?> future = executionTree.add(fib, null,
+						pool.submit(fib));
+				pool.submit(executionTree);
+				System.out.println("Fibonacci of 8 is: " + future.get());
 			} catch (ExecutionException e) {
 				e.printStackTrace();
 			}
@@ -47,20 +51,20 @@ public class ForkJoinBSP extends BSP {
 		// while we have tasks to manage: DO
 		// -schedule available tasks to grooms
 		// -receive the new tasks that got forked and queue them
-
+		pool.shutdown();
 	}
 
-	public ForkJoinBSPTask<?> submit(ForkJoinBSPTask<?> task,
+	public synchronized ForkJoinBSPTask<?> submit(ForkJoinBSPTask<?> task,
 			ForkJoinBSPTask<?> parent) {
 		task.parent = parent;
-		task.id = currentId++;
+		task.id = currentId.incrementAndGet();
+		currentId = new AtomicInteger(task.id);
 		this.schedule(task, parent);
 		return task;
 	}
 
-	private void schedule(ForkJoinBSPTask<?> task, ForkJoinBSPTask<?> parent) {
-		executionTree.add(task, parent);
-		pool.submit(task);
+	private synchronized void schedule(ForkJoinBSPTask<?> task, ForkJoinBSPTask<?> parent) {
+		executionTree.add(task, parent, pool.submit(task));
 	}
 
 	@Override
