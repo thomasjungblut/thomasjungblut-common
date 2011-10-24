@@ -11,7 +11,6 @@ import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPJobClient;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.ClusterStatus;
-import org.apache.hama.bsp.IntegerMessage;
 import org.apache.zookeeper.KeeperException;
 
 import twitter4j.Status;
@@ -62,9 +61,11 @@ public class DataStreamProcessing extends BSP {
               System.out.println("Got new status from: "
                   + s.getUser().getName() + " with message " + s.getText());
               // we distribute messages to the other peers for
-              // processing via message id partitioning
-              bspPeer.send(otherPeers[(int) (s.getId() % otherPeers.length)],
-                  new IntegerMessage(s.getText(), 0));
+              // processing via user id partitioning
+              // so a task gets all messages for a user
+              bspPeer.send(
+                  otherPeers[(int) (s.getUser().getId() % otherPeers.length)],
+                  new LongMessage(s.getUser().getId(), s.getText()));
               numMessagesSend++;
             }
           }
@@ -84,9 +85,10 @@ public class DataStreamProcessing extends BSP {
       while (true) {
         // wait for some work...
         bspPeer.sync();
-        IntegerMessage message = null;
-        while ((message = (IntegerMessage) bspPeer.getCurrentMessage()) != null) {
-          System.out.println("Got work in form of text: " + message.getTag());
+        LongMessage message = null;
+        while ((message = (LongMessage) bspPeer.getCurrentMessage()) != null) {
+          System.out.println("Got work in form of text: " + message.getData()
+              + " for the userid: " + message.getTag().longValue());
         }
       }
     }
