@@ -8,9 +8,7 @@ import java.util.List;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
-import org.apache.hama.bsp.BSPJobClient;
 import org.apache.hama.bsp.BSPPeer;
-import org.apache.hama.bsp.ClusterStatus;
 import org.apache.zookeeper.KeeperException;
 
 import twitter4j.Status;
@@ -33,8 +31,8 @@ public class DataStreamProcessing extends BSP {
     // gets the default twitter
     twitter = new TwitterFactory().getInstance();
     userName = peer.getConfiguration().get("twitter.user.name");
-    isMaster = peer.getConfiguration().get("master.task")
-        .equals(peer.getPeerName());
+    // our master is always the task which is the first in our array
+    isMaster = peer.getPeerName().equals(peer.getAllPeerNames()[0]);
     if (isMaster) {
       // get the other peer names in an array
       String[] allPeerNames = peer.getAllPeerNames();
@@ -107,15 +105,6 @@ public class DataStreamProcessing extends BSP {
     // Set the job name
     bsp.setJobName("Twitter stream processing");
     bsp.setBspClass(DataStreamProcessing.class);
-
-    BSPJobClient jobClient = new BSPJobClient(conf);
-    ClusterStatus cluster = jobClient.getClusterStatus(true);
-
-    // Choose one as a master
-    for (String hostName : cluster.getActiveGroomNames().keySet()) {
-      conf.set("master.task", hostName);
-      break;
-    }
 
     bsp.waitForCompletion(true);
 
