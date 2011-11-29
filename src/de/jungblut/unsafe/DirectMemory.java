@@ -6,7 +6,7 @@ import java.util.Random;
 
 import sun.misc.Unsafe;
 
-public class DirectMemory {
+public final class DirectMemory {
 
     public static void main(String[] args) {
 	Unsafe unsafe = null;
@@ -20,25 +20,29 @@ public class DirectMemory {
 	}
 
 	// int = 32bit = 4bytes
-	int[] rand = getRandomIntArray(10);
+	int[] rand = getRandomIntArray(1000000);
 	Arrays.sort(rand);
-	System.out.println(Arrays.toString(rand));
 	long mallocStart = unsafe.allocateMemory(rand.length * 4);
 	long start = mallocStart;
 	for (int i = 0; i < rand.length; i++) {
 	    unsafe.putInt(start, rand[i]);
 	    start += 4L;
 	}
-	
-	int[] r = new int[rand.length];
-	for (int i = 0; i < rand.length; i++) {
-	    int ret = unsafe.getInt(mallocStart);
-	    r[i] = ret;
-	    mallocStart += 4L;
-	}
 
-	System.out.println(Arrays.toString(r));
     }
+
+    public static final int[] reconstructFromUnsafe(long mallocStart,
+	    Unsafe unsafe, int length) {
+	long start = mallocStart;
+	int[] r = new int[length];
+	for (int i = 0; i < length; i++) {
+	    int ret = unsafe.getInt(start);
+	    r[i] = ret;
+	    start += 4L;
+	}
+	return r;
+    }
+
 
     public static final int[] getRandomIntArray(int size) {
 	Random r = new Random();
