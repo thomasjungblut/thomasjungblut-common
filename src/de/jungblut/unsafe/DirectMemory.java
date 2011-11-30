@@ -20,7 +20,7 @@ public final class DirectMemory {
 	}
 
 	// int = 32bit = 4bytes
-	int[] rand = getRandomIntArray(1000000);
+	int[] rand = getRandomIntArray(100000000);
 	Arrays.sort(rand);
 	long mallocStart = unsafe.allocateMemory(rand.length * 4);
 	long start = mallocStart;
@@ -29,6 +29,34 @@ public final class DirectMemory {
 	    start += 4L;
 	}
 
+	long startTime = System.currentTimeMillis();
+	for (int i = 0; i < rand.length; i++) {
+	    int res = binarySearch(unsafe, mallocStart, rand.length, rand[i]);
+//	    if (rand[i] != rand[res]) {
+//		throw new UnsupportedOperationException("Wanted " + i
+//			+ " but got " + res + "!");
+//	    }
+	}
+	System.out.println("Took " + (System.currentTimeMillis() - startTime)
+		+ "ms");
+    }
+
+    public static final int binarySearch(Unsafe unsafe, long mallocStart,
+	    int size, int key) {
+	int low = 0;
+	int high = size - 1;
+
+	while (low <= high) {
+	    final int mid = (low + high) >>> 1;
+	    final int midVal = unsafe.getInt(mallocStart + mid * 4L);
+	    if (midVal < key)
+		low = mid + 1;
+	    else if (midVal > key)
+		high = mid - 1;
+	    else
+		return mid; // key found
+	}
+	return -(low + 1); // key not found.
     }
 
     public static final int[] reconstructFromUnsafe(long mallocStart,
@@ -43,12 +71,12 @@ public final class DirectMemory {
 	return r;
     }
 
-
     public static final int[] getRandomIntArray(int size) {
 	Random r = new Random();
 	int[] arr = new int[size];
 	for (int i = 0; i < size; i++) {
-	    arr[i] = r.nextInt();
+	    final int x = r.nextInt(Integer.MAX_VALUE);
+	    arr[i] = x;
 	}
 
 	return arr;

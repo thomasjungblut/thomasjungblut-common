@@ -31,6 +31,7 @@ public final class KMeansBSP extends
 	// we then emit the lowest distance to each other task? <- not too optimal
 	// if a center needs to be updated, it needs to be broadcasted once again.
 	// TODO this isn't too optimal, but I'm still in development.
+	peer.reopenInput();
     }
 
     @Override
