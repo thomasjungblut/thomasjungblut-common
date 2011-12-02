@@ -9,6 +9,7 @@ import org.apache.hadoop.io.WritableComparable;
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
     private Vector center;
+    private int kTimesIncremented = 2;
 
     public ClusterCenter() {
 	super();
@@ -25,6 +26,17 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 	this.center = center;
     }
 
+    // summing up, based on averaging in data streams
+    public ClusterCenter average(ClusterCenter c) {
+	double[] vector = c.center.getVector();
+	double[] thisVector = center.getVector();
+	for (int i = 0; i < vector.length; i++) {
+	    thisVector[i] = thisVector[i] + (vector[i] / kTimesIncremented) - (thisVector[i] / kTimesIncremented) ;
+	}
+	kTimesIncremented++;
+	return this;
+    }
+
     public boolean converged(ClusterCenter c) {
 	return compareTo(c) == 0 ? false : true;
     }
@@ -32,12 +44,14 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     @Override
     public void write(DataOutput out) throws IOException {
 	center.write(out);
+	out.writeInt(kTimesIncremented);
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
 	this.center = new Vector();
 	center.readFields(in);
+	kTimesIncremented = in.readInt();
     }
 
     @Override

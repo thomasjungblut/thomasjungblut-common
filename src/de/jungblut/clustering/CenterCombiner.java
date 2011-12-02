@@ -9,7 +9,7 @@ public class CenterCombiner extends Combiner{
     @Override
     public BSPMessageBundle combine(Iterable<BSPMessage> messages) {
 	
-	
+	// TODO needed?
 	return null;
     }
 

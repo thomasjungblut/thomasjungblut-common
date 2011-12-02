@@ -1,7 +1,9 @@
 package de.jungblut.clustering;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,6 +19,7 @@ import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.zookeeper.KeeperException;
 
+import de.jungblut.clustering.model.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.DistanceMeasurer;
 import de.jungblut.clustering.model.Vector;
@@ -68,6 +71,8 @@ public final class KMeansBSP extends
 	    // each task has all the centers, if a center has been updated it
 	    // needs to be broadcasted.
 
+	    // contains the for this input fitting new calculated cluster center
+	    final HashMap<ClusterCenter, ClusterCenter> meanMap = new HashMap<ClusterCenter, ClusterCenter>();
 	    // we have an assignment step
 	    NullWritable value = NullWritable.get();
 	    Vector key = new Vector();
@@ -77,6 +82,8 @@ public final class KMeansBSP extends
 		for (ClusterCenter center : centers) {
 		    double estimatedDistance = DistanceMeasurer
 			    .measureDistance(center, key);
+		    // check if we have a can assign a new center, because we
+		    // got a lower distance
 		    if (lowestDistantCenter == null) {
 			lowestDistantCenter = center;
 		    } else {
@@ -86,24 +93,44 @@ public final class KMeansBSP extends
 			}
 		    }
 		}
-		// send to every other peer the lowest distance for a vertex.
-		// TODO we then use combiner for each vector that has been
-		// assigned to a center. So we just send the "new" averaged
-		// center via network.
+		final ClusterCenter clusterCenter = meanMap
+			.get(lowestDistantCenter);
+		if (clusterCenter == null) {
+		    meanMap.put(lowestDistantCenter, new ClusterCenter(
+			    lowestDistantCenter));
+		} else {
+		    // if we already have a cluster center, update it with the
+		    // newest lowest distance
+		    meanMap.put(lowestDistantCenter,
+			    clusterCenter.average(lowestDistantCenter));
+		}
+	    }
+
+	    for (Entry<ClusterCenter, ClusterCenter> entry : meanMap.entrySet()) {
 		for (String peerName : peer.getAllPeerNames()) {
-//		    peer.send(peerName, msg);
+		    peer.send(peerName,
+			    new CenterMessage(entry.getKey(), entry.getValue()));
 		}
 	    }
 
 	    peer.sync();
 
-	    while (peer.getCurrentMessage() != null) {
-		// here we get the new centers, and then increment the counter
+	    CenterMessage msg = null;
+	    while ((msg = (CenterMessage) peer.getCurrentMessage()) != null) {
+		// here we get the new centers of each other peer- we have to
+		// average on the result of every other peer.
+		// And then increment the counter if we have an update
+
+		// TODO
+
 	    }
 
 	    // TODO and an update step
 	    peer.reopenInput();
 	}
+
+	// TODO we must somehow get the assignment
+	// peer.write(key, value);
     }
 
     public static void main(String[] args) throws IOException,
@@ -120,7 +147,7 @@ public final class KMeansBSP extends
 	BSPJob job = new BSPJob(conf, KMeansBSP.class);
 	job.setJobName("KMeans Clustering");
 
-	job.setCombinerClass(CenterCombiner.class);
+	// job.setCombinerClass(CenterCombiner.class);
 	job.setJarByClass(KMeansBSP.class);
 	job.setBspClass(KMeansBSP.class);
 
