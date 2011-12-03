@@ -3,6 +3,7 @@ package de.jungblut.clustering.model;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.apache.hadoop.io.WritableComparable;
 
@@ -27,14 +28,17 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     }
 
     // summing up, based on averaging in data streams
+    // makes a new defensive copy for a clustercenter
     public ClusterCenter average(ClusterCenter c) {
 	double[] vector = c.center.getVector();
-	double[] thisVector = center.getVector();
+	double[] thisVector = Arrays.copyOf(center.getVector(),
+		center.getVector().length);
 	for (int i = 0; i < vector.length; i++) {
-	    thisVector[i] = thisVector[i] + (vector[i] / kTimesIncremented) - (thisVector[i] / kTimesIncremented) ;
+	    thisVector[i] = thisVector[i] + (vector[i] / kTimesIncremented)
+		    - (thisVector[i] / kTimesIncremented);
 	}
 	kTimesIncremented++;
-	return this;
+	return new ClusterCenter(new Vector(thisVector));
     }
 
     public boolean converged(ClusterCenter c) {

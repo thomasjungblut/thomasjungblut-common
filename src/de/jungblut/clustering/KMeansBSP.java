@@ -2,7 +2,6 @@ package de.jungblut.clustering;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map.Entry;
 
 import org.apache.commons.logging.Log;
@@ -10,7 +9,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hama.HamaConfiguration;
@@ -29,7 +27,7 @@ public final class KMeansBSP extends
 
     private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
 
-    private LinkedList<ClusterCenter> centers = new LinkedList<ClusterCenter>();
+    private HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
 
     enum Centers {
 	CONVERGED
@@ -47,8 +45,10 @@ public final class KMeansBSP extends
 		    peer.getConfiguration());
 	    ClusterCenter key = new ClusterCenter();
 	    NullWritable value = NullWritable.get();
+	    int centerId = 0;
 	    while (reader.next(key, value)) {
-		centers.add(new ClusterCenter(key));
+		ClusterCenter center = new ClusterCenter(key);
+		centers.put(centerId++, center);
 	    }
 	} finally {
 	    if (reader != null)
@@ -66,71 +66,86 @@ public final class KMeansBSP extends
 	// the plan is easy, we have much less centers (k) than records (n). So
 	// we can iterate on disk via Hamas IO over the vectors and measure the
 	// distance against the centers.
-
-	while (peer.getCounter(Centers.CONVERGED).getCounter() > 0) {
-	    // each task has all the centers, if a center has been updated it
-	    // needs to be broadcasted.
-
-	    // contains the for this input fitting new calculated cluster center
-	    final HashMap<ClusterCenter, ClusterCenter> meanMap = new HashMap<ClusterCenter, ClusterCenter>();
-	    // we have an assignment step
-	    NullWritable value = NullWritable.get();
-	    Vector key = new Vector();
-	    while (peer.readNext(key, value)) {
-		ClusterCenter lowestDistantCenter = null;
-		double lowestDistance = Double.MAX_VALUE;
-		for (ClusterCenter center : centers) {
-		    double estimatedDistance = DistanceMeasurer
-			    .measureDistance(center, key);
-		    // check if we have a can assign a new center, because we
-		    // got a lower distance
-		    if (lowestDistantCenter == null) {
-			lowestDistantCenter = center;
-		    } else {
-			if (estimatedDistance < lowestDistance) {
-			    lowestDistance = estimatedDistance;
-			    lowestDistantCenter = center;
-			}
-		    }
-		}
-		final ClusterCenter clusterCenter = meanMap
-			.get(lowestDistantCenter);
-		if (clusterCenter == null) {
-		    meanMap.put(lowestDistantCenter, new ClusterCenter(
-			    lowestDistantCenter));
-		} else {
-		    // if we already have a cluster center, update it with the
-		    // newest lowest distance
-		    meanMap.put(lowestDistantCenter,
-			    clusterCenter.average(lowestDistantCenter));
-		}
-	    }
-
-	    for (Entry<ClusterCenter, ClusterCenter> entry : meanMap.entrySet()) {
-		for (String peerName : peer.getAllPeerNames()) {
-		    peer.send(peerName,
-			    new CenterMessage(entry.getKey(), entry.getValue()));
-		}
-	    }
-
+	long lastCounter = 0L;
+	// as long as our counter do change over the supersteps, we are
+	// running this
+	while (peer.getCounter(Centers.CONVERGED).getCounter() != lastCounter) {
+	    lastCounter = peer.getCounter(Centers.CONVERGED).getCounter();
+	    assignCenters(peer);
 	    peer.sync();
-
-	    CenterMessage msg = null;
-	    while ((msg = (CenterMessage) peer.getCurrentMessage()) != null) {
-		// here we get the new centers of each other peer- we have to
-		// average on the result of every other peer.
-		// And then increment the counter if we have an update
-
-		// TODO
-
-	    }
-
-	    // TODO and an update step
+	    updateCenters(peer);
 	    peer.reopenInput();
 	}
-
+	LOG.info("Finished!");
 	// TODO we must somehow get the assignment
 	// peer.write(key, value);
+    }
+
+    private final void updateCenters(
+	    BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+	    throws IOException {
+	// this is the update step
+	CenterMessage msg = null;
+	while ((msg = (CenterMessage) peer.getCurrentMessage()) != null) {
+	    // here we get the new centers of each other peer- we have to
+	    // average on the result of every other peer.
+	    // And then increment the counter if we have an update
+	    ClusterCenter oldCenter = centers.get(msg.getTag());
+	    ClusterCenter newCenter = msg.getData();
+	    if (oldCenter.converged(newCenter)) {
+		centers.remove(msg.getTag());
+		centers.put(msg.getTag(), newCenter);
+		peer.incrCounter(Centers.CONVERGED, 1L);
+	    }
+	}
+    }
+
+    private final void assignCenters(
+	    BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+	    throws IOException {
+	// each task has all the centers, if a center has been updated it
+	// needs to be broadcasted.
+	// contains the for this input fitting new calculated cluster center
+	final HashMap<Integer, ClusterCenter> meanMap = new HashMap<Integer, ClusterCenter>();
+	meanMap.putAll(centers);
+	// we have an assignment step
+	NullWritable value = NullWritable.get();
+	Vector key = new Vector();
+	while (peer.readNext(key, value)) {
+	    Integer lowestDistantCenter = null;
+	    double lowestDistance = Double.MAX_VALUE;
+	    for (Entry<Integer, ClusterCenter> center : centers.entrySet()) {
+		double estimatedDistance = DistanceMeasurer.measureDistance(
+			center.getValue(), key);
+		// check if we have a can assign a new center, because we
+		// got a lower distance
+		if (lowestDistantCenter == null) {
+		    lowestDistantCenter = center.getKey();
+		    lowestDistance = estimatedDistance;
+		} else {
+		    if (estimatedDistance < lowestDistance) {
+			lowestDistance = estimatedDistance;
+			lowestDistantCenter = center.getKey();
+		    }
+		}
+	    }
+	    // this won't ever be null
+	    final ClusterCenter clusterCenter = meanMap
+		    .get(lowestDistantCenter);
+	    // if we already have a cluster center, average it with the
+	    // assigned vector
+	    meanMap.put(lowestDistantCenter,
+		    clusterCenter.average(new ClusterCenter(key)));
+	}
+
+	// TODO this is currently sending all the centers along with their
+	// updates, we can just send the once that have changed.
+	for (Entry<Integer, ClusterCenter> entry : meanMap.entrySet()) {
+	    for (String peerName : peer.getAllPeerNames()) {
+		peer.send(peerName,
+			new CenterMessage(entry.getKey(), entry.getValue()));
+	    }
+	}
     }
 
     public static void main(String[] args) throws IOException,
