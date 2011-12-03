@@ -8,12 +8,20 @@ import java.awt.Toolkit;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileStatus;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.SequenceFile;
 
+import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.Vector;
 
 public class ClusteringDisplay extends Frame {
@@ -56,24 +64,48 @@ public class ClusteringDisplay extends Frame {
     @Override
     public void paint(Graphics g) {
 	Graphics2D g2 = (Graphics2D) g;
-	drawVectors(g2);
+	try {
+	    drawVectors(g2);
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
     }
 
-    public void drawVectors(Graphics2D g2) {
+    public void drawVectors(Graphics2D g2) throws IOException {
 	double sx = (double) res / DS;
 	g2.setTransform(AffineTransform.getScaleInstance(sx, sx));
 
 	// plot the axes
 	g2.setColor(Color.BLACK);
-	Vector dv = new Vector(SIZE/2.0,SIZE/2.0);
-	plotRectangle(g2, new Vector(2,2), dv);
-	plotRectangle(g2, new Vector(2,-2), dv);
+	Vector dv = new Vector(SIZE / 2.0, SIZE / 2.0);
+	plotRectangle(g2, new Vector(2, 2), dv);
+	plotRectangle(g2, new Vector(2, -2), dv);
 
 	// plot the sample data
 	g2.setColor(Color.DARK_GRAY);
 	dv.add(new Vector(0.03, 0.03));
-	for (Vector v : points) {
-	    plotRectangle(g2, v, dv);
+
+	Path out = new Path("files/clustering/out");
+	Configuration conf = new Configuration();
+	FileSystem fs = FileSystem.get(conf);
+
+	FileStatus[] stati = fs.listStatus(out);
+	for (FileStatus status : stati) {
+	    if (!status.isDir()) {
+		Path path = status.getPath();
+		LOG.debug("FOUND " + path.toString());
+		SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
+			conf);
+		ClusterCenter key = new ClusterCenter();
+		Vector v = new Vector();
+		while (reader.next(key, v)) {
+		    g2.setColor(Color.DARK_GRAY);
+		    plotRectangle(g2, v, dv);
+		    g2.setColor(Color.RED);
+		    plotEllipse(g2, key.getCenter(), dv);
+		}
+		reader.close();
+	    }
 	}
     }
 
@@ -87,33 +119,16 @@ public class ClusteringDisplay extends Frame {
 		dv.getVector()[1] * DS));
     }
 
-    // original code from mahout
-    /*
-     * protected static void plotSampleData(Graphics2D g2) { double sx =
-     * (double) res / DS; g2.setTransform(AffineTransform.getScaleInstance(sx,
-     * sx));
-     * 
-     * // plot the axes g2.setColor(Color.BLACK); Vector dv = new
-     * DenseVector(2).assign(SIZE / 2.0); plotRectangle(g2, new
-     * DenseVector(2).assign(2), dv); plotRectangle(g2, new
-     * DenseVector(2).assign(-2), dv);
-     * 
-     * // plot the sample data g2.setColor(Color.DARK_GRAY); dv.assign(0.03);
-     * for (VectorWritable v : SAMPLE_DATA) { plotRectangle(g2, v.get(), dv); }
-     * }
-     * 
-     * protected static void plotRectangle(Graphics2D g2, Vector v, Vector dv) {
-     * double[] flip = {1, -1}; Vector v2 = v.times(new DenseVector(flip)); v2 =
-     * v2.minus(dv.divide(2)); int h = SIZE / 2; double x = v2.get(0) + h;
-     * double y = v2.get(1) + h; g2.draw(new Rectangle2D.Double(x * DS, y * DS,
-     * dv.get(0) * DS, dv.get(1) * DS)); }
-     * 
-     * protected static void plotEllipse(Graphics2D g2, Vector v, Vector dv) {
-     * double[] flip = {1, -1}; Vector v2 = v.times(new DenseVector(flip)); v2 =
-     * v2.minus(dv.divide(2)); int h = SIZE / 2; double x = v2.get(0) + h;
-     * double y = v2.get(1) + h; g2.draw(new Ellipse2D.Double(x * DS, y * DS,
-     * dv.get(0) * DS, dv.get(1) * DS)); }
-     */
+    protected static void plotEllipse(Graphics2D g2, Vector v, Vector dv) {
+	double[] flip = { 1, -1 };
+	Vector v2 = v.times(new Vector(flip));
+	v2 = v2.minus(dv.divide(new Vector(2, 2)));
+	int h = SIZE / 2;
+	double x = v2.getVector()[0] + h;
+	double y = v2.getVector()[1] + h;
+	g2.draw(new Ellipse2D.Double(x * DS, y * DS, dv.getVector()[0] * DS, dv
+		.getVector()[1] * DS));
+    }
 
     public static void main(String[] args) throws Exception {
 	new ClusteringDisplay();
