@@ -78,8 +78,8 @@ public class ClusteringDisplay extends Frame {
 	// plot the axes
 	g2.setColor(Color.BLACK);
 	Vector dv = new Vector(SIZE / 2.0, SIZE / 2.0);
-	plotRectangle(g2, new Vector(2, 2), dv);
-	plotRectangle(g2, new Vector(2, -2), dv);
+	// plotRectangle(g2, new Vector(2, 2), dv);
+	// plotRectangle(g2, new Vector(2, -2), dv);
 
 	// plot the sample data
 	g2.setColor(Color.DARK_GRAY);
@@ -98,11 +98,15 @@ public class ClusteringDisplay extends Frame {
 			conf);
 		ClusterCenter key = new ClusterCenter();
 		Vector v = new Vector();
+		int count = 0;
 		while (reader.next(key, v)) {
 		    g2.setColor(Color.DARK_GRAY);
 		    plotRectangle(g2, v, dv);
 		    g2.setColor(Color.RED);
 		    plotEllipse(g2, key.getCenter(), dv);
+		    if (count++ % 1000 == 0) {
+			LOG.info("Reading " + count);
+		    }
 		}
 		reader.close();
 	    }

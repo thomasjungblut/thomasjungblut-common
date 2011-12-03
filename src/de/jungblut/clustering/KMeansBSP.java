@@ -83,6 +83,8 @@ public final class KMeansBSP extends
 	    peer.sync();
 	    updateCenters(peer);
 	    peer.reopenInput();
+	    // this sync may be needed for race conditions in counters
+	    // peer.sync();
 	}
 	LOG.info("Finished! Writing the assignments...");
 	recalculateAssignmentsAndWrite(peer);
@@ -233,8 +235,12 @@ public final class KMeansBSP extends
 			conf);
 		ClusterCenter key = new ClusterCenter();
 		Vector v = new Vector();
+		int count = 0;
 		while (reader.next(key, v)) {
 		    LOG.info(key + " / " + v);
+		    if (count++ > 5) {
+			break;
+		    }
 		}
 		reader.close();
 	    }
@@ -253,29 +259,24 @@ public final class KMeansBSP extends
 	    fs.delete(in, true);
 
 	final SequenceFile.Writer centerWriter = SequenceFile.createWriter(fs,
-		conf, center, ClusterCenter.class, NullWritable.class);
+		conf, center, ClusterCenter.class, NullWritable.class,
+		CompressionType.NONE);
 	final NullWritable value = NullWritable.get();
 	centerWriter.append(new ClusterCenter(new Vector(1, 1)), value);
-	centerWriter.append(new ClusterCenter(new Vector(100000, 500000)), value);
+	centerWriter.append(new ClusterCenter(new Vector(100000, 500000)),
+		value);
 	centerWriter.close();
 
 	final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs,
-		conf, in, Vector.class, NullWritable.class,CompressionType.NONE);
-//	dataWriter.append(new Vector(1, 2), value);
-//	dataWriter.append(new Vector(16, 3), value);
-//	dataWriter.append(new Vector(3, 3), value);
-//	dataWriter.append(new Vector(2, 2), value);
-//	dataWriter.append(new Vector(2, 3), value);
-//	dataWriter.append(new Vector(25, 1), value);
-//	dataWriter.append(new Vector(7, 6), value);
-//	dataWriter.append(new Vector(6, 5), value);
-//	dataWriter.append(new Vector(-1, -23), value);
+		conf, in, Vector.class, NullWritable.class,
+		CompressionType.NONE);
+
 	// spawns arround 6 tasks
 	Random r = new Random();
-	for(int i = 0; i < 7000000;i++){
-	    dataWriter.append(new Vector(r.nextInt(i+200),r.nextInt(i+500)),value);
+	for (int i = 0; i < 7000000; i++) {
+	    dataWriter.append(new Vector(r.nextInt(i + 200), r.nextInt()),
+		    value);
 	}
 	dataWriter.close();
     }
-
 }

@@ -64,6 +64,22 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 	return compareTo(c) == 0 ? false : true;
     }
 
+    // compute the squared error for the two centers
+    public boolean converged(ClusterCenter c, double error) {
+	double err = 0.0d;
+	for (int i = 0; i < center.getVector().length; i++) {
+	    // use multiplication instead of pow, because this is faster.
+	    final double abs = Math.abs(center.getVector()[i]
+		    - c.getCenter().getVector()[i]);
+	    err += abs * abs;
+	}
+	err = err / center.getVector().length;
+	if (err <= error) {
+	    return true;
+	}
+	return false;
+    }
+
     @Override
     public void write(DataOutput out) throws IOException {
 	center.write(out);
