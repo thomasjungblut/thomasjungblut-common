@@ -3,6 +3,7 @@ package de.jungblut.clustering;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,6 +12,7 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
@@ -112,8 +114,6 @@ public final class KMeansBSP extends
 		centers.remove(center.getKey());
 		centers.put(center.getKey(), center.getValue());
 		peer.incrCounter(Centers.CONVERGED, 1L);
-		LOG.info("Cluster center converged from " + oldCenter + " to "
-			+ center.getValue());
 	    }
 	}
     }
@@ -134,8 +134,6 @@ public final class KMeansBSP extends
 
 	    final ClusterCenter clusterCenter = meanMap
 		    .get(lowestDistantCenter);
-	    LOG.info("Found lowest center " + centers.get(lowestDistantCenter)
-		    + " for " + key);
 	    if (clusterCenter == null) {
 		meanMap.put(lowestDistantCenter, new ClusterCenter(key));
 	    } else {
@@ -258,20 +256,25 @@ public final class KMeansBSP extends
 		conf, center, ClusterCenter.class, NullWritable.class);
 	final NullWritable value = NullWritable.get();
 	centerWriter.append(new ClusterCenter(new Vector(1, 1)), value);
-	centerWriter.append(new ClusterCenter(new Vector(5, 5)), value);
+	centerWriter.append(new ClusterCenter(new Vector(100000, 500000)), value);
 	centerWriter.close();
 
 	final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs,
-		conf, in, Vector.class, NullWritable.class);
-	dataWriter.append(new Vector(1, 2), value);
-	dataWriter.append(new Vector(16, 3), value);
-	dataWriter.append(new Vector(3, 3), value);
-	dataWriter.append(new Vector(2, 2), value);
-	dataWriter.append(new Vector(2, 3), value);
-	dataWriter.append(new Vector(25, 1), value);
-	dataWriter.append(new Vector(7, 6), value);
-	dataWriter.append(new Vector(6, 5), value);
-	dataWriter.append(new Vector(-1, -23), value);
+		conf, in, Vector.class, NullWritable.class,CompressionType.NONE);
+//	dataWriter.append(new Vector(1, 2), value);
+//	dataWriter.append(new Vector(16, 3), value);
+//	dataWriter.append(new Vector(3, 3), value);
+//	dataWriter.append(new Vector(2, 2), value);
+//	dataWriter.append(new Vector(2, 3), value);
+//	dataWriter.append(new Vector(25, 1), value);
+//	dataWriter.append(new Vector(7, 6), value);
+//	dataWriter.append(new Vector(6, 5), value);
+//	dataWriter.append(new Vector(-1, -23), value);
+	// spawns arround 6 tasks
+	Random r = new Random();
+	for(int i = 0; i < 7000000;i++){
+	    dataWriter.append(new Vector(r.nextInt(i+200),r.nextInt(i+500)),value);
+	}
 	dataWriter.close();
     }
 

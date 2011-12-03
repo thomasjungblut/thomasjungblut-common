@@ -16,7 +16,6 @@ public final class Vector implements WritableComparable<Vector> {
     }
 
     public Vector(Vector v) {
-	super();
 	int l = v.vector.length;
 	this.vector = new double[l];
 	System.arraycopy(v.vector, 0, this.vector, 0, l);
@@ -25,6 +24,10 @@ public final class Vector implements WritableComparable<Vector> {
     public Vector(double x, double y) {
 	super();
 	this.vector = new double[] { x, y };
+    }
+
+    public Vector(int cardinality) {
+	this.vector = new double[cardinality];
     }
 
     public Vector(double... vec) {
@@ -96,6 +99,48 @@ public final class Vector implements WritableComparable<Vector> {
     @Override
     public String toString() {
 	return "Vector [vector=" + Arrays.toString(vector) + "]";
+    }
+
+    // some element-wise math stuff
+
+    public Vector times(Vector vector2) {
+	Vector newVector = new Vector(Arrays.copyOf(this.vector,
+		this.vector.length));
+	for (int i = 0; i < newVector.vector.length; i++) {
+	    newVector.getVector()[i] = newVector.getVector()[i]
+		    * vector2.getVector()[i];
+	}
+	return newVector;
+    }
+
+    public Vector divide(Vector vector2) {
+	Vector newVector = new Vector(Arrays.copyOf(this.vector,
+		this.vector.length));
+	for (int i = 0; i < newVector.vector.length; i++) {
+	    newVector.getVector()[i] = newVector.getVector()[i]
+		    / vector2.getVector()[i];
+	}
+	return newVector;
+    }
+
+    public Vector minus(Vector vector2) {
+	Vector newVector = new Vector(Arrays.copyOf(this.vector,
+		this.vector.length));
+	for (int i = 0; i < newVector.vector.length; i++) {
+	    newVector.getVector()[i] = newVector.getVector()[i]
+		    - vector2.getVector()[i];
+	}
+	return newVector;
+    }
+
+    public Vector add(Vector vector2) {
+	Vector newVector = new Vector(Arrays.copyOf(this.vector,
+		this.vector.length));
+	for (int i = 0; i < newVector.vector.length; i++) {
+	    newVector.getVector()[i] = newVector.getVector()[i]
+		    + vector2.getVector()[i];
+	}
+	return newVector;
     }
 
 }
