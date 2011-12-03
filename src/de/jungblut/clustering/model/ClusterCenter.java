@@ -7,6 +7,8 @@ import java.util.Arrays;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import de.jungblut.clustering.KMeansBSP;
+
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
     private Vector center;
@@ -37,16 +39,30 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     // makes a new defensive copy for a clustercenter
     // TODO this can be refactored because we are most of the time averaging
     // against vectors
-    public ClusterCenter average(ClusterCenter c) {
+    public ClusterCenter average(ClusterCenter c, boolean local) {
+	int newk = kTimesIncremented;
+	if (!local) {
+	    newk += c.kTimesIncremented;
+	}
+	KMeansBSP.LOG.info("Calculating avg of " + this + " to " + c);
 	double[] vector = c.center.getVector();
 	double[] thisVector = Arrays.copyOf(center.getVector(),
 		center.getVector().length);
 	for (int i = 0; i < vector.length; i++) {
-	    thisVector[i] = thisVector[i] + (vector[i] / kTimesIncremented)
-		    - (thisVector[i] / kTimesIncremented);
+	    thisVector[i] = thisVector[i] + (vector[i] / newk)
+		    - (thisVector[i] / newk);
 	}
-	kTimesIncremented++;
-	return new ClusterCenter(new Vector(thisVector), kTimesIncremented);
+	KMeansBSP.LOG.info("\treturning with k=" + newk + " and "
+		+ Arrays.toString(thisVector));
+	newk++;
+	return new ClusterCenter(new Vector(thisVector), newk);
+    }
+    
+    public static void main(String[] args) {
+	ClusterCenter c = new ClusterCenter(new Vector(7,6));
+	c = c.average(new ClusterCenter(new Vector(16,3)), true);
+	c = c.average(new ClusterCenter(new Vector(6,5)), true);
+	System.out.println(c);
     }
 
     public boolean converged(ClusterCenter c) {

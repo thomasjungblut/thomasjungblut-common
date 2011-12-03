@@ -25,7 +25,7 @@ import de.jungblut.clustering.model.Vector;
 public final class KMeansBSP extends
 	BSP<Vector, NullWritable, ClusterCenter, Vector> {
 
-    private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
+    public static final Log LOG = LogFactory.getLog(KMeansBSP.class);
 
     private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
 
@@ -101,7 +101,8 @@ public final class KMeansBSP extends
 	    if (oldCenter == null) {
 		msgCenters.put(msg.getTag(), newCenter);
 	    } else {
-		msgCenters.put(msg.getTag(), oldCenter.average(newCenter));
+		msgCenters.put(msg.getTag(),
+			oldCenter.average(newCenter, false));
 	    }
 	}
 
@@ -111,6 +112,8 @@ public final class KMeansBSP extends
 		centers.remove(center.getKey());
 		centers.put(center.getKey(), center.getValue());
 		peer.incrCounter(Centers.CONVERGED, 1L);
+		LOG.info("Cluster center converged from " + oldCenter + " to "
+			+ center.getValue());
 	    }
 	}
     }
@@ -131,17 +134,17 @@ public final class KMeansBSP extends
 
 	    final ClusterCenter clusterCenter = meanMap
 		    .get(lowestDistantCenter);
-
+	    LOG.info("Found lowest center " + centers.get(lowestDistantCenter)
+		    + " for " + key);
 	    if (clusterCenter == null) {
 		meanMap.put(lowestDistantCenter, new ClusterCenter(key));
 	    } else {
 		// if we already have a cluster center, average it with the
 		// assigned vector
 		meanMap.put(lowestDistantCenter,
-			clusterCenter.average(new ClusterCenter(key)));
+			clusterCenter.average(new ClusterCenter(key), true));
 	    }
 	}
-
 	for (Entry<Integer, ClusterCenter> entry : meanMap.entrySet()) {
 	    for (String peerName : peer.getAllPeerNames()) {
 		peer.send(peerName,
@@ -151,14 +154,11 @@ public final class KMeansBSP extends
     }
 
     private final int getNearestCenter(Vector key) {
-	LOG.info("Getting nearest center for " + key);
 	Integer lowestDistantCenter = null;
 	double lowestDistance = Double.MAX_VALUE;
 	for (Entry<Integer, ClusterCenter> center : centers.entrySet()) {
 	    double estimatedDistance = DistanceMeasurer.measureDistance(
 		    center.getValue(), key);
-	    LOG.info("\tFrom center " + center.getValue() + " to " + key
-		    + " is the distance of " + estimatedDistance);
 	    // check if we have a can assign a new center, because we
 	    // got a lower distance
 	    if (lowestDistantCenter == null) {
@@ -171,8 +171,6 @@ public final class KMeansBSP extends
 		}
 	    }
 	}
-	LOG.info("\tAssigned " + centers.get(lowestDistantCenter)
-		+ " with vector " + key);
 	return lowestDistantCenter;
     }
 
