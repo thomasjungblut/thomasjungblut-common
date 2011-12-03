@@ -46,7 +46,7 @@ public final class KMeansBSP extends
 	    reader = new SequenceFile.Reader(fs, centroids,
 		    peer.getConfiguration());
 	    ClusterCenter key = new ClusterCenter();
-	    IntWritable value = new IntWritable();
+	    NullWritable value = NullWritable.get();
 	    while (reader.next(key, value)) {
 		centers.add(new ClusterCenter(key));
 	    }
@@ -150,6 +150,8 @@ public final class KMeansBSP extends
 	// job.setCombinerClass(CenterCombiner.class);
 	job.setJarByClass(KMeansBSP.class);
 	job.setBspClass(KMeansBSP.class);
+	// has no effect when the input is too small
+	// job.setNumBspTask(2);
 
 	job.setInputPath(in);
 	job.setOutputPath(out);
@@ -201,32 +203,23 @@ public final class KMeansBSP extends
 	    fs.delete(in, true);
 
 	final SequenceFile.Writer centerWriter = SequenceFile.createWriter(fs,
-		conf, center, ClusterCenter.class, IntWritable.class);
-	final IntWritable value = new IntWritable(0);
+		conf, center, ClusterCenter.class, NullWritable.class);
+	final NullWritable value = NullWritable.get();
 	centerWriter.append(new ClusterCenter(new Vector(1, 1)), value);
 	centerWriter.append(new ClusterCenter(new Vector(5, 5)), value);
 	centerWriter.close();
 
 	final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs,
-		conf, in, ClusterCenter.class, Vector.class);
-	dataWriter
-		.append(new ClusterCenter(new Vector(0, 0)), new Vector(1, 2));
-	dataWriter.append(new ClusterCenter(new Vector(0, 0)),
-		new Vector(16, 3));
-	dataWriter
-		.append(new ClusterCenter(new Vector(0, 0)), new Vector(3, 3));
-	dataWriter
-		.append(new ClusterCenter(new Vector(0, 0)), new Vector(2, 2));
-	dataWriter
-		.append(new ClusterCenter(new Vector(0, 0)), new Vector(2, 3));
-	dataWriter.append(new ClusterCenter(new Vector(0, 0)),
-		new Vector(25, 1));
-	dataWriter
-		.append(new ClusterCenter(new Vector(0, 0)), new Vector(7, 6));
-	dataWriter
-		.append(new ClusterCenter(new Vector(0, 0)), new Vector(6, 5));
-	dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(-1,
-		-23));
+		conf, in, Vector.class, NullWritable.class);
+	dataWriter.append(new Vector(1, 2), value);
+	dataWriter.append(new Vector(16, 3), value);
+	dataWriter.append(new Vector(3, 3), value);
+	dataWriter.append(new Vector(2, 2), value);
+	dataWriter.append(new Vector(2, 3), value);
+	dataWriter.append(new Vector(25, 1), value);
+	dataWriter.append(new Vector(7, 6), value);
+	dataWriter.append(new Vector(6, 5), value);
+	dataWriter.append(new Vector(-1, -23), value);
 	dataWriter.close();
     }
 
