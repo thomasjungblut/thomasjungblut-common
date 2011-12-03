@@ -26,7 +26,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
     public ClusterCenter(Vector center) {
 	super();
-	this.center = center;
+	this.center = new Vector(center);
     }
 
     public ClusterCenter(Vector center, int k) {
