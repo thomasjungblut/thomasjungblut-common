@@ -27,14 +27,15 @@ public final class KMeansBSP extends
 
     private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
 
-    private HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
+    private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
 
     enum Centers {
 	CONVERGED
     }
 
     @Override
-    public void setup(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+    public final void setup(
+	    BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
 	    throws IOException, KeeperException, InterruptedException {
 
 	Path centroids = new Path(peer.getConfiguration().get("centroid.path"));
@@ -53,6 +54,11 @@ public final class KMeansBSP extends
 	} finally {
 	    if (reader != null)
 		reader.close();
+	}
+
+	if (centers.size() == 0) {
+	    throw new IllegalArgumentException(
+		    "Centers file must contain at least a single center!");
 	}
 	// in our first step, each center has "converged"
 	// this is just there to prevent skipping the main loop in BSP
@@ -76,25 +82,34 @@ public final class KMeansBSP extends
 	    updateCenters(peer);
 	    peer.reopenInput();
 	}
-	LOG.info("Finished!");
-	// TODO we must somehow get the assignment
-	// peer.write(key, value);
+	LOG.info("Finished! Writing the assignments...");
+	recalculateAssignmentsAndWrite(peer);
     }
 
     private final void updateCenters(
 	    BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
 	    throws IOException {
 	// this is the update step
+	HashMap<Integer, ClusterCenter> msgCenters = new HashMap<Integer, ClusterCenter>();
 	CenterMessage msg = null;
 	while ((msg = (CenterMessage) peer.getCurrentMessage()) != null) {
 	    // here we get the new centers of each other peer- we have to
 	    // average on the result of every other peer.
 	    // And then increment the counter if we have an update
-	    ClusterCenter oldCenter = centers.get(msg.getTag());
+	    ClusterCenter oldCenter = msgCenters.get(msg.getTag());
 	    ClusterCenter newCenter = msg.getData();
-	    if (oldCenter.converged(newCenter)) {
-		centers.remove(msg.getTag());
-		centers.put(msg.getTag(), newCenter);
+	    if (oldCenter == null) {
+		msgCenters.put(msg.getTag(), newCenter);
+	    } else {
+		msgCenters.put(msg.getTag(), oldCenter.average(newCenter));
+	    }
+	}
+
+	for (Entry<Integer, ClusterCenter> center : msgCenters.entrySet()) {
+	    ClusterCenter oldCenter = centers.get(center.getKey());
+	    if (oldCenter.converged(center.getValue())) {
+		centers.remove(center.getKey());
+		centers.put(center.getKey(), center.getValue());
 		peer.incrCounter(Centers.CONVERGED, 1L);
 	    }
 	}
@@ -107,44 +122,68 @@ public final class KMeansBSP extends
 	// needs to be broadcasted.
 	// contains the for this input fitting new calculated cluster center
 	final HashMap<Integer, ClusterCenter> meanMap = new HashMap<Integer, ClusterCenter>();
-	meanMap.putAll(centers);
+
 	// we have an assignment step
 	NullWritable value = NullWritable.get();
 	Vector key = new Vector();
 	while (peer.readNext(key, value)) {
-	    Integer lowestDistantCenter = null;
-	    double lowestDistance = Double.MAX_VALUE;
-	    for (Entry<Integer, ClusterCenter> center : centers.entrySet()) {
-		double estimatedDistance = DistanceMeasurer.measureDistance(
-			center.getValue(), key);
-		// check if we have a can assign a new center, because we
-		// got a lower distance
-		if (lowestDistantCenter == null) {
-		    lowestDistantCenter = center.getKey();
-		    lowestDistance = estimatedDistance;
-		} else {
-		    if (estimatedDistance < lowestDistance) {
-			lowestDistance = estimatedDistance;
-			lowestDistantCenter = center.getKey();
-		    }
-		}
-	    }
-	    // this won't ever be null
+	    int lowestDistantCenter = getNearestCenter(key);
+
 	    final ClusterCenter clusterCenter = meanMap
 		    .get(lowestDistantCenter);
-	    // if we already have a cluster center, average it with the
-	    // assigned vector
-	    meanMap.put(lowestDistantCenter,
-		    clusterCenter.average(new ClusterCenter(key)));
+
+	    if (clusterCenter == null) {
+		meanMap.put(lowestDistantCenter, new ClusterCenter(key));
+	    } else {
+		// if we already have a cluster center, average it with the
+		// assigned vector
+		meanMap.put(lowestDistantCenter,
+			clusterCenter.average(new ClusterCenter(key)));
+	    }
 	}
 
-	// TODO this is currently sending all the centers along with their
-	// updates, we can just send the once that have changed.
 	for (Entry<Integer, ClusterCenter> entry : meanMap.entrySet()) {
 	    for (String peerName : peer.getAllPeerNames()) {
 		peer.send(peerName,
 			new CenterMessage(entry.getKey(), entry.getValue()));
 	    }
+	}
+    }
+
+    private final int getNearestCenter(Vector key) {
+	LOG.info("Getting nearest center for " + key);
+	Integer lowestDistantCenter = null;
+	double lowestDistance = Double.MAX_VALUE;
+	for (Entry<Integer, ClusterCenter> center : centers.entrySet()) {
+	    double estimatedDistance = DistanceMeasurer.measureDistance(
+		    center.getValue(), key);
+	    LOG.info("\tFrom center " + center.getValue() + " to " + key
+		    + " is the distance of " + estimatedDistance);
+	    // check if we have a can assign a new center, because we
+	    // got a lower distance
+	    if (lowestDistantCenter == null) {
+		lowestDistantCenter = center.getKey();
+		lowestDistance = estimatedDistance;
+	    } else {
+		if (estimatedDistance < lowestDistance) {
+		    lowestDistance = estimatedDistance;
+		    lowestDistantCenter = center.getKey();
+		}
+	    }
+	}
+	LOG.info("\tAssigned " + centers.get(lowestDistantCenter)
+		+ " with vector " + key);
+	return lowestDistantCenter;
+    }
+
+    private final void recalculateAssignmentsAndWrite(
+	    BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+	    throws IOException {
+	NullWritable value = NullWritable.get();
+	Vector key = new Vector();
+	while (peer.readNext(key, value)) {
+	    Integer lowestDistantCenter = getNearestCenter(key);
+	    peer.write(centers.get(lowestDistantCenter), key);
 	}
     }
 
@@ -193,7 +232,7 @@ public final class KMeansBSP extends
 	for (FileStatus status : stati) {
 	    if (!status.isDir()) {
 		Path path = status.getPath();
-		LOG.info("FOUND " + path.toString());
+		LOG.debug("FOUND " + path.toString());
 		SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
 			conf);
 		ClusterCenter key = new ClusterCenter();

@@ -27,8 +27,16 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 	this.center = center;
     }
 
+    public ClusterCenter(Vector center, int k) {
+	super();
+	this.center = center;
+	this.kTimesIncremented = k;
+    }
+
     // summing up, based on averaging in data streams
     // makes a new defensive copy for a clustercenter
+    // TODO this can be refactored because we are most of the time averaging
+    // against vectors
     public ClusterCenter average(ClusterCenter c) {
 	double[] vector = c.center.getVector();
 	double[] thisVector = Arrays.copyOf(center.getVector(),
@@ -38,7 +46,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 		    - (thisVector[i] / kTimesIncremented);
 	}
 	kTimesIncremented++;
-	return new ClusterCenter(new Vector(thisVector));
+	return new ClusterCenter(new Vector(thisVector), kTimesIncremented);
     }
 
     public boolean converged(ClusterCenter c) {
