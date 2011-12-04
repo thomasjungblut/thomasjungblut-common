@@ -88,29 +88,31 @@ public class ClusteringDisplay extends Frame {
 	Path out = new Path("files/clustering/out");
 	Configuration conf = new Configuration();
 	FileSystem fs = FileSystem.get(conf);
+	plotEllipse(g2, new Vector(2,2), dv);
 
-	FileStatus[] stati = fs.listStatus(out);
-	for (FileStatus status : stati) {
-	    if (!status.isDir()) {
-		Path path = status.getPath();
-		LOG.debug("FOUND " + path.toString());
-		SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
-			conf);
-		ClusterCenter key = new ClusterCenter();
-		Vector v = new Vector();
-		int count = 0;
-		while (reader.next(key, v)) {
-		    g2.setColor(Color.DARK_GRAY);
-		    plotRectangle(g2, v, dv);
-		    g2.setColor(Color.RED);
-		    plotEllipse(g2, key.getCenter(), dv);
-		    if (count++ % 1000 == 0) {
-			LOG.info("Reading " + count);
-		    }
-		}
-		reader.close();
-	    }
-	}
+//	FileStatus[] stati = fs.listStatus(out);
+//	for (FileStatus status : stati) {
+//	    if (!status.isDir()) {
+//		Path path = status.getPath();
+//		LOG.debug("FOUND " + path.toString());
+//		SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
+//			conf);
+//		ClusterCenter key = new ClusterCenter();
+//		Vector v = new Vector();
+//		int count = 0;
+//		while (reader.next(key, v)) {
+//		    g2.setColor(Color.DARK_GRAY);
+//		    plotRectangle(g2, v, dv);
+//		    g2.setColor(Color.RED);
+//		    plotEllipse(g2, key.getCenter(), dv);
+//		    if (count++ % 1000 == 0) {
+//			LOG.info("Reading " + count);
+//		    }
+//		}
+//		LOG.info("finished! " + count);
+//		reader.close();
+//	    }
+//	}
     }
 
     protected static void plotRectangle(Graphics2D g2, Vector v, Vector dv) {
