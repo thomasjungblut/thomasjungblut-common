@@ -274,7 +274,7 @@ public final class KMeansBSP extends
 	// spawns arround 6 tasks
 	Random r = new Random();
 	for (int i = 0; i < 7000000; i++) {
-	    dataWriter.append(new Vector(r.nextInt(i + 200), r.nextInt()),
+	    dataWriter.append(new Vector(r.nextInt(i + 200), r.nextInt(7000000 - i)),
 		    value);
 	}
 	dataWriter.close();

@@ -31,11 +31,7 @@ public final class DirectMemory {
 
 	long startTime = System.currentTimeMillis();
 	for (int i = 0; i < rand.length; i++) {
-	    int res = binarySearch(unsafe, mallocStart, rand.length, rand[i]);
-//	    if (rand[i] != rand[res]) {
-//		throw new UnsupportedOperationException("Wanted " + i
-//			+ " but got " + res + "!");
-//	    }
+	    binarySearch(unsafe, mallocStart, rand.length, rand[i]);
 	}
 	System.out.println("Took " + (System.currentTimeMillis() - startTime)
 		+ "ms");
