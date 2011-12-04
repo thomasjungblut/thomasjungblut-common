@@ -263,7 +263,9 @@ public final class KMeansBSP extends
 		CompressionType.NONE);
 	final NullWritable value = NullWritable.get();
 	centerWriter.append(new ClusterCenter(new Vector(1, 1)), value);
-	centerWriter.append(new ClusterCenter(new Vector(100000, 500000)),
+	centerWriter.append(new ClusterCenter(new Vector(999, 999)),
+		value);
+	centerWriter.append(new ClusterCenter(new Vector(1, 999)),
 		value);
 	centerWriter.close();
 
@@ -273,8 +275,9 @@ public final class KMeansBSP extends
 
 	// spawns arround 6 tasks
 	Random r = new Random();
-	for (int i = 0; i < 7000000; i++) {
-	    dataWriter.append(new Vector(r.nextInt(i + 200), r.nextInt(7000000 - i)),
+	int count = 1000;
+	for (int i = 0; i < count; i++) {
+	    dataWriter.append(new Vector(r.nextInt(i + count), r.nextInt(count - i)),
 		    value);
 	}
 	dataWriter.close();

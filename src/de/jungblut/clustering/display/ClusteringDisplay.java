@@ -33,8 +33,8 @@ public class ClusteringDisplay extends Frame {
     private static final Log LOG = LogFactory.getLog(ClusteringDisplay.class);
     protected static Dimension res; // screen resolution
 
-    static final Color[] COLORS = { Color.RED, Color.BLUE, Color.ORANGE,
-	    Color.YELLOW, Color.GREEN, Color.MAGENTA };
+    static final Color[] COLORS = { Color.RED, Color.BLUE, Color.GREEN,
+	    Color.YELLOW, Color.ORANGE, Color.MAGENTA };
 
     private final HashMap<ClusterCenter, ArrayList<Vector>> centerMap = new HashMap<ClusterCenter, ArrayList<Vector>>();
 
@@ -96,7 +96,7 @@ public class ClusteringDisplay extends Frame {
 	int count = 0;
 	for (Entry<ClusterCenter, ArrayList<Vector>> vmap : centerMap
 		.entrySet()) {
-//	    g2.setColor(Color.BLACK);
+	    // g2.setColor(Color.BLACK);
 	    g2.setColor(COLORS[count]);
 	    plotEllipse(g2, vmap.getKey().getCenter(), 10);
 	    g2.setColor(COLORS[count]);
