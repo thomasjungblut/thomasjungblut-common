@@ -96,7 +96,8 @@ public class ClusteringDisplay extends Frame {
 	int count = 0;
 	for (Entry<ClusterCenter, ArrayList<Vector>> vmap : centerMap
 		.entrySet()) {
-	    g2.setColor(Color.BLACK);
+//	    g2.setColor(Color.BLACK);
+	    g2.setColor(COLORS[count]);
 	    plotEllipse(g2, vmap.getKey().getCenter(), 10);
 	    g2.setColor(COLORS[count]);
 	    for (Vector v : vmap.getValue()) {
