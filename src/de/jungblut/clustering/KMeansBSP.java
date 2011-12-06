@@ -188,9 +188,9 @@ public final class KMeansBSP extends
     public static void main(String[] args) throws IOException,
 	    ClassNotFoundException, InterruptedException {
 
-	// count = 70000000 spawns arround 6 tasks
-	int count = 1000;
-	int k = 10;
+	// count = 7000000 spawns arround 6 tasks
+	int count = 7000000;
+	int k = 25;
 
 	HamaConfiguration conf = new HamaConfiguration();
 

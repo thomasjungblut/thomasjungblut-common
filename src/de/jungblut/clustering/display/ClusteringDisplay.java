@@ -140,6 +140,7 @@ public class ClusteringDisplay extends Frame {
 		} else if (e.getClickCount() == 1) {
 		    if (button == 2) { // middle click reset
 			zoomed = false;
+			zoomFactor = 1;
 		    }
 		}
 		LOG.info("zoomed=" + zoomed + " factor=" + zoomFactor);
