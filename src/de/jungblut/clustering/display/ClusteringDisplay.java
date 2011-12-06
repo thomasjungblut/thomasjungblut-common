@@ -52,8 +52,8 @@ public class ClusteringDisplay extends Frame {
     double scaleFactorX = 1;
     double scaleFactorY = 1;
 
-    double offsetX = 0;
-    double offsetY = 0;
+    double offsetX = 25;
+    double offsetY = 25;
 
     private Point clickPoint;
     private boolean zoomed = false;
@@ -90,7 +90,6 @@ public class ClusteringDisplay extends Frame {
 	    @Override
 	    public void mouseDragged(MouseEvent e) {
 		Point p = e.getPoint();
-		LOG.info("mouse dragged to " + p);
 		curX = p.x;
 		curY = p.y;
 		if (inDrag) {
@@ -136,6 +135,7 @@ public class ClusteringDisplay extends Frame {
 			    zoomFactor -= 1;
 			}
 		    }
+
 		} else if (e.getClickCount() == 1) {
 		    if (button == 2) { // middle click reset
 			zoomed = false;
@@ -158,6 +158,7 @@ public class ClusteringDisplay extends Frame {
     @Override
     public void paint(Graphics g) {
 	Graphics2D g2 = (Graphics2D) g;
+	g2.translate(offsetX, offsetY);
 	caclulcateScaling();
 	drawVectors(g2);
     }
@@ -172,14 +173,11 @@ public class ClusteringDisplay extends Frame {
 	}
 	if (zoomed && clickPoint != null) {
 	    g2.scale(zoomFactor, zoomFactor);
-	    if (!inDrag) {
-		g2.translate(-clickPoint.x, -clickPoint.y);
-	    } else {
-		int w = curX - startX;
-		int h = curY - startY;
-		g2.translate(w - clickPoint.x, h - clickPoint.y);
-	    }
+	    g2.translate(-clickPoint.x, -clickPoint.y);
 	}
+
+	g2.drawLine(0, 0, Integer.MAX_VALUE, 0);
+	g2.drawLine(0, 0, 0, Integer.MAX_VALUE);
 
 	int count = 0;
 	for (Entry<ClusterCenter, ArrayList<Vector>> vmap : centerMap
@@ -233,7 +231,6 @@ public class ClusteringDisplay extends Frame {
 			LOG.info("Reading " + count);
 		    }
 		}
-		LOG.info("finished! " + count);
 		LOG.info("Found minX: " + minX + " maxX: " + maxX + " minY: "
 			+ minY + " maxY: " + maxY);
 		reader.close();
@@ -242,8 +239,8 @@ public class ClusteringDisplay extends Frame {
     }
 
     protected void caclulcateScaling() {
-	scaleFactorX = (this.getWidth() - 2 * offsetX) / (maxX - minX);
-	scaleFactorY = (this.getHeight() - 2 * offsetY) / (maxY - minY);
+	scaleFactorX = (this.getWidth() - offsetX) / (maxX - minX);
+	scaleFactorY = (this.getHeight() - offsetY) / (maxY - minY);
 	LOG.info("Found scale factor of: " + scaleFactorX + " / "
 		+ scaleFactorY);
     }

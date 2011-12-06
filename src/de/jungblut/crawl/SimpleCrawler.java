@@ -35,9 +35,6 @@ public class SimpleCrawler {
 
 		MAX_FETCHES = fetches;
 		System.out.println("Set fetches to " + MAX_FETCHES);
-		// start our stop thread
-		// Thread gui = new Thread(new StopGUIThread());
-		// gui.start();
 
 		// start the persisting thread
 		persister = new FetchResultPersister();

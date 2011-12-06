@@ -273,7 +273,7 @@ public final class KMeansBSP extends
 	Random r = new Random();
 	for (int i = 0; i < count; i++) {
 	    Vector vector = new Vector(Math.abs(r.nextGaussian() * i + 1), Math.abs(r.nextGaussian()
-		    * count + 1));
+		    * (count-i) + k));
 	    dataWriter.append(vector, value);
 	    if (k > i) {
 		centerWriter.append(new ClusterCenter(vector), value);
