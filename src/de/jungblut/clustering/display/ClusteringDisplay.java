@@ -52,8 +52,8 @@ public class ClusteringDisplay extends Frame {
     double scaleFactorX = 1;
     double scaleFactorY = 1;
 
-    double offsetX = 25;
-    double offsetY = 25;
+    double offsetX = 50;
+    double offsetY = 100;
 
     private Point clickPoint;
     private boolean zoomed = false;
@@ -102,6 +102,7 @@ public class ClusteringDisplay extends Frame {
 	    @Override
 	    public void mouseReleased(MouseEvent e) {
 		inDrag = false;
+		clickPoint = null;
 	    }
 
 	    @Override
@@ -158,22 +159,29 @@ public class ClusteringDisplay extends Frame {
     @Override
     public void paint(Graphics g) {
 	Graphics2D g2 = (Graphics2D) g;
-	g2.translate(offsetX, offsetY);
 	caclulcateScaling();
+	g2.setTransform(AffineTransform.getScaleInstance(scaleFactorX,
+		scaleFactorY));
+	g2.translate(offsetX, offsetY);
 	drawVectors(g2);
     }
 
     public void drawVectors(Graphics2D g2) {
-	g2.setTransform(AffineTransform.getScaleInstance(scaleFactorX,
-		scaleFactorY));
 	if (inDrag) {
 	    int w = curX - startX;
 	    int h = curY - startY;
-	    g2.translate(w, h);
+	    g2.translate(offsetX + w, offsetY + h);
 	}
 	if (zoomed && clickPoint != null) {
 	    g2.scale(zoomFactor, zoomFactor);
-	    g2.translate(-clickPoint.x, -clickPoint.y);
+	    if (!inDrag) {
+		g2.translate(-clickPoint.x, -clickPoint.y);
+	    } else {
+		int w = curX - startX;
+		int h = curY - startY;
+		g2.translate(offsetX + w - clickPoint.x, offsetY + h
+			- clickPoint.y);
+	    }
 	}
 
 	g2.drawLine(0, 0, Integer.MAX_VALUE, 0);
@@ -241,7 +249,7 @@ public class ClusteringDisplay extends Frame {
     protected void caclulcateScaling() {
 	scaleFactorX = (this.getWidth() - offsetX) / (maxX - minX);
 	scaleFactorY = (this.getHeight() - offsetY) / (maxY - minY);
-	LOG.info("Found scale factor of: " + scaleFactorX + " / "
+	LOG.debug("Found scale factor of: " + scaleFactorX + " / "
 		+ scaleFactorY);
     }
 
