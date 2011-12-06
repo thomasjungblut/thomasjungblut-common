@@ -187,9 +187,12 @@ public final class KMeansBSP extends
 
     public static void main(String[] args) throws IOException,
 	    ClassNotFoundException, InterruptedException {
-	int iteration = 1;
+
+	// count = 70000000 spawns arround 6 tasks
+	int count = 1000;
+	int k = 10;
+
 	HamaConfiguration conf = new HamaConfiguration();
-	conf.set("num.iteration", iteration + "");
 
 	Path in = new Path("files/clustering/in/data.seq");
 	Path center = new Path("files/clustering/in/center/cen.seq");
@@ -215,7 +218,7 @@ public final class KMeansBSP extends
 
 	FileSystem fs = FileSystem.get(conf);
 	// prepare the input, like deleting old versions and creating centers
-	prepareInput(conf, in, center, out, fs);
+	prepareInput(count, k, conf, in, center, out, fs);
 
 	// just submit the job
 	job.waitForCompletion(true);
@@ -247,8 +250,8 @@ public final class KMeansBSP extends
 	}
     }
 
-    private static void prepareInput(HamaConfiguration conf, Path in,
-	    Path center, Path out, FileSystem fs) throws IOException {
+    private static void prepareInput(int count, int k, HamaConfiguration conf,
+	    Path in, Path center, Path out, FileSystem fs) throws IOException {
 	if (fs.exists(out))
 	    fs.delete(out, true);
 
@@ -262,23 +265,21 @@ public final class KMeansBSP extends
 		conf, center, ClusterCenter.class, NullWritable.class,
 		CompressionType.NONE);
 	final NullWritable value = NullWritable.get();
-	centerWriter.append(new ClusterCenter(new Vector(1, 1)), value);
-	centerWriter.append(new ClusterCenter(new Vector(999, 999)),
-		value);
-	centerWriter.append(new ClusterCenter(new Vector(1, 999)),
-		value);
-	centerWriter.close();
 
 	final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs,
 		conf, in, Vector.class, NullWritable.class,
 		CompressionType.NONE);
 
-	// spawns arround 6 tasks
 	Random r = new Random();
-	int count = 1000;
 	for (int i = 0; i < count; i++) {
-	    dataWriter.append(new Vector(r.nextInt(i + count), r.nextInt(count - i)),
-		    value);
+	    Vector vector = new Vector(Math.abs(r.nextGaussian() * i + 1), Math.abs(r.nextGaussian()
+		    * count + 1));
+	    dataWriter.append(vector, value);
+	    if (k > i) {
+		centerWriter.append(new ClusterCenter(vector), value);
+	    } else if (k == i) {
+		centerWriter.close();
+	    }
 	}
 	dataWriter.close();
     }

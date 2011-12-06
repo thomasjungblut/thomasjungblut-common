@@ -5,7 +5,11 @@ import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Point;
 import java.awt.Toolkit;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.geom.AffineTransform;
@@ -31,10 +35,12 @@ public class ClusteringDisplay extends Frame {
     private static final long serialVersionUID = 5937206456529884404L;
 
     private static final Log LOG = LogFactory.getLog(ClusteringDisplay.class);
-    protected static Dimension res; // screen resolution
+    protected static Dimension res; // screen resolution, or if zoomed the zoom
+				    // resolution
 
     static final Color[] COLORS = { Color.RED, Color.BLUE, Color.GREEN,
-	    Color.YELLOW, Color.ORANGE, Color.MAGENTA };
+	    Color.YELLOW, Color.ORANGE, Color.MAGENTA, Color.BLACK, Color.CYAN,
+	    Color.PINK };
 
     private final HashMap<ClusterCenter, ArrayList<Vector>> centerMap = new HashMap<ClusterCenter, ArrayList<Vector>>();
 
@@ -48,6 +54,14 @@ public class ClusteringDisplay extends Frame {
 
     double offsetX = 0;
     double offsetY = 0;
+
+    private Point clickPoint;
+    private boolean zoomed = false;
+    private int zoomFactor = 1;
+
+    boolean inDrag = false;
+    int startX = -1, startY = -1;
+    int curX = -1, curY = -1;
 
     public ClusteringDisplay() throws IOException {
 	initialize();
@@ -67,6 +81,70 @@ public class ClusteringDisplay extends Frame {
 	getMaxAndMinFromFile(fs, out, conf);
 	caclulcateScaling();
 	this.setVisible(true);
+	this.addMouseMotionListener(new MouseMotionListener() {
+
+	    @Override
+	    public void mouseMoved(MouseEvent e) {
+	    }
+
+	    @Override
+	    public void mouseDragged(MouseEvent e) {
+		Point p = e.getPoint();
+		LOG.info("mouse dragged to " + p);
+		curX = p.x;
+		curY = p.y;
+		if (inDrag) {
+		    repaint();
+		}
+	    }
+	});
+	this.addMouseListener(new MouseListener() {
+
+	    @Override
+	    public void mouseReleased(MouseEvent e) {
+		inDrag = false;
+	    }
+
+	    @Override
+	    public void mousePressed(MouseEvent e) {
+		Point p = e.getPoint();
+		startX = p.x;
+		startY = p.y;
+		inDrag = true;
+	    }
+
+	    @Override
+	    public void mouseExited(MouseEvent e) {
+	    }
+
+	    @Override
+	    public void mouseEntered(MouseEvent e) {
+	    }
+
+	    @Override
+	    public void mouseClicked(MouseEvent e) {
+		int button = e.getButton();
+		if (e.getClickCount() == 2) {
+		    clickPoint = e.getPoint();
+		    // left click zoom in
+		    if (button == 1) {
+			zoomed = true;
+			zoomFactor += 1;
+		    } else if (button == 3) { // right click zoom out
+			zoomed = true;
+			if (zoomFactor > 1) {
+			    zoomFactor -= 1;
+			}
+		    }
+		} else if (e.getClickCount() == 1) {
+		    if (button == 2) { // middle click reset
+			zoomed = false;
+		    }
+		}
+		LOG.info("zoomed=" + zoomed + " factor=" + zoomFactor);
+		repaint();
+	    }
+	});
 
 	// Window listener to terminate program.
 	this.addWindowListener(new WindowAdapter() {
@@ -77,34 +155,42 @@ public class ClusteringDisplay extends Frame {
 	});
     }
 
-    // Override the paint() method
     @Override
     public void paint(Graphics g) {
 	Graphics2D g2 = (Graphics2D) g;
 	caclulcateScaling();
-	try {
-	    drawVectors(g2);
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
+	drawVectors(g2);
     }
 
-    public void drawVectors(Graphics2D g2) throws IOException {
+    public void drawVectors(Graphics2D g2) {
 	g2.setTransform(AffineTransform.getScaleInstance(scaleFactorX,
 		scaleFactorY));
+	if (inDrag) {
+	    int w = curX - startX;
+	    int h = curY - startY;
+	    g2.translate(w, h);
+	}
+	if (zoomed && clickPoint != null) {
+	    g2.scale(zoomFactor, zoomFactor);
+	    if (!inDrag) {
+		g2.translate(-clickPoint.x, -clickPoint.y);
+	    } else {
+		int w = curX - startX;
+		int h = curY - startY;
+		g2.translate(w - clickPoint.x, h - clickPoint.y);
+	    }
+	}
 
 	int count = 0;
 	for (Entry<ClusterCenter, ArrayList<Vector>> vmap : centerMap
 		.entrySet()) {
-	    // g2.setColor(Color.BLACK);
 	    g2.setColor(COLORS[count]);
-	    plotEllipse(g2, vmap.getKey().getCenter(), 10);
-	    g2.setColor(COLORS[count]);
+	    plotEllipse(g2, vmap.getKey().getCenter(), 16);
 	    for (Vector v : vmap.getValue()) {
-		plotEllipse(g2, v, 3);
+		plotEllipse(g2, v, 6);
 	    }
 	    count++;
-	    if (count > COLORS.length) {
+	    if (count >= COLORS.length) {
 		count = 0;
 	    }
 	}
