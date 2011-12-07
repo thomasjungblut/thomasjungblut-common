@@ -53,13 +53,6 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 	return new ClusterCenter(new Vector(thisVector), newk);
     }
 
-    public static void main(String[] args) {
-	ClusterCenter c = new ClusterCenter(new Vector(7, 6));
-	c = c.average(new ClusterCenter(new Vector(16, 3)), true);
-	c = c.average(new ClusterCenter(new Vector(6, 5)), true);
-	System.out.println(c);
-    }
-
     public boolean converged(ClusterCenter c) {
 	return compareTo(c) == 0 ? false : true;
     }
