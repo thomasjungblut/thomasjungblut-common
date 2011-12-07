@@ -10,7 +10,7 @@ import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
-import org.apache.zookeeper.KeeperException;
+import org.apache.hama.bsp.sync.SyncException;
 
 import twitter4j.Status;
 import twitter4j.Twitter;
@@ -30,7 +30,7 @@ public class DataStreamProcessing extends
     @Override
     public void setup(
 	    BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable> peer)
-	    throws IOException, KeeperException, InterruptedException {
+	    throws IOException, InterruptedException {
 	// gets the default twitter
 	twitter = new TwitterFactory().getInstance();
 	userName = peer.getConfiguration().get("twitter.user.name");
@@ -50,7 +50,7 @@ public class DataStreamProcessing extends
     @Override
     public void bsp(
 	    BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable> bspPeer)
-	    throws IOException, KeeperException, InterruptedException {
+	    throws IOException, SyncException, InterruptedException {
 
 	if (isMaster) {
 	    while (true) {
