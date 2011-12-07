@@ -31,6 +31,9 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 	private static final String MESSAGE_TAG_CONVERGED = "CONVERGED";
 	public static final Log LOG = LogFactory.getLog(KMeansBSP.class);
 	private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
+	// TODO since all updates on the centers are applyied on every task
+	// we can just use this number to say if a center has converged or not,
+	// this can replace the crap I have written now
 
 	@Override
 	public final void setup(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
@@ -68,12 +71,16 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			peer.sync();
 			converged = updateCenters(peer);
 			peer.reopenInput();
-			if (converged == 0) {
-				break;
-			}
+			LOG.info(peer.getPeerName() + " has converged " + converged);
 			sendNumConvergedCenters(peer, converged);
 			peer.sync();
 			checkConvergence(peer);
+			peer.sync();
+			BSPMessage bspMsg = peer.getCurrentMessage();
+			if (bspMsg.getTag().equals(MESSAGE_TAG_CONVERGED)) {
+				if (bspMsg.getData().equals(0))
+					break;
+			}
 		}
 		LOG.info("Finished! Writing the assignments...");
 		recalculateAssignmentsAndWrite(peer);
@@ -105,19 +112,13 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 		HashMap<Integer, ClusterCenter> msgCenters = new HashMap<Integer, ClusterCenter>();
 		BSPMessage bspMsg = null;
 		while ((bspMsg = peer.getCurrentMessage()) != null) {
-			if (bspMsg.getTag().equals(MESSAGE_TAG_CONVERGED)) {
-				if ((Long) bspMsg.getData() == 0L) {
-					return 0;
-				}
+			CenterMessage msg = (CenterMessage) bspMsg;
+			ClusterCenter oldCenter = msgCenters.get(msg.getTag());
+			ClusterCenter newCenter = msg.getData();
+			if (oldCenter == null) {
+				msgCenters.put(msg.getTag(), newCenter);
 			} else {
-				CenterMessage msg = (CenterMessage) bspMsg;
-				ClusterCenter oldCenter = msgCenters.get(msg.getTag());
-				ClusterCenter newCenter = msg.getData();
-				if (oldCenter == null) {
-					msgCenters.put(msg.getTag(), newCenter);
-				} else {
-					msgCenters.put(msg.getTag(), oldCenter.average(newCenter, false));
-				}
+				msgCenters.put(msg.getTag(), oldCenter.average(newCenter, false));
 			}
 		}
 
@@ -197,13 +198,13 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			InterruptedException {
 
 		// count = 7000000 spawns arround 6 tasks
-		int count = 50000;
+		int count = 1000;
 		int k = 10;
 
 		HamaConfiguration conf = new HamaConfiguration();
 		// setting block size to the half of arround 50000 vectors will spawn
 		// two tasks.
-		conf.setLong("fs.local.block.size", 706988L);
+		conf.setLong("fs.local.block.size", 14000L);
 
 		Path in = new Path("files/clustering/in/data.seq");
 		Path center = new Path("files/clustering/in/center/cen.seq");
