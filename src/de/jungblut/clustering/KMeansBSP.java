@@ -65,18 +65,19 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			throw new IllegalArgumentException(
 					"Centers file must contain at least a single center!");
 		}
-		peer.getCounter(Centers.CONVERGED).increment(centers.size());
 	}
 
 	@Override
 	public final void bsp(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
 			throws IOException, InterruptedException, SyncException {
-		convergedCounter = 1L;
-		while (convergedCounter > 0) {
+		while (true) {
 			convergedCounter = 0;
 			assignCenters(peer);
 			peer.sync();
 			updateCenters(peer);
+			if (convergedCounter == 0) {
+				break;
+			}
 			peer.reopenInput();
 			sendNumConvergedCenters(peer);
 			peer.sync();
@@ -88,8 +89,7 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 
 	private final void sendNumConvergedCenters(
 			BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer) throws IOException {
-		peer.send(peer.getPeerName(0), new LongMessage("", peer.getCounter(Centers.CONVERGED)
-				.getCounter()));
+		peer.send(peer.getPeerName(0), new LongMessage("", convergedCounter));
 	}
 
 	private final void checkConvergence(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
@@ -102,8 +102,6 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			for (String peerName : peer.getAllPeerNames()) {
 				peer.send(peerName, new LongMessage(MESSAGE_TAG_CONVERGED, convergedCounter));
 			}
-		} else {
-			convergedCounter = 0L;
 		}
 	}
 
@@ -208,7 +206,8 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 		int k = 10;
 
 		HamaConfiguration conf = new HamaConfiguration();
-		// setting block size to the half of arround 50000 vectors will spawn two tasks.
+		// setting block size to the half of arround 50000 vectors will spawn
+		// two tasks.
 		conf.setLong("fs.local.block.size", 706988L);
 
 		Path in = new Path("files/clustering/in/data.seq");
