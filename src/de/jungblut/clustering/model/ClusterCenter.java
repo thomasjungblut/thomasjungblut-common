@@ -9,6 +9,9 @@ import org.apache.hadoop.io.WritableComparable;
 
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
+    // TODO generally we have to add a kind of error of the assigned vectors to
+    // the centers
+
     private Vector center;
     private int kTimesIncremented = 2;
 
@@ -33,10 +36,6 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 	this.kTimesIncremented = k;
     }
 
-    // summing up, based on averaging in data streams
-    // makes a new defensive copy for a clustercenter
-    // TODO this can be refactored because we are most of the time averaging
-    // against vectors
     public ClusterCenter average(ClusterCenter c, boolean local) {
 	int newk = kTimesIncremented;
 	if (!local) {

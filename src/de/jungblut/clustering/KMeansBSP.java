@@ -29,6 +29,7 @@ public final class KMeansBSP extends
 
     public static final Log LOG = LogFactory.getLog(KMeansBSP.class);
     private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
+    private int maxIterations;
 
     @Override
     public final void setup(
@@ -57,6 +58,9 @@ public final class KMeansBSP extends
 	    throw new IllegalArgumentException(
 		    "Centers file must contain at least a single center!");
 	}
+
+	maxIterations = peer.getConfiguration().getInt(
+		"k.means.max.iterations", -1);
     }
 
     @Override
@@ -70,6 +74,8 @@ public final class KMeansBSP extends
 	    converged = updateCenters(peer);
 	    peer.reopenInput();
 	    if (converged == 0)
+		break;
+	    if (maxIterations > peer.getSuperstepCount())
 		break;
 	}
 	LOG.info("Finished! Writing the assignments...");
