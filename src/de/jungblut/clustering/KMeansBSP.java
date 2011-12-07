@@ -29,16 +29,8 @@ import de.jungblut.clustering.model.Vector;
 public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Vector> {
 
 	private static final String MESSAGE_TAG_CONVERGED = "CONVERGED";
-
 	public static final Log LOG = LogFactory.getLog(KMeansBSP.class);
-
 	private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
-
-	private long convergedCounter;
-
-	enum Centers {
-		CONVERGED
-	}
 
 	@Override
 	public final void setup(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
@@ -70,16 +62,16 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 	@Override
 	public final void bsp(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
 			throws IOException, InterruptedException, SyncException {
+		long converged = 0L;
 		while (true) {
-			convergedCounter = 0;
 			assignCenters(peer);
 			peer.sync();
-			updateCenters(peer);
-			if (convergedCounter == 0) {
+			converged = updateCenters(peer);
+			peer.reopenInput();
+			if (converged == 0) {
 				break;
 			}
-			peer.reopenInput();
-			sendNumConvergedCenters(peer);
+			sendNumConvergedCenters(peer, converged);
 			peer.sync();
 			checkConvergence(peer);
 		}
@@ -88,13 +80,15 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 	}
 
 	private final void sendNumConvergedCenters(
-			BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer) throws IOException {
+			BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer, long convergedCounter)
+			throws IOException {
 		peer.send(peer.getPeerName(0), new LongMessage("", convergedCounter));
 	}
 
 	private final void checkConvergence(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
 			throws IOException {
-		if (peer.getNumCurrentMessages() > 0) {
+		if (peer.getPeerName().equals(peer.getPeerName(0))) {
+			long convergedCounter = 0L;
 			LongMessage msg = null;
 			while ((msg = (LongMessage) peer.getCurrentMessage()) != null) {
 				convergedCounter += msg.getData();
@@ -105,7 +99,7 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 		}
 	}
 
-	private final void updateCenters(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+	private final long updateCenters(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
 			throws IOException {
 		// this is the update step
 		HashMap<Integer, ClusterCenter> msgCenters = new HashMap<Integer, ClusterCenter>();
@@ -113,8 +107,7 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 		while ((bspMsg = peer.getCurrentMessage()) != null) {
 			if (bspMsg.getTag().equals(MESSAGE_TAG_CONVERGED)) {
 				if ((Long) bspMsg.getData() == 0L) {
-					convergedCounter = 0L;
-					break;
+					return 0;
 				}
 			} else {
 				CenterMessage msg = (CenterMessage) bspMsg;
@@ -128,6 +121,7 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			}
 		}
 
+		long convergedCounter = 0L;
 		for (Entry<Integer, ClusterCenter> center : msgCenters.entrySet()) {
 			ClusterCenter oldCenter = centers.get(center.getKey());
 			if (oldCenter.converged(center.getValue())) {
@@ -136,6 +130,7 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 				convergedCounter++;
 			}
 		}
+		return convergedCounter;
 	}
 
 	private final void assignCenters(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
