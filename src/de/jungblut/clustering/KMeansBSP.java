@@ -65,6 +65,7 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			throw new IllegalArgumentException(
 					"Centers file must contain at least a single center!");
 		}
+		peer.getCounter(Centers.CONVERGED).increment(centers.size());
 	}
 
 	@Override
@@ -203,10 +204,12 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			InterruptedException {
 
 		// count = 7000000 spawns arround 6 tasks
-		int count = 1000;
+		int count = 50000;
 		int k = 10;
 
 		HamaConfiguration conf = new HamaConfiguration();
+		// setting block size to the half of arround 50000 vectors will spawn two tasks.
+		conf.setLong("fs.local.block.size", 706988L);
 
 		Path in = new Path("files/clustering/in/data.seq");
 		Path center = new Path("files/clustering/in/center/cen.seq");
