@@ -65,7 +65,7 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			peer.sync();
 			converged = updateCenters(peer);
 			peer.reopenInput();
-			if(converged == 0)
+			if (converged == 0)
 				break;
 		}
 		LOG.info("Finished! Writing the assignments...");
@@ -163,13 +163,10 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			InterruptedException {
 
 		// count = 7000000 spawns arround 6 tasks
-		int count = 1000;
+		int count = 5000000;
 		int k = 10;
 
 		HamaConfiguration conf = new HamaConfiguration();
-		// setting block size to the half of arround 50000 vectors will spawn
-		// two tasks.
-		conf.setLong("fs.local.block.size", 14000L);
 
 		Path in = new Path("files/clustering/in/data.seq");
 		Path center = new Path("files/clustering/in/center/cen.seq");
