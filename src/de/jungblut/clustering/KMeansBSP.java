@@ -16,9 +16,7 @@ import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
-import org.apache.hama.bsp.BSPMessage;
 import org.apache.hama.bsp.BSPPeer;
-import org.apache.hama.bsp.LongMessage;
 import org.apache.hama.bsp.sync.SyncException;
 
 import de.jungblut.clustering.model.CenterMessage;
@@ -28,12 +26,8 @@ import de.jungblut.clustering.model.Vector;
 
 public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Vector> {
 
-	private static final String MESSAGE_TAG_CONVERGED = "CONVERGED";
 	public static final Log LOG = LogFactory.getLog(KMeansBSP.class);
 	private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
-	// TODO since all updates on the centers are applyied on every task
-	// we can just use this number to say if a center has converged or not,
-	// this can replace the crap I have written now
 
 	@Override
 	public final void setup(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
@@ -71,48 +65,19 @@ public final class KMeansBSP extends BSP<Vector, NullWritable, ClusterCenter, Ve
 			peer.sync();
 			converged = updateCenters(peer);
 			peer.reopenInput();
-			LOG.info(peer.getPeerName() + " has converged " + converged);
-			sendNumConvergedCenters(peer, converged);
-			peer.sync();
-			checkConvergence(peer);
-			peer.sync();
-			BSPMessage bspMsg = peer.getCurrentMessage();
-			if (bspMsg.getTag().equals(MESSAGE_TAG_CONVERGED)) {
-				if (bspMsg.getData().equals(0))
-					break;
-			}
+			if(converged == 0)
+				break;
 		}
 		LOG.info("Finished! Writing the assignments...");
 		recalculateAssignmentsAndWrite(peer);
-	}
-
-	private final void sendNumConvergedCenters(
-			BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer, long convergedCounter)
-			throws IOException {
-		peer.send(peer.getPeerName(0), new LongMessage("", convergedCounter));
-	}
-
-	private final void checkConvergence(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
-			throws IOException {
-		if (peer.getPeerName().equals(peer.getPeerName(0))) {
-			long convergedCounter = 0L;
-			LongMessage msg = null;
-			while ((msg = (LongMessage) peer.getCurrentMessage()) != null) {
-				convergedCounter += msg.getData();
-			}
-			for (String peerName : peer.getAllPeerNames()) {
-				peer.send(peerName, new LongMessage(MESSAGE_TAG_CONVERGED, convergedCounter));
-			}
-		}
 	}
 
 	private final long updateCenters(BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
 			throws IOException {
 		// this is the update step
 		HashMap<Integer, ClusterCenter> msgCenters = new HashMap<Integer, ClusterCenter>();
-		BSPMessage bspMsg = null;
-		while ((bspMsg = peer.getCurrentMessage()) != null) {
-			CenterMessage msg = (CenterMessage) bspMsg;
+		CenterMessage msg = null;
+		while ((msg = (CenterMessage) peer.getCurrentMessage()) != null) {
 			ClusterCenter oldCenter = msgCenters.get(msg.getTag());
 			ClusterCenter newCenter = msg.getData();
 			if (oldCenter == null) {
