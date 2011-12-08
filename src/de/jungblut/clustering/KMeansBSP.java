@@ -144,7 +144,7 @@ public final class KMeansBSP extends
     Integer lowestDistantCenter = null;
     double lowestDistance = Double.MAX_VALUE;
     for (Entry<Integer, ClusterCenter> center : centers.entrySet()) {
-      double estimatedDistance = DistanceMeasurer.measureDistance(
+      double estimatedDistance = DistanceMeasurer.measureManhattanDistance(
           center.getValue(), key);
       // check if we have a can assign a new center, because we
       // got a lower distance

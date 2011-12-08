@@ -46,7 +46,7 @@ public class KMeansMapper extends
 	ClusterCenter nearest = null;
 	double nearestDistance = Double.MAX_VALUE;
 	for (ClusterCenter c : centers) {
-	    double dist = DistanceMeasurer.measureDistance(c, value);
+	    double dist = DistanceMeasurer.measureEuclidianDistance(c, value);
 	    if (nearest == null) {
 		nearest = c;
 		nearestDistance = dist;
