@@ -27,9 +27,11 @@ import de.jungblut.clustering.model.Vector;
 public final class KMeansBSP extends
     BSP<Vector, NullWritable, ClusterCenter, Vector> {
 
+  private static final double ERROR_DEACTIVATED = -1d;
   public static final Log LOG = LogFactory.getLog(KMeansBSP.class);
   private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
   private int maxIterations;
+  private double error = ERROR_DEACTIVATED;
 
   @Override
   public final void setup(
@@ -60,6 +62,10 @@ public final class KMeansBSP extends
 
     maxIterations = peer.getConfiguration()
         .getInt("k.means.max.iterations", -1);
+    String errorString = peer.getConfiguration().get("k.means.error");
+    if (errorString != null) {
+      error = Double.parseDouble(errorString);
+    }
   }
 
   @Override
@@ -74,7 +80,7 @@ public final class KMeansBSP extends
       peer.reopenInput();
       if (converged == 0)
         break;
-      if (maxIterations > peer.getSuperstepCount())
+      if (maxIterations < peer.getSuperstepCount())
         break;
     }
     LOG.info("Finished! Writing the assignments...");
@@ -93,17 +99,27 @@ public final class KMeansBSP extends
       if (oldCenter == null) {
         msgCenters.put(msg.getTag(), newCenter);
       } else {
-        msgCenters.put(msg.getTag(), oldCenter.average(newCenter, false));
+        ClusterCenter average = oldCenter.average(newCenter, false);
+        msgCenters.put(msg.getTag(), average);
       }
     }
 
     long convergedCounter = 0L;
     for (Entry<Integer, ClusterCenter> center : msgCenters.entrySet()) {
       ClusterCenter oldCenter = centers.get(center.getKey());
-      if (oldCenter.converged(center.getValue())) {
-        centers.remove(center.getKey());
-        centers.put(center.getKey(), center.getValue());
-        convergedCounter++;
+
+      if (error == ERROR_DEACTIVATED) {
+        if (oldCenter.converged(center.getValue())) {
+          centers.remove(center.getKey());
+          centers.put(center.getKey(), center.getValue());
+          convergedCounter++;
+        }
+      } else {
+        if (oldCenter.converged(center.getValue(), error)) {
+          centers.remove(center.getKey());
+          centers.put(center.getKey(), center.getValue());
+          convergedCounter++;
+        }
       }
     }
     return convergedCounter;
@@ -129,8 +145,8 @@ public final class KMeansBSP extends
       } else {
         // if we already have a cluster center, average it with the
         // assigned vector
-        meanMap.put(lowestDistantCenter,
-            clusterCenter.average(new ClusterCenter(key), true));
+        final ClusterCenter average = clusterCenter.average(key);
+        meanMap.put(lowestDistantCenter, average);
       }
     }
     for (Entry<Integer, ClusterCenter> entry : meanMap.entrySet()) {
@@ -172,15 +188,22 @@ public final class KMeansBSP extends
     }
   }
 
-  public static void main(String[] args) throws IOException,
+  public static final void main(String[] args) throws IOException,
       ClassNotFoundException, InterruptedException {
 
-    // count = 7000000 spawns arround 6 tasks
-    int count = 1000;
-    int k = 10;
-    int dimension = 2;
-
+    if (args.length != 4) {
+      LOG.info("USAGE: <COUNT> <K> <DIMENSION OF VECTORS> <MAXITERATIONS>");
+      return;
+    }
     HamaConfiguration conf = new HamaConfiguration();
+    // count = 7000000 spawns arround 6 tasks for 32mb block size
+    int count = Integer.parseInt(args[0]);
+    int k = Integer.parseInt(args[1]);
+    int dimension = Integer.parseInt(args[2]);
+
+    conf.setInt("k.means.max.iterations", Integer.parseInt(args[3]));
+
+    // conf.set("k.means.error", "0.5");
 
     Path in = new Path("files/clustering/in/data.seq");
     Path center = new Path("files/clustering/in/center/cen.seq");
@@ -212,8 +235,8 @@ public final class KMeansBSP extends
     readOutput(conf, out, fs);
   }
 
-  private static void readOutput(HamaConfiguration conf, Path out, FileSystem fs)
-      throws IOException {
+  private static final void readOutput(HamaConfiguration conf, Path out,
+      FileSystem fs) throws IOException {
     FileStatus[] stati = fs.listStatus(out);
     for (FileStatus status : stati) {
       if (!status.isDir()) {
@@ -234,7 +257,7 @@ public final class KMeansBSP extends
     }
   }
 
-  private static void prepareInput(int count, int k, int dimension,
+  private static final void prepareInput(int count, int k, int dimension,
       HamaConfiguration conf, Path in, Path center, Path out, FileSystem fs)
       throws IOException {
     if (fs.exists(out))
