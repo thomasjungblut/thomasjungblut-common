@@ -107,19 +107,10 @@ public final class KMeansBSP extends
     long convergedCounter = 0L;
     for (Entry<Integer, ClusterCenter> center : msgCenters.entrySet()) {
       ClusterCenter oldCenter = centers.get(center.getKey());
-
-      if (error == ERROR_DEACTIVATED) {
-        if (oldCenter.converged(center.getValue())) {
-          centers.remove(center.getKey());
-          centers.put(center.getKey(), center.getValue());
-          convergedCounter++;
-        }
-      } else {
-        if (oldCenter.converged(center.getValue(), error)) {
-          centers.remove(center.getKey());
-          centers.put(center.getKey(), center.getValue());
-          convergedCounter++;
-        }
+      if (oldCenter.converged(center.getValue())) {
+        centers.remove(center.getKey());
+        centers.put(center.getKey(), center.getValue());
+        convergedCounter++;
       }
     }
     return convergedCounter;
@@ -200,12 +191,13 @@ public final class KMeansBSP extends
     int count = Integer.parseInt(args[0]);
     int k = Integer.parseInt(args[1]);
     int dimension = Integer.parseInt(args[2]);
-    
+
     conf.setInt("k.means.max.iterations", Integer.parseInt(args[3]));
-    
-    LOG.info("N: " + count + " k: " + k + " Dimension: " + dimension + " Iterations: " + args[3]);
-    
-    conf.set("fs.local.block.size","134217728");
+
+    LOG.info("N: " + count + " k: " + k + " Dimension: " + dimension
+        + " Iterations: " + args[3]);
+
+    conf.set("fs.local.block.size", "134217728");
 
     // conf.set("k.means.error", "0.5");
 
