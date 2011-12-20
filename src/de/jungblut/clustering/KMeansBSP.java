@@ -80,7 +80,7 @@ public final class KMeansBSP extends
       peer.reopenInput();
       if (converged == 0)
         break;
-      if (maxIterations < peer.getSuperstepCount())
+      if (maxIterations > 0 && maxIterations < peer.getSuperstepCount())
         break;
     }
     LOG.info("Finished! Writing the assignments...");
