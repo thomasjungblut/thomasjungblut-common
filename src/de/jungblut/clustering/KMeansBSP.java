@@ -19,7 +19,6 @@ import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
 
-import de.jungblut.clustering.model.AverageMessage;
 import de.jungblut.clustering.model.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.DistanceMeasurer;
@@ -28,11 +27,9 @@ import de.jungblut.clustering.model.Vector;
 public final class KMeansBSP extends
     BSP<Vector, NullWritable, ClusterCenter, Vector> {
 
-  private static final double ERROR_DEACTIVATED = -1d;
   public static final Log LOG = LogFactory.getLog(KMeansBSP.class);
   private final HashMap<Integer, ClusterCenter> centers = new HashMap<Integer, ClusterCenter>();
   private int maxIterations;
-  private double error = ERROR_DEACTIVATED;
 
   @Override
   public final void setup(
@@ -63,10 +60,6 @@ public final class KMeansBSP extends
 
     maxIterations = peer.getConfiguration()
         .getInt("k.means.max.iterations", -1);
-    String errorString = peer.getConfiguration().get("k.means.error");
-    if (errorString != null) {
-      error = Double.parseDouble(errorString);
-    }
   }
 
   @Override
@@ -83,58 +76,9 @@ public final class KMeansBSP extends
         break;
       if (maxIterations > 0 && maxIterations < peer.getSuperstepCount())
         break;
-      if (error != ERROR_DEACTIVATED) {
-        // TODO
-        double err = calculateGlobalCost(peer);
-      }
     }
     LOG.info("Finished! Writing the assignments...");
     recalculateAssignmentsAndWrite(peer);
-  }
-
-  // TODO this must be calculated correctly
-  private final double calculateGlobalCost(
-      BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
-      throws IOException, SyncException, InterruptedException {
-    final HashMap<Integer, AverageMessage> meanMap = new HashMap<Integer, AverageMessage>();
-    NullWritable value = NullWritable.get();
-    Vector key = new Vector();
-    while (peer.readNext(key, value)) {
-      int lowestDistantCenter = getNearestCenter(key);
-      ClusterCenter nearestCenter = centers.get(lowestDistantCenter);
-      double calculateError = nearestCenter.calculateError(key);
-      // TODO maybe we can use the average-on-streams solution
-      final AverageMessage partialSum = meanMap.get(lowestDistantCenter);
-      if (partialSum == null) {
-        meanMap.put(lowestDistantCenter, new AverageMessage(1, calculateError));
-      } else {
-        meanMap.put(lowestDistantCenter, partialSum.average(calculateError));
-      }
-    }
-    // now send all that stuff
-
-    for (Entry<Integer, AverageMessage> entry : meanMap.entrySet()) {
-      peer.send(peer.getPeerName(0), entry.getValue());
-    }
-    peer.sync();
-
-    meanMap.clear();
-    AverageMessage msg = null;
-    while ((msg = (AverageMessage) peer.getCurrentMessage()) != null) {
-      final AverageMessage averageMessage = meanMap.get(msg.getTag());
-      if (averageMessage == null) {
-        meanMap.put(msg.getTag(), msg);
-      } else {
-        meanMap.put(msg.getTag(), msg.average(averageMessage));
-      }
-    }
-    
-    double sum = 0;
-    for(AverageMessage m : meanMap.values()){
-      sum+=m.getData();
-    }
-
-    return sum;
   }
 
   private final long updateCenters(
@@ -248,8 +192,6 @@ public final class KMeansBSP extends
         + " Iterations: " + args[3]);
 
     conf.set("fs.local.block.size", "134217728");
-
-    // conf.set("k.means.error", "0.5");
 
     Path in = new Path("files/clustering/in/data.seq");
     Path center = new Path("files/clustering/in/center/cen.seq");
