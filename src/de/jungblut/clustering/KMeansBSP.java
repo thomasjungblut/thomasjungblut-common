@@ -17,9 +17,9 @@ import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
-import org.apache.hama.bsp.DoubleMessage;
 import org.apache.hama.bsp.sync.SyncException;
 
+import de.jungblut.clustering.model.AverageMessage;
 import de.jungblut.clustering.model.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.DistanceMeasurer;
@@ -95,8 +95,8 @@ public final class KMeansBSP extends
   // TODO this must be calculated correctly
   private final double calculateGlobalCost(
       BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
-      throws IOException {
-    final HashMap<Integer, Double> meanMap = new HashMap<Integer, Double>();
+      throws IOException, SyncException, InterruptedException {
+    final HashMap<Integer, AverageMessage> meanMap = new HashMap<Integer, AverageMessage>();
     NullWritable value = NullWritable.get();
     Vector key = new Vector();
     while (peer.readNext(key, value)) {
@@ -104,23 +104,37 @@ public final class KMeansBSP extends
       ClusterCenter nearestCenter = centers.get(lowestDistantCenter);
       double calculateError = nearestCenter.calculateError(key);
       // TODO maybe we can use the average-on-streams solution
-      final Double partialSum = meanMap.get(lowestDistantCenter);
+      final AverageMessage partialSum = meanMap.get(lowestDistantCenter);
       if (partialSum == null) {
-        meanMap.put(lowestDistantCenter, calculateError);
+        meanMap.put(lowestDistantCenter, new AverageMessage(1, calculateError));
       } else {
-        meanMap.put(lowestDistantCenter, partialSum + calculateError);
+        meanMap.put(lowestDistantCenter, partialSum.average(calculateError));
       }
     }
-    
     // now send all that stuff
-    
-    for (Entry<Integer, Double> entry : meanMap.entrySet()) {
-      for (String peerName : peer.getAllPeerNames()) {
-        peer.send(peerName, new DoubleMessage());
+
+    for (Entry<Integer, AverageMessage> entry : meanMap.entrySet()) {
+      peer.send(peer.getPeerName(0), entry.getValue());
+    }
+    peer.sync();
+
+    meanMap.clear();
+    AverageMessage msg = null;
+    while ((msg = (AverageMessage) peer.getCurrentMessage()) != null) {
+      final AverageMessage averageMessage = meanMap.get(msg.getTag());
+      if (averageMessage == null) {
+        meanMap.put(msg.getTag(), msg);
+      } else {
+        meanMap.put(msg.getTag(), msg.average(averageMessage));
       }
     }
     
-    return 0.0;
+    double sum = 0;
+    for(AverageMessage m : meanMap.values()){
+      sum+=m.getData();
+    }
+
+    return sum;
   }
 
   private final long updateCenters(
