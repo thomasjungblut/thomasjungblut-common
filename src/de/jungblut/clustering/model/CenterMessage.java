@@ -22,6 +22,7 @@ public final class CenterMessage extends BSPMessage {
   @Override
   public final void readFields(DataInput in) throws IOException {
     oldCenterId = in.readInt();
+    newCenter = new ClusterCenter();
     newCenter.readFields(in);
   }
 
