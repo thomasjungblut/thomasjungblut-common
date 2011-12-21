@@ -66,16 +66,20 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
   }
 
   public final boolean converged(ClusterCenter c, double error) {
-    int length = center.getVector().length;
+    return calculateError(c.getCenter()) > error;
+  }
+
+  public final double calculateError(Vector v) {
+    int length = v.getVector().length;
     double[] vector = center.getVector();
-    double[] otherVector = c.getCenter().getVector();
+    double[] otherVector = v.getVector();
 
     double err = 0.0d;
     for (int i = 0; i < length; i++) {
       double abs = Math.abs(vector[i] - otherVector[i]);
       err += (abs * abs);
     }
-    return err > error;
+    return err;
   }
 
   @Override

@@ -17,6 +17,7 @@ import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
+import org.apache.hama.bsp.DoubleMessage;
 import org.apache.hama.bsp.sync.SyncException;
 
 import de.jungblut.clustering.model.CenterMessage;
@@ -82,9 +83,44 @@ public final class KMeansBSP extends
         break;
       if (maxIterations > 0 && maxIterations < peer.getSuperstepCount())
         break;
+      if (error != ERROR_DEACTIVATED) {
+        // TODO
+        double err = calculateGlobalCost(peer);
+      }
     }
     LOG.info("Finished! Writing the assignments...");
     recalculateAssignmentsAndWrite(peer);
+  }
+
+  // TODO this must be calculated correctly
+  private final double calculateGlobalCost(
+      BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+      throws IOException {
+    final HashMap<Integer, Double> meanMap = new HashMap<Integer, Double>();
+    NullWritable value = NullWritable.get();
+    Vector key = new Vector();
+    while (peer.readNext(key, value)) {
+      int lowestDistantCenter = getNearestCenter(key);
+      ClusterCenter nearestCenter = centers.get(lowestDistantCenter);
+      double calculateError = nearestCenter.calculateError(key);
+      // TODO maybe we can use the average-on-streams solution
+      final Double partialSum = meanMap.get(lowestDistantCenter);
+      if (partialSum == null) {
+        meanMap.put(lowestDistantCenter, calculateError);
+      } else {
+        meanMap.put(lowestDistantCenter, partialSum + calculateError);
+      }
+    }
+    
+    // now send all that stuff
+    
+    for (Entry<Integer, Double> entry : meanMap.entrySet()) {
+      for (String peerName : peer.getAllPeerNames()) {
+        peer.send(peerName, new DoubleMessage());
+      }
+    }
+    
+    return 0.0;
   }
 
   private final long updateCenters(
