@@ -32,24 +32,34 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     this.kTimesIncremented = k;
   }
 
+  public final void plus(Vector c) {
+    double[] vector = c.getVector();
+    double[] thisVector = center.getVector();
+
+    for (int i = 0; i < thisVector.length; i++) {
+      thisVector[i] = thisVector[i] + vector[i];
+    }
+
+    kTimesIncremented++;
+  }
+
+  public final void divideByInternalIncrement() {
+    double[] thisVector = center.getVector();
+
+    for (int i = 0; i < thisVector.length; i++) {
+      thisVector[i] = thisVector[i] / (double) kTimesIncremented;
+    }
+  }
+
   public final ClusterCenter average(ClusterCenter c, boolean local) {
     int newk = kTimesIncremented;
     if (!local) {
       newk += c.kTimesIncremented;
     }
-    double[] vector = c.center.getVector();
-    double[] thisVector = Arrays.copyOf(center.getVector(),
-        center.getVector().length);
-    for (int i = 0; i < vector.length; i++) {
-      thisVector[i] = thisVector[i] + (vector[i] / newk)
-          - (thisVector[i] / newk);
-    }
-    newk++;
-    return new ClusterCenter(new Vector(thisVector), newk);
+    return average(c.getCenter(), newk);
   }
 
-  public final ClusterCenter average(Vector c) {
-    int newk = kTimesIncremented;
+  public final ClusterCenter average(Vector c, int newk) {
     double[] vector = c.getVector();
     double[] thisVector = Arrays.copyOf(center.getVector(),
         center.getVector().length);
@@ -62,7 +72,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
   }
 
   public final boolean converged(ClusterCenter c) {
-    return compareTo(c) == 0 ? false : true;
+    return calculateError(c.getCenter()) > 0 ? true : false;
   }
 
   public final boolean converged(ClusterCenter c, double error) {
