@@ -160,11 +160,18 @@ public final class KMeansBSP extends
   private final void recalculateAssignmentsAndWrite(
       BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
       throws IOException {
-    final NullWritable value = NullWritable.get();
-    final Vector key = new Vector();
-    while (peer.readNext(key, value)) {
-      final int lowestDistantCenter = getNearestCenter(key);
-      peer.write(centers[lowestDistantCenter], key);
+    // final NullWritable value = NullWritable.get();
+    // final Vector key = new Vector();
+    // while (peer.readNext(key, value)) {
+    // final int lowestDistantCenter = getNearestCenter(key);
+    // peer.write(centers[lowestDistantCenter], key);
+    // }
+    // just write centers, for performance improvement and just on master task
+    if (peer.getPeerName().equals(peer.getPeerName(0))) {
+      final Vector val = new Vector(0);
+      for (int i = 0; i < centers.length; i++) {
+        peer.write(centers[i], val);
+      }
     }
   }
 
@@ -172,7 +179,7 @@ public final class KMeansBSP extends
       ClassNotFoundException, InterruptedException {
 
     if (args.length != 4) {
-      LOG.info("USAGE: <COUNT> <K> <DIMENSION OF VECTORS> <MAXITERATIONS>");
+      LOG.info("USAGE: <COUNT> <K> <DIMENSION OF VECTORS> <MAXITERATIONS> <optional: num of tasks>");
       return;
     }
     HamaConfiguration conf = new HamaConfiguration();
@@ -191,14 +198,15 @@ public final class KMeansBSP extends
     conf.set("centroid.path", center.toString());
     Path out = new Path("files/clustering/out");
 
-    // conf.set("fs.local.block.size", "3780214016");
     // number of cores on my machine
     conf.set("bsp.local.tasks.maximum", "12");
 
     BSPJob job = new BSPJob(conf, KMeansBSP.class);
     job.setJobName("KMeans Clustering");
 
-    // job.setNumBspTask(Integer.parseInt(args[4]));
+    if (args.length == 5) {
+      job.setNumBspTask(Integer.parseInt(args[4]));
+    }
 
     job.setJarByClass(KMeansBSP.class);
     job.setBspClass(KMeansBSP.class);
