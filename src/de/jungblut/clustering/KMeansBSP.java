@@ -178,7 +178,7 @@ public final class KMeansBSP extends
   public static final void main(String[] args) throws IOException,
       ClassNotFoundException, InterruptedException {
 
-    if (args.length != 4) {
+    if (args.length < 4) {
       LOG.info("USAGE: <COUNT> <K> <DIMENSION OF VECTORS> <MAXITERATIONS> <optional: num of tasks>");
       return;
     }
