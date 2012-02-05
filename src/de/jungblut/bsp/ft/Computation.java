@@ -6,14 +6,14 @@ import org.apache.hama.bsp.BSPMessage;
 
 public class Computation {
     
-    @Superstep(1)
+//    @Superstep(1)
     public List<BSPMessage> first(List<BSPMessage> inMessages, List<BSPMessage> outMessages){
 	
 	
 	return outMessages;
     }
     
-    @Superstep(2)
+//    @Superstep(2)
     public List<BSPMessage> second(List<BSPMessage> inMessages, List<BSPMessage> outMessages){
 	
 	

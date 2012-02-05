@@ -1,7 +1,9 @@
 package de.jungblut.bsp.ft;
 
-public @interface Superstep {
+import org.apache.hama.bsp.BSPPeer;
 
-    int value();
+public abstract class Superstep<KEYIN, VALUEIN, MESSAGEIN, MESSAGEOUT,KEYOUT, VALUEOUT> {
+  
+  protected abstract void compute(BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer);
 
 }
