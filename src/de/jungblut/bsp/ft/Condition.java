@@ -12,10 +12,7 @@ public class Condition {
     }
 
     public boolean isTrue(BSPPeer peer){
-	if(peer.getSuperstepCount() < limit)
-	    return true;
-	else
-	    return false;
+	return peer.getSuperstepCount() < limit;
     }
 
 }
