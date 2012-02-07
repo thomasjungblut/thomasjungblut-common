@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.apache.hama.bsp.BSPMessage;
 
+// test for annotation based execution
 public class Computation {
     
 //    @Superstep(1)
