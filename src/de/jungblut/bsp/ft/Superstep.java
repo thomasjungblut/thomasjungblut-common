@@ -1,23 +1,23 @@
 package de.jungblut.bsp.ft;
 
-import java.io.IOException;
-
 import org.apache.hama.bsp.BSPPeer;
 
-public abstract class Superstep<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
+import java.io.IOException;
 
-  protected void setup(BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer) {
-  }
+abstract class Superstep<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
 
-  protected void cleanup(BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer) {
-  }
+    void setup(BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer) {
+    }
 
-  protected abstract void compute(BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer)
-      throws IOException;
+    void cleanup(BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer) {
+    }
 
-  protected boolean haltComputation(
-      BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer) {
-    return false;
-  }
+    protected abstract void compute(BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer)
+            throws IOException;
+
+    boolean haltComputation(
+            BSPPeer<KEYIN, VALUEIN, KEYOUT, VALUEOUT> peer) {
+        return false;
+    }
 
 }
