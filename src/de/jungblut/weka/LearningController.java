@@ -3,6 +3,8 @@ package de.jungblut.weka;
 import au.com.bytecode.opencsv.CSVWriter;
 import weka.classifiers.Classifier;
 import weka.classifiers.Evaluation;
+import weka.core.Attribute;
+import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffSaver;
 import weka.filters.Filter;
@@ -18,54 +20,69 @@ public abstract class LearningController {
     private boolean debug;
 
     public void compute() throws Exception {
-        List<String[]> input = prepareInput();
-        CSVWriter writer = prepareOutput();
-        List<ClassificationTask> tasks = getTasks();
+        List<String[]> trainingSet = prepareInput(getTrainingInput());
+        List<String[]> validationSet = prepareInput(getValidationInput());
+        try (CSVWriter writer = prepareOutput()) {
+            List<ClassificationTask> tasks = getTasks();
+            for (ClassificationTask task : tasks) {
+                final int taskId = task.getId();
+                final List<String[]> filteredInput = filter(validationSet, taskId, getFilterColumn());
+                Instances instances = new Instances(taskId + "_dataset", task.getAttributes(), filteredInput.size());
+                instances.setClassIndex(task.getPredictionAttributeIndex());
+                for (String[] line : filteredInput) {
+                    instances.add(task.parseTrainingInstance(line));
+                }
+                saveInstances(taskId, false, instances);
 
-        for (ClassificationTask task : tasks) {
-            final int taskId = task.getId();
-            final List<String[]> filteredInput = filter(input, taskId, getFilterColumn());
-            Instances instances = new Instances(taskId + "_dataset", task.getAttributes(), filteredInput.size());
-            instances.setClassIndex(task.getPredictionAttributeIndex());
-            for (String[] line : filteredInput) {
-                instances.add(task.parseTrainingInstance(line));
+                final List<Filter> filterList = task.getFilterList();
+                for (Filter f : filterList) {
+                    instances = Filter.useFilter(instances, f);
+                }
+                saveInstances(taskId, true, instances);
+
+                Classifier classifier = task.getClassifier();
+                classifier.buildClassifier(instances);
+
+                Evaluation eTest = new Evaluation(instances);
+                eTest.crossValidateModel(classifier, instances, 10,
+                        new Random(System.currentTimeMillis()));
+                outputEvaluation(eTest);
+
+                final List<String[]> filteredValidationSet = filter(validationSet, task.getId(), getFilterColumn());
+                final Attribute targetAttribute = task.getAttributes().get(task.getPredictionAttributeIndex());
+                for (String[] s : filteredValidationSet) {
+                    Instance inst = task.parseInstance(s);
+                    inst.setDataset(instances);
+                    for (Filter f : filterList) {
+                        f.input(inst);
+                        inst = f.output();
+                    }
+                    int index = (int) classifier.classifyInstance(inst);
+                    String prediction = targetAttribute.value(index);
+                    String[] output = task.prepareResult(s, prediction, isDebug());
+                    // TODO buffer and maybe sort on a specific column
+                    writer.writeNext(output);
+                }
             }
-            saveInstances(taskId, false, instances);
-
-            List<Filter> filterList = task.getFilterList();
-            for (Filter f : filterList) {
-                instances = Filter.useFilter(instances, f);
-            }
-            saveInstances(taskId, true, instances);
-
-            Classifier classifier = task.getClassifier();
-            classifier.buildClassifier(instances);
-
-            Evaluation eTest = new Evaluation(instances);
-            eTest.crossValidateModel(classifier, instances, 10,
-                    new Random(System.currentTimeMillis()));
-            outputEvaluation(eTest);
-
-
         }
     }
 
     private void saveInstances(int taskId, boolean filtered,
                                Instances instances) throws IOException {
-        save(instances, filtered ? "files/weka_out/" + taskId + "_filtered.arff"
-                : "files/weka_out/" + taskId + ".arff");
+        save(instances, filtered ? new File(getOutput(), taskId + "_filtered.arff")
+                : new File(getOutput(), taskId + ".arff"));
     }
 
-    private void save(Instances instances, String text)
+    private void save(Instances instances, File f)
             throws IOException {
         ArffSaver saver = new ArffSaver();
         saver.setInstances(instances);
-        saver.setFile(new File(text));
+        saver.setFile(f);
         saver.writeBatch();
     }
 
     private List<String[]> filter(List<String[]> set, int setId,
-                                        int filterColumn) {
+                                  int filterColumn) {
         if (setId > 0) {
             List<String[]> list = new ArrayList<>();
             final Iterator<String[]> iterator = set.iterator();
@@ -92,19 +109,23 @@ public abstract class LearningController {
         return writer;
     }
 
-    private List<String[]> prepareInput() throws IOException {
-        BufferedReader br = new BufferedReader(new FileReader(getInput()));
+    private List<String[]> prepareInput(File f) {
         List<String[]> lineList = new ArrayList<>();
-        String line;
-        while ((line = br.readLine()) != null)
-            lineList.add(line.split("\t"));
+        try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+            String line;
+            while ((line = br.readLine()) != null)
+                lineList.add(line.split("\t"));
 
-        lineList.remove(0);
-        br.close();
+            lineList.remove(0);
+        } catch (IOException error) {
+            error.printStackTrace();
+        }
         return lineList;
     }
 
-    public abstract File getInput();
+    public abstract File getTrainingInput();
+
+    public abstract File getValidationInput();
 
     public abstract File getOutput();
 

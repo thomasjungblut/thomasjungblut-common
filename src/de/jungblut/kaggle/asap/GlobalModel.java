@@ -1,31 +1,36 @@
 package de.jungblut.kaggle.asap;
 
-import com.google.common.collect.Lists;
+import de.jungblut.weka.ClassificationTask;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.sentdetect.SentenceDetectorME;
 import opennlp.tools.sentdetect.SentenceModel;
 import opennlp.tools.tokenize.WhitespaceTokenizer;
-import weka.core.*;
+import weka.core.Attribute;
+import weka.core.DenseInstance;
+import weka.core.Instance;
 
 import java.io.*;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 /**
  * @author thomas.jungblut
  */
-@SuppressWarnings({"unchecked", "deprecation", "rawtypes"})
-final class Vectorizer {
+public abstract class GlobalModel implements ClassificationTask {
 
-    private static final int NUM_PROCESSORS = 5;
-    static final ExecutorService threadPool = Executors.newCachedThreadPool();
+    private static final Pattern specialSignFilter = Pattern.compile(
+            "\\p{Punct}", Pattern.CASE_INSENSITIVE);
+    private static final Pattern upperCaseStartsWith = Pattern
+            .compile("^[A-Z]");
 
-    // essay_set -> min and max domain 1 score
-    private static final HashMap<String, Integer> maxScore = new HashMap<>();
-    private static final HashMap<String, Integer> minScore = new HashMap<>();
+    private int minScore;
+    private int maxScore;
 
+    private HashSet<String> idfTokensPerEssay = new HashSet<>();
     // top 1000 idf scored tokens in training set
     private static final HashMap<String, Double> idfMap = new HashMap<>();
     // top idf scored tokens per sentence from essay
@@ -33,37 +38,10 @@ final class Vectorizer {
 
     private static final HashMap<String, Integer> sentimentMap = new HashMap<>();
 
-    private static final Pattern specialSignFilter = Pattern.compile(
-            "\\p{Punct}", Pattern.CASE_INSENSITIVE);
-    private static final Pattern upperCaseStartsWith = Pattern
-            .compile("^[A-Z]");
-    // how many polynoms to add? starting from 2.
-    private static final int POLYNOMIAL_ADD = 50;
-
     static {
-        minScore.put("1", 2);
-        maxScore.put("1", 12);
-        minScore.put("2", 1);
-        maxScore.put("2", 6);
-        minScore.put("-2", 1);
-        maxScore.put("-2", 4);
-        minScore.put("3", 0);
-        maxScore.put("3", 3);
-        minScore.put("4", 0);
-        maxScore.put("4", 3);
-        minScore.put("5", 0);
-        maxScore.put("5", 4);
-        minScore.put("6", 0);
-        maxScore.put("6", 4);
-        minScore.put("7", 0);
-        maxScore.put("7", 30);
-        minScore.put("8", 0);
-        maxScore.put("8", 60);
-
-        BufferedReader br;
-        try {
-            br = new BufferedReader(new FileReader(new File(
-                    "files/tfidf/idf.csv")));
+        try (BufferedReader
+                     br = new BufferedReader(new FileReader(new File(
+                "files/tfidf/idf.csv")))) {
             String line;
             while ((line = br.readLine()) != null) {
                 final String[] split = line.split("\t");
@@ -79,10 +57,9 @@ final class Vectorizer {
         for (int i = 3; i <= 6; i++) {
             HashSet<String> set = new HashSet<>();
             idfEssayMap.put(i, set);
-            br = null;
-            try {
-                br = new BufferedReader(new FileReader(new File(
-                        "files/tfidf/idf_essay_" + i + ".csv")));
+            try (BufferedReader
+                         br = new BufferedReader(new FileReader(new File(
+                    "files/tfidf/idf_essay_" + i + ".csv")))) {
                 String line;
                 while ((line = br.readLine()) != null) {
                     final String[] split = line.split("\t");
@@ -94,10 +71,8 @@ final class Vectorizer {
             }
         }
 
-        br = null;
-        try {
-            br = new BufferedReader(new FileReader(new File(
-                    "files/AFINN/AFINN-111.txt")));
+        try (BufferedReader br = new BufferedReader(new FileReader(new File(
+                "files/AFINN/AFINN-111.txt")))) {
             String line;
             while ((line = br.readLine()) != null) {
                 final String[] split = line.split("\t");
@@ -108,9 +83,6 @@ final class Vectorizer {
             e.printStackTrace();
         }
     }
-
-    private static Instances trainingSet;
-    private static Instances testSet;
 
     /**
      * Features TODO: maybe put into another model and use boosting?<br>
@@ -187,12 +159,7 @@ final class Vectorizer {
             "Square Weighted sum of sentiment of the text");
     private final Attribute logWeightedSentiment = new Attribute(
             "Log Weighted sum of sentiment of the text");
-
-    public Attribute prediction = null;
-    private final int filter;
-    int mode = 0;
     private final int attributeIndexStartPolys;
-    private final HashSet<String> idfTokensPerEssay;
 
     {
         attributes.add(textLength);
@@ -235,7 +202,7 @@ final class Vectorizer {
 
         ArrayList<Attribute> tmpList = new ArrayList<>();
         for (Attribute attribute : attributes) {
-            for (int i = 0; i < POLYNOMIAL_ADD; i++) {
+            for (int i = 0; i < getPolynomsToAdd(); i++) {
                 tmpList.add(new Attribute(attribute.name() + "^" + (i + 2)));
             }
         }
@@ -243,86 +210,35 @@ final class Vectorizer {
         attributes.addAll(tmpList);
     }
 
-    public Vectorizer(int filter) {
-        this.filter = filter;
-        this.setupPrediction();
-        idfTokensPerEssay = idfEssayMap.get(filter);
+
+    public int getMinScore() {
+        return minScore;
     }
 
-    /**
-     * INIT finish
-     */
-
-    public final void mapFilesIntoRAM() throws IOException,
-            InterruptedException, ExecutionException {
-        BufferedReader br = new BufferedReader(new FileReader(new File(
-                "files/training_set_rel3.csv")));
-        List<String[]> set = new ArrayList<>();
-        String line;
-        while ((line = br.readLine()) != null)
-            set.add(line.split("\t"));
-
-        set.remove(0);
-        br.close();
-
-        set = filter(set, filter + "");
-
-        trainingSet = extract(set);
-        testSet = splitRandomSets(0.1f, trainingSet);
+    protected void setMinScore(int minScore) {
+        this.minScore = minScore;
     }
 
-    void setupPrediction() {
-        FastVector filteredAttributeValues = new FastVector();
-        final int min = minScore.get(filter + "");
-        final int max = maxScore.get(filter + "");
-        for (int i = min; i <= max; i++)
-            filteredAttributeValues.add(i + "");
+    public int getMaxScore() {
+        return maxScore;
+    }
 
-        prediction = new Attribute("Domain score", filteredAttributeValues);
+    protected void setMaxScore(int maxScore) {
+        this.maxScore = maxScore;
+    }
+
+
+    protected abstract int getPolynomsToAdd();
+
+    protected void fillPrediction() {
+        ArrayList<String> nominalPrediction = new ArrayList<>();
+        for (int i = minScore; i <= maxScore; i++) {
+            nominalPrediction.add(i + "");
+        }
+        Attribute prediction = new Attribute("Domain score", nominalPrediction);
         attributes.add(prediction);
     }
 
-    public static List<String[]> filter(List<String[]> set, String s) {
-        final Iterator<String[]> iterator = set.iterator();
-        while (iterator.hasNext()) {
-            final String[] next = iterator.next();
-            if (!next[1].equals(s)) {
-                iterator.remove();
-            }
-        }
-        return set;
-    }
-
-    final Instances splitRandomSets(float percentage, Instances set) {
-        if (percentage < 0.0f || percentage > 1.0f) {
-            throw new IllegalArgumentException(
-                    "Percentage must be between 0.0 and 1.0! Given "
-                            + percentage);
-        }
-
-        Instances instances = new Instances("asap-test", attributes, set.size());
-        instances.setClassIndex(attributes.size() - 1);
-
-        final Random rand = new Random(System.nanoTime());
-        final int firstMatrixRowsCount = Math.round(percentage * set.size());
-
-        final HashSet<Integer> lowerMatrixRowIndices = new HashSet<>();
-        int missingRows = firstMatrixRowsCount;
-        while (missingRows > 0) {
-            final int nextIndex = rand.nextInt(set.size());
-            if (lowerMatrixRowIndices.add(nextIndex)) {
-                missingRows--;
-                final Instance removed = set.get(nextIndex);
-                instances.add(removed);
-            }
-        }
-        return instances;
-    }
-
-    public final Instance parseInstance(String[] line, POSTaggerME tagger,
-                                        SentenceDetectorME sentence) {
-        return addScore(line, parseInstanceInternal(line, tagger, sentence));
-    }
 
     public final Instance parseInstanceInternal(String[] line,
                                                 POSTaggerME tagger, SentenceDetectorME sentenceDetector) {
@@ -442,37 +358,22 @@ final class Vectorizer {
 
         int offset = 0;
         for (int i = 0; i < attributeIndexStartPolys; i++) {
-            for (int poly = 0; poly < POLYNOMIAL_ADD; poly++) {
+            for (int poly = 0; poly < getPolynomsToAdd(); poly++) {
                 double pow = Math.pow(instance.value(i), poly + 2);
                 instance.setValue(attributeIndexStartPolys + offset + poly, pow);
             }
-            offset += POLYNOMIAL_ADD;
+            offset += getPolynomsToAdd();
         }
         return instance;
     }
 
-    public final Instance addScore(String[] line, Instance instance) {
-        String stringScore;
-        if (filter != 2) {
-            stringScore = line[6];
-        } else {
-            stringScore = line[6];
-            if (mode == 1)
-                stringScore = line[9];
-        }
-        final int realScore = Integer.parseInt(stringScore);
-        final int min = minScore.get(filter + "");
-        final double score = realScore - min;
-        instance.setValue(this.prediction, score);
-        return instance;
-    }
 
     /**
      * SQRT((SUM(tokens => if(token.length > 1)
      * tokens.length^2)/tokens.length)-avg^2)
      */
-    private double tokenLengthVariance(String[] tokens,
-                                             double avgTokenLength) {
+    protected double tokenLengthVariance(String[] tokens,
+                                         double avgTokenLength) {
         double variance = 0.0d;
         int scored = 0;
         for (String s : tokens) {
@@ -483,7 +384,7 @@ final class Vectorizer {
                 - (avgTokenLength * avgTokenLength));
     }
 
-    private double averageTokenLength(String[] tokens) {
+    protected double averageTokenLength(String[] tokens) {
         double avg = 0.0d;
         int scored = 0;
         for (String s : tokens) {
@@ -493,7 +394,7 @@ final class Vectorizer {
         return avg / scored;
     }
 
-    final int count(String sourceString, char lookFor) {
+    protected int count(String sourceString, char lookFor) {
         int count = 0;
         for (int i = 0; i < sourceString.length(); i++) {
             final char c = sourceString.charAt(i);
@@ -504,7 +405,7 @@ final class Vectorizer {
         return count;
     }
 
-    private int countVerbs(String[] taggedTokens) {
+    protected int countVerbs(String[] taggedTokens) {
         int count = 0;
         for (String s : taggedTokens) {
             if (s.charAt(0) == 'V') {
@@ -514,7 +415,7 @@ final class Vectorizer {
         return count;
     }
 
-    private int countAdjectives(String[] taggedTokens) {
+    protected int countAdjectives(String[] taggedTokens) {
         int count = 0;
         for (String s : taggedTokens) {
             if (s.charAt(0) == 'J') {
@@ -524,7 +425,7 @@ final class Vectorizer {
         return count;
     }
 
-    private int countNouns(String[] taggedTokens) {
+    protected int countNouns(String[] taggedTokens) {
         int count = 0;
         for (String s : taggedTokens) {
             if (s.charAt(0) == 'N') {
@@ -534,43 +435,6 @@ final class Vectorizer {
         return count;
     }
 
-    public final Instances extractTrainingset() {
-        return trainingSet;
-    }
-
-    public final Instances extractTestset() {
-        return testSet;
-    }
-
-    final Instances extract(List<String[]> set)
-            throws InterruptedException, ExecutionException, IOException {
-        final List<List<String[]>> partitions = Lists.partition(set,
-                (set.size() / NUM_PROCESSORS));
-        // System.out.println("Partioned dataset into " + partitions.size());
-        ExecutorCompletionService<Instances> completionService = new ExecutorCompletionService<>(
-                threadPool);
-        Instances instances = new Instances("asap", attributes, set.size());
-        instances.setClassIndex(attributes.size() - 1);
-        int count = 0;
-        for (List<String[]> sublist : partitions) {
-            final POSTaggerME tagger = getPosTagger();
-            final SentenceDetectorME sentenceDetector = getSentenceDetector();
-            final Instances allocatedInstance = new Instances(count + "",
-                    attributes, sublist.size());
-            allocatedInstance.setClassIndex(attributes.size() - 1);
-            completionService.submit(new Worker(this, sublist,
-                    allocatedInstance, tagger, sentenceDetector));
-            count++;
-        }
-
-        for (int i = 0; i < count; i++) {
-            final Future<Instances> instancesFuture = completionService.take();
-            instances.addAll(instancesFuture.get());
-            // System.out.println("Progress: "
-            // + ((float) instances.size() / set.size() * 100) + "%");
-        }
-        return instances;
-    }
 
     public final POSTaggerME getPosTagger() throws IOException {
         POSTaggerME tagger;
@@ -591,5 +455,6 @@ final class Vectorizer {
 
         return detector;
     }
+
 
 }

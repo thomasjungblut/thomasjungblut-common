@@ -24,7 +24,6 @@ public class ClusteringDisplay extends Frame {
     private static final long serialVersionUID = 5937206456529884404L;
 
     private static final Log LOG = LogFactory.getLog(ClusteringDisplay.class);
-    private static Dimension res; // screen resolution, or if zoomed the zoom
     // resolution
 
     private static final Color[] COLORS = {Color.RED, Color.BLUE, Color.GREEN,
@@ -61,7 +60,7 @@ public class ClusteringDisplay extends Frame {
 
     void initialize() throws IOException {
         // Get screen resolution
-        res = Toolkit.getDefaultToolkit().getScreenSize();
+        Dimension res = Toolkit.getDefaultToolkit().getScreenSize();
 
         Path out = new Path("files/clustering/out");
         Configuration conf = new Configuration();

@@ -31,7 +31,7 @@
 	<classpathentry kind="lib" path="lib/opennlp-uima-1.5.2-incubating.jar"/>
 	<classpathentry kind="lib" path="lib/twitter4j-stream-2.2.5.jar"/>
 	<classpathentry kind="lib" path="lib/weka-src.jar"/>
-	<classpathentry kind="lib" path="lib/weka.jar"/>
+	<classpathentry kind="lib" path="lib/weka.jar" sourcepath="lib/weka-src.jar"/>
 	<classpathentry kind="lib" path="lib/guava-r03.jar"/>
 	<classpathentry kind="lib" path="lib/opencsv-2.3.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
