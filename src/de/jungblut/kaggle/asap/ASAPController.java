@@ -33,10 +33,11 @@ public class ASAPController extends LearningController {
 
   @Override
   public List<ClassificationTask> getTasks() {
-    return Arrays.asList(new ClassificationTask[] { new GlobalModel(1),
-        new GlobalModel(2), new GlobalModel(3), new GlobalModel(4),
-        new GlobalModel(5), new GlobalModel(6), new GlobalModel(7),
-        new GlobalModel(8) });
+    return Arrays.asList(new ClassificationTask[] { new GlobalModel(1)
+//    ,new GlobalModel(2), new GlobalModel(3), new GlobalModel(4),
+//        new GlobalModel(5), new GlobalModel(6), new GlobalModel(7),
+//        new GlobalModel(8) 
+    });
   }
 
   @Override

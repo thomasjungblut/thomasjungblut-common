@@ -506,7 +506,7 @@ public class GlobalModel implements ClassificationTask {
 
   @Override
   public Instance parseTrainingInstance(String[] data) {
-    return parseInstanceInternal(data);
+    return addScore(data, parseInstanceInternal(data));
   }
 
   @Override
