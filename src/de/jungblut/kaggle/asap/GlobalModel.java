@@ -456,9 +456,9 @@ public class GlobalModel implements ClassificationTask {
 
   @Override
   public List<Filter> getFilterList() {
-    NumericToNominal nom = new NumericToNominal();
-    nom.setAttributeIndices("last");
-    Standardize stand = new Standardize();
+//    NumericToNominal nom = new NumericToNominal();
+//    nom.setAttributeIndices("last");
+//    Standardize stand = new Standardize();
     // Normalize normalizer = new Normalize();
     // normalizer.setScale(value);
     // Discretize disc = new Discretize();
@@ -472,7 +472,7 @@ public class GlobalModel implements ClassificationTask {
     // selector.setSearch(new Ranker());
     // return Lists.asList(nom, new Filter[] { stand, normalizer, disc, sample,
     // selector, removeMisclassified });
-    return Arrays.asList(new Filter[] { nom, stand });
+    return Arrays.asList(new Filter[] {  });
   }
 
   @Override
@@ -483,6 +483,7 @@ public class GlobalModel implements ClassificationTask {
     SGD classifier = new SGD();
     classifier.setLossFunction(new SelectedTag(SGD.SQUAREDLOSS,
         SGD.TAGS_SELECTION));
+    classifier.setDontNormalize(false);
     // read our more sophisticated model from file..
     // ObjectInputStream is = null;
     // try {
@@ -530,7 +531,10 @@ public class GlobalModel implements ClassificationTask {
   }
 
   @Override
-  public String[] prepareResult(String[] s, String prediction, boolean debug) {
+  public String[] prepareResult(String[] s, double pred, boolean debug) {
+    String prediction = pred + "";
+//  int index = (int) classifier.classifyInstance(inst);
+//  String prediction = targetAttribute.value(index);
     if (debug) {
       return new String[] { s[3], s[0], s[1], "1", prediction, s[6], s[2] };
     } else {

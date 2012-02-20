@@ -69,9 +69,7 @@ public abstract class LearningController {
             f.input(inst);
             inst = f.output();
           }
-          int index = (int) classifier.classifyInstance(inst);
-          String prediction = targetAttribute.value(index);
-          String[] output = task.prepareResult(s, prediction, isDebug());
+          String[] output = task.prepareResult(s, classifier.classifyInstance(inst), isDebug());
           // TODO buffer and maybe sort on a specific column
           writer.writeNext(output);
         }

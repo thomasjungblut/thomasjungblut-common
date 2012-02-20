@@ -24,5 +24,5 @@ public interface ClassificationTask {
 
     public int getId();
 
-    public String[] prepareResult(String[] input, String prediction, boolean debug);
+    public String[] prepareResult(String[] input, double prediction, boolean debug);
 }
