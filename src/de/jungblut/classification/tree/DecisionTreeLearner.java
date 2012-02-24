@@ -6,9 +6,17 @@ import de.jungblut.math.DenseIntVector;
 import de.jungblut.math.Matrix;
 import de.jungblut.util.Tuple;
 
+/**
+ * Decision tree for nominal attributes and binary classification. <br/>
+ * TODO extend to nominal classification.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class DecisionTreeLearner {
 
   private EntropyCalculator attributeChooser = new EntropyCalculator();
+  private Matrix algorithmInputFeatures;
 
   /**
    * For ml-class.org mates inputFeatures is equal to "X" whereas outputVariable
@@ -18,6 +26,7 @@ public final class DecisionTreeLearner {
    */
   public final DecisionTree train(Matrix inputFeatures,
       DenseIntVector outputVariable) {
+    this.algorithmInputFeatures = inputFeatures;
     return trainInternal(inputFeatures, outputVariable,
         new boolean[inputFeatures.getColumnCount()]);
   }
@@ -35,15 +44,15 @@ public final class DecisionTreeLearner {
     }
     // if we just have a single attribute value left in our prediction, we
     // return this
-    if (outputVariable.getNumberOfDistinctElementsFast() == 1) {
+    if (outputVariable.getNumberOfDistinctElements() == 1) {
       return new DecisionTree(outputVariable.get(0));
     }
     // we look which attribute has the lowest entropy
-    final int bestAttributeIndex = attributeChooser.getIndexWithMinEntropy(
+    final int bestAttributeIndex = attributeChooser.getColumnWithHighestGain(
         inputFeatures, outputVariable, filteredAttributes);
     if (bestAttributeIndex != -1) {
       // look how many attribute values exist
-      final int[] attributeValues = inputFeatures
+      final int[] attributeValues = algorithmInputFeatures
           .getDistinctElementsAsArray(bestAttributeIndex);
 
       DecisionTree node = new DecisionTree(bestAttributeIndex,
@@ -90,7 +99,6 @@ public final class DecisionTreeLearner {
         return node;
       }
     }
-    // TODO make n counts rather than just 2
     if ((predictionChildCount[0] != 0 && predictionChildCount[1] == 0)
         || predictionChildCount[1] != 0 && predictionChildCount[0] == 0) {
       node.turnToLeaf(predictionChildCount[0] > predictionChildCount[1] ? 0 : 1);
@@ -157,4 +165,20 @@ public final class DecisionTreeLearner {
     return toReturn;
   }
 
+  public static void main(String[] args) {
+    // sample vectorized set where the last column is the prediction
+    int[][] intMatrix = new int[][] { { 0, 0, 1, 1, 2, 1 },
+        { 0, 0, 1, 1, 0, 1 }, { 1, 0, 0, 2, 1, 0 }, { 0, 1, 1, 0, 2, 0 },
+        { 1, 0, 0, 0, 0, 1 }, { 1, 1, 1, 2, 2, 1 }, { 1, 1, 1, 2, 1, 0 },
+        { 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 1, 1 }, { 0, 1, 0, 1, 2, 1 },
+        { 1, 1, 1, 1, 0, 0 } };
+    Matrix matrix = new Matrix(intMatrix);
+    Tuple<Matrix, DenseIntVector> tuple = matrix.splitLastColumn();
+
+    DecisionTreeLearner learner = new DecisionTreeLearner();
+    DecisionTree train = learner.train(tuple.getFirst(), tuple.getSecond());
+
+    System.out.println(train.toPrettyTreeString());
+
+  }
 }

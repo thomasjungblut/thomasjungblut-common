@@ -2,6 +2,9 @@ package de.jungblut.math;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Random;
+
+import de.jungblut.util.Tuple;
 
 public final class Matrix {
 
@@ -18,7 +21,10 @@ public final class Matrix {
   public Matrix(int[][] otherMatrix) {
     this.matrix = otherMatrix;
     this.numRows = otherMatrix.length;
-    this.numColumns = matrix[0].length;
+    if (matrix.length > 0)
+      this.numColumns = matrix[0].length;
+    else
+      this.numColumns = numRows;
   }
 
   /**
@@ -151,6 +157,10 @@ public final class Matrix {
     return new DenseIntVector(getRow(row));
   }
 
+  final void set(int row, int col, int value) {
+    this.matrix[row][col] = value;
+  }
+
   /**
    * Get the highest value of column in the matrix.
    * 
@@ -194,6 +204,71 @@ public final class Matrix {
    */
   public String sizeToString() {
     return numRows + "x" + numColumns;
+  }
+
+  public final Tuple<Matrix, DenseIntVector> splitLastColumn() {
+    Matrix m = new Matrix(getRowCount(), getColumnCount() - 1);
+    for (int i = 0; i < getRowCount(); i++) {
+      for (int j = 0; j < getColumnCount() - 1; j++) {
+        m.set(i, j, get(i, j));
+      }
+    }
+    DenseIntVector v = new DenseIntVector(getColumn(getColumnCount() - 1));
+    return new Tuple<Matrix, DenseIntVector>(m, v);
+  }
+
+  /**
+   * Creates two matrices out of this by the given percentage. It uses a random
+   * function to determine which rows should belong to the matrix including the
+   * given percentage amount of rows.
+   * 
+   * @param percentage A float value between 0.0f and 1.0f
+   * @return A tuple which includes two matrices, the first contains the
+   *         percentage of the rows from the original matrix (rows are chosen
+   *         randomly) and the second one contains all other rows.
+   */
+  public final Tuple<Matrix, Matrix> splitRandomMatrices(float percentage) {
+    if (percentage < 0.0f || percentage > 1.0f) {
+      throw new IllegalArgumentException(
+          "Percentage must be between 0.0 and 1.0! Given " + percentage);
+    }
+
+    if (percentage == 1.0f) {
+      return new Tuple<Matrix, Matrix>(this, null);
+    } else if (percentage == 0.0f) {
+      return new Tuple<Matrix, Matrix>(null, this);
+    }
+
+    final Random rand = new Random(System.nanoTime());
+    int firstMatrixRowsCount = Math.round(percentage * numRows);
+
+    // we first choose needed rows number of items to pick
+    final HashSet<Integer> lowerMatrixRowIndices = new HashSet<Integer>();
+    int missingRows = firstMatrixRowsCount;
+    while (missingRows > 0) {
+      final int nextIndex = rand.nextInt(numRows);
+      if (lowerMatrixRowIndices.add(nextIndex)) {
+        missingRows--;
+      }
+    }
+
+    // make to new matrixes
+    final int[][] firstMatrix = new int[firstMatrixRowsCount][numColumns];
+    int firstMatrixIndex = 0;
+    final int[][] secondMatrix = new int[numRows - firstMatrixRowsCount][numColumns];
+    int secondMatrixIndex = 0;
+
+    // then we loop over all items and put split the matrix
+    for (int r = 0; r < numRows; r++) {
+      if (lowerMatrixRowIndices.contains(r)) {
+        firstMatrix[firstMatrixIndex++] = matrix[r];
+      } else {
+        secondMatrix[secondMatrixIndex++] = matrix[r];
+      }
+    }
+
+    return new Tuple<Matrix, Matrix>(new Matrix(firstMatrix), new Matrix(
+        secondMatrix));
   }
 
   @Override

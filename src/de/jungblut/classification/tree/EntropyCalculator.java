@@ -3,83 +3,91 @@ package de.jungblut.classification.tree;
 import de.jungblut.math.DenseIntVector;
 import de.jungblut.math.Matrix;
 
+/**
+ * 
+ * @author thanks to Marvin Ritter who is better in coding math equations than
+ *         me :)
+ * 
+ */
 public final class EntropyCalculator {
 
-  static final double LOG_BASE_TWO = Math.log(2);
+  static final double LOG_TWO = Math.log(2);
 
   /**
-   * Returns the index of a feature which has the lowest entropy and wasn't used
-   * before. This method can be used for external tracking of what attributes
-   * have been returned to filter.
+   * Returns the index of a feature which has the highest information gain using
+   * entropy. If multiple attributes have the same gain the first one will be
+   * chosen.
    * 
-   * @return -1 if all features has been examined from outside. >=0 index of
-   *         what attribute in feature should be used next. (based on min
-   *         entropy).
+   * @return Index of the column with the highest information gain or -1 if all
+   *         not target columns are already used
+   * @throws MatrixFormatException
    */
-  public final int getIndexWithMinEntropy(Matrix inputFeatures,
-      DenseIntVector outputVariables, boolean[] alreadyUsedIndicesList) {
-    
-    final int columns = inputFeatures.getColumnCount();
-    int entropyIndex = -1;
-    double lowestEntropy = Double.MAX_VALUE;
-    for (int i = 0; i < columns; i++) {
-      if (!alreadyUsedIndicesList[i]) {
-        double weightedEntropySum = getWeightedEntropySum(new DenseIntVector(
-            inputFeatures.getColumn(i)), outputVariables);
-        if (weightedEntropySum < lowestEntropy && weightedEntropySum > 0) {
-          lowestEntropy = weightedEntropySum;
-          entropyIndex = i;
+  public final int getColumnWithHighestGain(Matrix matrix,
+      DenseIntVector outputVariable, boolean[] columnsAlreadyUsed) {
+    /*
+     * Choose the column/attribute with the highest information gain. Gain(S, A)
+     * = Entropy(S) - \sum_{v \in Values(A)} \frac{|S_v|}{|S|} * Entropy(S_v)
+     * The part in the sum is the weighted entropy. For choosing the best
+     * column/attribute the Entropy(S) can be ignored because it is the constant
+     * for all columns.
+     */
+
+    double minWeightedEntropySum = Double.MAX_VALUE;
+    int column = -1;
+
+    for (int c = 0; c < matrix.getColumnCount(); c++) {
+      if (!columnsAlreadyUsed[c]) {
+        double x = getWeightedEntropySum(matrix, outputVariable, c);
+        if (x < minWeightedEntropySum) {
+          minWeightedEntropySum = x;
+          column = c;
         }
       }
     }
-    if (entropyIndex >= 0) {
-      alreadyUsedIndicesList[entropyIndex] = true;
-    }
-    return entropyIndex;
+
+    return column;
   }
 
-  public final double getWeightedEntropySum(DenseIntVector attributeColumn,
-      DenseIntVector outputVariables) {
-    final int length = attributeColumn.getLength();
-    final int distinctAttributes = attributeColumn
-        .getNumberOfDistinctElements();
-    final int[] attributeCount = new int[distinctAttributes];
-    /*
-     * This is always two dimensional, on the first dimension is the attribute,
-     * in the second dimension are the counts for the predition.
-     */
-    final int[][] preditionCount = new int[distinctAttributes][2];
+  public final double getWeightedEntropySum(Matrix matrix,
+      DenseIntVector outputVariable, int col) {
 
-    for (int i = 0; i < length; i++) {
-      final int attributeIndex = attributeColumn.get(i);
-      final int prediction = outputVariables.get(i);
-      // This "hack" is only working if our DenseIntVector elements strictly
-      // start with zero and are incremented
-      // afterwards.
-      attributeCount[attributeIndex]++;
-      preditionCount[attributeIndex][prediction]++;
+    final int[][] m = matrix.getValues();
+    final int columnValues = new DenseIntVector(matrix.getColumn(col))
+        .getMaxValue();
+    final int targetValues = outputVariable.getNumberOfDistinctElements();
+
+    // count predictions for each possible value in this column
+    int[] valueCounts = new int[columnValues + 1]; /* |S_v| for each attribute */
+    int[][] predictionCounts = new int[columnValues + 1][targetValues + 1];
+    for (int r = 0; r < m.length; r++) {
+      int value = m[r][col];
+      int prediction = outputVariable.get(r);
+      valueCounts[value]++;
+      predictionCounts[value][prediction]++;
     }
 
-    double weightedEntropySum = 0.0;
-    // log base two is calculated as following:
-    // (Math.log(x) / Math.log(2)
-    for (int i = 0; i < distinctAttributes; i++) {
-      if (preditionCount[i][0] > 0 && preditionCount[i][1] > 0) {
-        // only working for binary classification
-        // DANGER! Sophisticated math function incoming!
-        // weightedEntropySum += ((double) attributeCount[i] / (double) length)
-        // * (((-(double) preditionCount[i][0] / (double) attributeCount[i]) *
-        // (Math
-        // .log((double) preditionCount[i][0] / (double) attributeCount[i]) /
-        // LOG_BASE_TWO)) - ((-(double) preditionCount[i][1] / (double)
-        // attributeCount[i]) * (Math
-        // .log((double) preditionCount[i][1] / (double) attributeCount[i]) /
-        // LOG_BASE_TWO)));
-        // TODO this is wrong because of a wrong minus
+    double sum = 0.0;
+    double totalRows = (double) m.length;
+    for (int v = 0; v < valueCounts.length; v++) {
+      if (valueCounts[v] > 0) {
+        sum += valueCounts[v] / totalRows
+            * getEntropy(predictionCounts[v], valueCounts[v]);
       }
     }
-    // we have to absolute our calculation because negative values make no sense
-    // in probability.
-    return Math.abs(weightedEntropySum);
+
+    return sum;
   }
+
+  private final double getEntropy(int[] predictionCounts, int sum) {
+    double entropy = 0.0;
+    for (int prediction : predictionCounts) {
+      if (prediction != 0 && prediction != sum) {
+        double p = (double) prediction / sum;
+        entropy -= p * Math.log(p) / LOG_TWO;
+      }
+    }
+
+    return entropy;
+  }
+
 }

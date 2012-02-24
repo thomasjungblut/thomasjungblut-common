@@ -20,7 +20,7 @@ public final class DenseIntVector {
     return vector.length;
   }
 
-  private final void set(int index, int value) {
+  final void set(int index, int value) {
     vector[index] = value;
   }
 
@@ -47,6 +47,16 @@ public final class DenseIntVector {
     }
     // +1 because of zero
     return high + 1;
+  }
+
+  public int getMaxValue() {
+    int maxValue = vector[0];
+    for (int i = 0; i < vector.length; i++) {
+      if (maxValue < vector[i]) {
+        maxValue = vector[i];
+      }
+    }
+    return maxValue;
   }
 
   /*
