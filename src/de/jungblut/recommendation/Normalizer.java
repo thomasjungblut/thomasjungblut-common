@@ -20,8 +20,9 @@ public class Normalizer {
         mean = mean / nonZeroElements;
       for (int column = 0; column < matrix.getColumnCount(); column++) {
         double val = matrix.get(row, column);
-        if (val != DenseDoubleMatrix.NOT_FLAGGED)
+        if (val != DenseDoubleMatrix.NOT_FLAGGED) {
           matrix.set(row, column, val - mean);
+        }
       }
     }
 
