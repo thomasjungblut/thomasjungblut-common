@@ -226,7 +226,7 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
-  public final DenseDoubleMatrix multiply(int scalar) {
+  public final DenseDoubleMatrix multiply(double scalar) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
@@ -257,11 +257,27 @@ public final class DenseDoubleMatrix {
     return matrix;
   }
 
-  public DenseDoubleMatrix transpose() {
-    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+  /**
+   * Multiplies this matrix per element with a binary matrix.
+   */
+  public final DenseDoubleMatrix multiplyElementWise(DenseBooleanMatrix other) {
+    DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
+        this.numColumns);
+
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
-        m.set(i, j, this.matrix[j][i]);
+        matrix.set(i, j, this.get(i, j) * (other.get(i, j) ? 1.0d : 0.0d));
+      }
+    }
+
+    return matrix;
+  }
+
+  public DenseDoubleMatrix transpose() {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numColumns, this.numRows);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(j, i, this.matrix[i][j]);
       }
     }
     return m;
@@ -274,7 +290,7 @@ public final class DenseDoubleMatrix {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
-        m.set(i, j, amount - this.matrix[j][i]);
+        m.set(i, j, amount - this.matrix[i][j]);
       }
     }
     return m;
@@ -287,7 +303,52 @@ public final class DenseDoubleMatrix {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
-        m.set(i, j, this.matrix[j][i] - amount);
+        m.set(i, j, this.matrix[i][j] - amount);
+      }
+    }
+    return m;
+  }
+
+  /**
+   * this-other
+   */
+  public DenseDoubleMatrix subtract(DenseDoubleMatrix other) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, this.matrix[i][j] - other.get(j, i));
+      }
+    }
+    return m;
+  }
+
+  /**
+   * this+other
+   */
+  public DenseDoubleMatrix add(DenseDoubleMatrix other) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, this.matrix[i][j] + other.get(j, i));
+      }
+    }
+    return m;
+  }
+
+  public DenseDoubleMatrix pow(int x) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        // for lower order polynomials it is faster to loop
+        double value = 0.0d;
+        if (x < 5) {
+          for (int f = 1; f < x; f++)
+            value += matrix[i][j] * matrix[i][j];
+        } else {
+          value = Math.pow(matrix[i][j], x);
+        }
+
+        m.set(i, j, value);
       }
     }
     return m;
@@ -295,12 +356,16 @@ public final class DenseDoubleMatrix {
 
   @Override
   public String toString() {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < numRows; i++) {
-      sb.append(Arrays.toString(matrix[i]));
-      sb.append('\n');
+    if (numRows < 10) {
+      StringBuilder sb = new StringBuilder();
+      for (int i = 0; i < numRows; i++) {
+        sb.append(Arrays.toString(matrix[i]));
+        sb.append('\n');
+      }
+      return sb.toString();
+    } else {
+      return numRows + "x" + numColumns;
     }
-    return sb.toString();
   }
 
   public static DenseDoubleMatrix eye(int dimension) {
@@ -325,8 +390,10 @@ public final class DenseDoubleMatrix {
   }
 
   public static void main(String[] args) {
-    DenseDoubleMatrix m = eye(5);
-    System.out.println(copy(m));
+    DenseDoubleMatrix m = new DenseDoubleMatrix(new double[][] { { 1, 2, 3 },
+        { 4, 5, 6 } });
+    System.out.println(m.transpose());
+
   }
 
 }

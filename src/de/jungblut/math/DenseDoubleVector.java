@@ -28,7 +28,7 @@ public final class DenseDoubleVector {
     return vector.length;
   }
 
-  final void set(int index, double value) {
+  public final void set(int index, double value) {
     vector[index] = value;
   }
 
@@ -40,6 +40,14 @@ public final class DenseDoubleVector {
     DenseDoubleVector newv = new DenseDoubleVector(v.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       newv.set(i, this.get(i) + v.get(i));
+    }
+    return newv;
+  }
+
+  public final DenseDoubleVector add(double scalar) {
+    DenseDoubleVector newv = new DenseDoubleVector(this.getLength());
+    for (int i = 0; i < this.getLength(); i++) {
+      newv.set(i, this.get(i) + scalar);
     }
     return newv;
   }
