@@ -226,9 +226,107 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
+  public final DenseDoubleMatrix multiply(int scalar) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, this.matrix[i][j] * scalar);
+      }
+    }
+    return m;
+  }
+
+  public final DenseDoubleMatrix multiply(DenseDoubleMatrix other) {
+    DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
+        this.numColumns);
+
+    final int m = this.numRows;
+    final int n = this.numColumns;
+    final int p = other.numColumns;
+
+    for (int j = p; --j >= 0;) {
+      for (int i = m; --i >= 0;) {
+        double s = 0;
+        for (int k = n; --k >= 0;) {
+          s += get(i, k) * other.get(k, j);
+        }
+        matrix.set(i, j, s + matrix.get(i, j));
+      }
+    }
+
+    return matrix;
+  }
+
+  public DenseDoubleMatrix transpose() {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, this.matrix[j][i]);
+      }
+    }
+    return m;
+  }
+
+  /**
+   * = (amount - m)
+   */
+  public DenseDoubleMatrix subtractBy(double amount) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, amount - this.matrix[j][i]);
+      }
+    }
+    return m;
+  }
+
+  /**
+   * = (m - amount)
+   */
+  public DenseDoubleMatrix subtract(double amount) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, this.matrix[j][i] - amount);
+      }
+    }
+    return m;
+  }
+
   @Override
   public String toString() {
-    return Arrays.deepToString(matrix);
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < numRows; i++) {
+      sb.append(Arrays.toString(matrix[i]));
+      sb.append('\n');
+    }
+    return sb.toString();
+  }
+
+  public static DenseDoubleMatrix eye(int dimension) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(dimension, dimension);
+
+    for (int i = 0; i < dimension; i++) {
+      m.set(i, i, 1);
+    }
+
+    return m;
+  }
+
+  public static DenseDoubleMatrix copy(DenseDoubleMatrix matrix) {
+    final double[][] src = matrix.getValues();
+    final double[][] dest = new double[matrix.getRowCount()][matrix
+        .getColumnCount()];
+
+    for (int i = 0; i < dest.length; i++)
+      System.arraycopy(src[i], 0, dest[i], 0, src[i].length);
+
+    return new DenseDoubleMatrix(dest);
+  }
+
+  public static void main(String[] args) {
+    DenseDoubleMatrix m = eye(5);
+    System.out.println(copy(m));
   }
 
 }
