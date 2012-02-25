@@ -3,6 +3,7 @@ package de.jungblut.recommendation;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
 
 import de.jungblut.math.DenseDoubleMatrix;
 
@@ -28,6 +29,22 @@ public class MovieLensReader {
     }
 
     return matrix;
+  }
+
+  public static HashMap<Integer, String> getMovieLookupTable() {
+    HashMap<Integer, String> map = new HashMap<Integer, String>();
+    try (BufferedReader br = new BufferedReader(new FileReader(
+        "files/ml-1m/movies.dat"))) {
+      String line;
+      while ((line = br.readLine()) != null) {
+        // MovieID::Title::Genres
+        String[] split = line.split("::");
+        map.put(Integer.parseInt(split[0]), split[1]);
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return map;
   }
 
 }

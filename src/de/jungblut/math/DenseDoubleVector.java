@@ -1,6 +1,12 @@
 package de.jungblut.math;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+
+import de.jungblut.util.Tuple;
 
 public final class DenseDoubleVector {
 
@@ -112,6 +118,22 @@ public final class DenseDoubleVector {
     final double[] dest = new double[vector.getLength()];
     System.arraycopy(src, 0, dest, 0, vector.getLength());
     return new DenseDoubleVector(dest);
+  }
+
+  public static List<Tuple<Double, Integer>> sort(DenseDoubleVector vector,
+      final Comparator<Double> scoreComparator) {
+    List<Tuple<Double, Integer>> list = new ArrayList<Tuple<Double, Integer>>(
+        vector.getLength());
+    for (int i = 0; i < vector.getLength(); i++) {
+      list.add(new Tuple<Double, Integer>(vector.get(i), i));
+    }
+    Collections.sort(list, new Comparator<Tuple<Double, Integer>>() {
+      @Override
+      public int compare(Tuple<Double, Integer> o1, Tuple<Double, Integer> o2) {
+        return scoreComparator.compare(o1.getFirst(), o2.getFirst());
+      }
+    });
+    return list;
   }
 
 }

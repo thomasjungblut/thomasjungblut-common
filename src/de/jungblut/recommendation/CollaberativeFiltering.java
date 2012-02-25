@@ -1,5 +1,9 @@
 package de.jungblut.recommendation;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import de.jungblut.math.DenseBooleanMatrix;
@@ -49,12 +53,29 @@ public class CollaberativeFiltering {
 
     DenseDoubleMatrix computedTheta = unfoldMatrices[1];
 
-    DenseDoubleMatrix p = x.multiply(computedTheta.transpose());
+    DenseDoubleMatrix p = x.multiply(computedTheta);
 
     DenseDoubleVector myPredictions = p.getColumnVector(0).add(
         movieRatingMeanVector);
 
-    System.out.println("Predictions for me: " + myPredictions);
+    HashMap<Integer, String> movieLookupTable = MovieLensReader
+        .getMovieLookupTable();
+    
+    List<Tuple<Double, Integer>> sort = DenseDoubleVector.sort(myPredictions,
+        Collections.reverseOrder(new Comparator<Double>() {
+          @Override
+          public int compare(Double o1, Double o2) {
+            return Double.compare(o1, o2);
+          }
+        }));
+    
+    System.out.println("Predictions for me: ");
+    for (int i = 0; i < 10; i++) {
+      Tuple<Double, Integer> tuple = sort.get(i);
+      double score = tuple.getFirst();
+      int index = tuple.getSecond();
+      System.out.println(movieLookupTable.get(index) + " | " + score);
+    }
 
   }
 }

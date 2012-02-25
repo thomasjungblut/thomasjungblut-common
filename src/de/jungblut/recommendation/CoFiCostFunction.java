@@ -40,7 +40,7 @@ public final class CoFiCostFunction implements CostFunction {
     DenseDoubleMatrix xGradient = new DenseDoubleMatrix(x.getRowCount(),
         x.getColumnCount());
 
-    // do the magic...
+    // do the magic... TODO I guess there are some wrong transposes!
 
     DenseDoubleMatrix tmp = theta.multiply(x)
         .subtract(userMovieRatings).pow(2).transpose();
@@ -90,4 +90,10 @@ public final class CoFiCostFunction implements CostFunction {
     }
     return totalSum;
   }
+  
+  
+  public static void main(String[] args) {
+    
+  }
+  
 }
