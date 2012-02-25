@@ -14,8 +14,8 @@ public class DenseMatrixFolder {
     DenseDoubleVector v = new DenseDoubleVector(length);
     int index = 0;
     for (DenseDoubleMatrix matrix : matrices) {
-      for (int i = 0; i < matrix.getRowCount(); i++) {
-        for (int j = 0; j < matrix.getColumnCount(); j++) {
+      for (int j = 0; j < matrix.getColumnCount(); j++) {
+        for (int i = 0; i < matrix.getRowCount(); i++) {
           v.set(index++, matrix.get(i, j));
         }
       }
@@ -35,8 +35,8 @@ public class DenseMatrixFolder {
     for (int i = 0; i < arr.length; i++) {
       final int numRows = sizeArray[i][0];
       final int numColumns = sizeArray[i][1];
-      for (int row = 0; row < numRows; row++) {
-        for (int col = 0; col < numColumns; col++) {
+      for (int col = 0; col < numColumns; col++) {
+        for (int row = 0; row < numRows; row++) {
           arr[i].set(row, col, vector.get(currentVectorIndex++));
         }
       }

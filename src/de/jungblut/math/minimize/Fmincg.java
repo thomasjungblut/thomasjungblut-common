@@ -30,7 +30,7 @@ public class Fmincg {
     double f1 = evaluateCost.getFirst();
     DenseDoubleVector df1 = evaluateCost.getSecond();
     i = i + (length < 0 ? 1 : 0);
-    DenseDoubleVector s = df1.multiply(-1); // search direction is steepest
+    DenseDoubleVector s = df1.multiply(-1.0d); // search direction is steepest
 
     double d1 = s.multiply(-1.0d).dot(s); // this is the slope
     double z1 = (double) red / (1.0 - d1); // initial step is red/(|s|+1)
@@ -70,22 +70,19 @@ public class Fmincg {
           double A = 0.0d;
           double B = 0.0d;
           if (f2 > f1) {
-            z2 = z3 - (0.5 * d3 * z3 * z3) / (d3 * z3 + f2 - f3); // quadratic
-                                                                  // fit
+            // quadratic fit
+            z2 = z3 - (0.5 * d3 * z3 * z3) / (d3 * z3 + f2 - f3);
           } else {
             A = 6 * (f2 - f3) / z3 + 3 * (d2 + d3); // cubic fit
             B = 3 * (f3 - f2) - z3 * (d3 + 2 * d2);
-            z2 = (Math.sqrt(B * B - A * d2 * z3 * z3) - B) / A; // numerical
-                                                                // error
-                                                                // possible -
-                                                                // ok!
+            // numerical error possible - ok!
+            z2 = (Math.sqrt(B * B - A * d2 * z3 * z3) - B) / A;
           }
           if (Double.isNaN(z2) || Double.isInfinite(z2)) {
             z2 = z3 / 2.0d; // if we had a numerical problem then bisect
           }
-          z2 = Math.max(Math.min(z2, INT * z3), (1 - INT) * z3); // don't accept
-                                                                 // too close to
-                                                                 // limits
+          // don't accept too close to limits
+          z2 = Math.max(Math.min(z2, INT * z3), (1 - INT) * z3);
           z1 = z1 + z2; // update the step
           input = input.add(s.multiply(z2));
           final Tuple<Double, DenseDoubleVector> evaluateCost3 = f
@@ -108,30 +105,24 @@ public class Fmincg {
         double A = 6 * (f2 - f3) / z3 + 3 * (d2 + d3); // make cubic
                                                        // extrapolation
         double B = 3 * (f3 - f2) - z3 * (d3 + 2 * d2);
-        double z2 = -d2 * z3 * z3 / (B + Math.sqrt(B * B - A * d2 * z3 * z3)); // num.
-                                                                               // error
-                                                                               // possible
-                                                                               // -
-                                                                               // ok!
-        if (Double.isNaN(z2) || Double.isInfinite(z2) || z2 < 0) // num prob or
-                                                                 // wrong sign?
+        double z2 = -d2 * z3 * z3 / (B + Math.sqrt(B * B - A * d2 * z3 * z3));
+        // num prob or wrong sign?
+        if (Double.isNaN(z2) || Double.isInfinite(z2) || z2 < 0)
           if (limit < -0.5) { // if we have no upper limit
             z2 = z1 * (EXT - 1); // the extrapolate the maximum amount
           } else {
             z2 = (limit - z1) / 2; // otherwise bisect
           }
-        else if ((limit > -0.5) && (z2 + z1 > limit)) { // extraplation beyond
-                                                        // max?
+        else if ((limit > -0.5) && (z2 + z1 > limit)) {
+          // extraplation beyond max?
           z2 = (limit - z1) / 2; // bisect
-        } else if ((limit < -0.5) && (z2 + z1 > z1 * EXT)) { // extrapolation
-                                                             // beyond limit
+        } else if ((limit < -0.5) && (z2 + z1 > z1 * EXT)) {
+          // extrapolationbeyond limit
           z2 = z1 * (EXT - 1.0); // set to extrapolation limit
         } else if (z2 < -z3 * INT) {
           z2 = -z3 * INT;
-        } else if ((limit > -0.5) && (z2 < (limit - z1) * (1.0 - INT))) { // too
-                                                                          // close
-                                                                          // to
-                                                                          // limit?
+        } else if ((limit > -0.5) && (z2 < (limit - z1) * (1.0 - INT))) {
+          // too close to the limit
           z2 = (limit - z1) * (1.0 - INT);
         }
         // set point 3 equal to point 2
@@ -157,6 +148,8 @@ public class Fmincg {
         fX = new DenseDoubleVector(fX.toArray(), f1);
         System.out.printf("Interation %d | Cost: %f\r", i, f1);
         // Polack-Ribiere direction
+        // (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
+        // TODO df1'*df1 = matrix not double...
         s = s.multiply(df1.dot(df1)).subtract(df2)
             .divideFrom((df2.dot(df2) - df1.dot(df2)));
         tmp = df1;
@@ -169,7 +162,7 @@ public class Fmincg {
         }
         // MIN_VALUE is actually realmin = 2.2251e-308, this will overflow
         // double.. d2-Double.MIN_VALUE
-        z1 = z1 * Math.min(RATIO, d1 / (d2)); // slope ratio but max RATIO
+        z1 = z1 * Math.min(RATIO, d1 / (d2-2.2251e-308)); // slope ratio but max RATIO
         d1 = d2;
         ls_failed = 0; // this line search did not fail
       } else {

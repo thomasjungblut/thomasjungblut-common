@@ -1,10 +1,13 @@
 package de.jungblut.recommendation;
 
+import java.util.Random;
+
 import de.jungblut.math.DenseBooleanMatrix;
 import de.jungblut.math.DenseDoubleMatrix;
 import de.jungblut.math.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
+import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.util.Tuple;
 
 public final class CoFiCostFunction implements CostFunction {
@@ -42,8 +45,8 @@ public final class CoFiCostFunction implements CostFunction {
 
     // do the magic... TODO I guess there are some wrong transposes!
 
-    DenseDoubleMatrix tmp = theta.multiply(x)
-        .subtract(userMovieRatings).pow(2).transpose();
+    DenseDoubleMatrix tmp = theta.multiply(x).subtract(userMovieRatings).pow(2)
+        .transpose();
     // code=((Theta*X'-Y').^2)';
 
     j = sumWhenTrue(tmp, ratingMatrix) / 2.0d
@@ -58,8 +61,8 @@ public final class CoFiCostFunction implements CostFunction {
     // X_grad = ((X*Theta'-Y).*R)*Theta + lambda*X;
 
     thetaGradient = ((theta.multiply(x).subtract(userMovieRatings).transpose()
-        .multiplyElementWise(ratingMatrix)).transpose().multiply(x).add(theta.multiply(
-        lambda).transpose()));
+        .multiplyElementWise(ratingMatrix)).transpose().multiply(x).add(theta
+        .multiply(lambda).transpose()));
     // Theta_grad = ((Theta*X'-Y').*R')*X + lambda*Theta;
 
     return new Tuple<Double, DenseDoubleVector>(j,
@@ -90,10 +93,39 @@ public final class CoFiCostFunction implements CostFunction {
     }
     return totalSum;
   }
-  
-  
+
   public static void main(String[] args) {
-    
+    DenseDoubleMatrix x = new DenseDoubleMatrix(new double[][] {
+        { 1.048686, -0.400232, 1.194119 }, { 0.780851, -0.385626, 0.521198 },
+        { 0.641509, -0.547854, -0.083796 }, { 0.453618, -0.800218, 0.680481 },
+        { 0.937538, 0.106090, 0.361953 }, });
+
+    DenseDoubleMatrix y = new DenseDoubleMatrix(new double[][] {
+        { 5, 4, 0, 0 }, { 3, 0, 0, 0 }, { 4, 0, 0, 0 }, { 3, 0, 0, 0 },
+        { 3, 0, 0, 0 } });
+
+    DenseBooleanMatrix r = new DenseBooleanMatrix(new boolean[][] {
+        { true, true, false, false }, { true, false, false, false },
+        { true, false, false, false }, { true, false, false, false },
+        { true, false, false, false } });
+
+    int numUsers = 4;
+    int numMovies = 5;
+    int numFeatures = 3;
+    double lambda = 0.0d;
+
+    DenseDoubleMatrix theta = new DenseDoubleMatrix(new double[][] {
+        { 0.28544, -1.68427, 0.26294 }, { 0.50501, -0.45465, 0.31746 },
+        { -0.43192, -0.47880, 0.84671 }, { 0.72860, -0.27189, 0.32684 } });
+
+    // fold x and theta so they are ready to be passed to fmincg
+    DenseDoubleVector initialParameters = DenseMatrixFolder.foldMatrices(x,
+        theta);
+    CoFiCostFunction cost = new CoFiCostFunction(y, r, numUsers, numMovies,
+        numFeatures, lambda);
+
+    DenseDoubleVector minimizeFunction = Fmincg.minimizeFunction(cost,
+        initialParameters, 100);
+
   }
-  
 }

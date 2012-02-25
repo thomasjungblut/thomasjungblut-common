@@ -69,7 +69,7 @@ public final class DenseDoubleVector {
   public DenseDoubleVector multiply(double scalar) {
     DenseDoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
-      this.set(i, this.get(i) * scalar);
+      v.set(i, this.get(i) * scalar);
     }
     return v;
   }
@@ -80,7 +80,7 @@ public final class DenseDoubleVector {
   public DenseDoubleVector divide(double scalar) {
     DenseDoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
-      this.set(i, this.get(i) / scalar);
+      v.set(i, this.get(i) / scalar);
     }
     return v;
   }
@@ -91,7 +91,7 @@ public final class DenseDoubleVector {
   public DenseDoubleVector divideFrom(double scalar) {
     DenseDoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
-      this.set(i, scalar / this.get(i));
+      v.set(i, scalar / this.get(i));
     }
     return v;
   }
