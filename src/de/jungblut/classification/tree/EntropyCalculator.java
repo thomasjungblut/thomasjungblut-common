@@ -1,7 +1,7 @@
 package de.jungblut.classification.tree;
 
 import de.jungblut.math.DenseIntVector;
-import de.jungblut.math.Matrix;
+import de.jungblut.math.DenseIntMatrix;
 
 /**
  * 
@@ -22,7 +22,7 @@ public final class EntropyCalculator {
    *         not target columns are already used
    * @throws MatrixFormatException
    */
-  public final int getColumnWithHighestGain(Matrix matrix,
+  public final int getColumnWithHighestGain(DenseIntMatrix matrix,
       DenseIntVector outputVariable, boolean[] columnsAlreadyUsed) {
     /*
      * Choose the column/attribute with the highest information gain. Gain(S, A)
@@ -48,7 +48,7 @@ public final class EntropyCalculator {
     return column;
   }
 
-  public final double getWeightedEntropySum(Matrix matrix,
+  public final double getWeightedEntropySum(DenseIntMatrix matrix,
       DenseIntVector outputVariable, int col) {
 
     final int[][] m = matrix.getValues();

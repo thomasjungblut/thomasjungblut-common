@@ -6,19 +6,19 @@ import java.util.Random;
 
 import de.jungblut.util.Tuple;
 
-public final class Matrix {
+public final class DenseIntMatrix {
 
   protected final int[][] matrix;
   protected final int numRows;
   protected final int numColumns;
 
-  public Matrix(int rows, int columns) {
+  public DenseIntMatrix(int rows, int columns) {
     this.numRows = rows;
     this.numColumns = columns;
     this.matrix = new int[rows][columns];
   }
 
-  public Matrix(int[][] otherMatrix) {
+  public DenseIntMatrix(int[][] otherMatrix) {
     this.matrix = otherMatrix;
     this.numRows = otherMatrix.length;
     if (matrix.length > 0)
@@ -206,15 +206,15 @@ public final class Matrix {
     return numRows + "x" + numColumns;
   }
 
-  public final Tuple<Matrix, DenseIntVector> splitLastColumn() {
-    Matrix m = new Matrix(getRowCount(), getColumnCount() - 1);
+  public final Tuple<DenseIntMatrix, DenseIntVector> splitLastColumn() {
+    DenseIntMatrix m = new DenseIntMatrix(getRowCount(), getColumnCount() - 1);
     for (int i = 0; i < getRowCount(); i++) {
       for (int j = 0; j < getColumnCount() - 1; j++) {
         m.set(i, j, get(i, j));
       }
     }
     DenseIntVector v = new DenseIntVector(getColumn(getColumnCount() - 1));
-    return new Tuple<Matrix, DenseIntVector>(m, v);
+    return new Tuple<DenseIntMatrix, DenseIntVector>(m, v);
   }
 
   /**
@@ -227,16 +227,16 @@ public final class Matrix {
    *         percentage of the rows from the original matrix (rows are chosen
    *         randomly) and the second one contains all other rows.
    */
-  public final Tuple<Matrix, Matrix> splitRandomMatrices(float percentage) {
+  public final Tuple<DenseIntMatrix, DenseIntMatrix> splitRandomMatrices(float percentage) {
     if (percentage < 0.0f || percentage > 1.0f) {
       throw new IllegalArgumentException(
           "Percentage must be between 0.0 and 1.0! Given " + percentage);
     }
 
     if (percentage == 1.0f) {
-      return new Tuple<Matrix, Matrix>(this, null);
+      return new Tuple<DenseIntMatrix, DenseIntMatrix>(this, null);
     } else if (percentage == 0.0f) {
-      return new Tuple<Matrix, Matrix>(null, this);
+      return new Tuple<DenseIntMatrix, DenseIntMatrix>(null, this);
     }
 
     final Random rand = new Random(System.nanoTime());
@@ -267,7 +267,7 @@ public final class Matrix {
       }
     }
 
-    return new Tuple<Matrix, Matrix>(new Matrix(firstMatrix), new Matrix(
+    return new Tuple<DenseIntMatrix, DenseIntMatrix>(new DenseIntMatrix(firstMatrix), new DenseIntMatrix(
         secondMatrix));
   }
 

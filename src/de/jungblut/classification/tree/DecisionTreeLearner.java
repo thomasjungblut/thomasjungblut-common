@@ -3,7 +3,7 @@ package de.jungblut.classification.tree;
 import java.util.ArrayList;
 
 import de.jungblut.math.DenseIntVector;
-import de.jungblut.math.Matrix;
+import de.jungblut.math.DenseIntMatrix;
 import de.jungblut.util.Tuple;
 
 /**
@@ -16,7 +16,7 @@ import de.jungblut.util.Tuple;
 public final class DecisionTreeLearner {
 
   private EntropyCalculator attributeChooser = new EntropyCalculator();
-  private Matrix algorithmInputFeatures;
+  private DenseIntMatrix algorithmInputFeatures;
 
   /**
    * For ml-class.org mates inputFeatures is equal to "X" whereas outputVariable
@@ -24,7 +24,7 @@ public final class DecisionTreeLearner {
    * 
    * @return a trained DecisionTree model.
    */
-  public final DecisionTree train(Matrix inputFeatures,
+  public final DecisionTree train(DenseIntMatrix inputFeatures,
       DenseIntVector outputVariable) {
     this.algorithmInputFeatures = inputFeatures;
     return trainInternal(inputFeatures, outputVariable,
@@ -36,7 +36,7 @@ public final class DecisionTreeLearner {
    * 
    * @return a trained model which is able to classify datasets.
    */
-  private final DecisionTree trainInternal(Matrix inputFeatures,
+  private final DecisionTree trainInternal(DenseIntMatrix inputFeatures,
       DenseIntVector outputVariable, boolean[] filteredAttributes) {
     // return default prediction if we have no data
     if (inputFeatures.getRowCount() == 0) {
@@ -59,7 +59,7 @@ public final class DecisionTreeLearner {
           attributeValues.length);
       for (int i = 0; i < attributeValues.length; i++) {
         // we are filtering the matrix and output according to our attributes
-        final Tuple<Matrix, DenseIntVector> filterAttribute = filterAttribute(
+        final Tuple<DenseIntMatrix, DenseIntVector> filterAttribute = filterAttribute(
             inputFeatures, outputVariable, bestAttributeIndex, i);
         // make a recursive step with the new attribute
         final DecisionTree trainInternal = trainInternal(
@@ -130,8 +130,8 @@ public final class DecisionTreeLearner {
    * @return a new tuple of matrix and DenseIntVector where the rows with the
    *         given attributeIndex and attributeValue are not included.
    */
-  private final Tuple<Matrix, DenseIntVector> filterAttribute(
-      Matrix inputFeatures, DenseIntVector outputVariable, int attributeIndex,
+  private final Tuple<DenseIntMatrix, DenseIntVector> filterAttribute(
+      DenseIntMatrix inputFeatures, DenseIntVector outputVariable, int attributeIndex,
       int attributeValue) {
     final ArrayList<int[]> rowList = new ArrayList<int[]>();
     final ArrayList<Integer> outList = new ArrayList<Integer>();
@@ -148,7 +148,7 @@ public final class DecisionTreeLearner {
       newOutput[i] = outList.get(i);
     }
 
-    return new Tuple<Matrix, DenseIntVector>(new Matrix(
+    return new Tuple<DenseIntMatrix, DenseIntVector>(new DenseIntMatrix(
         rowList.toArray(new int[0][0])), new DenseIntVector(newOutput));
 
   }
@@ -172,8 +172,8 @@ public final class DecisionTreeLearner {
         { 1, 0, 0, 0, 0, 1 }, { 1, 1, 1, 2, 2, 1 }, { 1, 1, 1, 2, 1, 0 },
         { 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 1, 1 }, { 0, 1, 0, 1, 2, 1 },
         { 1, 1, 1, 1, 0, 0 } };
-    Matrix matrix = new Matrix(intMatrix);
-    Tuple<Matrix, DenseIntVector> tuple = matrix.splitLastColumn();
+    DenseIntMatrix matrix = new DenseIntMatrix(intMatrix);
+    Tuple<DenseIntMatrix, DenseIntVector> tuple = matrix.splitLastColumn();
 
     DecisionTreeLearner learner = new DecisionTreeLearner();
     DecisionTree train = learner.train(tuple.getFirst(), tuple.getSecond());
