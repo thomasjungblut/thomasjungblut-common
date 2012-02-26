@@ -15,7 +15,6 @@ import de.jungblut.math.DenseDoubleMatrix;
 public class JCUDAMatrixUtils {
 
   public static boolean CUDA_AVAILABLE = false;
-  private static cublasHandle handle;
 
   static {
     try {
@@ -25,12 +24,8 @@ public class JCUDAMatrixUtils {
       cudaDeviceProp cudaDeviceProp = new cudaDeviceProp();
       JCuda.cudaGetDeviceProperties(cudaDeviceProp, 0);
       System.out.println("Using device " + cudaDeviceProp.getName()
-          + " with VRAM of " + cudaDeviceProp.totalGlobalMem + " bytes!");
-      handle = new cublasHandle();
-      JCublas2.cublasCreate(handle);
+          + " with total RAM of " + cudaDeviceProp.totalGlobalMem + " bytes!");
       JCublas2.initialize();
-      JCublas2.cublasSetPointerMode(handle,
-          cublasPointerMode.CUBLAS_POINTER_MODE_DEVICE);
       CUDA_AVAILABLE = true;
     } catch (Throwable e) {
       // e.printStackTrace();
@@ -41,6 +36,12 @@ public class JCUDAMatrixUtils {
   // TODO transpose can be actually done on GPU as well
   public static DenseDoubleMatrix multiply(DenseDoubleMatrix a,
       DenseDoubleMatrix b) {
+
+    cublasHandle handle = new cublasHandle();
+    JCublas2.cublasCreate(handle);
+    JCublas2.cublasSetPointerMode(handle,
+        cublasPointerMode.CUBLAS_POINTER_MODE_DEVICE);
+
     Pointer alpha = new Pointer();
     JCuda.cudaMalloc(alpha, Sizeof.DOUBLE);
     JCuda.cudaMemcpy(alpha, Pointer.to(new double[] { 1.0d }), Sizeof.DOUBLE,
@@ -73,7 +74,7 @@ public class JCUDAMatrixUtils {
     freePointer(matrixPointerA);
     freePointer(matrixPointerB);
     freePointer(deviceResultPointer);
-//    cublasDestroy(handle);
+    cublasDestroy(handle);
 
     return matrix;
   }
@@ -106,7 +107,7 @@ public class JCUDAMatrixUtils {
     return new DenseDoubleMatrix(raw, rows, columns);
   }
 
-  @SuppressWarnings("unused") // seems to have problems with latest CUDA
+  // seems to have problems with latest CUDA?
   private static final void cublasDestroy(cublasHandle handle) {
     JCublas2.cublasDestroy(handle);
   }
