@@ -46,7 +46,7 @@ public class CollaborativeFiltering {
         theta);
     CoFiCostFunction cost = new CoFiCostFunction(userMovieRatings,
         ratingMatrix, numUsers, numMovies, numFeatures, lambda);
-
+    long start = System.currentTimeMillis();
     DenseDoubleVector minimizeFunction = Fmincg.minimizeFunction(cost,
         initialParameters, 100);
 
@@ -80,6 +80,9 @@ public class CollaborativeFiltering {
       int index = tuple.getSecond();
       System.out.println(movieLookupTable.get(index) + " | " + score);
     }
+
+    System.out.println("Took: " + (System.currentTimeMillis() - start) / 1000
+        + "s");
 
   }
 }
