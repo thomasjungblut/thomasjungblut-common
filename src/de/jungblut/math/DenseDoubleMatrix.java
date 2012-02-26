@@ -237,8 +237,16 @@ public final class DenseDoubleMatrix {
   }
 
   public final DenseDoubleMatrix multiply(DenseDoubleMatrix other) {
+
+    if (this.numColumns != other.getRowCount()) {
+      throw new IllegalArgumentException(
+          "multiply: nonconformant arguments (this is " + this.numRows + "x"
+              + this.numColumns + ", other is " + other.getRowCount() + "x"
+              + other.getColumnCount() + ")");
+    }
+
     DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
-        this.numColumns);
+        other.numColumns);
 
     final int m = this.numRows;
     final int n = this.numColumns;
@@ -329,7 +337,7 @@ public final class DenseDoubleMatrix {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
-        m.set(i, j, this.matrix[i][j] - other.get(j, i));
+        m.set(i, j, this.matrix[i][j] - other.get(i, j));
       }
     }
     return m;
@@ -342,7 +350,7 @@ public final class DenseDoubleMatrix {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
-        m.set(i, j, this.matrix[i][j] + other.get(j, i));
+        m.set(i, j, this.matrix[i][j] + other.get(i, j));
       }
     }
     return m;
@@ -417,9 +425,12 @@ public final class DenseDoubleMatrix {
   }
 
   public static void main(String[] args) {
-    DenseDoubleVector a = new DenseDoubleVector(new double[] { 1, 2, 3 });
-    DenseDoubleVector b = new DenseDoubleVector(new double[] { 2, 3, 4 });
-    System.out.println(multiplyTransposedVectors(a, b).multiplyVector(a));
+    DenseDoubleMatrix a = new DenseDoubleMatrix(new double[][] { { 1, 2, 3 },
+        { 4, 5, 6 } });
+    DenseDoubleMatrix b = new DenseDoubleMatrix(new double[][] { { 6, -1 },
+        { 3, 2 }, { 0, -3 } });
+    System.out.println(a.multiply(b));
+
   }
 
 }

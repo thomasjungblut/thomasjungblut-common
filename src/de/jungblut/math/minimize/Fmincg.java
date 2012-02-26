@@ -1,6 +1,5 @@
 package de.jungblut.math.minimize;
 
-import de.jungblut.math.DenseDoubleMatrix;
 import de.jungblut.math.DenseDoubleVector;
 import de.jungblut.util.Tuple;
 
@@ -17,9 +16,6 @@ public class Fmincg {
   private static final int MAX = 20; // max 20 function evaluations per line
                                      // search
   private static final int RATIO = 100; // maximum allowed slope ratio
-
-  // octave rounds in 2 decimal places
-  private static final int ROUNDING_PRECISION = 100;
 
   public static DenseDoubleVector minimizeFunction(CostFunction f,
       DenseDoubleVector input, int length) {
@@ -162,10 +158,9 @@ public class Fmincg {
           s = df1.multiply(-1.0d); // otherwise use steepest direction
           d2 = s.multiply(-1.0d).dot(s);
         }
-        // MIN_VALUE is actually realmin = 2.2251e-308, this will overflow
-        // double.. d2-Double.MIN_VALUE
-        z1 = z1 * Math.min(RATIO, d1 / (d2 - 2.2251e-308)); // slope ratio but
-                                                            // max RATIO
+        // realmin in octave = 2.2251e-308
+        // slope ratio but max RATIO
+        z1 = z1 * Math.min(RATIO, d1 / (d2 - 2.2251e-308));
         d1 = d2;
         ls_failed = 0; // this line search did not fail
       } else {

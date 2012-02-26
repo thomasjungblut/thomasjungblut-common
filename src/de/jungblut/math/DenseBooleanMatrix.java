@@ -136,6 +136,16 @@ public final class DenseBooleanMatrix {
   public final void set(int row, int col, boolean value) {
     this.matrix[row][col] = value;
   }
+  
+  public DenseBooleanMatrix transpose() {
+    DenseBooleanMatrix m = new DenseBooleanMatrix(this.numColumns, this.numRows);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(j, i, this.matrix[i][j]);
+      }
+    }
+    return m;
+  }
 
   /**
    * Returns the size of the matrix as string (ROWSxCOLUMNS).
