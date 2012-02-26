@@ -20,8 +20,8 @@ public class JCUDAMatrixUtils {
   static {
     try {
       // Disable exceptions and omit subsequent error checks
-      JCublas2.setExceptionsEnabled(false);
-      JCuda.setExceptionsEnabled(false);
+      JCublas2.setExceptionsEnabled(true);
+      JCuda.setExceptionsEnabled(true);
       cudaDeviceProp cudaDeviceProp = new cudaDeviceProp();
       JCuda.cudaGetDeviceProperties(cudaDeviceProp, 0);
       System.out.println("Using device " + cudaDeviceProp.getName()
@@ -72,6 +72,7 @@ public class JCUDAMatrixUtils {
 
     freePointer(matrixPointerA);
     freePointer(matrixPointerB);
+    freePointer(deviceResultPointer);
 //    cublasDestroy(handle);
 
     return matrix;
