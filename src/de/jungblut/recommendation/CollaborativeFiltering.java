@@ -22,11 +22,10 @@ public class CollaborativeFiltering {
         .getNonDefaultBooleanMatrix();
     final Tuple<DenseDoubleMatrix, DenseDoubleVector> normalizedTuple = Normalizer
         .meanNormalize(userMovieRatings);
-    
+
     userMovieRatings.set(0, 260, 5); // star wars IV
     userMovieRatings.set(0, 1196, 5); // star wars V
     userMovieRatings.set(0, 1210, 5); // star wars VI
-    
 
     final DenseDoubleMatrix normalizedRatings = normalizedTuple.getFirst();
     final DenseDoubleVector movieRatingMeanVector = normalizedTuple.getSecond();
@@ -65,7 +64,7 @@ public class CollaborativeFiltering {
 
     HashMap<Integer, String> movieLookupTable = MovieLensReader
         .getMovieLookupTable();
-    
+
     List<Tuple<Double, Integer>> sort = DenseDoubleVector.sort(myPredictions,
         Collections.reverseOrder(new Comparator<Double>() {
           @Override
@@ -73,7 +72,7 @@ public class CollaborativeFiltering {
             return Double.compare(o1, o2);
           }
         }));
-    
+
     System.out.println("Predictions for me: ");
     for (int i = 0; i < 10; i++) {
       Tuple<Double, Integer> tuple = sort.get(i);

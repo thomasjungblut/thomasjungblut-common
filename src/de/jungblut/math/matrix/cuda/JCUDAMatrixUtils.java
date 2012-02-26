@@ -23,10 +23,12 @@ public class JCUDAMatrixUtils {
       JCuda.setExceptionsEnabled(false);
       cudaDeviceProp cudaDeviceProp = new cudaDeviceProp();
       JCuda.cudaGetDeviceProperties(cudaDeviceProp, 0);
-      System.out.println("Found device: " + cudaDeviceProp.getName());
-      CUDA_AVAILABLE = false;
+      System.out.println("Using device " + cudaDeviceProp.getName()
+          + " with VRAM of " + cudaDeviceProp.totalGlobalMem + " bytes!");
+      CUDA_AVAILABLE = true;
     } catch (Throwable e) {
-      e.printStackTrace();
+      // e.printStackTrace();
+      System.out.println(e.getLocalizedMessage());
     }
   }
 
@@ -69,7 +71,7 @@ public class JCUDAMatrixUtils {
 
     freePointer(matrixPointerA);
     freePointer(matrixPointerB);
-    cublasDestroy(handle);
+//    cublasDestroy(handle);
 
     return matrix;
   }
