@@ -1,5 +1,6 @@
 package de.jungblut.math.minimize;
 
+import de.jungblut.math.DenseDoubleMatrix;
 import de.jungblut.math.DenseDoubleVector;
 import de.jungblut.util.Tuple;
 
@@ -16,6 +17,9 @@ public class Fmincg {
   private static final int MAX = 20; // max 20 function evaluations per line
                                      // search
   private static final int RATIO = 100; // maximum allowed slope ratio
+
+  // octave rounds in 2 decimal places
+  private static final int ROUNDING_PRECISION = 100;
 
   public static DenseDoubleVector minimizeFunction(CostFunction f,
       DenseDoubleVector input, int length) {
@@ -147,11 +151,9 @@ public class Fmincg {
         f1 = f2;
         fX = new DenseDoubleVector(fX.toArray(), f1);
         System.out.printf("Interation %d | Cost: %f\r", i, f1);
-        // Polack-Ribiere direction
-        // (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
-        // TODO df1'*df1 = matrix not double...
-        s = s.multiply(df1.dot(df1)).subtract(df2)
-            .divideFrom((df2.dot(df2) - df1.dot(df2)));
+        // Polack-Ribiere direction: s = (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
+        final double numerator = (df2.dot(df2) - df1.dot(df2)) / df1.dot(df1);
+        s = s.multiply(numerator).subtract(df2);
         tmp = df1;
         df1 = df2;
         df2 = tmp; // swap derivatives
@@ -162,7 +164,8 @@ public class Fmincg {
         }
         // MIN_VALUE is actually realmin = 2.2251e-308, this will overflow
         // double.. d2-Double.MIN_VALUE
-        z1 = z1 * Math.min(RATIO, d1 / (d2-2.2251e-308)); // slope ratio but max RATIO
+        z1 = z1 * Math.min(RATIO, d1 / (d2 - 2.2251e-308)); // slope ratio but
+                                                            // max RATIO
         d1 = d2;
         ls_failed = 0; // this line search did not fail
       } else {

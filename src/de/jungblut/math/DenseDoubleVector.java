@@ -91,7 +91,12 @@ public final class DenseDoubleVector {
   public DenseDoubleVector divideFrom(double scalar) {
     DenseDoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
-      v.set(i, scalar / this.get(i));
+      if (this.get(i) != 0.0d) {
+        double result = scalar / this.get(i);
+        v.set(i, result);
+      } else {
+        v.set(i, 0.0d);
+      }
     }
     return v;
   }

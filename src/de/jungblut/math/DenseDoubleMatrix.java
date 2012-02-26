@@ -273,6 +273,19 @@ public final class DenseDoubleMatrix {
     return matrix;
   }
 
+  public final DenseDoubleVector multiplyVector(DenseDoubleVector v) {
+    DenseDoubleVector vector = new DenseDoubleVector(this.getRowCount());
+    for (int row = 0; row < numRows; row++) {
+      double sum = 0.0d;
+      for (int col = 0; col < numColumns; col++) {
+        sum += (matrix[row][col] * v.get(col));
+      }
+      vector.set(row, sum);
+    }
+
+    return vector;
+  }
+
   public DenseDoubleMatrix transpose() {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numColumns, this.numRows);
     for (int i = 0; i < numRows; i++) {
@@ -389,11 +402,24 @@ public final class DenseDoubleMatrix {
     return new DenseDoubleMatrix(dest);
   }
 
-  public static void main(String[] args) {
-    DenseDoubleMatrix m = new DenseDoubleMatrix(new double[][] { { 1, 2, 3 },
-        { 4, 5, 6 } });
-    System.out.println(m.transpose());
+  // this is actually strange, but works like this in octave
+  public static DenseDoubleMatrix multiplyTransposedVectors(
+      DenseDoubleVector transposed, DenseDoubleVector normal) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(transposed.getLength(),
+        normal.getLength());
+    for (int row = 0; row < transposed.getLength(); row++) {
+      for (int col = 0; col < normal.getLength(); col++) {
+        m.set(row, col, transposed.get(row) * normal.get(col));
+      }
+    }
 
+    return m;
+  }
+
+  public static void main(String[] args) {
+    DenseDoubleVector a = new DenseDoubleVector(new double[] { 1, 2, 3 });
+    DenseDoubleVector b = new DenseDoubleVector(new double[] { 2, 3, 4 });
+    System.out.println(multiplyTransposedVectors(a, b).multiplyVector(a));
   }
 
 }
