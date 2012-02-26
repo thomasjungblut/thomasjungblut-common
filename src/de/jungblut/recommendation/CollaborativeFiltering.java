@@ -58,7 +58,7 @@ public class CollaborativeFiltering {
 
     DenseDoubleMatrix computedTheta = unfoldMatrices[1];
 
-    DenseDoubleMatrix p = x.multiply(computedTheta);
+    DenseDoubleMatrix p = x.multiply(computedTheta.transpose());
 
     DenseDoubleVector myPredictions = p.getColumnVector(0).add(
         movieRatingMeanVector);

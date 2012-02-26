@@ -51,6 +51,17 @@ public final class DenseDoubleMatrix {
       this.numColumns = numRows;
   }
 
+  public DenseDoubleMatrix(double[] v, int rows, int columns) {
+    this.matrix = new double[rows][columns];
+
+    for (int i = 0; i < rows; i++) {
+      System.arraycopy(v, i * columns, this.matrix[i], 0, columns);
+    }
+
+    this.numRows = rows;
+    this.numColumns = columns;
+  }
+
   /**
    * Get a specific value of the matrix.
    * 
@@ -138,6 +149,10 @@ public final class DenseDoubleMatrix {
 
   public final void set(int row, int col, double value) {
     this.matrix[row][col] = value;
+  }
+
+  public final void setRow(int row, double[] value) {
+    this.matrix[row] = value;
   }
 
   /**
@@ -422,15 +437,6 @@ public final class DenseDoubleMatrix {
     }
 
     return m;
-  }
-
-  public static void main(String[] args) {
-    DenseDoubleMatrix a = new DenseDoubleMatrix(new double[][] { { 1, 2, 3 },
-        { 4, 5, 6 } });
-    DenseDoubleMatrix b = new DenseDoubleMatrix(new double[][] { { 6, -1 },
-        { 3, 2 }, { 0, -3 } });
-    System.out.println(a.multiply(b));
-
   }
 
 }
