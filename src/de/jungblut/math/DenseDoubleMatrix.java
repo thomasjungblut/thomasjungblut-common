@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
+import de.jungblut.math.matrix.cuda.JCUDAMatrixUtils;
 import de.jungblut.util.Tuple;
 
 public final class DenseDoubleMatrix {
@@ -56,6 +57,13 @@ public final class DenseDoubleMatrix {
 
     for (int i = 0; i < rows; i++) {
       System.arraycopy(v, i * columns, this.matrix[i], 0, columns);
+    }
+
+    int index = 0;
+    for (int col = 0; col < columns; col++) {
+      for (int row = 0; row < rows; row++) {
+        matrix[row][col] = v[index++];
+      }
     }
 
     this.numRows = rows;
@@ -252,32 +260,35 @@ public final class DenseDoubleMatrix {
   }
 
   public final DenseDoubleMatrix multiply(DenseDoubleMatrix other) {
-
-    if (this.numColumns != other.getRowCount()) {
-      throw new IllegalArgumentException(
-          "multiply: nonconformant arguments (this is " + this.numRows + "x"
-              + this.numColumns + ", other is " + other.getRowCount() + "x"
-              + other.getColumnCount() + ")");
-    }
-
-    DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
-        other.numColumns);
-
-    final int m = this.numRows;
-    final int n = this.numColumns;
-    final int p = other.numColumns;
-
-    for (int j = p; --j >= 0;) {
-      for (int i = m; --i >= 0;) {
-        double s = 0;
-        for (int k = n; --k >= 0;) {
-          s += get(i, k) * other.get(k, j);
-        }
-        matrix.set(i, j, s + matrix.get(i, j));
+    if (JCUDAMatrixUtils.CUDA_AVAILABLE) {
+      return JCUDAMatrixUtils.multiply(this, other);
+    } else {
+      if (this.numColumns != other.getRowCount()) {
+        throw new IllegalArgumentException(
+            "multiply: nonconformant arguments (this is " + this.numRows + "x"
+                + this.numColumns + ", other is " + other.getRowCount() + "x"
+                + other.getColumnCount() + ")");
       }
-    }
 
-    return matrix;
+      DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
+          other.numColumns);
+
+      final int m = this.numRows;
+      final int n = this.numColumns;
+      final int p = other.numColumns;
+
+      for (int j = p; --j >= 0;) {
+        for (int i = m; --i >= 0;) {
+          double s = 0;
+          for (int k = n; --k >= 0;) {
+            s += get(i, k) * other.get(k, j);
+          }
+          matrix.set(i, j, s + matrix.get(i, j));
+        }
+      }
+
+      return matrix;
+    }
   }
 
   /**
