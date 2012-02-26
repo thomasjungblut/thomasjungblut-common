@@ -13,7 +13,7 @@ import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.util.Tuple;
 
-public class CollaberativeFiltering {
+public class CollaborativeFiltering {
 
   public static void main(String[] args) {
     final DenseDoubleMatrix userMovieRatings = MovieLensReader
@@ -22,6 +22,11 @@ public class CollaberativeFiltering {
         .getNonDefaultBooleanMatrix();
     final Tuple<DenseDoubleMatrix, DenseDoubleVector> normalizedTuple = Normalizer
         .meanNormalize(userMovieRatings);
+    
+    userMovieRatings.set(0, 260, 5); // star wars IV
+    userMovieRatings.set(0, 1196, 5); // star wars V
+    userMovieRatings.set(0, 1210, 5); // star wars VI
+    
 
     final DenseDoubleMatrix normalizedRatings = normalizedTuple.getFirst();
     final DenseDoubleVector movieRatingMeanVector = normalizedTuple.getSecond();
