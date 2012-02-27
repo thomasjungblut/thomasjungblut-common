@@ -58,14 +58,16 @@ public final class DecisionTreeLearner {
       DecisionTree node = new DecisionTree(bestAttributeIndex,
           attributeValues.length);
       for (int i = 0; i < attributeValues.length; i++) {
-        // we are filtering the matrix and output according to our attributes
+        // we are filtering the matrix and output according to our
+        // attributes
         final Tuple<DenseIntMatrix, DenseIntVector> filterAttribute = filterAttribute(
             inputFeatures, outputVariable, bestAttributeIndex, i);
         // make a recursive step with the new attribute
         final DecisionTree trainInternal = trainInternal(
             filterAttribute.getFirst(), filterAttribute.getSecond(),
             cloneArray(filteredAttributes));
-        // make sure that this method never returns null, otherwise this will
+        // make sure that this method never returns null, otherwise this
+        // will
         // fail greatly.
         node.addNode(attributeValues[i], trainInternal);
       }
@@ -75,7 +77,8 @@ public final class DecisionTreeLearner {
       // our node is trained completly, now return
       return node;
     } else {
-      // if our entropy isn't reliable enough, use majority value of predictions
+      // if our entropy isn't reliable enough, use majority value of
+      // predictions
       return new DecisionTree(getMajorityPrediction(outputVariable));
     }
   }
@@ -95,7 +98,8 @@ public final class DecisionTreeLearner {
       if (child != null && child.isLeaf()) {
         predictionChildCount[child.getPrediction()]++;
       } else {
-        // if we find something that is no leaf, we have to return directly
+        // if we find something that is no leaf, we have to return
+        // directly
         return node;
       }
     }
@@ -131,8 +135,8 @@ public final class DecisionTreeLearner {
    *         given attributeIndex and attributeValue are not included.
    */
   private final Tuple<DenseIntMatrix, DenseIntVector> filterAttribute(
-      DenseIntMatrix inputFeatures, DenseIntVector outputVariable, int attributeIndex,
-      int attributeValue) {
+      DenseIntMatrix inputFeatures, DenseIntVector outputVariable,
+      int attributeIndex, int attributeValue) {
     final ArrayList<int[]> rowList = new ArrayList<int[]>();
     final ArrayList<Integer> outList = new ArrayList<Integer>();
     final int rowCount = inputFeatures.getRowCount();

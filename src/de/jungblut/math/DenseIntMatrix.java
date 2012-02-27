@@ -227,7 +227,8 @@ public final class DenseIntMatrix {
    *         percentage of the rows from the original matrix (rows are chosen
    *         randomly) and the second one contains all other rows.
    */
-  public final Tuple<DenseIntMatrix, DenseIntMatrix> splitRandomMatrices(float percentage) {
+  public final Tuple<DenseIntMatrix, DenseIntMatrix> splitRandomMatrices(
+      float percentage) {
     if (percentage < 0.0f || percentage > 1.0f) {
       throw new IllegalArgumentException(
           "Percentage must be between 0.0 and 1.0! Given " + percentage);
@@ -267,8 +268,8 @@ public final class DenseIntMatrix {
       }
     }
 
-    return new Tuple<DenseIntMatrix, DenseIntMatrix>(new DenseIntMatrix(firstMatrix), new DenseIntMatrix(
-        secondMatrix));
+    return new Tuple<DenseIntMatrix, DenseIntMatrix>(new DenseIntMatrix(
+        firstMatrix), new DenseIntMatrix(secondMatrix));
   }
 
   @Override

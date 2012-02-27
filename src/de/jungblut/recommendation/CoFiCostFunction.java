@@ -48,7 +48,8 @@ public final class CoFiCostFunction implements CostFunction {
     j = sumWhenTrue(tmp, ratingMatrix) / 2.0d
         + (lambda * sum(theta.pow(2)) / 2.0d)
         + (lambda * sum((x.pow(2))) / 2.0d);
-    // J = (sum(code(R==1)))/2 + (lambda * (sum(sum(Theta.^2))) /2) + (lambda *
+    // J = (sum(code(R==1)))/2 + (lambda * (sum(sum(Theta.^2))) /2) +
+    // (lambda *
     // sum((sum(X.^2))) /2);
 
     xGradient = ((x.multiply(theta.transpose()).subtract(userMovieRatings)

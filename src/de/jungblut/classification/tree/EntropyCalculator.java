@@ -57,7 +57,9 @@ public final class EntropyCalculator {
     final int targetValues = outputVariable.getNumberOfDistinctElements();
 
     // count predictions for each possible value in this column
-    int[] valueCounts = new int[columnValues + 1]; /* |S_v| for each attribute */
+    int[] valueCounts = new int[columnValues + 1]; /*
+                                                    * |S_v| for each attribute
+                                                    */
     int[][] predictionCounts = new int[columnValues + 1][targetValues + 1];
     for (int r = 0; r < m.length; r++) {
       int value = m[r][col];

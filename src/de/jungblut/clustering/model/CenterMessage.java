@@ -8,38 +8,38 @@ import java.io.IOException;
 
 public final class CenterMessage extends BSPMessage {
 
-    private int oldCenterId;
-    private ClusterCenter newCenter;
+  private int oldCenterId;
+  private ClusterCenter newCenter;
 
-    public CenterMessage() {
-    }
+  public CenterMessage() {
+  }
 
-    public CenterMessage(int key, ClusterCenter value) {
-        this.oldCenterId = key;
-        this.newCenter = value;
-    }
+  public CenterMessage(int key, ClusterCenter value) {
+    this.oldCenterId = key;
+    this.newCenter = value;
+  }
 
-    @Override
-    public final void readFields(DataInput in) throws IOException {
-        oldCenterId = in.readInt();
-        newCenter = new ClusterCenter();
-        newCenter.readFields(in);
-    }
+  @Override
+  public final void readFields(DataInput in) throws IOException {
+    oldCenterId = in.readInt();
+    newCenter = new ClusterCenter();
+    newCenter.readFields(in);
+  }
 
-    @Override
-    public final void write(DataOutput out) throws IOException {
-        out.writeInt(oldCenterId);
-        newCenter.write(out);
-    }
+  @Override
+  public final void write(DataOutput out) throws IOException {
+    out.writeInt(oldCenterId);
+    newCenter.write(out);
+  }
 
-    @Override
-    public final Integer getTag() {
-        return oldCenterId;
-    }
+  @Override
+  public final Integer getTag() {
+    return oldCenterId;
+  }
 
-    @Override
-    public final ClusterCenter getData() {
-        return newCenter;
-    }
+  @Override
+  public final ClusterCenter getData() {
+    return newCenter;
+  }
 
 }

@@ -2,15 +2,15 @@ package de.jungblut.classification.bayes;
 
 public interface Type extends Cloneable {
 
-    public void addInput(String input);
+  public void addInput(String input);
 
-    public double getProbability(String input, double aprioriProbability);
+  public double getProbability(String input, double aprioriProbability);
 
-    public void setAttributeName(String input);
+  public void setAttributeName(String input);
 
-    public String getAttributeName();
+  public String getAttributeName();
 
-    public void finalizeType();
+  public void finalizeType();
 
-    Type clone();
+  Type clone();
 }

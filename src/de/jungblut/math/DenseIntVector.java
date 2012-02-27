@@ -33,7 +33,8 @@ public final class DenseIntVector {
     return set.size();
   }
 
-  // in our "hack" environment, this fast retrieval can be made because we have
+  // in our "hack" environment, this fast retrieval can be made because we
+  // have
   // elements starting from 0 and then are
   // incremented. -> Experimental!
   public final int getNumberOfDistinctElementsFast() {

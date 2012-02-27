@@ -16,8 +16,8 @@ import de.jungblut.util.Tuple;
 public class CollaborativeFiltering {
 
   public static void main(String[] args) {
-	  // TODO move out of the main method in a more object oriented style
-	  // take 100 users and all movies
+    // TODO move out of the main method in a more object oriented style
+    // take 100 users and all movies
     final DenseDoubleMatrix userMovieRatings = MovieLensReader
         .getUserMovieRatings().slice(100, 6040);
     final DenseBooleanMatrix ratingMatrix = userMovieRatings

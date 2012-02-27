@@ -136,7 +136,7 @@ public final class DenseBooleanMatrix {
   public final void set(int row, int col, boolean value) {
     this.matrix[row][col] = value;
   }
-  
+
   public DenseBooleanMatrix transpose() {
     DenseBooleanMatrix m = new DenseBooleanMatrix(this.numColumns, this.numRows);
     for (int i = 0; i < numRows; i++) {
