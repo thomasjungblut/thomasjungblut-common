@@ -69,6 +69,8 @@ public class JCUDAMatrixUtils {
         a.getColumnCount(), alpha, matrixPointerA, a.getRowCount(),
         matrixPointerB, b.getRowCount(), beta, deviceResultPointer,
         a.getRowCount());
+    System.out.println(JCuda.cudaGetErrorString(JCuda.cudaGetLastError()));
+    
     JCuda.cudaDeviceSynchronize();
 
     DenseDoubleMatrix matrix = getMatrix(deviceResultPointer, a.getRowCount(),
@@ -120,12 +122,10 @@ public class JCUDAMatrixUtils {
 
   public static void main(String[] args) {
 
-    for (int i = 2; i < 10000; i++) {
+    for (int i = 2; i < 300; i++) {
       DenseDoubleMatrix a = new DenseDoubleMatrix(i, i, new Random());
       DenseDoubleMatrix b = new DenseDoubleMatrix(i, i, new Random());
-      CUDA_AVAILABLE = false;
       DenseDoubleMatrix multiplyCPU = a.multiply(b);
-      CUDA_AVAILABLE = true;
       DenseDoubleMatrix multiplyGPU = multiply(a, b);
       System.out.println(i + " "
           + DenseDoubleMatrix.error(multiplyCPU, multiplyGPU));
