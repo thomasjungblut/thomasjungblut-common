@@ -1,4 +1,4 @@
-package de.jungblut.math.matrix.cuda;
+package de.jungblut.math.cuda;
 
 import jcuda.Pointer;
 import jcuda.Sizeof;

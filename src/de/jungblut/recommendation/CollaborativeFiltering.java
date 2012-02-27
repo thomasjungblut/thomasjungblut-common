@@ -16,8 +16,10 @@ import de.jungblut.util.Tuple;
 public class CollaborativeFiltering {
 
   public static void main(String[] args) {
+	  // TODO move out of the main method in a more object oriented style
+	  // take 100 users and all movies
     final DenseDoubleMatrix userMovieRatings = MovieLensReader
-        .getUserMovieRatings();
+        .getUserMovieRatings().slice(100, 6040);
     final DenseBooleanMatrix ratingMatrix = userMovieRatings
         .getNonDefaultBooleanMatrix();
     final Tuple<DenseDoubleMatrix, DenseDoubleVector> normalizedTuple = Normalizer
@@ -48,7 +50,7 @@ public class CollaborativeFiltering {
         ratingMatrix, numUsers, numMovies, numFeatures, lambda);
     long start = System.currentTimeMillis();
     DenseDoubleVector minimizeFunction = Fmincg.minimizeFunction(cost,
-        initialParameters, 100);
+        initialParameters, 100, true);
 
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
         minimizeFunction, new int[][] {

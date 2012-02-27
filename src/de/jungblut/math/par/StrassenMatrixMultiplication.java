@@ -1,4 +1,4 @@
-package de.jungblut.math.matrix;
+package de.jungblut.math.par;
 
 import java.util.Arrays;
 

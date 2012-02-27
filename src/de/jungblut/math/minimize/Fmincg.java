@@ -18,7 +18,7 @@ public class Fmincg {
   private static final int RATIO = 100; // maximum allowed slope ratio
 
   public static DenseDoubleVector minimizeFunction(CostFunction f,
-      DenseDoubleVector input, int length) {
+      DenseDoubleVector input, int length, boolean verbose) {
 
     int M = 0;
     int i = 0; // zero the run length counter
@@ -146,7 +146,8 @@ public class Fmincg {
       if (success == 1) { // if line search succeeded
         f1 = f2;
         fX = new DenseDoubleVector(fX.toArray(), f1);
-        System.out.printf("Interation %d | Cost: %f\r", i, f1);
+        if(verbose)
+        	System.out.printf("Interation %d | Cost: %f\r", i, f1);
         // Polack-Ribiere direction: s = (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
         final double numerator = (df2.dot(df2) - df1.dot(df2)) / df1.dot(df1);
         s = s.multiply(numerator).subtract(df2);
