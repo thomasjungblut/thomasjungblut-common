@@ -23,10 +23,13 @@ public class JCUDAMatrixUtils {
       JCuda.setExceptionsEnabled(true);
       cudaDeviceProp cudaDeviceProp = new cudaDeviceProp();
       JCuda.cudaGetDeviceProperties(cudaDeviceProp, 0);
-      System.out.println("Using device " + cudaDeviceProp.getName()
-          + " with total RAM of " + cudaDeviceProp.totalGlobalMem + " bytes!");
-      JCublas2.initialize();
-      CUDA_AVAILABLE = true;
+      // actually here is only cublas2 available.
+      if(Integer.parseInt(cudaDeviceProp.getName().replaceAll("[^\\d]", "")) > 400){
+    	  JCublas2.initialize();
+    	  System.out.println("Using device " + cudaDeviceProp.getName()
+    	          + " with total RAM of " + cudaDeviceProp.totalGlobalMem + " bytes!");
+    	  CUDA_AVAILABLE = true;
+      }
     } catch (Throwable e) {
       // e.printStackTrace();
       System.out.println(e.getLocalizedMessage());
