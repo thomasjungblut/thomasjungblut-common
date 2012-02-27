@@ -4,7 +4,6 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
-import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.util.Tuple;
 
 public final class DenseDoubleMatrix {
@@ -260,35 +259,35 @@ public final class DenseDoubleMatrix {
   }
 
   public final DenseDoubleMatrix multiply(DenseDoubleMatrix other) {
-    if (JCUDAMatrixUtils.CUDA_AVAILABLE) {
-      return JCUDAMatrixUtils.multiply(this, other);
-    } else {
-      if (this.numColumns != other.getRowCount()) {
-        throw new IllegalArgumentException(
-            "multiply: nonconformant arguments (this is " + this.numRows + "x"
-                + this.numColumns + ", other is " + other.getRowCount() + "x"
-                + other.getColumnCount() + ")");
-      }
-
-      DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
-          other.numColumns);
-
-      final int m = this.numRows;
-      final int n = this.numColumns;
-      final int p = other.numColumns;
-
-      for (int j = p; --j >= 0;) {
-        for (int i = m; --i >= 0;) {
-          double s = 0;
-          for (int k = n; --k >= 0;) {
-            s += get(i, k) * other.get(k, j);
-          }
-          matrix.set(i, j, s + matrix.get(i, j));
-        }
-      }
-
-      return matrix;
+    // if (JCUDAMatrixUtils.CUDA_AVAILABLE) {
+    // return JCUDAMatrixUtils.multiply(this, other);
+    // } else {
+    if (this.numColumns != other.getRowCount()) {
+      throw new IllegalArgumentException(
+          "multiply: nonconformant arguments (this is " + this.numRows + "x"
+              + this.numColumns + ", other is " + other.getRowCount() + "x"
+              + other.getColumnCount() + ")");
     }
+
+    DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
+        other.numColumns);
+
+    final int m = this.numRows;
+    final int n = this.numColumns;
+    final int p = other.numColumns;
+
+    for (int j = p; --j >= 0;) {
+      for (int i = m; --i >= 0;) {
+        double s = 0;
+        for (int k = n; --k >= 0;) {
+          s += get(i, k) * other.get(k, j);
+        }
+        matrix.set(i, j, s + matrix.get(i, j));
+      }
+    }
+
+    return matrix;
+    // }
   }
 
   /**
@@ -417,6 +416,44 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
+  public double sumElements() {
+    double x = 0.0d;
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        x += Math.abs(matrix[i][j]);
+      }
+    }
+    return x;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + Arrays.hashCode(matrix);
+    result = prime * result + numColumns;
+    result = prime * result + numRows;
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    DenseDoubleMatrix other = (DenseDoubleMatrix) obj;
+    if (!Arrays.deepEquals(matrix, other.matrix))
+      return false;
+    if (numColumns != other.numColumns)
+      return false;
+    if (numRows != other.numRows)
+      return false;
+    return true;
+  }
+
   @Override
   public String toString() {
     if (numRows < 10) {
@@ -464,6 +501,10 @@ public final class DenseDoubleMatrix {
     }
 
     return m;
+  }
+
+  public static double error(DenseDoubleMatrix a, DenseDoubleMatrix b) {
+    return a.subtract(b).sumElements();
   }
 
 }

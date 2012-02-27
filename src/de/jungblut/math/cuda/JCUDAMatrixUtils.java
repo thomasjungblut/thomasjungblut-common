@@ -1,5 +1,7 @@
 package de.jungblut.math.cuda;
 
+import java.util.Random;
+
 import jcuda.Pointer;
 import jcuda.Sizeof;
 import jcuda.jcublas.JCublas2;
@@ -67,7 +69,6 @@ public class JCUDAMatrixUtils {
         a.getColumnCount(), alpha, matrixPointerA, a.getRowCount(),
         matrixPointerB, b.getRowCount(), beta, deviceResultPointer,
         a.getRowCount());
-    cublasDestroy(handle);
     JCuda.cudaDeviceSynchronize();
 
     DenseDoubleMatrix matrix = getMatrix(deviceResultPointer, a.getRowCount(),
@@ -76,7 +77,7 @@ public class JCUDAMatrixUtils {
     freePointer(matrixPointerA);
     freePointer(matrixPointerB);
     freePointer(deviceResultPointer);
-
+    cublasDestroy(handle);
     return matrix;
   }
 
@@ -118,14 +119,17 @@ public class JCUDAMatrixUtils {
   }
 
   public static void main(String[] args) {
-    DenseDoubleMatrix a = new DenseDoubleMatrix(new double[][] { { 1, 2, 3 },
-        { 4, 5, 6 } });
-    DenseDoubleMatrix b = new DenseDoubleMatrix(new double[][] { { 6, -1 },
-        { 3, 2 }, { 0, -3 } });
-    CUDA_AVAILABLE = false;
-    System.out.println(a.multiply(b));
-    CUDA_AVAILABLE = false;
-    System.out.println(multiply(a, b));
+
+    for (int i = 2; i < 10000; i++) {
+      DenseDoubleMatrix a = new DenseDoubleMatrix(i, i, new Random());
+      DenseDoubleMatrix b = new DenseDoubleMatrix(i, i, new Random());
+      CUDA_AVAILABLE = false;
+      DenseDoubleMatrix multiplyCPU = a.multiply(b);
+      CUDA_AVAILABLE = true;
+      DenseDoubleMatrix multiplyGPU = multiply(a, b);
+      System.out.println(i + " "
+          + DenseDoubleMatrix.error(multiplyCPU, multiplyGPU));
+    }
   }
 
 }
