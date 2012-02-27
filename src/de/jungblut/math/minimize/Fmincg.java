@@ -3,6 +3,59 @@ package de.jungblut.math.minimize;
 import de.jungblut.math.DenseDoubleVector;
 import de.jungblut.util.Tuple;
 
+/**
+ * 
+ * Minimize a continuous differentialble multivariate function. Starting point <br/>
+ * is given by "X" (D by 1), and the function named in the string "f", must<br/>
+ * return a function value and a vector of partial derivatives. The Polack-<br/>
+ * Ribiere flavour of conjugate gradients is used to compute search directions,<br/>
+ * and a line search using quadratic and cubic polynomial approximations and the<br/>
+ * Wolfe-Powell stopping criteria is used together with the slope ratio method<br/>
+ * for guessing initial step sizes. Additionally a bunch of checks are made to<br/>
+ * make sure that exploration is taking place and that extrapolation will not<br/>
+ * be unboundedly large. The "length" gives the length of the run: if it is<br/>
+ * positive, it gives the maximum number of line searches, if negative its<br/>
+ * absolute gives the maximum allowed number of function evaluations. You can<br/>
+ * (optionally) give "length" a second component, which will indicate the<br/>
+ * reduction in function value to be expected in the first line-search (defaults<br/>
+ * to 1.0). The function returns when either its length is up, or if no further<br/>
+ * progress can be made (ie, we are at a minimum, or so close that due to<br/>
+ * numerical problems, we cannot get any closer). If the function terminates<br/>
+ * within a few iterations, it could be an indication that the function value<br/>
+ * and derivatives are not consistent (ie, there may be a bug in the<br/>
+ * implementation of your "f" function). The function returns the found<br/>
+ * solution "X", a vector of function values "fX" indicating the progress made<br/>
+ * and "i" the number of iterations (line searches or function evaluations,<br/>
+ * depending on the sign of "length") used.<br/>
+ * <br/>
+ * Usage: [X, fX, i] = fmincg(f, X, options, P1, P2, P3, P4, P5)<br/>
+ * <br/>
+ * See also: checkgrad <br/>
+ * <br/>
+ * Copyright (C) 2001 and 2002 by Carl Edward Rasmussen. Date 2002-02-13<br/>
+ * <br/>
+ * <br/>
+ * (C) Copyright 1999, 2000 & 2001, Carl Edward Rasmussen <br/>
+ * Permission is granted for anyone to copy, use, or modify these<br/>
+ * programs and accompanying documents for purposes of research or<br/>
+ * education, provided this copyright notice is retained, and note is<br/>
+ * made of any changes that have been made.<br/>
+ * <br/>
+ * These programs and documents are distributed without any warranty,<br/>
+ * express or implied. As the programs were written for research<br/>
+ * purposes only, they have not been tested to the degree that would be<br/>
+ * advisable in any important application. All use of these programs is<br/>
+ * entirely at the user's own risk.<br/>
+ * <br/>
+ * [ml-class] Changes Made:<br/>
+ * 1) Function name and argument specifications<br/>
+ * 2) Output display<br/>
+ * <br/>
+ * [tjungblut] Changes Made: <br/>
+ * 1) translated from octave to java<br/>
+ * <br/>
+ * BTW "fmincg" stands for Function minimize nonlinear conjugate gradient
+ */
 public class Fmincg {
 
   private static final double RHO = 0.01; // a bunch of constants for line
@@ -18,6 +71,20 @@ public class Fmincg {
   // search
   private static final int RATIO = 100; // maximum allowed slope ratio
 
+  /**
+   * Minimizes the given CostFunction with Nonlinear conjugate gradient method. <br/>
+   * It uses the Polak–Ribière (PR) to calculate the conjugate direction, for
+   * line search it uses the golden section search.<br/>
+   * See <br/>
+   * {@link http://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method} <br/>
+   * for more information.
+   * 
+   * @param f the cost function to minimize.
+   * @param input the input vector, also called starting point
+   * @param length the number of iterations to make
+   * @param verbose output the progress to STDOUT
+   * @return a vector containing the optimized input
+   */
   public static DenseDoubleVector minimizeFunction(CostFunction f,
       DenseDoubleVector input, int length, boolean verbose) {
 
