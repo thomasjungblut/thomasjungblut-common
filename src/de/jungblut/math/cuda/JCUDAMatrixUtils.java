@@ -14,6 +14,7 @@ import jcuda.runtime.cudaMemcpyKind;
 import de.jungblut.math.DenseDoubleMatrix;
 
 // -Djava.library.path="/lib/;${env_var:PATH}" must be added to the running VM
+// TODO seems to have a NaN bug when processing doubles.
 public class JCUDAMatrixUtils {
 
   public static boolean CUDA_AVAILABLE = false;
