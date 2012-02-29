@@ -26,7 +26,7 @@ public final class CollaborativeFiltering {
     super();
     this.userMovieRatings = userMovieRatings;
     this.ratingMatrix = userMovieRatings.getNonDefaultBooleanMatrix();
-    normalizedTuple = Normalizer.meanNormalize(userMovieRatings);
+    normalizedTuple = Normalizer.meanNormalizeRows(userMovieRatings);
   }
 
   public DenseDoubleMatrix train() {

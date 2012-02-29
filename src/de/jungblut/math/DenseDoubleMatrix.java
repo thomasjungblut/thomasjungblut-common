@@ -56,7 +56,7 @@ public final class DenseDoubleMatrix {
     this(otherMatrix.getRowCount(), otherMatrix.getColumnCount() + 1);
     setColumn(0, first.toArray());
     for (int col = 1; col < otherMatrix.getColumnCount() + 1; col++)
-      setColumn(col, otherMatrix.getColumn(col-1));
+      setColumn(col, otherMatrix.getColumn(col - 1));
   }
 
   public DenseDoubleMatrix(double[] v, int rows, int columns) {
@@ -377,6 +377,53 @@ public final class DenseDoubleMatrix {
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
         m.set(i, j, this.matrix[i][j] - other.get(i, j));
+      }
+    }
+    return m;
+  }
+
+  /**
+   * subtracts each element in a column by the related element in vec
+   */
+  public DenseDoubleMatrix subtract(DenseDoubleVector vec) {
+    DenseDoubleMatrix cop = new DenseDoubleMatrix(this.getRowCount(),
+        this.getColumnCount());
+    for (int i = 0; i < this.getColumnCount(); i++) {
+      cop.setColumn(i, getColumnVector(i).subtract(vec.get(i)).toArray());
+    }
+    return cop;
+  }
+
+  public DenseDoubleMatrix divide(DenseDoubleVector vec) {
+    DenseDoubleMatrix cop = new DenseDoubleMatrix(this.getRowCount(),
+        this.getColumnCount());
+    for (int i = 0; i < this.getColumnCount(); i++) {
+      cop.setColumn(i, getColumnVector(i).divide(vec.get(i)).toArray());
+    }
+    return cop;
+  }
+
+  /**
+   * this / other
+   */
+  public DenseDoubleMatrix divide(DenseDoubleMatrix other) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, this.matrix[i][j] / other.get(i, j));
+      }
+    }
+    return m;
+  }
+
+  /**
+   * this / scalar
+   */
+  public DenseDoubleMatrix divide(double scalar) {
+    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        m.set(i, j, this.matrix[i][j] / scalar);
       }
     }
     return m;
