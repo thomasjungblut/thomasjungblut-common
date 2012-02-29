@@ -51,6 +51,14 @@ public final class DenseDoubleMatrix {
       this.numColumns = numRows;
   }
 
+  public DenseDoubleMatrix(DenseDoubleVector first,
+      DenseDoubleMatrix otherMatrix) {
+    this(otherMatrix.getRowCount(), otherMatrix.getColumnCount() + 1);
+    setColumn(0, first.toArray());
+    for (int col = 1; col < otherMatrix.getColumnCount() + 1; col++)
+      setColumn(col, otherMatrix.getColumn(col-1));
+  }
+
   public DenseDoubleMatrix(double[] v, int rows, int columns) {
     this.matrix = new double[rows][columns];
 
@@ -160,6 +168,12 @@ public final class DenseDoubleMatrix {
 
   public final void setRow(int row, double[] value) {
     this.matrix[row] = value;
+  }
+
+  public final void setColumn(int col, double[] values) {
+    for (int i = 0; i < getRowCount(); i++) {
+      this.matrix[i][col] = values[i];
+    }
   }
 
   /**

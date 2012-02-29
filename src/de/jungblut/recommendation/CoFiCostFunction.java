@@ -1,5 +1,7 @@
 package de.jungblut.recommendation;
 
+import static de.jungblut.math.MatrixUtils.sum;
+import static de.jungblut.math.MatrixUtils.sumWhenTrue;
 import de.jungblut.math.DenseBooleanMatrix;
 import de.jungblut.math.DenseDoubleMatrix;
 import de.jungblut.math.DenseDoubleVector;
@@ -64,31 +66,6 @@ public final class CoFiCostFunction implements CostFunction {
 
     return new Tuple<Double, DenseDoubleVector>(j,
         DenseMatrixFolder.foldMatrices(xGradient, thetaGradient));
-  }
-
-  private double sum(DenseDoubleMatrix toSum) {
-    double totalSum = 0.0d;
-    for (int col = 0; col < toSum.getColumnCount(); col++) {
-      double colSum = 0.0d;
-      for (int row = 0; row < toSum.getRowCount(); row++) {
-        colSum += toSum.get(row, col);
-      }
-      totalSum += colSum;
-    }
-    return totalSum;
-  }
-
-  private double sumWhenTrue(DenseDoubleMatrix toSum, DenseBooleanMatrix blocker) {
-    double totalSum = 0.0d;
-    for (int col = 0; col < toSum.getColumnCount(); col++) {
-      double colSum = 0.0d;
-      for (int row = 0; row < toSum.getRowCount(); row++) {
-        if (blocker.get(row, col))
-          colSum += toSum.get(row, col);
-      }
-      totalSum += colSum;
-    }
-    return totalSum;
   }
 
   public static void main(String[] args) {

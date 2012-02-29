@@ -56,4 +56,10 @@ public final class Tuple<FIRST, SECOND> implements
     }
   }
 
+  @Override
+  public String toString() {
+    return "Tuple [first=" + first + ", second=" + second + "]";
+  }
+  
+
 }

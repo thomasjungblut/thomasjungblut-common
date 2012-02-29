@@ -11,26 +11,27 @@ import de.jungblut.math.DenseDoubleMatrix;
 import de.jungblut.math.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
+import de.jungblut.normalize.Normalizer;
 import de.jungblut.util.Tuple;
 
-public class CollaborativeFiltering {
+public final class CollaborativeFiltering {
 
-  public static void main(String[] args) {
-    // TODO move out of the main method in a more object oriented style
-    // take 100 users and all movies
-    final DenseDoubleMatrix userMovieRatings = MovieLensReader
-        .getUserMovieRatings().slice(100, 6040);
-    final DenseBooleanMatrix ratingMatrix = userMovieRatings
-        .getNonDefaultBooleanMatrix();
-    final Tuple<DenseDoubleMatrix, DenseDoubleVector> normalizedTuple = Normalizer
-        .meanNormalize(userMovieRatings);
+  private final DenseDoubleMatrix userMovieRatings;
+  final DenseBooleanMatrix ratingMatrix;
+  private Tuple<DenseDoubleMatrix, DenseDoubleVector> normalizedTuple;
+  private DenseDoubleVector movieRatingMeanVector;
+  private DenseDoubleMatrix p;
 
-    userMovieRatings.set(0, 260, 5); // star wars IV
-    userMovieRatings.set(0, 1196, 5); // star wars V
-    userMovieRatings.set(0, 1210, 5); // star wars VI
+  public CollaborativeFiltering(DenseDoubleMatrix userMovieRatings) {
+    super();
+    this.userMovieRatings = userMovieRatings;
+    this.ratingMatrix = userMovieRatings.getNonDefaultBooleanMatrix();
+    normalizedTuple = Normalizer.meanNormalize(userMovieRatings);
+  }
 
+  public DenseDoubleMatrix train() {
     final DenseDoubleMatrix normalizedRatings = normalizedTuple.getFirst();
-    final DenseDoubleVector movieRatingMeanVector = normalizedTuple.getSecond();
+    movieRatingMeanVector = normalizedTuple.getSecond();
 
     final int numUsers = normalizedRatings.getColumnCount();
     final int numMovies = normalizedRatings.getRowCount();
@@ -48,7 +49,6 @@ public class CollaborativeFiltering {
         theta);
     CoFiCostFunction cost = new CoFiCostFunction(userMovieRatings,
         ratingMatrix, numUsers, numMovies, numFeatures, lambda);
-    long start = System.currentTimeMillis();
     DenseDoubleVector minimizeFunction = Fmincg.minimizeFunction(cost,
         initialParameters, 100, true);
 
@@ -58,15 +58,31 @@ public class CollaborativeFiltering {
             { theta.getRowCount(), theta.getColumnCount() } });
 
     DenseDoubleMatrix computedTheta = unfoldMatrices[1];
+    p = x.multiply(computedTheta.transpose());
+    return p;
+  }
 
-    DenseDoubleMatrix p = x.multiply(computedTheta.transpose());
+  public DenseDoubleVector predict(int userColumn) {
+    return p.getColumnVector(0).add(movieRatingMeanVector);
+  }
 
-    DenseDoubleVector myPredictions = p.getColumnVector(0).add(
-        movieRatingMeanVector);
+  public static void main(String[] args) {
+    // take 100 users and all movies
+    final DenseDoubleMatrix userMovieRatings = MovieLensReader
+        .getUserMovieRatings().slice(100, 6040);
+    // set my preferences
+    userMovieRatings.set(0, 260, 5); // star wars IV
+    userMovieRatings.set(0, 1196, 5); // star wars V
+    userMovieRatings.set(0, 1210, 5); // star wars VI
+
+    CollaborativeFiltering collaborativeFiltering = new CollaborativeFiltering(
+        userMovieRatings);
+
+    collaborativeFiltering.train();
+    DenseDoubleVector myPredictions = collaborativeFiltering.predict(0);
 
     HashMap<Integer, String> movieLookupTable = MovieLensReader
         .getMovieLookupTable();
-
     List<Tuple<Double, Integer>> sort = DenseDoubleVector.sort(myPredictions,
         Collections.reverseOrder(new Comparator<Double>() {
           @Override
@@ -82,9 +98,6 @@ public class CollaborativeFiltering {
       int index = tuple.getSecond();
       System.out.println(movieLookupTable.get(index) + " | " + score);
     }
-
-    System.out.println("Took: " + (System.currentTimeMillis() - start) / 1000
-        + "s");
 
   }
 }

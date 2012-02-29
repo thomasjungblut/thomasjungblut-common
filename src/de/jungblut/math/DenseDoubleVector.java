@@ -15,6 +15,11 @@ public final class DenseDoubleVector {
   public DenseDoubleVector(int length) {
     this.vector = new double[length];
   }
+  
+  public DenseDoubleVector(int length, double val) {
+    this(length);
+    Arrays.fill(vector, val);
+  }
 
   public DenseDoubleVector(double[] arr) {
     this.vector = arr;
@@ -74,6 +79,14 @@ public final class DenseDoubleVector {
     return v;
   }
 
+  public DenseDoubleVector multiply(DenseDoubleVector vector) {
+    DenseDoubleVector v = new DenseDoubleVector(this.getLength());
+    for (int i = 0; i < v.getLength(); i++) {
+      v.set(i, this.get(i) * vector.get(i));
+    }
+    return v;
+  }
+
   /**
    * = vector/scalar
    */
@@ -81,6 +94,14 @@ public final class DenseDoubleVector {
     DenseDoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       v.set(i, this.get(i) / scalar);
+    }
+    return v;
+  }
+
+  public DenseDoubleVector pow(double power) {
+    DenseDoubleVector v = new DenseDoubleVector(getLength());
+    for (int i = 0; i < v.getLength(); i++) {
+      v.set(i, Math.pow(vector[i], power));
     }
     return v;
   }
@@ -109,6 +130,20 @@ public final class DenseDoubleVector {
     return dotProduct;
   }
 
+  public DenseDoubleVector slice(int length) {
+    return slice(0, length);
+  }
+
+  public DenseDoubleVector slice(int offset, int length) {
+    DenseDoubleVector nv = new DenseDoubleVector(length - offset);
+
+    for (int i = offset; i < length-offset; i++) {
+      nv.set(i, vector[i]);
+    }
+
+    return nv;
+  }
+
   public final double[] toArray() {
     return vector;
   }
@@ -116,6 +151,10 @@ public final class DenseDoubleVector {
   @Override
   public final String toString() {
     return Arrays.toString(vector);
+  }
+  
+  public static DenseDoubleVector ones(int num){
+    return new DenseDoubleVector(num, 1.0d);
   }
 
   public static DenseDoubleVector copy(DenseDoubleVector vector) {

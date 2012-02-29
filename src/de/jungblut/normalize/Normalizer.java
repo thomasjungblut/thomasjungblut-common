@@ -1,4 +1,4 @@
-package de.jungblut.recommendation;
+package de.jungblut.normalize;
 
 import de.jungblut.math.DenseDoubleMatrix;
 import de.jungblut.math.DenseDoubleVector;
