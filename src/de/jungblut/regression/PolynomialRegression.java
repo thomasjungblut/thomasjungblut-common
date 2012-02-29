@@ -19,7 +19,8 @@ public final class PolynomialRegression {
     this.lambda = lambda;
   }
 
-  public DenseDoubleVector trainLinearModel(int numIterations) {
+  // TODO add normalize step
+  public DenseDoubleVector trainModel(int numIterations) {
     RegressionCostFunction f = new RegressionCostFunction(x, y, lambda);
     DenseDoubleVector initialTheta = new DenseDoubleVector(
         x.getColumnCount() + 1);
@@ -27,18 +28,7 @@ public final class PolynomialRegression {
     return theta;
   }
 
-  // TODO this needs normalization, maybe combine the two methods
-  public DenseDoubleVector trainPolynomialModel(int numPolynomials,
-      int numIterations) {
-    DenseDoubleMatrix newX = createPolynomials(x, numPolynomials);
-    RegressionCostFunction f = new RegressionCostFunction(newX, y, lambda);
-    DenseDoubleVector initialTheta = new DenseDoubleVector(
-        newX.getColumnCount() + 1);
-    theta = Fmincg.minimizeFunction(f, initialTheta, numIterations, false);
-    return theta;
-  }
-
-  private DenseDoubleMatrix createPolynomials(DenseDoubleMatrix seed, int num) {
+  public static DenseDoubleMatrix createPolynomials(DenseDoubleMatrix seed, int num) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(seed.getRowCount(),
         seed.getColumnCount() * num);
     for (int c = 0; c < seed.getColumnCount(); c++) {
@@ -72,7 +62,7 @@ public final class PolynomialRegression {
         7.6277, 22.7524 });
 
     PolynomialRegression reg = new PolynomialRegression(x, y, 1.0);
-    reg.trainLinearModel(200);
+    reg.trainModel(200);
     System.out.println("linear model: "
         + reg.predict(new DenseDoubleMatrix(new double[][] { { -15.9368 },
             { -29.1530 } })));
