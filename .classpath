@@ -33,10 +33,6 @@
 	<classpathentry kind="lib" path="lib/opencsv-2.3.jar"/>
 	<classpathentry kind="lib" path="jcuda/jcublas-0.4.1.jar"/>
 	<classpathentry kind="lib" path="jcuda/jcuda-0.4.1.jar"/>
-	<classpathentry kind="lib" path="jcuda/jcudpp-0.4.1.jar"/>
-	<classpathentry kind="lib" path="jcuda/jcufft-0.4.1.jar"/>
-	<classpathentry kind="lib" path="jcuda/jcurand-0.4.1.jar"/>
-	<classpathentry kind="lib" path="jcuda/jcusparse-0.4.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

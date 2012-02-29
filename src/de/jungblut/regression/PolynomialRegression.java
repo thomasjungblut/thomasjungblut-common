@@ -52,7 +52,7 @@ public final class PolynomialRegression {
     return new DenseDoubleMatrix(DenseDoubleVector.ones(in.getRowCount()), in)
         .multiplyVector(theta);
   }
-  
+
   public static DenseDoubleMatrix createPolynomials(DenseDoubleMatrix seed,
       int num) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(seed.getRowCount(),
@@ -84,19 +84,19 @@ public final class PolynomialRegression {
 
     PolynomialRegression reg = new PolynomialRegression(x, y, 1.0, false);
     DenseDoubleVector trainModel = reg.trainModel(200);
-    System.out.println("linear model: "
-        + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
-            { -29 } })));
-    System.out.println("theta: "+trainModel);
-    
+    System.out
+        .println("linear model: "
+            + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
+                { -29 } })));
+    System.out.println("theta: " + trainModel);
+
     DenseDoubleMatrix xPoly = createPolynomials(x, 8);
     reg = new PolynomialRegression(xPoly, y, 1.0, true);
     trainModel = reg.trainModel(200);
-    System.out.println("8. polynomial model: "
-        + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
-            { -29 } })));
-    System.out.println("theta: "+trainModel);
-    
+    System.out
+        .println("8. polynomial model: "
+            + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
+                { -29 } })));
+    System.out.println("theta: " + trainModel);
   }
-
 }
