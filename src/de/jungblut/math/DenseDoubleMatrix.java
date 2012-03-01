@@ -320,6 +320,22 @@ public final class DenseDoubleMatrix {
     return matrix;
   }
 
+  /**
+   * Multiplies this matrix per element with a real matrix.
+   */
+  public final DenseDoubleMatrix multiplyElementWise(DenseDoubleMatrix other) {
+    DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
+        this.numColumns);
+
+    for (int i = 0; i < numRows; i++) {
+      for (int j = 0; j < numColumns; j++) {
+        matrix.set(i, j, this.get(i, j) * (other.get(i, j)));
+      }
+    }
+
+    return matrix;
+  }
+
   public final DenseDoubleVector multiplyVector(DenseDoubleVector v) {
     DenseDoubleVector vector = new DenseDoubleVector(this.getRowCount());
     for (int row = 0; row < numRows; row++) {
@@ -344,7 +360,7 @@ public final class DenseDoubleMatrix {
   }
 
   /**
-   * = (amount - m)
+   * = (amount - matrix value)
    */
   public DenseDoubleMatrix subtractBy(double amount) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
