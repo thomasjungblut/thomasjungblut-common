@@ -36,9 +36,20 @@ public class NNCostFunction implements CostFunction {
   public Tuple<Double, DenseDoubleVector> evaluateCost(DenseDoubleVector input) {
     // unroll thetas
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(input, foldArrays);
+    // TODO these steps can be generalized for n layers
     DenseDoubleMatrix theta1 = unfoldMatrices[0];
     DenseDoubleMatrix theta2 = unfoldMatrices[1];
-    
+    // step 1
+    DenseDoubleMatrix a1 = new DenseDoubleMatrix(DenseDoubleVector.ones(m), x);
+    DenseDoubleMatrix z2 = a1.multiply(theta1.transpose());
+    DenseDoubleMatrix a2 =  sigmoid(z2);
+    // step 2
+    DenseDoubleMatrix a2X = new DenseDoubleMatrix(DenseDoubleVector.ones(a2.getRowCount()), a2);
+    DenseDoubleMatrix z3 = a2X.multiply(theta2.transpose());
+    DenseDoubleMatrix a3 = sigmoid(z3);
+    // TODO really row count?
+    int k = a3.getRowCount();
+
     
 
     return null;
