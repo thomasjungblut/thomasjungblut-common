@@ -10,11 +10,9 @@ import jcuda.jcublas.cublasOperation;
 import jcuda.jcublas.cublasPointerMode;
 import jcuda.runtime.JCuda;
 import jcuda.runtime.cudaDeviceProp;
-import jcuda.runtime.cudaMemcpyKind;
 import de.jungblut.math.DenseDoubleMatrix;
 
 // -Djava.library.path="/lib/;${env_var:PATH}" must be added to the running VM
-// TODO seems to have a NaN bug when processing doubles.
 public class JCUDAMatrixUtils {
 
   public static boolean CUDA_AVAILABLE = false;
@@ -52,26 +50,19 @@ public class JCUDAMatrixUtils {
     int resMatrixSize = a.getRowCount() * b.getColumnCount();
     JCuda.cudaMalloc(deviceResultPointer, Sizeof.DOUBLE * resMatrixSize);
 
-    Pointer alpha = new Pointer();
-    JCuda.cudaMalloc(alpha, Sizeof.DOUBLE);
-    JCuda.cudaMemcpy(alpha, Pointer.to(new double[] { 1.0d }), Sizeof.DOUBLE,
-        cudaMemcpyKind.cudaMemcpyHostToDevice);
+    Pointer alpha = Pointer.to(new double[] { 1.0d });
+    Pointer beta = Pointer.to(new double[] { 0.0d });
 
-    Pointer beta = new Pointer();
-    JCuda.cudaMalloc(beta, Sizeof.DOUBLE);
-    JCuda.cudaMemcpy(beta, Pointer.to(new double[] { 0.0d }), Sizeof.DOUBLE,
-        cudaMemcpyKind.cudaMemcpyHostToDevice);
     cublasHandle handle = new cublasHandle();
     JCublas2.cublasCreate(handle);
     JCublas2.cublasSetPointerMode(handle,
-        cublasPointerMode.CUBLAS_POINTER_MODE_DEVICE);
+        cublasPointerMode.CUBLAS_POINTER_MODE_HOST);
     JCublas2.cublasDgemm(handle, cublasOperation.CUBLAS_OP_N,
         cublasOperation.CUBLAS_OP_N, a.getRowCount(), b.getColumnCount(),
         a.getColumnCount(), alpha, matrixPointerA, a.getRowCount(),
         matrixPointerB, b.getRowCount(), beta, deviceResultPointer,
         a.getRowCount());
-    System.out.println(JCuda.cudaGetErrorString(JCuda.cudaGetLastError()));
-    
+
     JCuda.cudaDeviceSynchronize();
 
     DenseDoubleMatrix matrix = getMatrix(deviceResultPointer, a.getRowCount(),
@@ -123,13 +114,13 @@ public class JCUDAMatrixUtils {
 
   public static void main(String[] args) {
 
-    for (int i = 2; i < 300; i++) {
+    for (int i = 2; i < 2000; i++) {
       DenseDoubleMatrix a = new DenseDoubleMatrix(i, i, new Random());
       DenseDoubleMatrix b = new DenseDoubleMatrix(i, i, new Random());
-      DenseDoubleMatrix multiplyCPU = a.multiply(b);
+//      DenseDoubleMatrix multiplyCPU = a.multiply(b);
       DenseDoubleMatrix multiplyGPU = multiply(a, b);
       System.out.println(i + " "
-          + DenseDoubleMatrix.error(multiplyCPU, multiplyGPU));
+          + multiplyGPU.sumElements());
     }
   }
 
