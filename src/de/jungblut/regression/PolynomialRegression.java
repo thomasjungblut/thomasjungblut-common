@@ -36,11 +36,11 @@ public final class PolynomialRegression {
     this.lambda = lambda;
   }
 
-  public DenseDoubleVector trainModel(int numIterations) {
+  public DenseDoubleVector trainModel(int numIterations, boolean verbose) {
     RegressionCostFunction f = new RegressionCostFunction(x, y, lambda);
     DenseDoubleVector initialTheta = new DenseDoubleVector(
         x.getColumnCount() + 1);
-    theta = Fmincg.minimizeFunction(f, initialTheta, numIterations, false);
+    theta = Fmincg.minimizeFunction(f, initialTheta, numIterations, verbose);
     return theta;
   }
 
@@ -53,8 +53,23 @@ public final class PolynomialRegression {
         .multiplyVector(theta);
   }
 
+  // mean squared error
+  public double error(DenseDoubleVector prediction) {
+    return (y.subtract(prediction).pow(2).sum() / y.getLength());
+  }
+
+  public DenseDoubleMatrix getX() {
+    return x;
+  }
+
+  public DenseDoubleVector getY() {
+    return y;
+  }
+
   public static DenseDoubleMatrix createPolynomials(DenseDoubleMatrix seed,
       int num) {
+    if (num == 1)
+      return seed;
     DenseDoubleMatrix m = new DenseDoubleMatrix(seed.getRowCount(),
         seed.getColumnCount() * num);
     for (int c = 0; c < seed.getColumnCount(); c++) {
@@ -83,7 +98,7 @@ public final class PolynomialRegression {
         7.6277, 22.7524 });
 
     PolynomialRegression reg = new PolynomialRegression(x, y, 1.0, false);
-    DenseDoubleVector trainModel = reg.trainModel(200);
+    DenseDoubleVector trainModel = reg.trainModel(200, false);
     System.out
         .println("linear model: "
             + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
@@ -92,7 +107,7 @@ public final class PolynomialRegression {
 
     DenseDoubleMatrix xPoly = createPolynomials(x, 8);
     reg = new PolynomialRegression(xPoly, y, 1.0, true);
-    trainModel = reg.trainModel(200);
+    trainModel = reg.trainModel(200, false);
     System.out
         .println("8. polynomial model: "
             + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },

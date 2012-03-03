@@ -70,7 +70,7 @@ public final class DenseDoubleVector {
     }
     return newv;
   }
-  
+
   public final DenseDoubleVector subtract(double v) {
     DenseDoubleVector newv = new DenseDoubleVector(vector.length);
     for (int i = 0; i < vector.length; i++) {
@@ -106,14 +106,22 @@ public final class DenseDoubleVector {
     return v;
   }
 
-  public DenseDoubleVector pow(double power) {
+  public DenseDoubleVector pow(int x) {
     DenseDoubleVector v = new DenseDoubleVector(getLength());
     for (int i = 0; i < v.getLength(); i++) {
-      v.set(i, Math.pow(vector[i], power));
+      // for lower order polynomials it is faster to loop
+      double value = 0.0d;
+      if (x < 5) {
+        for (int f = 1; f < x; f++)
+          value += vector[i] * vector[i];
+      } else {
+        value = Math.pow(vector[i], x);
+      }
+      v.set(i, value);
     }
     return v;
   }
-  
+
   public DenseDoubleVector sqrt() {
     DenseDoubleVector v = new DenseDoubleVector(getLength());
     for (int i = 0; i < v.getLength(); i++) {
@@ -174,7 +182,11 @@ public final class DenseDoubleVector {
 
   @Override
   public final String toString() {
-    return Arrays.toString(vector);
+    if (getLength() < 20) {
+      return Arrays.toString(vector);
+    } else {
+      return getLength() + "x1";
+    }
   }
 
   public static DenseDoubleVector ones(int num) {
