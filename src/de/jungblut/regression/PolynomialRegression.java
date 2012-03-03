@@ -58,6 +58,42 @@ public final class PolynomialRegression {
     return (y.subtract(prediction).pow(2).sum() / y.getLength());
   }
 
+  /*
+   * Some useful accessors for internal state
+   */
+
+  public DenseDoubleVector getTheta() {
+    return theta;
+  }
+
+  public void setTheta(DenseDoubleVector theta) {
+    this.theta = theta;
+  }
+
+  public DenseDoubleMatrix getX() {
+    return x;
+  }
+
+  public DenseDoubleVector getY() {
+    return y;
+  }
+
+  public double getLambda() {
+    return lambda;
+  }
+
+  public DenseDoubleVector getMean() {
+    return mean;
+  }
+
+  public DenseDoubleVector getStddev() {
+    return stddev;
+  }
+
+  public boolean isNormalize() {
+    return normalize;
+  }
+
   public static DenseDoubleMatrix createPolynomials(DenseDoubleMatrix seed,
       int num) {
     if (num == 1)
@@ -110,7 +146,7 @@ public final class PolynomialRegression {
     System.out.println("theta: " + trainModel);
     System.out.println(reg.error(reg.predict(xPoly)));
 
-//    GnuPlot.plot(x, y, trainModel, numPoly, reg.mean, reg.stddev);
+    // GnuPlot.plot(x, y, trainModel, numPoly, reg.mean, reg.stddev);
 
   }
 }
