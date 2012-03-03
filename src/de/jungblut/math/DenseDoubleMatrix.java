@@ -59,6 +59,11 @@ public final class DenseDoubleMatrix {
       setColumn(col, otherMatrix.getColumn(col - 1));
   }
 
+  public DenseDoubleMatrix(DenseDoubleVector first) {
+    this(first.getLength(), 1);
+    setColumn(0, first.toArray());
+  }
+
   public DenseDoubleMatrix(double[] v, int rows, int columns) {
     this.matrix = new double[rows][columns];
 
@@ -462,19 +467,32 @@ public final class DenseDoubleMatrix {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
-        // for lower order polynomials it is faster to loop
-        double value = 0.0d;
-        if (x < 5) {
-          for (int f = 1; f < x; f++)
-            value += matrix[i][j] * matrix[i][j];
-        } else {
-          value = Math.pow(matrix[i][j], x);
-        }
-
-        m.set(i, j, value);
+        m.set(i, j, Math.pow(matrix[i][j], x));
       }
     }
     return m;
+  }
+
+  public double max(int column) {
+    double max = Double.MIN_VALUE;
+    for (int i = 0; i < getRowCount(); i++) {
+      double d = matrix[i][column];
+      if (d > max) {
+        max = d;
+      }
+    }
+    return max;
+  }
+
+  public double min(int column) {
+    double min = Double.MAX_VALUE;
+    for (int i = 0; i < getRowCount(); i++) {
+      double d = matrix[i][column];
+      if (d < min) {
+        min = d;
+      }
+    }
+    return min;
   }
 
   public DenseDoubleMatrix slice(int rows, int cols) {

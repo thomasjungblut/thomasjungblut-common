@@ -51,7 +51,7 @@ public class Normalizer {
       DenseDoubleVector column = x.getColumnVector(col);
       double mean = column.sum() / column.getLength();
       meanVector.set(col, mean);
-      double var = column.subtract(mean).pow(2).sum();
+      double var = column.subtract(mean).pow(2).sum() *  1 / (column.getLength()-1);
       stddevVector.set(col, Math.sqrt(var));
     }
 

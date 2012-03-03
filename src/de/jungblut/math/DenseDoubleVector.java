@@ -109,11 +109,10 @@ public final class DenseDoubleVector {
   public DenseDoubleVector pow(int x) {
     DenseDoubleVector v = new DenseDoubleVector(getLength());
     for (int i = 0; i < v.getLength(); i++) {
-      // for lower order polynomials it is faster to loop
       double value = 0.0d;
-      if (x < 5) {
-        for (int f = 1; f < x; f++)
-          value += vector[i] * vector[i];
+      // it is faster to multiply when we having ^2
+      if (x == 2) {
+        value = vector[i] * vector[i];
       } else {
         value = Math.pow(vector[i], x);
       }
@@ -176,6 +175,28 @@ public final class DenseDoubleVector {
     return nv;
   }
 
+  public double max() {
+    double max = Double.MIN_VALUE;
+    for (int i = 0; i < getLength(); i++) {
+      double d = vector[i];
+      if (d > max) {
+        max = d;
+      }
+    }
+    return max;
+  }
+
+  public double min() {
+    double min = Double.MAX_VALUE;
+    for (int i = 0; i < getLength(); i++) {
+      double d = vector[i];
+      if (d < min) {
+        min = d;
+      }
+    }
+    return min;
+  }
+
   public final double[] toArray() {
     return vector;
   }
@@ -191,6 +212,17 @@ public final class DenseDoubleVector {
 
   public static DenseDoubleVector ones(int num) {
     return new DenseDoubleVector(num, 1.0d);
+  }
+
+  public static DenseDoubleVector fromUpTo(double from, double to,
+      double stepsize) {
+    DenseDoubleVector v = new DenseDoubleVector(
+        (int) (Math.round(((to - from) / stepsize) + 0.5)));
+
+    for (int i = 0; i < v.getLength(); i++) {
+      v.set(i, from + i * stepsize);
+    }
+    return v;
   }
 
   public static DenseDoubleVector copy(DenseDoubleVector vector) {

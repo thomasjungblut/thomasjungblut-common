@@ -5,6 +5,7 @@ import de.jungblut.math.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.normalize.Normalizer;
 import de.jungblut.util.Tuple3;
+import de.jungblut.visualize.GnuPlot;
 
 public final class PolynomialRegression {
 
@@ -39,7 +40,7 @@ public final class PolynomialRegression {
   public DenseDoubleVector trainModel(int numIterations, boolean verbose) {
     RegressionCostFunction f = new RegressionCostFunction(x, y, lambda);
     DenseDoubleVector initialTheta = new DenseDoubleVector(
-        x.getColumnCount() + 1);
+        x.getColumnCount() + 1, 1.0d);
     theta = Fmincg.minimizeFunction(f, initialTheta, numIterations, verbose);
     return theta;
   }
@@ -58,14 +59,6 @@ public final class PolynomialRegression {
     return (y.subtract(prediction).pow(2).sum() / y.getLength());
   }
 
-  public DenseDoubleMatrix getX() {
-    return x;
-  }
-
-  public DenseDoubleVector getY() {
-    return y;
-  }
-
   public static DenseDoubleMatrix createPolynomials(DenseDoubleMatrix seed,
       int num) {
     if (num == 1)
@@ -76,7 +69,6 @@ public final class PolynomialRegression {
       m.setColumn(c, seed.getColumn(c));
     }
     int offset = seed.getColumnCount();
-    // TODO experimental for seed matrix with more than 1 columns
     for (int col = offset; col < seed.getColumnCount() + 1; col++) {
       for (int i = 2; i < num + 1; i++) {
         DenseDoubleVector pow = seed.getColumnVector(col - offset).pow(i);
@@ -104,14 +96,21 @@ public final class PolynomialRegression {
             + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
                 { -29 } })));
     System.out.println("theta: " + trainModel);
+    System.out.println(reg.error(reg.predict(x)));
 
-    DenseDoubleMatrix xPoly = createPolynomials(x, 8);
-    reg = new PolynomialRegression(xPoly, y, 1.0, true);
+    int numPoly = 8;
+
+    DenseDoubleMatrix xPoly = createPolynomials(x, numPoly);
+    reg = new PolynomialRegression(xPoly, y, 3.0d, true);
     trainModel = reg.trainModel(200, false);
     System.out
-        .println("8. polynomial model: "
+        .println(numPoly
+            + ". polynomial model: "
             + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
                 { -29 } })));
     System.out.println("theta: " + trainModel);
+
+    GnuPlot.plot(x, y, trainModel, numPoly, reg.mean, reg.stddev);
+
   }
 }
