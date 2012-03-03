@@ -25,7 +25,7 @@ public class GnuPlot {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
+    // "plot "data" every 1000 using 1:2 with lines" for more data Page 30
     String exec = "plot " + modelToGNUPlot(model)
         + " with lines, '/gnuplot.in' with points;";
     try {
