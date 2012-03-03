@@ -5,7 +5,6 @@ import de.jungblut.math.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.normalize.Normalizer;
 import de.jungblut.util.Tuple3;
-import de.jungblut.visualize.GnuPlot;
 
 public final class PolynomialRegression {
 
@@ -109,8 +108,9 @@ public final class PolynomialRegression {
             + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
                 { -29 } })));
     System.out.println("theta: " + trainModel);
+    System.out.println(reg.error(reg.predict(xPoly)));
 
-    GnuPlot.plot(x, y, trainModel, numPoly, reg.mean, reg.stddev);
+//    GnuPlot.plot(x, y, trainModel, numPoly, reg.mean, reg.stddev);
 
   }
 }
