@@ -54,7 +54,7 @@ public class GnuPlot {
       e.printStackTrace();
     }
     // "plot "data" every 1000 using 1:2 with lines" for more data Page 30
-    String exec = "set xzeroaxis; set yzeroaxis ; plot '/gnuplot.in' with points, '/gnuplot_function.in' with lines;";
+    String exec = "set xzeroaxis; set yzeroaxis ; plot '/gnuplot.in' every 1000 using 1:2 with points, '/gnuplot_function.in' with lines;";
     try {
       Files.write(FileSystems.getDefault().getPath("/exec.gp"),
           exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
