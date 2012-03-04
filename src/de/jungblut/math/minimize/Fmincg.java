@@ -73,8 +73,7 @@ public class Fmincg {
 
   /**
    * Minimizes the given CostFunction with Nonlinear conjugate gradient method. <br/>
-   * It uses the Polak–Ribière (PR) to calculate the conjugate direction, for
-   * line search it uses the golden section search.<br/>
+   * It uses the Polak–Ribière (PR) to calculate the conjugate direction.
    * See <br/>
    * {@link http://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method} <br/>
    * for more information.
