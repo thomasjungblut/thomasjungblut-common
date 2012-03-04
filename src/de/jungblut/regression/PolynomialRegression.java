@@ -100,17 +100,15 @@ public final class PolynomialRegression {
       return seed;
     DenseDoubleMatrix m = new DenseDoubleMatrix(seed.getRowCount(),
         seed.getColumnCount() * num);
-    for (int c = 0; c < seed.getColumnCount(); c++) {
-      m.setColumn(c, seed.getColumn(c));
-    }
-    int offset = seed.getColumnCount();
-    for (int col = offset; col < seed.getColumnCount() + 1; col++) {
+    int index = 0;
+    for (int c = 0; c < m.getColumnCount(); c+=num) {
+      double[] column = seed.getColumn(index++);
+      m.setColumn(c, column);
       for (int i = 2; i < num + 1; i++) {
-        DenseDoubleVector pow = seed.getColumnVector(col - offset).pow(i);
-        m.setColumn(col * i - 1, pow.toArray());
+        DenseDoubleVector pow = new DenseDoubleVector(column).pow(i);
+        m.setColumn(c + i - 1, pow.toArray());
       }
     }
-
     return m;
   }
 
