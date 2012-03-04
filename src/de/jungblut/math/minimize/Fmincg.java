@@ -73,8 +73,7 @@ public class Fmincg {
 
   /**
    * Minimizes the given CostFunction with Nonlinear conjugate gradient method. <br/>
-   * It uses the Polak–Ribière (PR) to calculate the conjugate direction.
-   * See <br/>
+   * It uses the Polak–Ribière (PR) to calculate the conjugate direction. See <br/>
    * {@link http://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method} <br/>
    * for more information.
    * 
@@ -217,7 +216,7 @@ public class Fmincg {
         f1 = f2;
         fX = new DenseDoubleVector(fX.toArray(), f1);
         if (verbose)
-          System.out.printf("Interation %d | Cost: %f\r", i, f1);
+          System.out.print("Interation " + i + " | Cost: " + f1 + "\r");
         // Polack-Ribiere direction: s =
         // (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
         final double numerator = (df2.dot(df2) - df1.dot(df2)) / df1.dot(df1);
