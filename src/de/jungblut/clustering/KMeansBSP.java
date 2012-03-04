@@ -1,9 +1,9 @@
 package de.jungblut.clustering;
 
-import de.jungblut.clustering.model.CenterMessage;
-import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.DistanceMeasurer;
-import de.jungblut.clustering.model.Vector;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
@@ -18,9 +18,11 @@ import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
+import de.jungblut.clustering.model.CenterMessage;
+import de.jungblut.clustering.model.ClusterCenter;
+import de.jungblut.clustering.model.Vector;
+import de.jungblut.similarity.DistanceMeasurer;
+import de.jungblut.similarity.ManhattanDistance;
 
 public final class KMeansBSP extends
     BSP<Vector, NullWritable, ClusterCenter, Vector> {
@@ -28,6 +30,7 @@ public final class KMeansBSP extends
   private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
   private ClusterCenter[] centers;
   private int maxIterations;
+  private DistanceMeasurer distanceMeasurer;
 
   @Override
   public final void setup(
@@ -53,6 +56,8 @@ public final class KMeansBSP extends
     } else {
       this.centers = centers.toArray(new ClusterCenter[centers.size()]);
     }
+
+    distanceMeasurer = new ManhattanDistance();
 
     maxIterations = peer.getConfiguration()
         .getInt("k.means.max.iterations", -1);
@@ -141,8 +146,8 @@ public final class KMeansBSP extends
     int lowestDistantCenter = 0;
     double lowestDistance = Double.MAX_VALUE;
     for (int i = 0; i < centers.length; i++) {
-      double estimatedDistance = DistanceMeasurer.measureManhattanDistance(
-          centers[i], key);
+      double estimatedDistance = distanceMeasurer.measureDistance(centers[i]
+          .getCenter().getVector(), key.getVector());
       // check if we have a can assign a new center, because we
       // got a lower distance
       if (estimatedDistance < lowestDistance) {

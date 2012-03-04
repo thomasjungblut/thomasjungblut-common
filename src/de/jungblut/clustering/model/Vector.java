@@ -1,11 +1,11 @@
 package de.jungblut.clustering.model;
 
-import org.apache.hadoop.io.WritableComparable;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
+
+import org.apache.hadoop.io.WritableComparable;
 
 public final class Vector implements WritableComparable<Vector> {
 

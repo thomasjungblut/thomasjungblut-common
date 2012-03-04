@@ -1,18 +1,19 @@
 package de.jungblut.classification.bayes;
 
-import de.jungblut.similarity.CosineSimilarity;
-import de.jungblut.similarity.Similarity;
-import de.jungblut.similarity.Tokenizer;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+import de.jungblut.nlp.DocumentSimilarity;
+import de.jungblut.nlp.Tokenizer;
+import de.jungblut.similarity.CosineDistance;
 
 public class StringType implements Type {
 
   private String className;
 
-  private final Similarity similarity = new CosineSimilarity();
+  private final DocumentSimilarity similarity = DocumentSimilarity
+      .with(new CosineDistance());
   private final List<Set<String>> inputList = new LinkedList<>();
 
   @Override
@@ -27,8 +28,10 @@ public class StringType implements Type {
     double bestMatch = 0.0;
     final Set<String> inputTokens = Tokenizer.tokenize(input, 3);
     for (Set<String> term : inputList) {
-      final double distance = similarity.measureDistance(term, inputTokens);
-      if (distance > bestMatch)
+      final double distance = similarity.measureDocumentSimilarity(
+          term.toArray(new String[term.size()]),
+          inputTokens.toArray(new String[inputTokens.size()]));
+      if (distance < bestMatch)
         bestMatch = distance;
     }
 

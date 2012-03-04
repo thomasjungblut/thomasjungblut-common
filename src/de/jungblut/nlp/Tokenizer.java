@@ -1,10 +1,11 @@
-package de.jungblut.similarity;
+package de.jungblut.nlp;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
 
 public class Tokenizer {
 
+  // basic n-gram tokenizer
   public static Set<String> tokenize(String key, int size) {
     Set<String> set = new LinkedHashSet<>();
     if (key.length() < size) {

@@ -1,8 +1,9 @@
 package de.jungblut.clustering.mapreduce;
 
-import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.DistanceMeasurer;
-import de.jungblut.clustering.model.Vector;
+import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -10,14 +11,16 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Mapper;
 
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.List;
+import de.jungblut.clustering.model.ClusterCenter;
+import de.jungblut.clustering.model.Vector;
+import de.jungblut.similarity.DistanceMeasurer;
+import de.jungblut.similarity.EuclidianDistance;
 
 // first iteration, k-random centers, in every follow-up iteration we have new calculated centers
 class KMeansMapper extends Mapper<ClusterCenter, Vector, ClusterCenter, Vector> {
 
   private final List<ClusterCenter> centers = new LinkedList<>();
+  private DistanceMeasurer distanceMeasurer;
 
   @Override
   protected void setup(Context context) throws IOException,
@@ -34,6 +37,8 @@ class KMeansMapper extends Mapper<ClusterCenter, Vector, ClusterCenter, Vector> 
       centers.add(new ClusterCenter(key));
     }
     reader.close();
+
+    distanceMeasurer = new EuclidianDistance();
   }
 
   @Override
@@ -43,7 +48,8 @@ class KMeansMapper extends Mapper<ClusterCenter, Vector, ClusterCenter, Vector> 
     ClusterCenter nearest = null;
     double nearestDistance = Double.MAX_VALUE;
     for (ClusterCenter c : centers) {
-      double dist = DistanceMeasurer.measureEuclidianDistance(c, value);
+      double dist = distanceMeasurer.measureDistance(c.getCenter().getVector(),
+          value.getVector());
       if (nearest == null) {
         nearest = c;
         nearestDistance = dist;

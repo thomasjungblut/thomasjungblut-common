@@ -12,3 +12,6 @@ Have fun to browse through many things for:
 - Machine learning
 - Matrix and Vector stuff
 - JCuda experiments
+
+Since I am Apache committer, I consider everything inside of this repository 
+licensed by Apache 2.0 license, although I haven't put the usual header into the source files.
