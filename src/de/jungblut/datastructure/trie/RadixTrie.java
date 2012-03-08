@@ -10,8 +10,9 @@ import de.jungblut.similarity.CosineDistance;
 import de.jungblut.similarity.DistanceMeasurer;
 
 /**
- * A radix trie implementation that provides cool lookup features.
- * TODO I must test this because of other backed datastructure 
+ * A radix trie implementation that provides cool lookup features. TODO I must
+ * test this because of other backed datastructure
+ * 
  * @author thomas.jungblut
  * @param <T>
  */
