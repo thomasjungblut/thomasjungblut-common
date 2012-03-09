@@ -1,16 +1,17 @@
 package de.jungblut.normalize;
 
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.util.Tuple;
 import de.jungblut.util.Tuple3;
 
 public class Normalizer {
 
-  public static Tuple<DenseDoubleMatrix, DenseDoubleVector> meanNormalizeRows(
+  public static Tuple<DenseDoubleMatrix, DoubleVector> meanNormalizeRows(
       DenseDoubleMatrix matrix) {
 
-    DenseDoubleVector meanVector = new DenseDoubleVector(matrix.getRowCount());
+    DoubleVector meanVector = new DenseDoubleVector(matrix.getRowCount());
 
     for (int row = 0; row < matrix.getRowCount(); row++) {
       double mean = 0.0d;
@@ -33,22 +34,22 @@ public class Normalizer {
       }
     }
 
-    return new Tuple<DenseDoubleMatrix, DenseDoubleVector>(matrix, meanVector);
+    return new Tuple<DenseDoubleMatrix, DoubleVector>(matrix, meanVector);
   }
 
   /**
    * @return the normalized (0 mean and stddev of 1) as well as the mean and the
    *         stddev.
    */
-  public static Tuple3<DenseDoubleMatrix, DenseDoubleVector, DenseDoubleVector> featureNormalize(
+  public static Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
       DenseDoubleMatrix x) {
     DenseDoubleMatrix toReturn = new DenseDoubleMatrix(x.getRowCount(),
         x.getColumnCount());
-    DenseDoubleVector meanVector = new DenseDoubleVector(x.getColumnCount());
-    DenseDoubleVector stddevVector = new DenseDoubleVector(x.getColumnCount());
+    DoubleVector meanVector = new DenseDoubleVector(x.getColumnCount());
+    DoubleVector stddevVector = new DenseDoubleVector(x.getColumnCount());
 
     for (int col = 0; col < x.getColumnCount(); col++) {
-      DenseDoubleVector column = x.getColumnVector(col);
+      DoubleVector column = x.getColumnVector(col);
       double mean = column.sum() / column.getLength();
       meanVector.set(col, mean);
       double var = column.subtract(mean).pow(2).sum() *  1 / (column.getLength()-1);
@@ -56,12 +57,12 @@ public class Normalizer {
     }
 
     for (int col = 0; col < x.getColumnCount(); col++) {
-      DenseDoubleVector column = x.getColumnVector(col)
+      DoubleVector column = x.getColumnVector(col)
           .subtract(meanVector.get(col)).divide(stddevVector.get(col));
       toReturn.setColumn(col, column.toArray());
     }
 
-    return new Tuple3<DenseDoubleMatrix, DenseDoubleVector, DenseDoubleVector>(
+    return new Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector>(
         toReturn, meanVector, stddevVector);
   }
 

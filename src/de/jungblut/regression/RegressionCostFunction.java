@@ -1,19 +1,20 @@
 package de.jungblut.regression;
 
 import static de.jungblut.math.MatrixUtils.sum;
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.util.Tuple;
 
 public class RegressionCostFunction implements CostFunction {
 
   private final DenseDoubleMatrix x;
-  private final DenseDoubleVector y;
+  private final DoubleVector y;
   private final int m;
   private final double lambda;
 
-  public RegressionCostFunction(DenseDoubleMatrix x, DenseDoubleVector y,
+  public RegressionCostFunction(DenseDoubleMatrix x, DoubleVector y,
       double lambda) {
     // add ones to the first column
     this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(x.getRowCount()), x);
@@ -23,16 +24,16 @@ public class RegressionCostFunction implements CostFunction {
   }
 
   @Override
-  public Tuple<Double, DenseDoubleVector> evaluateCost(DenseDoubleVector theta) {
+  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector theta) {
 
-    DenseDoubleVector predictions = x.multiplyVector(theta);
-    DenseDoubleVector sqrErrors = predictions.subtract(y).pow(2);
+    DoubleVector predictions = x.multiplyVector(theta);
+    DoubleVector sqrErrors = predictions.subtract(y).pow(2);
 
     // (sum(sqrErrors)/2/m) + lambda * (sum(theta(2:end).^2)/2/m);
     double j = (sum(sqrErrors) / 2 / m) + lambda
         * (sum(theta.slice(2, theta.getLength()).pow(2)) / 2 / m);
 
-    DenseDoubleVector gradient = new DenseDoubleVector(theta.getLength());
+    DoubleVector gradient = new DenseDoubleVector(theta.getLength());
     for (int i = 0; i < theta.getLength(); i++) {
       gradient.set(i,
           sum((predictions.subtract(y).multiply(x.getColumnVector(i)))) / m);
@@ -40,7 +41,7 @@ public class RegressionCostFunction implements CostFunction {
         gradient.set(i, gradient.get(i) + lambda * (theta.get(i) / m));
     }
 
-    return new Tuple<Double, DenseDoubleVector>(j, gradient);
+    return new Tuple<Double, DoubleVector>(j, gradient);
   }
 
 }

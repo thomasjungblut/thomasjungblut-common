@@ -1,4 +1,4 @@
-package de.jungblut.math;
+package de.jungblut.math.dense;
 
 import java.util.Arrays;
 

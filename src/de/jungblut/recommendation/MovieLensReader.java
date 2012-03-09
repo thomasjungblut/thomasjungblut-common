@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 
-import de.jungblut.math.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleMatrix;
 
 public class MovieLensReader {
 

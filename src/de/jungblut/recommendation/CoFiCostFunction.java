@@ -2,9 +2,9 @@ package de.jungblut.recommendation;
 
 import static de.jungblut.math.MatrixUtils.sum;
 import static de.jungblut.math.MatrixUtils.sumWhenTrue;
-import de.jungblut.math.DenseBooleanMatrix;
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseBooleanMatrix;
+import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.util.Tuple;
@@ -30,7 +30,7 @@ public final class CoFiCostFunction implements CostFunction {
   }
 
   @Override
-  public Tuple<Double, DenseDoubleVector> evaluateCost(DenseDoubleVector input) {
+  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
         input, foldArrays);
     DenseDoubleMatrix x = unfoldMatrices[0];
@@ -64,7 +64,7 @@ public final class CoFiCostFunction implements CostFunction {
         x).add(theta.multiply(lambda));
     // Theta_grad = ((Theta*X'-Y').*R')*X + lambda*Theta;
 
-    return new Tuple<Double, DenseDoubleVector>(j,
+    return new Tuple<Double, DoubleVector>(j,
         DenseMatrixFolder.foldMatrices(xGradient, thetaGradient));
   }
 
@@ -93,12 +93,12 @@ public final class CoFiCostFunction implements CostFunction {
         { -0.43192, -0.47880, 0.84671 }, { 0.72860, -0.27189, 0.32684 } });
 
     // fold x and theta so they are ready to be passed to fmincg
-    DenseDoubleVector initialParameters = DenseMatrixFolder.foldMatrices(x,
+    DoubleVector initialParameters = DenseMatrixFolder.foldMatrices(x,
         theta);
     CoFiCostFunction cost = new CoFiCostFunction(y, r, numUsers, numMovies,
         numFeatures, lambda);
 
-    Tuple<Double, DenseDoubleVector> evaluateCost = cost
+    Tuple<Double, DoubleVector> evaluateCost = cost
         .evaluateCost(initialParameters);
     // should be arround 22.22
     System.out.println(evaluateCost.getFirst());

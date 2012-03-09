@@ -2,8 +2,8 @@ package de.jungblut.classification.tree;
 
 import java.util.ArrayList;
 
-import de.jungblut.math.DenseIntVector;
-import de.jungblut.math.DenseIntMatrix;
+import de.jungblut.math.dense.DenseIntMatrix;
+import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.util.Tuple;
 
 /**

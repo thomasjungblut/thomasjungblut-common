@@ -1,9 +1,10 @@
-package de.jungblut.math;
+package de.jungblut.math.dense;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
+import de.jungblut.math.DoubleVector;
 import de.jungblut.util.Tuple;
 
 public final class DenseDoubleMatrix {
@@ -124,7 +125,7 @@ public final class DenseDoubleMatrix {
    * @return
    * @throws IllegalArgumentException
    */
-  public final DenseDoubleVector getColumnVector(int col) {
+  public final DoubleVector getColumnVector(int col) {
     return new DenseDoubleVector(getColumn(col));
   }
 
@@ -163,7 +164,7 @@ public final class DenseDoubleMatrix {
    * @param row
    * @return
    */
-  public final DenseDoubleVector getRowVector(int row) {
+  public final DoubleVector getRowVector(int row) {
     return new DenseDoubleVector(getRow(row));
   }
 
@@ -341,8 +342,8 @@ public final class DenseDoubleMatrix {
     return matrix;
   }
 
-  public final DenseDoubleVector multiplyVector(DenseDoubleVector v) {
-    DenseDoubleVector vector = new DenseDoubleVector(this.getRowCount());
+  public final DoubleVector multiplyVector(DoubleVector v) {
+    DoubleVector vector = new DenseDoubleVector(this.getRowCount());
     for (int row = 0; row < numRows; row++) {
       double sum = 0.0d;
       for (int col = 0; col < numColumns; col++) {
@@ -406,7 +407,7 @@ public final class DenseDoubleMatrix {
   /**
    * subtracts each element in a column by the related element in vec
    */
-  public DenseDoubleMatrix subtract(DenseDoubleVector vec) {
+  public DenseDoubleMatrix subtract(DoubleVector vec) {
     DenseDoubleMatrix cop = new DenseDoubleMatrix(this.getRowCount(),
         this.getColumnCount());
     for (int i = 0; i < this.getColumnCount(); i++) {
@@ -415,7 +416,7 @@ public final class DenseDoubleMatrix {
     return cop;
   }
 
-  public DenseDoubleMatrix divide(DenseDoubleVector vec) {
+  public DenseDoubleMatrix divide(DoubleVector vec) {
     DenseDoubleMatrix cop = new DenseDoubleMatrix(this.getRowCount(),
         this.getColumnCount());
     for (int i = 0; i < this.getColumnCount(); i++) {
@@ -586,7 +587,7 @@ public final class DenseDoubleMatrix {
 
   // this is actually strange, but works like this in octave
   public static DenseDoubleMatrix multiplyTransposedVectors(
-      DenseDoubleVector transposed, DenseDoubleVector normal) {
+      DoubleVector transposed, DoubleVector normal) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(transposed.getLength(),
         normal.getLength());
     for (int row = 0; row < transposed.getLength(); row++) {

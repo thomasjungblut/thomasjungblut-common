@@ -1,7 +1,8 @@
 package de.jungblut.math.minimize;
 
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleVector;
 
 public class DenseMatrixFolder {
 
@@ -24,7 +25,7 @@ public class DenseMatrixFolder {
     return v;
   }
 
-  public static DenseDoubleMatrix[] unfoldMatrices(DenseDoubleVector vector,
+  public static DenseDoubleMatrix[] unfoldMatrices(DoubleVector vector,
       int[][] sizeArray) {
     DenseDoubleMatrix[] arr = new DenseDoubleMatrix[sizeArray.length];
     for (int i = 0; i < sizeArray.length; i++) {
@@ -50,7 +51,7 @@ public class DenseMatrixFolder {
         { 4, 5, 6 } });
     DenseDoubleMatrix b = new DenseDoubleMatrix(new double[][] { { 7, 8, 9 },
         { 10, 11, 12 } });
-    DenseDoubleVector foldMatrices = foldMatrices(a, b);
+    DoubleVector foldMatrices = foldMatrices(a, b);
     System.out.println(foldMatrices);
     DenseDoubleMatrix[] unfoldMatrices = unfoldMatrices(foldMatrices,
         new int[][] { { 2, 3 }, { 2, 3 } });

@@ -1,7 +1,8 @@
 package de.jungblut.regression;
 
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.normalize.Normalizer;
 import de.jungblut.util.Tuple3;
@@ -9,20 +10,20 @@ import de.jungblut.util.Tuple3;
 public final class PolynomialRegression {
 
   private final DenseDoubleMatrix x;
-  private final DenseDoubleVector y;
+  private final DoubleVector y;
   private final double lambda;
-  private final DenseDoubleVector mean;
-  private final DenseDoubleVector stddev;
+  private final DoubleVector mean;
+  private final DoubleVector stddev;
   private final boolean normalize;
 
-  private DenseDoubleVector theta;
+  private DoubleVector theta;
 
   public PolynomialRegression(DenseDoubleMatrix x, DenseDoubleVector y,
       double lambda, boolean normalize) {
     super();
     this.normalize = normalize;
     if (normalize) {
-      Tuple3<DenseDoubleMatrix, DenseDoubleVector, DenseDoubleVector> featureNormalize = Normalizer
+      Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector> featureNormalize = Normalizer
           .featureNormalize(x);
       this.x = featureNormalize.getFirst();
       this.mean = featureNormalize.getSecond();
@@ -36,15 +37,15 @@ public final class PolynomialRegression {
     this.lambda = lambda;
   }
 
-  public DenseDoubleVector trainModel(int numIterations, boolean verbose) {
+  public DoubleVector trainModel(int numIterations, boolean verbose) {
     RegressionCostFunction f = new RegressionCostFunction(x, y, lambda);
-    DenseDoubleVector initialTheta = new DenseDoubleVector(
+    DoubleVector initialTheta = new DenseDoubleVector(
         x.getColumnCount() + 1, 1.0d);
     theta = Fmincg.minimizeFunction(f, initialTheta, numIterations, verbose);
     return theta;
   }
 
-  public DenseDoubleVector predict(DenseDoubleMatrix input) {
+  public DoubleVector predict(DenseDoubleMatrix input) {
     DenseDoubleMatrix in = input;
     if (normalize) {
       in = in.subtract(mean).divide(stddev);
@@ -54,7 +55,7 @@ public final class PolynomialRegression {
   }
 
   // mean squared error
-  public double error(DenseDoubleVector prediction) {
+  public double error(DoubleVector prediction) {
     return (y.subtract(prediction).pow(2).sum() / y.getLength());
   }
 
@@ -62,7 +63,7 @@ public final class PolynomialRegression {
    * Some useful accessors for internal state
    */
 
-  public DenseDoubleVector getTheta() {
+  public DoubleVector getTheta() {
     return theta;
   }
 
@@ -74,7 +75,7 @@ public final class PolynomialRegression {
     return x;
   }
 
-  public DenseDoubleVector getY() {
+  public DoubleVector getY() {
     return y;
   }
 
@@ -82,11 +83,11 @@ public final class PolynomialRegression {
     return lambda;
   }
 
-  public DenseDoubleVector getMean() {
+  public DoubleVector getMean() {
     return mean;
   }
 
-  public DenseDoubleVector getStddev() {
+  public DoubleVector getStddev() {
     return stddev;
   }
 
@@ -105,7 +106,7 @@ public final class PolynomialRegression {
       double[] column = seed.getColumn(index++);
       m.setColumn(c, column);
       for (int i = 2; i < num + 1; i++) {
-        DenseDoubleVector pow = new DenseDoubleVector(column).pow(i);
+        DoubleVector pow = new DenseDoubleVector(column).pow(i);
         m.setColumn(c + i - 1, pow.toArray());
       }
     }
@@ -123,7 +124,7 @@ public final class PolynomialRegression {
         7.6277, 22.7524 });
 
     PolynomialRegression reg = new PolynomialRegression(x, y, 1.0, false);
-    DenseDoubleVector trainModel = reg.trainModel(200, false);
+    DoubleVector trainModel = reg.trainModel(200, false);
     System.out
         .println("linear model: "
             + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },

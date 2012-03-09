@@ -1,6 +1,6 @@
 package de.jungblut.classification.tree;
 
-import de.jungblut.math.DenseIntVector;
+import de.jungblut.math.dense.DenseIntVector;
 
 /**
  * This is the model class for a trained decision tree.

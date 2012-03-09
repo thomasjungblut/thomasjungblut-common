@@ -1,6 +1,7 @@
 package de.jungblut.math.minimize;
 
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.util.Tuple;
 
 /**
@@ -83,8 +84,8 @@ public class Fmincg {
    * @param verbose output the progress to STDOUT
    * @return a vector containing the optimized input
    */
-  public static DenseDoubleVector minimizeFunction(CostFunction f,
-      DenseDoubleVector input, int length, boolean verbose) {
+  public static DoubleVector minimizeFunction(CostFunction f,
+      DoubleVector input, int length, boolean verbose) {
 
     int M = 0;
     int i = 0; // zero the run length counter
@@ -92,11 +93,11 @@ public class Fmincg {
     int ls_failed = 0; // no previous line search has failed
     DenseDoubleVector fX = new DenseDoubleVector(0); // what we return as fX
     // get function value and gradient
-    final Tuple<Double, DenseDoubleVector> evaluateCost = f.evaluateCost(input);
+    final Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(input);
     double f1 = evaluateCost.getFirst();
-    DenseDoubleVector df1 = evaluateCost.getSecond();
+    DoubleVector df1 = evaluateCost.getSecond();
     i = i + (length < 0 ? 1 : 0);
-    DenseDoubleVector s = df1.multiply(-1.0d); // search direction is
+    DoubleVector s = df1.multiply(-1.0d); // search direction is
     // steepest
 
     double d1 = s.multiply(-1.0d).dot(s); // this is the slope
@@ -105,15 +106,15 @@ public class Fmincg {
     while (i < Math.abs(length)) {// while not finished
       i = i + (length > 0 ? 1 : 0);// count iterations?!
       // make a copy of current values
-      DenseDoubleVector X0 = DenseDoubleVector.copy(input);
+      DoubleVector X0 = input.deepCopy();
       double f0 = f1;
-      DenseDoubleVector df0 = DenseDoubleVector.copy(df1);
+      DoubleVector df0 = df1.deepCopy();
       // begin line search
       input = input.add(s.multiply(z1));
-      final Tuple<Double, DenseDoubleVector> evaluateCost2 = f
+      final Tuple<Double, DoubleVector> evaluateCost2 = f
           .evaluateCost(input);
       double f2 = evaluateCost2.getFirst();
-      DenseDoubleVector df2 = evaluateCost2.getSecond();
+      DoubleVector df2 = evaluateCost2.getSecond();
 
       i = i + (length < 0 ? 1 : 0); // count epochs?!
       double d2 = df2.dot(s);
@@ -153,7 +154,7 @@ public class Fmincg {
           z2 = Math.max(Math.min(z2, INT * z3), (1 - INT) * z3);
           z1 = z1 + z2; // update the step
           input = input.add(s.multiply(z2));
-          final Tuple<Double, DenseDoubleVector> evaluateCost3 = f
+          final Tuple<Double, DoubleVector> evaluateCost3 = f
               .evaluateCost(input);
           f2 = evaluateCost3.getFirst();
           df2 = evaluateCost3.getSecond();
@@ -201,7 +202,7 @@ public class Fmincg {
         z1 = z1 + z2;
         // update current estimates
         input = input.add(s.multiply(z2));
-        final Tuple<Double, DenseDoubleVector> evaluateCost3 = f
+        final Tuple<Double, DoubleVector> evaluateCost3 = f
             .evaluateCost(input);
         f2 = evaluateCost3.getFirst();
         df2 = evaluateCost3.getSecond();
@@ -210,7 +211,7 @@ public class Fmincg {
         d2 = df2.dot(s);
       }// end of line search
 
-      DenseDoubleVector tmp = null;
+      DoubleVector tmp = null;
 
       if (success == 1) { // if line search succeeded
         f1 = f2;

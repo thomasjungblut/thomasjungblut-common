@@ -1,7 +1,8 @@
 package de.jungblut.neural;
 
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.util.Tuple;
@@ -12,13 +13,13 @@ public class NNCostFunction implements CostFunction {
   private final int hiddenLayerSize;
   private final int numLabels;
   private final DenseDoubleMatrix x;
-  private final DenseDoubleVector y;
+  private final DoubleVector y;
   private final double lambda;
   private final int m;
   private int[][] foldArrays;
 
   public NNCostFunction(int inputLayerSize, int hiddenLayerSize, int numLabels,
-      DenseDoubleMatrix x, DenseDoubleVector y, double lambda) {
+      DenseDoubleMatrix x, DoubleVector y, double lambda) {
     super();
     this.inputLayerSize = inputLayerSize;
     this.hiddenLayerSize = hiddenLayerSize;
@@ -33,7 +34,7 @@ public class NNCostFunction implements CostFunction {
   }
 
   @Override
-  public Tuple<Double, DenseDoubleVector> evaluateCost(DenseDoubleVector input) {
+  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
     // unroll thetas
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(input, foldArrays);
     // TODO these steps can be generalized for n layers

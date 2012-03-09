@@ -1,14 +1,18 @@
-package de.jungblut.math;
+package de.jungblut.math.dense;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 
+import com.google.common.collect.AbstractIterator;
+
+import de.jungblut.math.DoubleVector;
 import de.jungblut.util.Tuple;
 
-public final class DenseDoubleVector {
+public final class DenseDoubleVector implements DoubleVector {
 
   private final double[] vector;
 
@@ -31,14 +35,22 @@ public final class DenseDoubleVector {
     this.vector[array.length] = f1;
   }
 
+  @Override
   public final double get(int index) {
     return vector[index];
   }
 
+  @Override
   public final int getLength() {
     return vector.length;
   }
 
+  @Override
+  public int getDimension() {
+    return getLength();
+  }
+
+  @Override
   public final void set(int index, double value) {
     vector[index] = value;
   }
@@ -47,7 +59,8 @@ public final class DenseDoubleVector {
    * MATH stuff
    */
 
-  public final DenseDoubleVector add(DenseDoubleVector v) {
+  @Override
+  public final DoubleVector add(DoubleVector v) {
     DenseDoubleVector newv = new DenseDoubleVector(v.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       newv.set(i, this.get(i) + v.get(i));
@@ -55,23 +68,26 @@ public final class DenseDoubleVector {
     return newv;
   }
 
-  public final DenseDoubleVector add(double scalar) {
-    DenseDoubleVector newv = new DenseDoubleVector(this.getLength());
+  @Override
+  public final DoubleVector add(double scalar) {
+    DoubleVector newv = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < this.getLength(); i++) {
       newv.set(i, this.get(i) + scalar);
     }
     return newv;
   }
 
-  public final DenseDoubleVector subtract(DenseDoubleVector v) {
-    DenseDoubleVector newv = new DenseDoubleVector(v.getLength());
+  @Override
+  public final DoubleVector subtract(DoubleVector v) {
+    DoubleVector newv = new DenseDoubleVector(v.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       newv.set(i, this.get(i) - v.get(i));
     }
     return newv;
   }
 
-  public final DenseDoubleVector subtract(double v) {
+  @Override
+  public final DoubleVector subtract(double v) {
     DenseDoubleVector newv = new DenseDoubleVector(vector.length);
     for (int i = 0; i < vector.length; i++) {
       newv.set(i, vector[i] - v);
@@ -79,26 +95,26 @@ public final class DenseDoubleVector {
     return newv;
   }
 
-  public DenseDoubleVector multiply(double scalar) {
-    DenseDoubleVector v = new DenseDoubleVector(this.getLength());
+  @Override
+  public DoubleVector multiply(double scalar) {
+    DoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       v.set(i, this.get(i) * scalar);
     }
     return v;
   }
 
-  public DenseDoubleVector multiply(DenseDoubleVector vector) {
-    DenseDoubleVector v = new DenseDoubleVector(this.getLength());
+  @Override
+  public DoubleVector multiply(DoubleVector vector) {
+    DoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       v.set(i, this.get(i) * vector.get(i));
     }
     return v;
   }
 
-  /**
-   * = vector/scalar
-   */
-  public DenseDoubleVector divide(double scalar) {
+  @Override
+  public DoubleVector divide(double scalar) {
     DenseDoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       v.set(i, this.get(i) / scalar);
@@ -106,7 +122,8 @@ public final class DenseDoubleVector {
     return v;
   }
 
-  public DenseDoubleVector pow(int x) {
+  @Override
+  public DoubleVector pow(int x) {
     DenseDoubleVector v = new DenseDoubleVector(getLength());
     for (int i = 0; i < v.getLength(); i++) {
       double value = 0.0d;
@@ -121,14 +138,16 @@ public final class DenseDoubleVector {
     return v;
   }
 
-  public DenseDoubleVector sqrt() {
-    DenseDoubleVector v = new DenseDoubleVector(getLength());
+  @Override
+  public DoubleVector sqrt() {
+    DoubleVector v = new DenseDoubleVector(getLength());
     for (int i = 0; i < v.getLength(); i++) {
       v.set(i, Math.sqrt(vector[i]));
     }
     return v;
   }
 
+  @Override
   public double sum() {
     double sum = 0.0d;
     for (int i = 0; i < vector.length; i++) {
@@ -137,11 +156,9 @@ public final class DenseDoubleVector {
     return sum;
   }
 
-  /**
-   * = scalar/vector
-   */
-  public DenseDoubleVector divideFrom(double scalar) {
-    DenseDoubleVector v = new DenseDoubleVector(this.getLength());
+  @Override
+  public DoubleVector divideFrom(double scalar) {
+    DoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {
       if (this.get(i) != 0.0d) {
         double result = scalar / this.get(i);
@@ -153,7 +170,8 @@ public final class DenseDoubleVector {
     return v;
   }
 
-  public double dot(DenseDoubleVector s) {
+  @Override
+  public double dot(DoubleVector s) {
     double dotProduct = 0.0d;
     for (int i = 0; i < getLength(); i++) {
       dotProduct += this.get(i) * s.get(i);
@@ -161,12 +179,14 @@ public final class DenseDoubleVector {
     return dotProduct;
   }
 
-  public DenseDoubleVector slice(int length) {
+  @Override
+  public DoubleVector slice(int length) {
     return slice(0, length);
   }
 
-  public DenseDoubleVector slice(int offset, int length) {
-    DenseDoubleVector nv = new DenseDoubleVector(length - offset);
+  @Override
+  public DoubleVector slice(int offset, int length) {
+    DoubleVector nv = new DenseDoubleVector(length - offset);
 
     for (int i = offset; i < length - offset; i++) {
       nv.set(i, vector[i]);
@@ -175,6 +195,7 @@ public final class DenseDoubleVector {
     return nv;
   }
 
+  @Override
   public double max() {
     double max = Double.MIN_VALUE;
     for (int i = 0; i < getLength(); i++) {
@@ -186,6 +207,7 @@ public final class DenseDoubleVector {
     return max;
   }
 
+  @Override
   public double min() {
     double min = Double.MAX_VALUE;
     for (int i = 0; i < getLength(); i++) {
@@ -197,8 +219,27 @@ public final class DenseDoubleVector {
     return min;
   }
 
+  @Override
   public final double[] toArray() {
     return vector;
+  }
+
+  @Override
+  public DoubleVector deepCopy() {
+    final double[] src = vector;
+    final double[] dest = new double[vector.length];
+    System.arraycopy(src, 0, dest, 0, vector.length);
+    return new DenseDoubleVector(dest);
+  }
+
+  @Override
+  public Iterator<DoubleVectorElement> iterateNonZero() {
+    return new NonZeroIterator();
+  }
+
+  @Override
+  public Iterator<DoubleVectorElement> iterate() {
+    return new DefaultIterator();
   }
 
   @Override
@@ -208,6 +249,55 @@ public final class DenseDoubleVector {
     } else {
       return getLength() + "x1";
     }
+  }
+
+  private final class NonZeroIterator extends
+      AbstractIterator<DoubleVectorElement> {
+
+    private final DoubleVectorElement element = new DoubleVectorElement();
+    private final double[] array;
+    private int currentIndex = 0;
+
+    private NonZeroIterator() {
+      this.array = vector;
+    }
+
+    @Override
+    protected final DoubleVectorElement computeNext() {
+      while (array[currentIndex] == 0.0d) {
+        currentIndex++;
+        if (currentIndex >= array.length)
+          return endOfData();
+      }
+      element.setIndex(currentIndex);
+      element.setValue(array[currentIndex]);
+      return element;
+    }
+  }
+
+  private final class DefaultIterator extends
+      AbstractIterator<DoubleVectorElement> {
+
+    private final DoubleVectorElement element = new DoubleVectorElement();
+    private final double[] array;
+    private int currentIndex = 0;
+
+    private DefaultIterator() {
+      this.array = vector;
+    }
+
+    @Override
+    protected final DoubleVectorElement computeNext() {
+      if (currentIndex < array.length) {
+        element.setIndex(currentIndex);
+        element.setValue(array[currentIndex]);
+        currentIndex++;
+        return element;
+      } else {
+        return endOfData();
+      }
+    }
+
   }
 
   public static DenseDoubleVector ones(int num) {
@@ -225,14 +315,7 @@ public final class DenseDoubleVector {
     return v;
   }
 
-  public static DenseDoubleVector copy(DenseDoubleVector vector) {
-    final double[] src = vector.vector;
-    final double[] dest = new double[vector.getLength()];
-    System.arraycopy(src, 0, dest, 0, vector.getLength());
-    return new DenseDoubleVector(dest);
-  }
-
-  public static List<Tuple<Double, Integer>> sort(DenseDoubleVector vector,
+  public static List<Tuple<Double, Integer>> sort(DoubleVector vector,
       final Comparator<Double> scoreComparator) {
     List<Tuple<Double, Integer>> list = new ArrayList<Tuple<Double, Integer>>(
         vector.getLength());

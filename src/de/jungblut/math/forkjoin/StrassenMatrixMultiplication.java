@@ -1,4 +1,4 @@
-package de.jungblut.math.par;
+package de.jungblut.math.forkjoin;
 
 import java.util.Arrays;
 

@@ -87,7 +87,6 @@ public class BinaryHeap {
 
     public static int[] sort(int[] arr) {
       int[] temp = new int[arr.length];
-      Arrays.fill(temp, 0);
       BinaryHeap heap = new BinaryHeap();
       for (int i : arr) {
         heap.add(i);

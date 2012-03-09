@@ -1,5 +1,8 @@
 package de.jungblut.math;
 
+import de.jungblut.math.dense.DenseBooleanMatrix;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+
 /**
  * Includes some sum functions.
  * 
@@ -20,7 +23,7 @@ public class MatrixUtils {
     return totalSum;
   }
 
-  public static double sum(DenseDoubleVector toSum) {
+  public static double sum(DoubleVector toSum) {
     double totalSum = 0.0d;
     for (int row = 0; row < toSum.getLength(); row++) {
       totalSum += toSum.get(row);

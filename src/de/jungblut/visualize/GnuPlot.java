@@ -9,16 +9,17 @@ import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.Scanner;
 
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.regression.PolynomialRegression;
 
 // for windows only and only if gnuplot 4.4 can be found in the path
 public class GnuPlot {
 
-  public static void plot(DenseDoubleMatrix x, DenseDoubleVector y,
-      DenseDoubleVector theta, int polyCount, DenseDoubleVector mean,
-      DenseDoubleVector sigma) {
+  public static void plot(DenseDoubleMatrix x, DoubleVector y,
+      DoubleVector theta, int polyCount, DoubleVector mean,
+      DoubleVector sigma) {
     /*
      * set xrange [" + (x.min(0) - 15) + ":" + (x.max(0) + 15) +
      * "] ; set yrange [" + (y.min() - 15) + ":" + (y.max() + 15) + "] ;
@@ -35,7 +36,7 @@ public class GnuPlot {
         DenseDoubleVector.ones(fromUpTo.getLength()), createPolynomials
             .subtract(mean).divide(sigma));
 
-    DenseDoubleVector multiplyVector = xPolyNormalized.multiplyVector(theta);
+    DoubleVector multiplyVector = xPolyNormalized.multiplyVector(theta);
     try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
         "/gnuplot_function.in")))) {
       for (int i = 0; i < multiplyVector.getLength(); i++) {
@@ -70,7 +71,7 @@ public class GnuPlot {
 
   }
 
-  public static String modelToGNUPlot(DenseDoubleVector p) {
+  public static String modelToGNUPlot(DoubleVector p) {
     String s = "";
     for (int i = 0; i < p.getLength(); i++) {
       if (i == 0) {

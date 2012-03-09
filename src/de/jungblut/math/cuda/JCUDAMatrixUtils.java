@@ -10,7 +10,7 @@ import jcuda.jcublas.cublasOperation;
 import jcuda.jcublas.cublasPointerMode;
 import jcuda.runtime.JCuda;
 import jcuda.runtime.cudaDeviceProp;
-import de.jungblut.math.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleMatrix;
 
 // -Djava.library.path="/lib/;${env_var:PATH}" must be added to the running VM
 public class JCUDAMatrixUtils {

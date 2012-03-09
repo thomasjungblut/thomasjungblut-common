@@ -1,11 +1,11 @@
-package de.jungblut.math.par;
+package de.jungblut.math.forkjoin;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
 
-import static de.jungblut.math.par.StrassenMatrixMultiplication.*;
+import static de.jungblut.math.forkjoin.StrassenMatrixMultiplication.*;
 
 /**
  * Uses static imports of the {@link StrassenMatrixMultiplication} class and

@@ -6,9 +6,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
-import de.jungblut.math.DenseBooleanMatrix;
-import de.jungblut.math.DenseDoubleMatrix;
-import de.jungblut.math.DenseDoubleVector;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseBooleanMatrix;
+import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.normalize.Normalizer;
@@ -18,8 +19,8 @@ public final class CollaborativeFiltering {
 
   private final DenseDoubleMatrix userMovieRatings;
   final DenseBooleanMatrix ratingMatrix;
-  private Tuple<DenseDoubleMatrix, DenseDoubleVector> normalizedTuple;
-  private DenseDoubleVector movieRatingMeanVector;
+  private Tuple<DenseDoubleMatrix, DoubleVector> normalizedTuple;
+  private DoubleVector movieRatingMeanVector;
   private DenseDoubleMatrix p;
 
   public CollaborativeFiltering(DenseDoubleMatrix userMovieRatings) {
@@ -49,7 +50,7 @@ public final class CollaborativeFiltering {
         theta);
     CoFiCostFunction cost = new CoFiCostFunction(userMovieRatings,
         ratingMatrix, numUsers, numMovies, numFeatures, lambda);
-    DenseDoubleVector minimizeFunction = Fmincg.minimizeFunction(cost,
+    DoubleVector minimizeFunction = Fmincg.minimizeFunction(cost,
         initialParameters, 100, true);
 
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
@@ -62,7 +63,7 @@ public final class CollaborativeFiltering {
     return p;
   }
 
-  public DenseDoubleVector predict(int userColumn) {
+  public DoubleVector predict(int userColumn) {
     return p.getColumnVector(0).add(movieRatingMeanVector);
   }
 
@@ -79,7 +80,7 @@ public final class CollaborativeFiltering {
         userMovieRatings);
 
     collaborativeFiltering.train();
-    DenseDoubleVector myPredictions = collaborativeFiltering.predict(0);
+    DoubleVector myPredictions = collaborativeFiltering.predict(0);
 
     HashMap<Integer, String> movieLookupTable = MovieLensReader
         .getMovieLookupTable();
@@ -96,7 +97,8 @@ public final class CollaborativeFiltering {
       Tuple<Double, Integer> tuple = sort.get(i);
       double score = tuple.getFirst();
       int index = tuple.getSecond();
-      System.out.println(movieLookupTable.get(index) + " | " + score);
+      if(index > 0)
+        System.out.println(movieLookupTable.get(index) + " | " + score);
     }
 
   }

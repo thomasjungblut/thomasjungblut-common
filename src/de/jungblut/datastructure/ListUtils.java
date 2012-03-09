@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ListUtils {
 
-  private static List<Integer> merge(List<Integer> list1, List<Integer> list2) {
+  public static List<Integer> merge(List<Integer> list1, List<Integer> list2) {
     List<Integer> newList = new ArrayList<>(list1.size() + list2.size());
 
     int offset1 = 0;
@@ -34,7 +34,7 @@ public class ListUtils {
     return newList;
   }
 
-  private static List<Integer> mergeSort(List<Integer> list) {
+  public static List<Integer> mergeSort(List<Integer> list) {
     if (list.size() <= 1) {
       return list;
     } else {
@@ -45,7 +45,7 @@ public class ListUtils {
     }
   }
 
-  private static List<Integer> subList(List<Integer> list, int begin, int end) {
+  public static List<Integer> subList(List<Integer> list, int begin, int end) {
     List<Integer> temp = new ArrayList<>(end - begin);
     for (int i = begin; i <= end; i++) {
       temp.add(list.get(i));
