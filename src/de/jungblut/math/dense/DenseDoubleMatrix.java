@@ -4,12 +4,11 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.util.Tuple;
 
-public final class DenseDoubleMatrix {
-
-  public static final double NOT_FLAGGED = 0.0d;
+public final class DenseDoubleMatrix implements DoubleMatrix {
 
   protected final double[][] matrix;
   protected final int numRows;
@@ -90,6 +89,7 @@ public final class DenseDoubleMatrix {
    * @param col
    * @return Returns the integer value at in the column at the row.
    */
+  @Override
   public final double get(int row, int col) {
     return this.matrix[row][col];
   }
@@ -113,6 +113,7 @@ public final class DenseDoubleMatrix {
    * 
    * @return
    */
+  @Override
   public final int getColumnCount() {
     return numColumns;
   }
@@ -125,6 +126,7 @@ public final class DenseDoubleMatrix {
    * @return
    * @throws IllegalArgumentException
    */
+  @Override
   public final DoubleVector getColumnVector(int col) {
     return new DenseDoubleVector(getColumn(col));
   }
@@ -154,6 +156,7 @@ public final class DenseDoubleMatrix {
    * 
    * @return
    */
+  @Override
   public final int getRowCount() {
     return numRows;
   }
@@ -164,10 +167,12 @@ public final class DenseDoubleMatrix {
    * @param row
    * @return
    */
+  @Override
   public final DoubleVector getRowVector(int row) {
     return new DenseDoubleVector(getRow(row));
   }
 
+  @Override
   public final void set(int row, int col, double value) {
     this.matrix[row][col] = value;
   }
@@ -180,6 +185,16 @@ public final class DenseDoubleMatrix {
     for (int i = 0; i < getRowCount(); i++) {
       this.matrix[i][col] = values[i];
     }
+  }
+
+  @Override
+  public void setColumnVector(int col, DoubleVector column) {
+    this.setColumn(col, column.toArray());
+  }
+
+  @Override
+  public void setRowVector(int rowIndex, DoubleVector row) {
+    this.setRow(rowIndex, row.toArray());
   }
 
   /**
@@ -268,6 +283,7 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
+  @Override
   public final DenseDoubleMatrix multiply(double scalar) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
@@ -278,23 +294,14 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
-  public final DenseDoubleMatrix multiply(DenseDoubleMatrix other) {
-    // if (JCUDAMatrixUtils.CUDA_AVAILABLE) {
-    // return JCUDAMatrixUtils.multiply(this, other);
-    // } else {
-    if (this.numColumns != other.getRowCount()) {
-      throw new IllegalArgumentException(
-          "multiply: nonconformant arguments (this is " + this.numRows + "x"
-              + this.numColumns + ", other is " + other.getRowCount() + "x"
-              + other.getColumnCount() + ")");
-    }
-
-    DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
-        other.numColumns);
+  @Override
+  public final DoubleMatrix multiply(DoubleMatrix other) {
+    DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.getRowCount(),
+        other.getColumnCount());
 
     final int m = this.numRows;
     final int n = this.numColumns;
-    final int p = other.numColumns;
+    final int p = other.getColumnCount();
 
     for (int j = p; --j >= 0;) {
       for (int i = m; --i >= 0;) {
@@ -313,6 +320,7 @@ public final class DenseDoubleMatrix {
   /**
    * Multiplies this matrix per element with a binary matrix.
    */
+  @Override
   public final DenseDoubleMatrix multiplyElementWise(DenseBooleanMatrix other) {
     DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
         this.numColumns);
@@ -329,7 +337,8 @@ public final class DenseDoubleMatrix {
   /**
    * Multiplies this matrix per element with a real matrix.
    */
-  public final DenseDoubleMatrix multiplyElementWise(DenseDoubleMatrix other) {
+  @Override
+  public final DoubleMatrix multiplyElementWise(DoubleMatrix other) {
     DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
         this.numColumns);
 
@@ -342,6 +351,7 @@ public final class DenseDoubleMatrix {
     return matrix;
   }
 
+  @Override
   public final DoubleVector multiplyVector(DoubleVector v) {
     DoubleVector vector = new DenseDoubleVector(this.getRowCount());
     for (int row = 0; row < numRows; row++) {
@@ -355,6 +365,7 @@ public final class DenseDoubleMatrix {
     return vector;
   }
 
+  @Override
   public DenseDoubleMatrix transpose() {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numColumns, this.numRows);
     for (int i = 0; i < numRows; i++) {
@@ -368,6 +379,7 @@ public final class DenseDoubleMatrix {
   /**
    * = (amount - matrix value)
    */
+  @Override
   public DenseDoubleMatrix subtractBy(double amount) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
@@ -381,6 +393,7 @@ public final class DenseDoubleMatrix {
   /**
    * = (m - amount)
    */
+  @Override
   public DenseDoubleMatrix subtract(double amount) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
@@ -394,8 +407,9 @@ public final class DenseDoubleMatrix {
   /**
    * this-other
    */
-  public DenseDoubleMatrix subtract(DenseDoubleMatrix other) {
-    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+  @Override
+  public DoubleMatrix subtract(DoubleMatrix other) {
+    DoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
         m.set(i, j, this.matrix[i][j] - other.get(i, j));
@@ -407,6 +421,7 @@ public final class DenseDoubleMatrix {
   /**
    * subtracts each element in a column by the related element in vec
    */
+  @Override
   public DenseDoubleMatrix subtract(DoubleVector vec) {
     DenseDoubleMatrix cop = new DenseDoubleMatrix(this.getRowCount(),
         this.getColumnCount());
@@ -416,11 +431,12 @@ public final class DenseDoubleMatrix {
     return cop;
   }
 
-  public DenseDoubleMatrix divide(DoubleVector vec) {
-    DenseDoubleMatrix cop = new DenseDoubleMatrix(this.getRowCount(),
+  @Override
+  public DoubleMatrix divide(DoubleVector vec) {
+    DoubleMatrix cop = new DenseDoubleMatrix(this.getRowCount(),
         this.getColumnCount());
     for (int i = 0; i < this.getColumnCount(); i++) {
-      cop.setColumn(i, getColumnVector(i).divide(vec.get(i)).toArray());
+      cop.setColumnVector(i, getColumnVector(i).divide(vec.get(i)));
     }
     return cop;
   }
@@ -428,8 +444,9 @@ public final class DenseDoubleMatrix {
   /**
    * this / other
    */
-  public DenseDoubleMatrix divide(DenseDoubleMatrix other) {
-    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+  @Override
+  public DoubleMatrix divide(DoubleMatrix other) {
+    DoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
         m.set(i, j, this.matrix[i][j] / other.get(i, j));
@@ -441,8 +458,9 @@ public final class DenseDoubleMatrix {
   /**
    * this / scalar
    */
-  public DenseDoubleMatrix divide(double scalar) {
-    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+  @Override
+  public DoubleMatrix divide(double scalar) {
+    DoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
         m.set(i, j, this.matrix[i][j] / scalar);
@@ -454,8 +472,9 @@ public final class DenseDoubleMatrix {
   /**
    * this+other
    */
-  public DenseDoubleMatrix add(DenseDoubleMatrix other) {
-    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+  @Override
+  public DoubleMatrix add(DoubleMatrix other) {
+    DoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
         m.set(i, j, this.matrix[i][j] + other.get(i, j));
@@ -464,8 +483,9 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
-  public DenseDoubleMatrix pow(int x) {
-    DenseDoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
+  @Override
+  public DoubleMatrix pow(int x) {
+    DoubleMatrix m = new DenseDoubleMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
         m.set(i, j, Math.pow(matrix[i][j], x));
@@ -474,6 +494,7 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
+  @Override
   public double max(int column) {
     double max = Double.MIN_VALUE;
     for (int i = 0; i < getRowCount(); i++) {
@@ -485,6 +506,7 @@ public final class DenseDoubleMatrix {
     return max;
   }
 
+  @Override
   public double min(int column) {
     double min = Double.MAX_VALUE;
     for (int i = 0; i < getRowCount(); i++) {
@@ -512,6 +534,7 @@ public final class DenseDoubleMatrix {
     return m;
   }
 
+  @Override
   public double sumElements() {
     double x = 0.0d;
     for (int i = 0; i < numRows; i++) {

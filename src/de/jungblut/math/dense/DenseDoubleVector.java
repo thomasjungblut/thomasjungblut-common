@@ -225,6 +225,11 @@ public final class DenseDoubleVector implements DoubleVector {
   }
 
   @Override
+  public boolean isSparse() {
+    return false;
+  }
+
+  @Override
   public DoubleVector deepCopy() {
     final double[] src = vector;
     final double[] dest = new double[vector.length];

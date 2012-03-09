@@ -18,8 +18,7 @@ import de.jungblut.regression.PolynomialRegression;
 public class GnuPlot {
 
   public static void plot(DenseDoubleMatrix x, DoubleVector y,
-      DoubleVector theta, int polyCount, DoubleVector mean,
-      DoubleVector sigma) {
+      DoubleVector theta, int polyCount, DoubleVector mean, DoubleVector sigma) {
     /*
      * set xrange [" + (x.min(0) - 15) + ":" + (x.max(0) + 15) +
      * "] ; set yrange [" + (y.min() - 15) + ":" + (y.max() + 15) + "] ;
@@ -33,8 +32,8 @@ public class GnuPlot {
         .createPolynomials(new DenseDoubleMatrix(fromUpTo), polyCount);
 
     DenseDoubleMatrix xPolyNormalized = new DenseDoubleMatrix(
-        DenseDoubleVector.ones(fromUpTo.getLength()), createPolynomials
-            .subtract(mean).divide(sigma));
+        DenseDoubleVector.ones(fromUpTo.getLength()),
+        (DenseDoubleMatrix) createPolynomials.subtract(mean).divide(sigma));
 
     DoubleVector multiplyVector = xPolyNormalized.multiplyVector(theta);
     try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(

@@ -39,8 +39,8 @@ public final class PolynomialRegression {
 
   public DoubleVector trainModel(int numIterations, boolean verbose) {
     RegressionCostFunction f = new RegressionCostFunction(x, y, lambda);
-    DoubleVector initialTheta = new DenseDoubleVector(
-        x.getColumnCount() + 1, 1.0d);
+    DoubleVector initialTheta = new DenseDoubleVector(x.getColumnCount() + 1,
+        1.0d);
     theta = Fmincg.minimizeFunction(f, initialTheta, numIterations, verbose);
     return theta;
   }
@@ -48,7 +48,7 @@ public final class PolynomialRegression {
   public DoubleVector predict(DenseDoubleMatrix input) {
     DenseDoubleMatrix in = input;
     if (normalize) {
-      in = in.subtract(mean).divide(stddev);
+      in = (DenseDoubleMatrix) in.subtract(mean).divide(stddev);
     }
     return new DenseDoubleMatrix(DenseDoubleVector.ones(in.getRowCount()), in)
         .multiplyVector(theta);
@@ -102,7 +102,7 @@ public final class PolynomialRegression {
     DenseDoubleMatrix m = new DenseDoubleMatrix(seed.getRowCount(),
         seed.getColumnCount() * num);
     int index = 0;
-    for (int c = 0; c < m.getColumnCount(); c+=num) {
+    for (int c = 0; c < m.getColumnCount(); c += num) {
       double[] column = seed.getColumn(index++);
       m.setColumn(c, column);
       for (int i = 2; i < num + 1; i++) {

@@ -60,6 +60,5 @@ public final class Tuple<FIRST, SECOND> implements
   public String toString() {
     return "Tuple [first=" + first + ", second=" + second + "]";
   }
-  
 
 }

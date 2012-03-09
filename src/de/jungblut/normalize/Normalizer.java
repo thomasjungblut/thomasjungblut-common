@@ -52,7 +52,8 @@ public class Normalizer {
       DoubleVector column = x.getColumnVector(col);
       double mean = column.sum() / column.getLength();
       meanVector.set(col, mean);
-      double var = column.subtract(mean).pow(2).sum() *  1 / (column.getLength()-1);
+      double var = column.subtract(mean).pow(2).sum() * 1
+          / (column.getLength() - 1);
       stddevVector.set(col, Math.sqrt(var));
     }
 
@@ -62,8 +63,8 @@ public class Normalizer {
       toReturn.setColumn(col, column.toArray());
     }
 
-    return new Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector>(
-        toReturn, meanVector, stddevVector);
+    return new Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector>(toReturn,
+        meanVector, stddevVector);
   }
 
 }

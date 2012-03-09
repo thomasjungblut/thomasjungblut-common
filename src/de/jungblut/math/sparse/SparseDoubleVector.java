@@ -218,6 +218,11 @@ public class SparseDoubleVector implements DoubleVector {
   }
 
   @Override
+  public boolean isSparse() {
+    return true;
+  }
+
+  @Override
   public DoubleVector slice(int offset, int length) {
     // TODO this should be ultra slow
     DoubleVector nv = new SparseDoubleVector(this.dimension);
@@ -331,5 +336,4 @@ public class SparseDoubleVector implements DoubleVector {
     }
 
   }
-
 }

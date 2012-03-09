@@ -59,7 +59,7 @@ public final class CollaborativeFiltering {
             { theta.getRowCount(), theta.getColumnCount() } });
 
     DenseDoubleMatrix computedTheta = unfoldMatrices[1];
-    p = x.multiply(computedTheta.transpose());
+    p = (DenseDoubleMatrix) x.multiply(computedTheta.transpose());
     return p;
   }
 
@@ -97,7 +97,7 @@ public final class CollaborativeFiltering {
       Tuple<Double, Integer> tuple = sort.get(i);
       double score = tuple.getFirst();
       int index = tuple.getSecond();
-      if(index > 0)
+      if (index > 0)
         System.out.println(movieLookupTable.get(index) + " | " + score);
     }
 

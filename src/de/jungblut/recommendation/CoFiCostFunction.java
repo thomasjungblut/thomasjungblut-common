@@ -43,29 +43,30 @@ public final class CoFiCostFunction implements CostFunction {
         x.getColumnCount());
 
     // do the magic...
-    DenseDoubleMatrix tmp = theta.multiply(x.transpose())
+    DenseDoubleMatrix tmp = (DenseDoubleMatrix) theta.multiply(x.transpose())
         .subtract(userMovieRatings.transpose()).pow(2).transpose();
     // code=((Theta*X'-Y').^2)';
 
     j = sumWhenTrue(tmp, ratingMatrix) / 2.0d
-        + (lambda * sum(theta.pow(2)) / 2.0d)
-        + (lambda * sum((x.pow(2))) / 2.0d);
+        + (lambda * sum((DenseDoubleMatrix) theta.pow(2)) / 2.0d)
+        + (lambda * sum((DenseDoubleMatrix) (x.pow(2))) / 2.0d);
     // J = (sum(code(R==1)))/2 + (lambda * (sum(sum(Theta.^2))) /2) +
     // (lambda *
     // sum((sum(X.^2))) /2);
 
-    xGradient = ((x.multiply(theta.transpose()).subtract(userMovieRatings)
-        .multiplyElementWise(ratingMatrix)).multiply(theta).add(x
-        .multiply(lambda)));
+    xGradient = (DenseDoubleMatrix) ((x.multiply(theta.transpose()).subtract(
+        userMovieRatings).multiplyElementWise(ratingMatrix)).multiply(theta)
+        .add(x.multiply(lambda)));
     // X_grad = ((X*Theta'-Y).*R)*Theta + lambda*X;
 
-    thetaGradient = ((theta.multiply(x.transpose()).subtract(userMovieRatings
-        .transpose())).multiplyElementWise(ratingMatrix.transpose())).multiply(
-        x).add(theta.multiply(lambda));
+    thetaGradient = (DenseDoubleMatrix) ((theta.multiply(x.transpose())
+        .subtract(userMovieRatings.transpose()))
+        .multiplyElementWise(ratingMatrix.transpose())).multiply(x).add(
+        theta.multiply(lambda));
     // Theta_grad = ((Theta*X'-Y').*R')*X + lambda*Theta;
 
-    return new Tuple<Double, DoubleVector>(j,
-        DenseMatrixFolder.foldMatrices(xGradient, thetaGradient));
+    return new Tuple<Double, DoubleVector>(j, DenseMatrixFolder.foldMatrices(
+        xGradient, thetaGradient));
   }
 
   public static void main(String[] args) {
@@ -93,8 +94,7 @@ public final class CoFiCostFunction implements CostFunction {
         { -0.43192, -0.47880, 0.84671 }, { 0.72860, -0.27189, 0.32684 } });
 
     // fold x and theta so they are ready to be passed to fmincg
-    DoubleVector initialParameters = DenseMatrixFolder.foldMatrices(x,
-        theta);
+    DoubleVector initialParameters = DenseMatrixFolder.foldMatrices(x, theta);
     CoFiCostFunction cost = new CoFiCostFunction(y, r, numUsers, numMovies,
         numFeatures, lambda);
 

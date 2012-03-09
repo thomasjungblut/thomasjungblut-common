@@ -58,6 +58,8 @@ public interface DoubleVector {
 
   public Iterator<DoubleVectorElement> iterate();
 
+  public boolean isSparse();
+
   public static final class DoubleVectorElement {
 
     private int index;

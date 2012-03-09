@@ -111,8 +111,7 @@ public class Fmincg {
       DoubleVector df0 = df1.deepCopy();
       // begin line search
       input = input.add(s.multiply(z1));
-      final Tuple<Double, DoubleVector> evaluateCost2 = f
-          .evaluateCost(input);
+      final Tuple<Double, DoubleVector> evaluateCost2 = f.evaluateCost(input);
       double f2 = evaluateCost2.getFirst();
       DoubleVector df2 = evaluateCost2.getSecond();
 
@@ -202,8 +201,7 @@ public class Fmincg {
         z1 = z1 + z2;
         // update current estimates
         input = input.add(s.multiply(z2));
-        final Tuple<Double, DoubleVector> evaluateCost3 = f
-            .evaluateCost(input);
+        final Tuple<Double, DoubleVector> evaluateCost3 = f.evaluateCost(input);
         f2 = evaluateCost3.getFirst();
         df2 = evaluateCost3.getSecond();
         M = M - 1;
