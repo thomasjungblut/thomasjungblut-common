@@ -67,12 +67,14 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
 
   @Override
   public void set(int row, int col, double value) {
-    SparseDoubleVector sparseDoubleVector = matrix.get(col);
-    if (sparseDoubleVector == null) {
-      sparseDoubleVector = new SparseDoubleVector(getRowCount());
-      matrix.put(col, sparseDoubleVector);
+    if (value != 0.0d) {
+      SparseDoubleVector sparseDoubleVector = matrix.get(col);
+      if (sparseDoubleVector == null) {
+        sparseDoubleVector = new SparseDoubleVector(getRowCount());
+        matrix.put(col, sparseDoubleVector);
+      }
+      sparseDoubleVector.set(row, value);
     }
-    sparseDoubleVector.set(row, value);
   }
 
   @Override

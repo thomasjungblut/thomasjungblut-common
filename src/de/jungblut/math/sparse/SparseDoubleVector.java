@@ -81,7 +81,7 @@ public class SparseDoubleVector implements DoubleVector {
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
-      set(e.getIndex(), e.getValue() + scalar);
+      v.set(e.getIndex(), e.getValue() + scalar);
     }
     return v;
   }
@@ -104,7 +104,7 @@ public class SparseDoubleVector implements DoubleVector {
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
-      set(e.getIndex(), e.getValue() - scalar);
+      v.set(e.getIndex(), e.getValue() - scalar);
     }
     return v;
   }
@@ -115,7 +115,7 @@ public class SparseDoubleVector implements DoubleVector {
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
-      set(e.getIndex(), e.getValue() * scalar);
+      v.set(e.getIndex(), e.getValue() * scalar);
     }
     return v;
   }
@@ -141,7 +141,7 @@ public class SparseDoubleVector implements DoubleVector {
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
-      set(e.getIndex(), e.getValue() / scalar);
+      v.set(e.getIndex(), e.getValue() / scalar);
     }
     return v;
   }
@@ -158,7 +158,7 @@ public class SparseDoubleVector implements DoubleVector {
       } else {
         value = Math.pow(e.getValue(), x);
       }
-      set(e.getIndex(), value);
+      v.set(e.getIndex(), value);
     }
     return v;
   }
@@ -169,7 +169,7 @@ public class SparseDoubleVector implements DoubleVector {
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
-      set(e.getIndex(), Math.sqrt(e.getValue()));
+      v.set(e.getIndex(), Math.sqrt(e.getValue()));
     }
     return v;
   }
@@ -191,7 +191,7 @@ public class SparseDoubleVector implements DoubleVector {
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
-      set(e.getIndex(), Math.abs(e.getValue()));
+      v.set(e.getIndex(), Math.abs(e.getValue()));
     }
     return v;
   }
@@ -202,7 +202,7 @@ public class SparseDoubleVector implements DoubleVector {
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
-      set(e.getIndex(), scalar / e.getValue());
+      v.set(e.getIndex(), scalar / e.getValue());
     }
     return v;
   }
