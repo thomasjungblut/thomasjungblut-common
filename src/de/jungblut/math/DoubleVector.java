@@ -16,7 +16,7 @@ public interface DoubleVector {
   public void set(int index, double value);
 
   public DoubleVector apply(DoubleVectorFunction func);
-  
+
   public DoubleVector apply(DoubleVector other, DoubleDoubleVectorFunction func);
 
   public DoubleVector add(DoubleVector v);

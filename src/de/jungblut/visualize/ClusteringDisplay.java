@@ -1,4 +1,4 @@
-package de.jungblut.clustering.display;
+package de.jungblut.visualize;
 
 import java.awt.Color;
 import java.awt.Dimension;
