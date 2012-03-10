@@ -119,7 +119,7 @@ public class JCUDAMatrixUtils {
       DenseDoubleMatrix b = new DenseDoubleMatrix(i, i, new Random());
       // DenseDoubleMatrix multiplyCPU = a.multiply(b);
       DenseDoubleMatrix multiplyGPU = multiply(a, b);
-      System.out.println(i + " " + multiplyGPU.sumElements());
+      System.out.println(i + " " + multiplyGPU.sum());
     }
   }
 

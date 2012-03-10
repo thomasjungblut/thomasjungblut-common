@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Random;
 
+import de.jungblut.math.BooleanMatrix;
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseBooleanMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
@@ -17,21 +18,21 @@ import de.jungblut.util.Tuple;
 
 public final class CollaborativeFiltering {
 
-  private final DenseDoubleMatrix userMovieRatings;
-  final DenseBooleanMatrix ratingMatrix;
-  private Tuple<DenseDoubleMatrix, DoubleVector> normalizedTuple;
+  private final DoubleMatrix userMovieRatings;
+  final BooleanMatrix ratingMatrix;
+  private Tuple<DoubleMatrix, DoubleVector> normalizedTuple;
   private DoubleVector movieRatingMeanVector;
-  private DenseDoubleMatrix p;
+  private DoubleMatrix p;
 
-  public CollaborativeFiltering(DenseDoubleMatrix userMovieRatings) {
+  public CollaborativeFiltering(DoubleMatrix userMovieRatings) {
     super();
     this.userMovieRatings = userMovieRatings;
     this.ratingMatrix = userMovieRatings.getNonDefaultBooleanMatrix();
     normalizedTuple = Normalizer.meanNormalizeRows(userMovieRatings);
   }
 
-  public DenseDoubleMatrix train() {
-    final DenseDoubleMatrix normalizedRatings = normalizedTuple.getFirst();
+  public DoubleMatrix train() {
+    final DoubleMatrix normalizedRatings = normalizedTuple.getFirst();
     movieRatingMeanVector = normalizedTuple.getSecond();
 
     final int numUsers = normalizedRatings.getColumnCount();

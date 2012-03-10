@@ -3,9 +3,10 @@ package de.jungblut.math.dense;
 import java.util.Arrays;
 import java.util.Random;
 
-public final class DenseBooleanMatrix {
+import de.jungblut.math.BooleanMatrix;
+import de.jungblut.math.BooleanVector;
 
-  public static final double NOT_FLAGGED = 0;
+public final class DenseBooleanMatrix implements BooleanMatrix {
 
   protected final boolean[][] matrix;
   protected final int numRows;
@@ -55,6 +56,7 @@ public final class DenseBooleanMatrix {
    * @param col
    * @return Returns the integer value at in the column at the row.
    */
+  @Override
   public final boolean get(int row, int col) {
     return this.matrix[row][col];
   }
@@ -78,6 +80,7 @@ public final class DenseBooleanMatrix {
    * 
    * @return
    */
+  @Override
   public final int getColumnCount() {
     return numColumns;
   }
@@ -90,7 +93,8 @@ public final class DenseBooleanMatrix {
    * @return
    * @throws IllegalArgumentException
    */
-  public final DenseBooleanVector getColumnVector(int col) {
+  @Override
+  public final BooleanVector getColumnVector(int col) {
     return new DenseBooleanVector(getColumn(col));
   }
 
@@ -119,6 +123,7 @@ public final class DenseBooleanMatrix {
    * 
    * @return
    */
+  @Override
   public final int getRowCount() {
     return numRows;
   }
@@ -129,15 +134,18 @@ public final class DenseBooleanMatrix {
    * @param row
    * @return
    */
-  public final DenseBooleanVector getRowVector(int row) {
+  @Override
+  public final BooleanVector getRowVector(int row) {
     return new DenseBooleanVector(getRow(row));
   }
 
+  @Override
   public final void set(int row, int col, boolean value) {
     this.matrix[row][col] = value;
   }
 
-  public DenseBooleanMatrix transpose() {
+  @Override
+  public BooleanMatrix transpose() {
     DenseBooleanMatrix m = new DenseBooleanMatrix(this.numColumns, this.numRows);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
@@ -159,6 +167,14 @@ public final class DenseBooleanMatrix {
   @Override
   public String toString() {
     return Arrays.deepToString(matrix);
+  }
+
+  @Override
+  public int[] columnIndices() {
+    int[] x = new int[getColumnCount()];
+    for (int i = 0; i < getColumnCount(); i++)
+      x[i] = i;
+    return x;
   }
 
 }

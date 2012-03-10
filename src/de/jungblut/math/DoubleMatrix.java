@@ -1,7 +1,5 @@
 package de.jungblut.math;
 
-import de.jungblut.math.dense.DenseBooleanMatrix;
-
 public interface DoubleMatrix {
 
   public static final double NOT_FLAGGED = 0.0d;
@@ -60,7 +58,7 @@ public interface DoubleMatrix {
   /**
    * Multiplies this matrix per element with a binary matrix.
    */
-  public DoubleMatrix multiplyElementWise(DenseBooleanMatrix other);
+  public DoubleMatrix multiplyElementWise(BooleanMatrix other);
 
   /**
    * Multiplies this matrix per element with a real matrix.
@@ -114,6 +112,12 @@ public interface DoubleMatrix {
 
   public double min(int column);
 
-  public double sumElements();
+  public double sum();
+
+  public int[] columnIndices();
+
+  public BooleanMatrix getNonDefaultBooleanMatrix();
+
+  public boolean isSparse();
 
 }

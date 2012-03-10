@@ -1,5 +1,6 @@
 package de.jungblut.normalize;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -8,8 +9,8 @@ import de.jungblut.util.Tuple3;
 
 public class Normalizer {
 
-  public static Tuple<DenseDoubleMatrix, DoubleVector> meanNormalizeRows(
-      DenseDoubleMatrix matrix) {
+  public static Tuple<DoubleMatrix, DoubleVector> meanNormalizeRows(
+      DoubleMatrix matrix) {
 
     DoubleVector meanVector = new DenseDoubleVector(matrix.getRowCount());
 
@@ -34,7 +35,7 @@ public class Normalizer {
       }
     }
 
-    return new Tuple<DenseDoubleMatrix, DoubleVector>(matrix, meanVector);
+    return new Tuple<DoubleMatrix, DoubleVector>(matrix, meanVector);
   }
 
   /**

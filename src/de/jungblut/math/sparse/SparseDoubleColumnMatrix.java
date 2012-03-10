@@ -4,10 +4,12 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Iterator;
 
+import de.jungblut.math.BooleanMatrix;
+import de.jungblut.math.BooleanVector;
+import de.jungblut.math.BooleanVector.BooleanVectorElement;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
-import de.jungblut.math.dense.DenseBooleanMatrix;
 
 public class SparseDoubleColumnMatrix implements DoubleMatrix {
 
@@ -99,14 +101,35 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
 
   @Override
   public DoubleMatrix multiply(DoubleMatrix other) {
-    // TODO Auto-generated method stub
-    return null;
+    // TODO improve for sparse vectors..
+    DoubleMatrix result = new SparseDoubleColumnMatrix(this.getRowCount(),
+        other.getColumnCount());
+    for (int row = 0; row < getRowCount(); row++) {
+      for (int col = 0; col < other.getColumnCount(); col++) {
+        double sum = 0;
+        for (int k = 0; k < getColumnCount(); k++) {
+          sum += get(row, k) * other.get(k, col);
+        }
+        result.set(row, col, sum);
+      }
+    }
+    return result;
   }
 
   @Override
-  public DoubleMatrix multiplyElementWise(DenseBooleanMatrix other) {
-    // TODO Auto-generated method stub
-    return null;
+  public DoubleMatrix multiplyElementWise(BooleanMatrix other) {
+    SparseDoubleColumnMatrix matrix = new SparseDoubleColumnMatrix(
+        this.numRows, this.numColumns);
+    for (int col : other.columnIndices()) {
+      BooleanVector columnVector = other.getColumnVector(col);
+      Iterator<BooleanVectorElement> iterateNonZero = columnVector
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        BooleanVectorElement next = iterateNonZero.next();
+        matrix.set(next.getIndex(), col, get(next.getIndex(), col));
+      }
+    }
+    return matrix;
   }
 
   @Override
@@ -126,14 +149,53 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
 
   @Override
   public DoubleVector multiplyVector(DoubleVector v) {
-    // TODO Auto-generated method stub
-    return null;
+    DoubleVector result = new SparseDoubleVector(this.getRowCount());
+    for (int col : this.matrix.keys()) {
+      Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
+          .iterateNonZero();
+      double sum = 0.0d;
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        sum += (e.getValue() * v.get(col));
+      }
+      result.set(col, sum);
+    }
+    return result;
+  }
+
+  @Override
+  public boolean isSparse() {
+    return true;
   }
 
   @Override
   public DoubleMatrix transpose() {
-    // TODO Auto-generated method stub
-    return null;
+    SparseDoubleColumnMatrix m = new SparseDoubleColumnMatrix(this.numColumns,
+        this.numRows);
+    for (int col : this.matrix.keys()) {
+      Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        m.set(col, e.getIndex(), e.getValue());
+      }
+    }
+    return m;
+  }
+
+  @Override
+  public BooleanMatrix getNonDefaultBooleanMatrix() {
+    BooleanMatrix mat = new SparseBooleanColumnMatrix(getRowCount(),
+        getColumnCount());
+    for (int col : this.matrix.keys()) {
+      Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
+        mat.set(next.getIndex(), col, true);
+      }
+    }
+    return mat;
   }
 
   @Override
@@ -166,37 +228,76 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
 
   @Override
   public DoubleMatrix subtract(DoubleMatrix other) {
-    // DoubleMatrix result = new SparseDoubleColumnMatrix(this);
-    // for (int col : this.matrix.keys()) {
-    // Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
-    // .iterateNonZero();
-    // while (iterateNonZero.hasNext()) {
-    // DoubleVectorElement e = iterateNonZero.next();
-    // result.set(e.getIndex(), col,
-    // get(e.getIndex(), col) - other.get(e.getIndex(), col));
-    // }
-    // }
-    // return result;
-    // TODO
-    return null;
+    SparseDoubleColumnMatrix m = new SparseDoubleColumnMatrix(other);
+
+    for (int col : this.matrix.keys()) {
+      Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        m.set(e.getIndex(), col,
+            get(e.getIndex(), col) - other.get(e.getIndex(), col));
+      }
+    }
+
+    for (int col : other.columnIndices()) {
+      Iterator<DoubleVectorElement> iterateNonZero = other.getColumnVector(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        m.set(e.getIndex(), col,
+            get(e.getIndex(), col) - other.get(e.getIndex(), col));
+      }
+    }
+
+    return m;
   }
 
   @Override
   public DoubleMatrix subtract(DoubleVector vec) {
-    // TODO Auto-generated method stub
-    return null;
+    DoubleMatrix result = new SparseDoubleColumnMatrix(this);
+    for (int col : this.matrix.keys()) {
+      SparseDoubleVector colVec = matrix.get(col);
+      result.setColumnVector(col, colVec.subtract(vec.get(col)));
+    }
+    return result;
   }
 
   @Override
   public DoubleMatrix divide(DoubleVector vec) {
-    // TODO Auto-generated method stub
-    return null;
+    DoubleMatrix result = new SparseDoubleColumnMatrix(this);
+    for (int col : this.matrix.keys()) {
+      SparseDoubleVector colVec = matrix.get(col);
+      result.setColumnVector(col, colVec.divide(vec.get(col)));
+    }
+    return result;
   }
 
   @Override
   public DoubleMatrix divide(DoubleMatrix other) {
-    // TODO
-    return null;
+    SparseDoubleColumnMatrix m = new SparseDoubleColumnMatrix(other);
+
+    for (int col : this.matrix.keys()) {
+      Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        m.set(e.getIndex(), col,
+            get(e.getIndex(), col) / other.get(e.getIndex(), col));
+      }
+    }
+
+    for (int col : other.columnIndices()) {
+      Iterator<DoubleVectorElement> iterateNonZero = other.getColumnVector(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        m.set(e.getIndex(), col,
+            get(e.getIndex(), col) / other.get(e.getIndex(), col));
+      }
+    }
+
+    return m;
   }
 
   @Override
@@ -215,8 +316,29 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
 
   @Override
   public DoubleMatrix add(DoubleMatrix other) {
-    // TODO
-    return null;
+    SparseDoubleColumnMatrix m = new SparseDoubleColumnMatrix(other);
+
+    for (int col : this.matrix.keys()) {
+      Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        m.set(e.getIndex(), col,
+            get(e.getIndex(), col) + other.get(e.getIndex(), col));
+      }
+    }
+
+    for (int col : other.columnIndices()) {
+      Iterator<DoubleVectorElement> iterateNonZero = other.getColumnVector(col)
+          .iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement e = iterateNonZero.next();
+        m.set(e.getIndex(), col,
+            get(e.getIndex(), col) + other.get(e.getIndex(), col));
+      }
+    }
+
+    return m;
   }
 
   @Override
@@ -249,7 +371,7 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
   }
 
   @Override
-  public double sumElements() {
+  public double sum() {
     double res = 0.0d;
     for (int col : this.matrix.keys()) {
       Iterator<DoubleVectorElement> iterateNonZero = matrix.get(col)
@@ -260,6 +382,11 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
       }
     }
     return res;
+  }
+
+  @Override
+  public int[] columnIndices() {
+    return matrix.keys();
   }
 
 }

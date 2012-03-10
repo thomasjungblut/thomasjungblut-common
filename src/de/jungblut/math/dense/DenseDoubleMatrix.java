@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
 
+import de.jungblut.math.BooleanMatrix;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.util.Tuple;
@@ -273,7 +274,8 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
         new DenseDoubleMatrix(firstMatrix), new DenseDoubleMatrix(secondMatrix));
   }
 
-  public final DenseBooleanMatrix getNonDefaultBooleanMatrix() {
+  @Override
+  public final BooleanMatrix getNonDefaultBooleanMatrix() {
     DenseBooleanMatrix m = new DenseBooleanMatrix(this.numRows, this.numColumns);
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
@@ -321,7 +323,7 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
    * Multiplies this matrix per element with a binary matrix.
    */
   @Override
-  public final DenseDoubleMatrix multiplyElementWise(DenseBooleanMatrix other) {
+  public final DenseDoubleMatrix multiplyElementWise(BooleanMatrix other) {
     DenseDoubleMatrix matrix = new DenseDoubleMatrix(this.numRows,
         this.numColumns);
 
@@ -535,13 +537,26 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
   }
 
   @Override
-  public double sumElements() {
+  public boolean isSparse() {
+    return false;
+  }
+
+  @Override
+  public double sum() {
     double x = 0.0d;
     for (int i = 0; i < numRows; i++) {
       for (int j = 0; j < numColumns; j++) {
         x += Math.abs(matrix[i][j]);
       }
     }
+    return x;
+  }
+
+  @Override
+  public int[] columnIndices() {
+    int[] x = new int[getColumnCount()];
+    for (int i = 0; i < getColumnCount(); i++)
+      x[i] = i;
     return x;
   }
 
@@ -623,7 +638,7 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
   }
 
   public static double error(DenseDoubleMatrix a, DenseDoubleMatrix b) {
-    return a.subtract(b).sumElements();
+    return a.subtract(b).sum();
   }
 
 }

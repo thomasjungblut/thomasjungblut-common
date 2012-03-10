@@ -1,7 +1,11 @@
 package de.jungblut.recommendation;
 
-import static de.jungblut.math.MatrixUtils.sum;
-import static de.jungblut.math.MatrixUtils.sumWhenTrue;
+import java.util.Iterator;
+
+import de.jungblut.math.BooleanMatrix;
+import de.jungblut.math.BooleanVector;
+import de.jungblut.math.BooleanVector.BooleanVectorElement;
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseBooleanMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
@@ -12,15 +16,15 @@ import de.jungblut.util.Tuple;
 public final class CoFiCostFunction implements CostFunction {
 
   // Y in octave code
-  private final DenseDoubleMatrix userMovieRatings;
+  private final DoubleMatrix userMovieRatings;
   // R in octave code
-  private final DenseBooleanMatrix ratingMatrix;
+  private final BooleanMatrix ratingMatrix;
   private final double lambda;
   private int[][] foldArrays;
 
-  public CoFiCostFunction(DenseDoubleMatrix userMovieRatings,
-      DenseBooleanMatrix ratingMatrix, int numUsers, int numMovies,
-      int numFeatures, double lambda) {
+  public CoFiCostFunction(DoubleMatrix userMovieRatings,
+      BooleanMatrix ratingMatrix, int numUsers, int numMovies, int numFeatures,
+      double lambda) {
     this.userMovieRatings = userMovieRatings;
     this.ratingMatrix = ratingMatrix;
     this.lambda = lambda;
@@ -48,8 +52,8 @@ public final class CoFiCostFunction implements CostFunction {
     // code=((Theta*X'-Y').^2)';
 
     j = sumWhenTrue(tmp, ratingMatrix) / 2.0d
-        + (lambda * sum((DenseDoubleMatrix) theta.pow(2)) / 2.0d)
-        + (lambda * sum((DenseDoubleMatrix) (x.pow(2))) / 2.0d);
+        + (lambda * theta.pow(2).sum() / 2.0d)
+        + (lambda * x.pow(2).sum() / 2.0d);
     // J = (sum(code(R==1)))/2 + (lambda * (sum(sum(Theta.^2))) /2) +
     // (lambda *
     // sum((sum(X.^2))) /2);
@@ -67,6 +71,33 @@ public final class CoFiCostFunction implements CostFunction {
 
     return new Tuple<Double, DoubleVector>(j, DenseMatrixFolder.foldMatrices(
         xGradient, thetaGradient));
+  }
+
+  public static double sumWhenTrue(DoubleMatrix toSum, BooleanMatrix blocker) {
+    double totalSum = 0.0d;
+    if (!toSum.isSparse()) {
+      for (int col = 0; col < toSum.getColumnCount(); col++) {
+        double colSum = 0.0d;
+        for (int row = 0; row < toSum.getRowCount(); row++) {
+          if (blocker.get(row, col))
+            colSum += toSum.get(row, col);
+        }
+        totalSum += colSum;
+      }
+    } else {
+      int[] columnIndices = blocker.columnIndices();
+      for (int col : columnIndices) {
+        DoubleVector doubleVec = toSum.getColumnVector(col);
+        BooleanVector columnVector = blocker.getColumnVector(col);
+        Iterator<BooleanVectorElement> iterateNonZero = columnVector
+            .iterateNonZero();
+        while (iterateNonZero.hasNext()) {
+          BooleanVectorElement next = iterateNonZero.next();
+          totalSum += doubleVec.get(next.getIndex());
+        }
+      }
+    }
+    return totalSum;
   }
 
   public static void main(String[] args) {

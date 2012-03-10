@@ -1,6 +1,5 @@
 package de.jungblut.regression;
 
-import static de.jungblut.math.MatrixUtils.sum;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -30,13 +29,13 @@ public class RegressionCostFunction implements CostFunction {
     DoubleVector sqrErrors = predictions.subtract(y).pow(2);
 
     // (sum(sqrErrors)/2/m) + lambda * (sum(theta(2:end).^2)/2/m);
-    double j = (sum(sqrErrors) / 2 / m) + lambda
-        * (sum(theta.slice(2, theta.getLength()).pow(2)) / 2 / m);
+    double j = (sqrErrors.sum() / 2 / m) + lambda
+        * (theta.slice(2, theta.getLength()).pow(2).sum() / 2 / m);
 
     DoubleVector gradient = new DenseDoubleVector(theta.getLength());
     for (int i = 0; i < theta.getLength(); i++) {
       gradient.set(i,
-          sum((predictions.subtract(y).multiply(x.getColumnVector(i)))) / m);
+          (predictions.subtract(y).multiply(x.getColumnVector(i))).sum() / m);
       if (i > 1)
         gradient.set(i, gradient.get(i) + lambda * (theta.get(i) / m));
     }
