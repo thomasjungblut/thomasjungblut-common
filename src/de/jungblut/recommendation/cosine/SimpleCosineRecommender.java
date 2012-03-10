@@ -62,7 +62,7 @@ public class SimpleCosineRecommender {
 
   public static void main(String[] args) {
     final DoubleMatrix userMovieRatings = MovieLensReader.getUserMovieRatings()
-        .slice(1000, 6041);
+        .slice(100, 6041);
     // set my preferences
     userMovieRatings.set(0, 260, 5); // star wars IV
     userMovieRatings.set(0, 1196, 5); // star wars V
