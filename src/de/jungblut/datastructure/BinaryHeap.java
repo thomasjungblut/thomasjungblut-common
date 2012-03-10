@@ -7,11 +7,11 @@ public class BinaryHeap {
   private int[] heap;
   private int size = 0;
 
-  private BinaryHeap() {
+  public BinaryHeap() {
     heap = new int[10];
   }
 
-  void add(int a) {
+  public void add(int a) {
     if (size == 0) {
       heap[0] = a;
     } else {
@@ -23,7 +23,7 @@ public class BinaryHeap {
     size++;
   }
 
-  void upHeap(int index) {
+  public void upHeap(int index) {
     boolean finished = false;
     while (!finished) {
       int parentIndex = getIndexOfParent(index);
@@ -51,7 +51,7 @@ public class BinaryHeap {
     }
   }
 
-  private void remove(int index) {
+  public void remove(int index) {
     heap[index] = 0;
     size--;
   }
@@ -126,7 +126,6 @@ public class BinaryHeap {
   }
 
   public static void main(String[] args) {
-
     int[] arr = { 100, 12, 136, 15, 26, 723, 62, 6184, 8, 1, 3, 2, 72 };
     System.out.println(Arrays.toString(HeapSort.sort(arr)));
   }
