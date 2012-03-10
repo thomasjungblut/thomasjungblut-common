@@ -95,7 +95,7 @@ public class SimpleCosineRecommender {
               double measureDistance = measure.measureDistance(colVec,
                   otherColVec);
               if (measureDistance > -1 && measureDistance < distanceThreshold)
-                output.set(col, otherCol, measureDistance);
+                output.set(otherCol, col, measureDistance);
             }
           }
         }
@@ -114,9 +114,9 @@ public class SimpleCosineRecommender {
   public static void main(String[] args) {
     final DoubleMatrix userMovieRatings = MovieLensReader.getUserMovieRatings();
     // set my preferences
-    userMovieRatings.set(0, 260, 5); // star wars IV
-    userMovieRatings.set(0, 1196, 5); // star wars V
-    userMovieRatings.set(0, 1210, 5); // star wars VI
+    userMovieRatings.set(260, 0, 5); // star wars IV
+    userMovieRatings.set(1196, 0, 5); // star wars V
+    userMovieRatings.set(1210, 0, 5); // star wars VI
 
     SimpleCosineRecommender recommendation = new SimpleCosineRecommender(
         userMovieRatings, 0.2d);
@@ -137,6 +137,8 @@ public class SimpleCosineRecommender {
 
     System.out.println("Predictions for me: ");
     for (int i = 0; i < 10; i++) {
+      if (i >= sort.size())
+        break;
       Tuple<Double, Integer> tuple = sort.get(i);
       double score = tuple.getFirst();
       int index = tuple.getSecond();

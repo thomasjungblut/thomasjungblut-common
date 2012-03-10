@@ -73,9 +73,9 @@ public final class CollaborativeFiltering {
     final DoubleMatrix userMovieRatings = MovieLensReader.getUserMovieRatings()
         .slice(100, 6041);
     // set my preferences
-    userMovieRatings.set(0, 260, 5); // star wars IV
-    userMovieRatings.set(0, 1196, 5); // star wars V
-    userMovieRatings.set(0, 1210, 5); // star wars VI
+    userMovieRatings.set(260, 0, 5); // star wars IV
+    userMovieRatings.set(1196, 0, 5); // star wars V
+    userMovieRatings.set(1210, 0, 5); // star wars VI
 
     CollaborativeFiltering collaborativeFiltering = new CollaborativeFiltering(
         userMovieRatings);
