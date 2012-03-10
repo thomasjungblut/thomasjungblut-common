@@ -125,25 +125,27 @@ public class SimpleCosineRecommender {
     HashMap<Integer, String> movieLookupTable = MovieLensReader
         .getMovieLookupTable();
 
-    DoubleVector myPredictions = recommendation.predict(0);
+    for (int j = 0; j < 20; j++) {
+      DoubleVector myPredictions = recommendation.predict(j);
 
-    List<Tuple<Double, Integer>> sort = DenseDoubleVector.sort(myPredictions,
-        Collections.reverseOrder(new Comparator<Double>() {
-          @Override
-          public int compare(Double o1, Double o2) {
-            return Double.compare(o1, o2);
-          }
-        }));
+      List<Tuple<Double, Integer>> sort = DenseDoubleVector.sort(myPredictions,
+          Collections.reverseOrder(new Comparator<Double>() {
+            @Override
+            public int compare(Double o1, Double o2) {
+              return Double.compare(o1, o2);
+            }
+          }));
 
-    System.out.println("Predictions for me: ");
-    for (int i = 0; i < 10; i++) {
-      if (i >= sort.size())
-        break;
-      Tuple<Double, Integer> tuple = sort.get(i);
-      double score = tuple.getFirst();
-      int index = tuple.getSecond();
-      if (index > 0)
-        System.out.println(movieLookupTable.get(index) + " | " + score);
+      System.out.println("\nPredictions for user " + j);
+      for (int i = 0; i < 10; i++) {
+        if (i >= sort.size())
+          break;
+        Tuple<Double, Integer> tuple = sort.get(i);
+        double score = tuple.getFirst();
+        int index = tuple.getSecond();
+        if (index > 0)
+          System.out.println(movieLookupTable.get(index) + " | " + score);
+      }
     }
 
   }
