@@ -4,9 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
+import de.jungblut.distance.CosineDistance;
 import de.jungblut.nlp.DocumentSimilarity;
 import de.jungblut.nlp.Tokenizer;
-import de.jungblut.similarity.CosineDistance;
 
 public class StringType implements Type {
 

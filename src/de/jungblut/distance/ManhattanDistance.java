@@ -1,4 +1,6 @@
-package de.jungblut.similarity;
+package de.jungblut.distance;
+
+import de.jungblut.math.DoubleVector;
 
 public class ManhattanDistance implements DistanceMeasurer {
 
@@ -10,6 +12,11 @@ public class ManhattanDistance implements DistanceMeasurer {
       sum += Math.abs(set1[i] - set2[i]);
     }
     return sum;
+  }
+
+  @Override
+  public double measureDistance(DoubleVector vec1, DoubleVector vec2) {
+    return vec1.subtract(vec2).abs().sum();
   }
 
 }

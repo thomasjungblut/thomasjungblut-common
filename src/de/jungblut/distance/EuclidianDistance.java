@@ -1,4 +1,6 @@
-package de.jungblut.similarity;
+package de.jungblut.distance;
+
+import de.jungblut.math.DoubleVector;
 
 public class EuclidianDistance implements DistanceMeasurer {
 
@@ -13,6 +15,11 @@ public class EuclidianDistance implements DistanceMeasurer {
     }
 
     return Math.sqrt(sum);
+  }
+
+  @Override
+  public double measureDistance(DoubleVector vec1, DoubleVector vec2) {
+    return Math.sqrt(vec2.subtract(vec2).pow(2).sum());
   }
 
 }

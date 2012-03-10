@@ -5,9 +5,9 @@ import java.util.Formatter;
 import java.util.Locale;
 import java.util.PriorityQueue;
 
+import de.jungblut.distance.CosineDistance;
+import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.nlp.DocumentSimilarity;
-import de.jungblut.similarity.CosineDistance;
-import de.jungblut.similarity.DistanceMeasurer;
 
 /**
  * A radix trie implementation that provides cool lookup features. TODO I must

@@ -13,8 +13,8 @@ import org.apache.hadoop.mapreduce.Mapper;
 
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.Vector;
-import de.jungblut.similarity.DistanceMeasurer;
-import de.jungblut.similarity.EuclidianDistance;
+import de.jungblut.distance.DistanceMeasurer;
+import de.jungblut.distance.EuclidianDistance;
 
 // first iteration, k-random centers, in every follow-up iteration we have new calculated centers
 class KMeansMapper extends Mapper<ClusterCenter, Vector, ClusterCenter, Vector> {

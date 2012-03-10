@@ -2,7 +2,7 @@ package de.jungblut.nlp;
 
 import java.util.List;
 
-import de.jungblut.similarity.DistanceMeasurer;
+import de.jungblut.distance.DistanceMeasurer;
 
 /**
  * Simply distance measure wrapper for debug string similarity measuring.

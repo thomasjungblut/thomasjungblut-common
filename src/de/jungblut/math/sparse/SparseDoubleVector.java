@@ -186,6 +186,17 @@ public class SparseDoubleVector implements DoubleVector {
   }
 
   @Override
+  public DoubleVector abs() {
+    DoubleVector v = new SparseDoubleVector(this);
+    Iterator<DoubleVectorElement> it = v.iterateNonZero();
+    while (it.hasNext()) {
+      DoubleVectorElement e = it.next();
+      set(e.getIndex(), Math.abs(e.getValue()));
+    }
+    return v;
+  }
+
+  @Override
   public DoubleVector divideFrom(double scalar) {
     DoubleVector v = new SparseDoubleVector(this);
     Iterator<DoubleVectorElement> it = v.iterateNonZero();
@@ -336,4 +347,5 @@ public class SparseDoubleVector implements DoubleVector {
     }
 
   }
+
 }

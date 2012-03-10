@@ -1,4 +1,6 @@
-package de.jungblut.similarity;
+package de.jungblut.distance;
+
+import de.jungblut.math.DoubleVector;
 
 public class JaccardDistance implements DistanceMeasurer {
 
@@ -26,4 +28,11 @@ public class JaccardDistance implements DistanceMeasurer {
     return dotProduct;
   }
 
+  @Override
+  public double measureDistance(DoubleVector vec1, DoubleVector vec2) {
+    double dot = vec1.dot(vec2);
+    double set1Length = vec1.pow(2).sum();
+    double set2Length = vec2.pow(2).sum();
+    return 1.0d - (dot / (set1Length + set2Length - dot));
+  }
 }

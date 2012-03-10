@@ -157,6 +157,16 @@ public final class DenseDoubleVector implements DoubleVector {
   }
 
   @Override
+  public DoubleVector abs() {
+    DoubleVector v = new DenseDoubleVector(getLength());
+    for (int i = 0; i < v.getLength(); i++) {
+      v.set(i, Math.abs(vector[i]));
+    }
+    return v;
+  }
+
+
+  @Override
   public DoubleVector divideFrom(double scalar) {
     DoubleVector v = new DenseDoubleVector(this.getLength());
     for (int i = 0; i < v.getLength(); i++) {

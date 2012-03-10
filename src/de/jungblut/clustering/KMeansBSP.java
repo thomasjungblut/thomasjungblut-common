@@ -21,8 +21,8 @@ import org.apache.hama.bsp.sync.SyncException;
 import de.jungblut.clustering.model.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.Vector;
-import de.jungblut.similarity.DistanceMeasurer;
-import de.jungblut.similarity.ManhattanDistance;
+import de.jungblut.distance.DistanceMeasurer;
+import de.jungblut.distance.ManhattanDistance;
 
 public final class KMeansBSP extends
     BSP<Vector, NullWritable, ClusterCenter, Vector> {
