@@ -1,6 +1,5 @@
 package de.jungblut.math;
 
-
 public interface BooleanMatrix {
 
   public static final double NOT_FLAGGED = 0;
@@ -49,7 +48,7 @@ public interface BooleanMatrix {
   public void set(int row, int col, boolean value);
 
   public BooleanMatrix transpose();
-  
+
   public int[] columnIndices();
 
 }

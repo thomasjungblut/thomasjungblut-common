@@ -1,5 +1,6 @@
 package de.jungblut.regression;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -8,13 +9,12 @@ import de.jungblut.util.Tuple;
 
 public class RegressionCostFunction implements CostFunction {
 
-  private final DenseDoubleMatrix x;
+  private final DoubleMatrix x;
   private final DoubleVector y;
   private final int m;
   private final double lambda;
 
-  public RegressionCostFunction(DenseDoubleMatrix x, DoubleVector y,
-      double lambda) {
+  public RegressionCostFunction(DoubleMatrix x, DoubleVector y, double lambda) {
     // add ones to the first column
     this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(x.getRowCount()), x);
     this.y = y;

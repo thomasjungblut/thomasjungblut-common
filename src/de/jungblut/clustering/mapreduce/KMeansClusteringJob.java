@@ -1,7 +1,7 @@
 package de.jungblut.clustering.mapreduce;
 
-import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.Vector;
+import java.io.IOException;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -14,7 +14,8 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import java.io.IOException;
+import de.jungblut.clustering.model.ClusterCenter;
+import de.jungblut.clustering.model.Vector;
 
 public class KMeansClusteringJob {
 

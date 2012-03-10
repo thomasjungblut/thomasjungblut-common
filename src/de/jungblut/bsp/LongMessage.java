@@ -1,10 +1,10 @@
 package de.jungblut.bsp;
 
-import org.apache.hama.bsp.BSPMessage;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+
+import org.apache.hama.bsp.BSPMessage;
 
 class LongMessage extends BSPMessage {
 

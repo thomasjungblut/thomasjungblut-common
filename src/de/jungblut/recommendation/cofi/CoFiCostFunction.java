@@ -1,4 +1,4 @@
-package de.jungblut.recommendation;
+package de.jungblut.recommendation.cofi;
 
 import java.util.Iterator;
 

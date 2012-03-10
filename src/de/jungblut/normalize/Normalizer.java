@@ -42,8 +42,8 @@ public class Normalizer {
    * @return the normalized (0 mean and stddev of 1) as well as the mean and the
    *         stddev.
    */
-  public static Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
-      DenseDoubleMatrix x) {
+  public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
+      DoubleMatrix x) {
     DenseDoubleMatrix toReturn = new DenseDoubleMatrix(x.getRowCount(),
         x.getColumnCount());
     DoubleVector meanVector = new DenseDoubleVector(x.getColumnCount());
@@ -64,7 +64,7 @@ public class Normalizer {
       toReturn.setColumn(col, column.toArray());
     }
 
-    return new Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector>(toReturn,
+    return new Tuple3<DoubleMatrix, DoubleVector, DoubleVector>(toReturn,
         meanVector, stddevVector);
   }
 

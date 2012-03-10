@@ -5,16 +5,17 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.HashMap;
 
-import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.DoubleMatrix;
+import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 
 public class MovieLensReader {
 
-  public static DenseDoubleMatrix getUserMovieRatings() {
+  public static DoubleMatrix getUserMovieRatings() {
 
     // - UserIDs range between 1 and 6040 = columns
     // - MovieIDs range between 1 and 3952 = rows
     // leaving zero column/row blank for a test rating
-    DenseDoubleMatrix matrix = new DenseDoubleMatrix(3952 + 1, 6040 + 1);
+    DoubleMatrix matrix = new SparseDoubleColumnMatrix(3952 + 1, 6040 + 1);
     try (BufferedReader br = new BufferedReader(new FileReader(
         "files/ml-1m/ratings.dat"))) {
       String line;

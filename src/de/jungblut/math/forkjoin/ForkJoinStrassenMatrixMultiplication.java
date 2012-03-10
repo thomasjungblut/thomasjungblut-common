@@ -1,11 +1,15 @@
 package de.jungblut.math.forkjoin;
 
+import static de.jungblut.math.forkjoin.StrassenMatrixMultiplication.add;
+import static de.jungblut.math.forkjoin.StrassenMatrixMultiplication.checkInput;
+import static de.jungblut.math.forkjoin.StrassenMatrixMultiplication.copy;
+import static de.jungblut.math.forkjoin.StrassenMatrixMultiplication.printMatrix;
+import static de.jungblut.math.forkjoin.StrassenMatrixMultiplication.reconstructMatrix;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.RecursiveTask;
-
-import static de.jungblut.math.forkjoin.StrassenMatrixMultiplication.*;
 
 /**
  * Uses static imports of the {@link StrassenMatrixMultiplication} class and

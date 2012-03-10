@@ -30,7 +30,7 @@ public interface DoubleVector {
   public DoubleVector divide(double scalar);
 
   public DoubleVector pow(int x);
-  
+
   public DoubleVector abs();
 
   public DoubleVector sqrt();

@@ -1,4 +1,4 @@
-package de.jungblut.recommendation;
+package de.jungblut.recommendation.cofi;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -14,6 +14,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.normalize.Normalizer;
+import de.jungblut.recommendation.MovieLensReader;
 import de.jungblut.util.Tuple;
 
 public final class CollaborativeFiltering {
@@ -69,9 +70,8 @@ public final class CollaborativeFiltering {
   }
 
   public static void main(String[] args) {
-    // take 100 users and all movies
-    final DenseDoubleMatrix userMovieRatings = MovieLensReader
-        .getUserMovieRatings().slice(100, 6040);
+    final DoubleMatrix userMovieRatings = MovieLensReader.getUserMovieRatings()
+        .slice(100, 6041);
     // set my preferences
     userMovieRatings.set(0, 260, 5); // star wars IV
     userMovieRatings.set(0, 1196, 5); // star wars V

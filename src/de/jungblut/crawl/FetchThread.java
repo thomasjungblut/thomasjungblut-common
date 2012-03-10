@@ -1,12 +1,5 @@
 package de.jungblut.crawl;
 
-import org.htmlparser.NodeFilter;
-import org.htmlparser.Parser;
-import org.htmlparser.filters.NodeClassFilter;
-import org.htmlparser.tags.LinkTag;
-import org.htmlparser.util.NodeList;
-import org.htmlparser.util.SimpleNodeIterator;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -14,6 +7,13 @@ import java.net.URLConnection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
+
+import org.htmlparser.NodeFilter;
+import org.htmlparser.Parser;
+import org.htmlparser.filters.NodeClassFilter;
+import org.htmlparser.tags.LinkTag;
+import org.htmlparser.util.NodeList;
+import org.htmlparser.util.SimpleNodeIterator;
 
 class FetchThread implements Callable<Set<String>> {
 

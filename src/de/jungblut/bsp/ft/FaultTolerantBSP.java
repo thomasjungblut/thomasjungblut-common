@@ -1,11 +1,11 @@
 package de.jungblut.bsp.ft;
 
+import java.io.IOException;
+
 import org.apache.hadoop.util.ReflectionUtils;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
-
-import java.io.IOException;
 
 @SuppressWarnings("rawtypes")
 public class FaultTolerantBSP extends BSP {

@@ -1,5 +1,6 @@
 package de.jungblut.regression;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -9,7 +10,7 @@ import de.jungblut.util.Tuple3;
 
 public final class PolynomialRegression {
 
-  private final DenseDoubleMatrix x;
+  private final DoubleMatrix x;
   private final DoubleVector y;
   private final double lambda;
   private final DoubleVector mean;
@@ -18,12 +19,12 @@ public final class PolynomialRegression {
 
   private DoubleVector theta;
 
-  public PolynomialRegression(DenseDoubleMatrix x, DenseDoubleVector y,
-      double lambda, boolean normalize) {
+  public PolynomialRegression(DoubleMatrix x, DoubleVector y, double lambda,
+      boolean normalize) {
     super();
     this.normalize = normalize;
     if (normalize) {
-      Tuple3<DenseDoubleMatrix, DoubleVector, DoubleVector> featureNormalize = Normalizer
+      Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize = Normalizer
           .featureNormalize(x);
       this.x = featureNormalize.getFirst();
       this.mean = featureNormalize.getSecond();
@@ -71,7 +72,7 @@ public final class PolynomialRegression {
     this.theta = theta;
   }
 
-  public DenseDoubleMatrix getX() {
+  public DoubleMatrix getX() {
     return x;
   }
 

@@ -1,8 +1,8 @@
 package de.jungblut.bsp.ft;
 
-import org.apache.hama.bsp.BSPPeer;
-
 import java.io.IOException;
+
+import org.apache.hama.bsp.BSPPeer;
 
 abstract class Superstep<KEYIN, VALUEIN, KEYOUT, VALUEOUT> {
 

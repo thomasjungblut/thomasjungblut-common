@@ -52,14 +52,6 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
       this.numColumns = numRows;
   }
 
-  public DenseDoubleMatrix(DenseDoubleVector first,
-      DenseDoubleMatrix otherMatrix) {
-    this(otherMatrix.getRowCount(), otherMatrix.getColumnCount() + 1);
-    setColumn(0, first.toArray());
-    for (int col = 1; col < otherMatrix.getColumnCount() + 1; col++)
-      setColumn(col, otherMatrix.getColumn(col - 1));
-  }
-
   public DenseDoubleMatrix(DenseDoubleVector first) {
     this(first.getLength(), 1);
     setColumn(0, first.toArray());
@@ -81,6 +73,13 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
 
     this.numRows = rows;
     this.numColumns = columns;
+  }
+
+  public DenseDoubleMatrix(DenseDoubleVector first, DoubleMatrix otherMatrix) {
+    this(otherMatrix.getRowCount(), otherMatrix.getColumnCount() + 1);
+    setColumn(0, first.toArray());
+    for (int col = 1; col < otherMatrix.getColumnCount() + 1; col++)
+      setColumnVector(col, otherMatrix.getColumnVector(col - 1));
   }
 
   /**
@@ -520,12 +519,13 @@ public final class DenseDoubleMatrix implements DoubleMatrix {
     return min;
   }
 
-  public DenseDoubleMatrix slice(int rows, int cols) {
+  @Override
+  public DoubleMatrix slice(int rows, int cols) {
     return slice(0, rows, 0, cols);
   }
 
-  public DenseDoubleMatrix slice(int rowOffset, int rowMax, int colOffset,
-      int colMax) {
+  @Override
+  public DoubleMatrix slice(int rowOffset, int rowMax, int colOffset, int colMax) {
     DenseDoubleMatrix m = new DenseDoubleMatrix(rowMax - rowOffset, colMax
         - colOffset);
     for (int row = rowOffset; row < rowMax; row++) {

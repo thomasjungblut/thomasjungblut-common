@@ -33,7 +33,11 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
 
   @Override
   public double get(int row, int col) {
-    return matrix.get(col).get(row);
+    SparseDoubleVector sparseDoubleVector = matrix.get(col);
+    if (sparseDoubleVector == null)
+      return NOT_FLAGGED;
+    else
+      return sparseDoubleVector.get(row);
   }
 
   @Override
@@ -114,6 +118,24 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
       }
     }
     return result;
+  }
+
+  @Override
+  public DoubleMatrix slice(int rows, int cols) {
+    return slice(0, rows, 0, cols);
+  }
+
+  @Override
+  public DoubleMatrix slice(int rowOffset, int rowMax, int colOffset, int colMax) {
+    DoubleMatrix m = new SparseDoubleColumnMatrix(rowMax - rowOffset, colMax
+        - colOffset);
+    for (int col : columnIndices()) {
+      DoubleVector columnVector = getColumnVector(col);
+      columnVector = columnVector.slice(rowOffset, rowMax);
+      m.setColumnVector(col - colOffset, columnVector);
+    }
+
+    return m;
   }
 
   @Override

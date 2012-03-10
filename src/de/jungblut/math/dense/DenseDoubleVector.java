@@ -165,7 +165,6 @@ public final class DenseDoubleVector implements DoubleVector {
     return v;
   }
 
-
   @Override
   public DoubleVector divideFrom(double scalar) {
     DoubleVector v = new DenseDoubleVector(this.getLength());

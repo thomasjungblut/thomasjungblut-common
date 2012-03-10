@@ -120,4 +120,8 @@ public interface DoubleMatrix {
 
   public boolean isSparse();
 
+  public DoubleMatrix slice(int rows, int cols);
+
+  public DoubleMatrix slice(int rowOffset, int rowMax, int colOffset, int colMax);
+
 }

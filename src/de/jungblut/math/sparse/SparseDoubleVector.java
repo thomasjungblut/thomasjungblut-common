@@ -235,10 +235,11 @@ public class SparseDoubleVector implements DoubleVector {
 
   @Override
   public DoubleVector slice(int offset, int length) {
-    // TODO this should be ultra slow
     DoubleVector nv = new SparseDoubleVector(this.dimension);
-    for (int i = offset; i < length - offset; i++) {
-      nv.set(i, get(i));
+    Iterator<DoubleVectorElement> iterateNonZero = iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
+      nv.set(next.getIndex() - offset, next.getValue());
     }
     return nv;
   }

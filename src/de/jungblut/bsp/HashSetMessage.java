@@ -1,11 +1,11 @@
 package de.jungblut.bsp;
 
-import org.apache.hama.bsp.BSPMessage;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashSet;
+
+import org.apache.hama.bsp.BSPMessage;
 
 class HashSetMessage extends BSPMessage {
 
