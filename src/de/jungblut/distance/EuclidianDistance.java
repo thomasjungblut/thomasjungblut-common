@@ -19,7 +19,7 @@ public class EuclidianDistance implements DistanceMeasurer {
 
   @Override
   public double measureDistance(DoubleVector vec1, DoubleVector vec2) {
-    return Math.sqrt(vec2.subtract(vec2).pow(2).sum());
+    return Math.sqrt(vec2.subtract(vec1).pow(2).sum());
   }
 
 }

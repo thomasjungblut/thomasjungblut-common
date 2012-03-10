@@ -10,6 +10,8 @@ import java.util.List;
 import com.google.common.collect.AbstractIterator;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.function.DoubleDoubleVectorFunction;
+import de.jungblut.math.function.DoubleVectorFunction;
 import de.jungblut.util.Tuple;
 
 public final class DenseDoubleVector implements DoubleVector {
@@ -53,6 +55,24 @@ public final class DenseDoubleVector implements DoubleVector {
   @Override
   public final void set(int index, double value) {
     vector[index] = value;
+  }
+
+  @Override
+  public DoubleVector apply(DoubleVectorFunction func) {
+    DenseDoubleVector newV = new DenseDoubleVector(this.vector);
+    for (int i = 0; i < vector.length; i++) {
+      newV.vector[i] = func.calculate(i, vector[i]);
+    }
+    return newV;
+  }
+
+  @Override
+  public DoubleVector apply(DoubleVector other, DoubleDoubleVectorFunction func) {
+    DenseDoubleVector newV = (DenseDoubleVector) deepCopy();
+    for (int i = 0; i < vector.length; i++) {
+      newV.vector[i] = func.calculate(i, vector[i], other.get(i));
+    }
+    return newV;
   }
 
   /*
@@ -263,6 +283,28 @@ public final class DenseDoubleVector implements DoubleVector {
     } else {
       return getLength() + "x1";
     }
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + Arrays.hashCode(vector);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    DenseDoubleVector other = (DenseDoubleVector) obj;
+    if (!Arrays.equals(vector, other.vector))
+      return false;
+    return true;
   }
 
   private final class NonZeroIterator extends

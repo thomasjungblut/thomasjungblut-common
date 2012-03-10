@@ -8,6 +8,8 @@ import java.util.Iterator;
 import com.google.common.collect.AbstractIterator;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.function.DoubleDoubleVectorFunction;
+import de.jungblut.math.function.DoubleVectorFunction;
 
 public class SparseDoubleVector implements DoubleVector {
 
@@ -61,6 +63,35 @@ public class SparseDoubleVector implements DoubleVector {
   @Override
   public void set(int index, double value) {
     vector.put(index, value);
+  }
+
+  @Override
+  public DoubleVector apply(DoubleVectorFunction func) {
+    SparseDoubleVector newV = new SparseDoubleVector(this);
+    Iterator<DoubleVectorElement> iterate = this.iterate();
+    while (iterate.hasNext()) {
+      DoubleVectorElement next = iterate.next();
+      double res = func.calculate(next.getIndex(), next.getValue());
+      if (res != 0.0d) {
+        newV.set(next.getIndex(), res);
+      }
+    }
+    return newV;
+  }
+
+  @Override
+  public DoubleVector apply(DoubleVector other, DoubleDoubleVectorFunction func) {
+    SparseDoubleVector newV = new SparseDoubleVector(this);
+    Iterator<DoubleVectorElement> iterate = this.iterate();
+    while (iterate.hasNext()) {
+      DoubleVectorElement next = iterate.next();
+      double res = func.calculate(next.getIndex(), next.getValue(),
+          other.get(next.getIndex()));
+      if (res != 0.0d) {
+        newV.set(next.getIndex(), res);
+      }
+    }
+    return newV;
   }
 
   @Override
@@ -288,6 +319,31 @@ public class SparseDoubleVector implements DoubleVector {
     } else {
       return getDimension() + "x1";
     }
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = 1;
+    result = prime * result + ((vector == null) ? 0 : vector.hashCode());
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj)
+      return true;
+    if (obj == null)
+      return false;
+    if (getClass() != obj.getClass())
+      return false;
+    SparseDoubleVector other = (SparseDoubleVector) obj;
+    if (vector == null) {
+      if (other.vector != null)
+        return false;
+    } else if (!vector.equals(other.vector))
+      return false;
+    return true;
   }
 
   @Override

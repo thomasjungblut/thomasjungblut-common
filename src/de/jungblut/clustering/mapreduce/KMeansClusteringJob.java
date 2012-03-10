@@ -15,7 +15,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.Vector;
+import de.jungblut.clustering.model.VectorWritable;
 
 public class KMeansClusteringJob {
 
@@ -54,21 +54,30 @@ public class KMeansClusteringJob {
     final SequenceFile.Writer centerWriter = SequenceFile.createWriter(fs,
         conf, center, ClusterCenter.class, IntWritable.class);
     final IntWritable value = new IntWritable(0);
-    centerWriter.append(new ClusterCenter(new Vector(1, 1)), value);
-    centerWriter.append(new ClusterCenter(new Vector(5, 5)), value);
+    centerWriter.append(new ClusterCenter(new VectorWritable(1, 1)), value);
+    centerWriter.append(new ClusterCenter(new VectorWritable(5, 5)), value);
     centerWriter.close();
 
     final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs, conf,
-        in, ClusterCenter.class, Vector.class);
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(1, 2));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(16, 3));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(3, 3));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(2, 2));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(2, 3));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(25, 1));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(7, 6));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(6, 5));
-    dataWriter.append(new ClusterCenter(new Vector(0, 0)), new Vector(-1, -23));
+        in, ClusterCenter.class, VectorWritable.class);
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(1, 2));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(16, 3));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(3, 3));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(2, 2));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(2, 3));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(25, 1));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(7, 6));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(6, 5));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(-1, -23));
     dataWriter.close();
 
     SequenceFileOutputFormat.setOutputPath(job, out);
@@ -76,7 +85,7 @@ public class KMeansClusteringJob {
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
     job.setOutputKeyClass(ClusterCenter.class);
-    job.setOutputValueClass(Vector.class);
+    job.setOutputValueClass(VectorWritable.class);
 
     job.waitForCompletion(true);
 
@@ -105,7 +114,7 @@ public class KMeansClusteringJob {
       job.setInputFormatClass(SequenceFileInputFormat.class);
       job.setOutputFormatClass(SequenceFileOutputFormat.class);
       job.setOutputKeyClass(ClusterCenter.class);
-      job.setOutputValueClass(Vector.class);
+      job.setOutputValueClass(VectorWritable.class);
 
       job.waitForCompletion(true);
       iteration++;
@@ -122,7 +131,7 @@ public class KMeansClusteringJob {
         LOG.info("FOUND " + path.toString());
         SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
         ClusterCenter key = new ClusterCenter();
-        Vector v = new Vector();
+        VectorWritable v = new VectorWritable();
         while (reader.next(key, v)) {
           LOG.info(key + " / " + v);
         }

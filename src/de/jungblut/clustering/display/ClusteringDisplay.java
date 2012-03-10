@@ -28,7 +28,8 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 
 import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.Vector;
+import de.jungblut.clustering.model.VectorWritable;
+import de.jungblut.math.DoubleVector;
 
 public class ClusteringDisplay extends Frame {
 
@@ -41,7 +42,7 @@ public class ClusteringDisplay extends Frame {
       Color.YELLOW, Color.ORANGE, Color.MAGENTA, Color.BLACK, Color.CYAN,
       Color.PINK };
 
-  private final HashMap<ClusterCenter, ArrayList<Vector>> centerMap = new HashMap<>();
+  private final HashMap<ClusterCenter, ArrayList<VectorWritable>> centerMap = new HashMap<>();
 
   private double minX = Double.MAX_VALUE;
   private double minY = Double.MAX_VALUE;
@@ -189,11 +190,12 @@ public class ClusteringDisplay extends Frame {
     // g2.drawLine(0, 0, 0, Integer.MAX_VALUE);
 
     int count = 0;
-    for (Entry<ClusterCenter, ArrayList<Vector>> vmap : centerMap.entrySet()) {
+    for (Entry<ClusterCenter, ArrayList<VectorWritable>> vmap : centerMap
+        .entrySet()) {
       g2.setColor(COLORS[count]);
-      plotEllipse(g2, vmap.getKey().getCenter(), 16);
-      for (Vector v : vmap.getValue()) {
-        plotEllipse(g2, v, 6);
+      plotEllipse(g2, vmap.getKey().getCenterVector(), 16);
+      for (VectorWritable v : vmap.getValue()) {
+        plotEllipse(g2, v.getVector(), 6);
       }
       count++;
       if (count >= COLORS.length) {
@@ -211,17 +213,18 @@ public class ClusteringDisplay extends Frame {
         LOG.debug("FOUND " + path.toString());
         SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
         ClusterCenter key = new ClusterCenter();
-        Vector v = new Vector();
+        VectorWritable v = new VectorWritable();
         int count = 0;
         while (reader.next(key, v)) {
-          ArrayList<Vector> arrayList = centerMap.get(key);
+          ArrayList<VectorWritable> arrayList = centerMap.get(key);
           if (arrayList == null) {
             arrayList = new ArrayList<>();
-            centerMap.put(new ClusterCenter(key.getCenter()), arrayList);
+            centerMap.put(new ClusterCenter(key), arrayList);
           }
-          double x = v.getVector()[0];
-          double y = v.getVector()[1];
-          arrayList.add(new Vector(x, y));
+          double[] array = v.getVector().toArray();
+          double x = array[0];
+          double y = array[1];
+          arrayList.add(new VectorWritable(x, y));
           if (x < minX) {
             minX = x;
           } else if (x > maxX) {
@@ -250,11 +253,10 @@ public class ClusteringDisplay extends Frame {
     LOG.debug("Found scale factor of: " + scaleFactorX + " / " + scaleFactorY);
   }
 
-  void plotEllipse(Graphics2D g2, Vector v2, int radius) {
-    double x = v2.getVector()[0];
-    double y = v2.getVector()[1];
-    LOG.debug("Plotting point " + x + "/" + y + " scaled from "
-        + v2.getVector()[0] + " / " + v2.getVector()[1]);
+  void plotEllipse(Graphics2D g2, DoubleVector doubleVector, int radius) {
+    double[] array = doubleVector.toArray();
+    double x = array[0];
+    double y = array[1];
     g2.fill(new Ellipse2D.Double(x, y, radius, radius));
   }
 

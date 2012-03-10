@@ -12,11 +12,12 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Reducer;
 
 import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.Vector;
+import de.jungblut.clustering.model.VectorWritable;
+import de.jungblut.math.DoubleVector;
 
 // calculate a new clustercenter for these vertices
 public class KMeansReducer extends
-    Reducer<ClusterCenter, Vector, ClusterCenter, Vector> {
+    Reducer<ClusterCenter, VectorWritable, ClusterCenter, VectorWritable> {
 
   public static enum Counter {
     CONVERGED
@@ -25,27 +26,23 @@ public class KMeansReducer extends
   private final List<ClusterCenter> centers = new LinkedList<>();
 
   @Override
-  protected void reduce(ClusterCenter key, Iterable<Vector> values,
+  protected void reduce(ClusterCenter key, Iterable<VectorWritable> values,
       Context context) throws IOException, InterruptedException {
 
-    Vector newCenter = new Vector();
-    List<Vector> vectorList = new LinkedList<>();
-    int vectorSize = key.getCenter().getVector().length;
-    newCenter.setVector(new double[vectorSize]);
-    for (Vector value : values) {
-      vectorList.add(new Vector(value));
-      for (int i = 0; i < value.getVector().length; i++) {
-        newCenter.getVector()[i] += value.getVector()[i];
-      }
+    List<VectorWritable> vectorList = new LinkedList<>();
+    DoubleVector newCenter = null;
+    for (VectorWritable value : values) {
+      vectorList.add(new VectorWritable(value));
+      if (newCenter == null)
+        newCenter = value.getVector().deepCopy();
+      else
+        newCenter = newCenter.add(value.getVector());
     }
 
-    for (int i = 0; i < newCenter.getVector().length; i++) {
-      newCenter.getVector()[i] = newCenter.getVector()[i] / vectorList.size();
-    }
-
+    newCenter = newCenter.divide(vectorList.size());
     ClusterCenter center = new ClusterCenter(newCenter);
     centers.add(center);
-    for (Vector vector : vectorList) {
+    for (VectorWritable vector : vectorList) {
       context.write(center, vector);
     }
 

@@ -20,12 +20,12 @@ import org.apache.hama.bsp.sync.SyncException;
 
 import de.jungblut.clustering.model.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.Vector;
+import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.ManhattanDistance;
 
 public final class KMeansBSP extends
-    BSP<Vector, NullWritable, ClusterCenter, Vector> {
+    BSP<VectorWritable, NullWritable, ClusterCenter, VectorWritable> {
 
   private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
   private ClusterCenter[] centers;
@@ -34,7 +34,7 @@ public final class KMeansBSP extends
 
   @Override
   public final void setup(
-      BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+      BSPPeer<VectorWritable, NullWritable, ClusterCenter, VectorWritable> peer)
       throws IOException, InterruptedException {
 
     Path centroids = new Path(peer.getConfiguration().get("centroid.path"));
@@ -65,7 +65,7 @@ public final class KMeansBSP extends
 
   @Override
   public final void bsp(
-      BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+      BSPPeer<VectorWritable, NullWritable, ClusterCenter, VectorWritable> peer)
       throws IOException, InterruptedException, SyncException {
     long converged;
     while (true) {
@@ -83,7 +83,7 @@ public final class KMeansBSP extends
   }
 
   private long updateCenters(
-      BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+      BSPPeer<VectorWritable, NullWritable, ClusterCenter, VectorWritable> peer)
       throws IOException {
     // this is the update step
     ClusterCenter[] msgCenters = new ClusterCenter[centers.length];
@@ -94,7 +94,7 @@ public final class KMeansBSP extends
       if (oldCenter == null) {
         msgCenters[msg.getTag()] = newCenter;
       } else {
-        ClusterCenter average = oldCenter.average(newCenter, false);
+        ClusterCenter average = oldCenter.average(newCenter);
         msgCenters[msg.getTag()] = average;
       }
     }
@@ -111,43 +111,40 @@ public final class KMeansBSP extends
   }
 
   private void assignCenters(
-      BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+      BSPPeer<VectorWritable, NullWritable, ClusterCenter, VectorWritable> peer)
       throws IOException {
     // each task has all the centers, if a center has been updated it
     // needs to be broadcasted.
-    final ClusterCenter[] sumArray = new ClusterCenter[centers.length];
+    final ClusterCenter[] newCenterArray = new ClusterCenter[centers.length];
 
     // we have an assignment step
     final NullWritable value = NullWritable.get();
-    final Vector key = new Vector();
+    final VectorWritable key = new VectorWritable();
     while (peer.readNext(key, value)) {
       final int lowestDistantCenter = getNearestCenter(key);
-      final ClusterCenter clusterCenter = sumArray[lowestDistantCenter];
+      final ClusterCenter clusterCenter = newCenterArray[lowestDistantCenter];
       if (clusterCenter == null) {
-        sumArray[lowestDistantCenter] = new ClusterCenter(key);
+        newCenterArray[lowestDistantCenter] = new ClusterCenter(key);
       } else {
-        sumArray[lowestDistantCenter].plus(key);
+        newCenterArray[lowestDistantCenter] = newCenterArray[lowestDistantCenter]
+            .average(key.getVector());
       }
     }
-    for (int i = 0; i < sumArray.length; i++) {
-      if (sumArray[i] != null) {
-        // we divide our center by the internal state (how many times we
-        // added a
-        // vector)
-        sumArray[i].divideByInternalIncrement();
+    for (int i = 0; i < newCenterArray.length; i++) {
+      if (newCenterArray[i] != null) {
         for (String peerName : peer.getAllPeerNames()) {
-          peer.send(peerName, new CenterMessage(i, sumArray[i]));
+          peer.send(peerName, new CenterMessage(i, newCenterArray[i]));
         }
       }
     }
   }
 
-  private int getNearestCenter(Vector key) {
+  private int getNearestCenter(VectorWritable key) {
     int lowestDistantCenter = 0;
     double lowestDistance = Double.MAX_VALUE;
     for (int i = 0; i < centers.length; i++) {
-      double estimatedDistance = distanceMeasurer.measureDistance(centers[i]
-          .getCenter().getVector(), key.getVector());
+      double estimatedDistance = distanceMeasurer.measureDistance(
+          centers[i].getCenterVector(), key.getVector());
       // check if we have a can assign a new center, because we
       // got a lower distance
       if (estimatedDistance < lowestDistance) {
@@ -159,18 +156,25 @@ public final class KMeansBSP extends
   }
 
   private void recalculateAssignmentsAndWrite(
-      BSPPeer<Vector, NullWritable, ClusterCenter, Vector> peer)
+      BSPPeer<VectorWritable, NullWritable, ClusterCenter, VectorWritable> peer)
       throws IOException {
-    // final NullWritable value = NullWritable.get();
-    // final Vector key = new Vector();
-    // while (peer.readNext(key, value)) {
-    // final int lowestDistantCenter = getNearestCenter(key);
-    // peer.write(centers[lowestDistantCenter], key);
-    // }
+    final NullWritable value = NullWritable.get();
+    final VectorWritable key = new VectorWritable();
+    while (peer.readNext(key, value)) {
+      final int lowestDistantCenter = getNearestCenter(key);
+      peer.write(centers[lowestDistantCenter], key);
+    }
+    // writeFinalCenters(peer);
+  }
+
+  @SuppressWarnings("unused")
+  private void writeFinalCenters(
+      BSPPeer<VectorWritable, NullWritable, ClusterCenter, VectorWritable> peer)
+      throws IOException {
     // just write centers, for performance improvement and just on master
     // task
     if (peer.getPeerName().equals(peer.getPeerName(0))) {
-      final Vector val = new Vector(0);
+      final VectorWritable val = new VectorWritable(0);
       for (ClusterCenter center : centers) {
         peer.write(center, val);
       }
@@ -219,7 +223,7 @@ public final class KMeansBSP extends
     job.setOutputFormat(org.apache.hama.bsp.SequenceFileOutputFormat.class);
 
     job.setOutputKeyClass(ClusterCenter.class);
-    job.setOutputValueClass(Vector.class);
+    job.setOutputValueClass(VectorWritable.class);
 
     FileSystem fs = FileSystem.get(conf);
     // prepare the input, like deleting old versions and creating centers
@@ -241,7 +245,7 @@ public final class KMeansBSP extends
         LOG.debug("FOUND " + path.toString());
         SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
         ClusterCenter key = new ClusterCenter();
-        Vector v = new Vector();
+        VectorWritable v = new VectorWritable();
         int count = 0;
         while (reader.next(key, v)) {
           LOG.info(key + " / " + v);
@@ -272,7 +276,7 @@ public final class KMeansBSP extends
     final NullWritable value = NullWritable.get();
 
     final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs, conf,
-        in, Vector.class, NullWritable.class, CompressionType.NONE);
+        in, VectorWritable.class, NullWritable.class, CompressionType.NONE);
 
     Random r = new Random();
     for (int i = 0; i < count; i++) {
@@ -281,7 +285,7 @@ public final class KMeansBSP extends
       for (int d = 0; d < dimension; d++) {
         arr[d] = r.nextInt(count);
       }
-      Vector vector = new Vector(arr);
+      VectorWritable vector = new VectorWritable(arr);
       dataWriter.append(vector, value);
       if (k > i) {
         centerWriter.append(new ClusterCenter(vector), value);

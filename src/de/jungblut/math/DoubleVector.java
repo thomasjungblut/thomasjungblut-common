@@ -2,6 +2,9 @@ package de.jungblut.math;
 
 import java.util.Iterator;
 
+import de.jungblut.math.function.DoubleDoubleVectorFunction;
+import de.jungblut.math.function.DoubleVectorFunction;
+
 public interface DoubleVector {
 
   public double get(int index);
@@ -11,6 +14,10 @@ public interface DoubleVector {
   public int getDimension();
 
   public void set(int index, double value);
+
+  public DoubleVector apply(DoubleVectorFunction func);
+  
+  public DoubleVector apply(DoubleVector other, DoubleDoubleVectorFunction func);
 
   public DoubleVector add(DoubleVector v);
 

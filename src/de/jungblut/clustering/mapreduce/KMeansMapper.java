@@ -12,12 +12,13 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Mapper;
 
 import de.jungblut.clustering.model.ClusterCenter;
-import de.jungblut.clustering.model.Vector;
+import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.distance.DistanceMeasurer;
-import de.jungblut.distance.EuclidianDistance;
+import de.jungblut.distance.ManhattanDistance;
 
 // first iteration, k-random centers, in every follow-up iteration we have new calculated centers
-class KMeansMapper extends Mapper<ClusterCenter, Vector, ClusterCenter, Vector> {
+class KMeansMapper extends
+    Mapper<ClusterCenter, VectorWritable, ClusterCenter, VectorWritable> {
 
   private final List<ClusterCenter> centers = new LinkedList<>();
   private DistanceMeasurer distanceMeasurer;
@@ -38,17 +39,17 @@ class KMeansMapper extends Mapper<ClusterCenter, Vector, ClusterCenter, Vector> 
     }
     reader.close();
 
-    distanceMeasurer = new EuclidianDistance();
+    distanceMeasurer = new ManhattanDistance();
   }
 
   @Override
-  protected void map(ClusterCenter key, Vector value, Context context)
+  protected void map(ClusterCenter key, VectorWritable value, Context context)
       throws IOException, InterruptedException {
 
     ClusterCenter nearest = null;
     double nearestDistance = Double.MAX_VALUE;
     for (ClusterCenter c : centers) {
-      double dist = distanceMeasurer.measureDistance(c.getCenter().getVector(),
+      double dist = distanceMeasurer.measureDistance(c.getCenterVector(),
           value.getVector());
       if (nearest == null) {
         nearest = c;

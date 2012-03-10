@@ -3,117 +3,99 @@ package de.jungblut.clustering.model;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.apache.hadoop.io.WritableComparable;
 
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.function.RunningAverageFunction;
+
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
-  private Vector center;
+  private DoubleVector center;
   private int kTimesIncremented = 2;
 
   public ClusterCenter() {
     super();
   }
 
+  public ClusterCenter(DoubleVector center) {
+    super();
+    this.center = center.deepCopy();
+  }
+
   public ClusterCenter(ClusterCenter center) {
     super();
-    this.center = new Vector(center.center);
+    this.center = center.center.deepCopy();
   }
 
-  public ClusterCenter(Vector center) {
+  public ClusterCenter(VectorWritable center) {
     super();
-    this.center = new Vector(center);
+    this.center = center.getVector().deepCopy();
   }
 
-  private ClusterCenter(Vector center, int k) {
+  private ClusterCenter(VectorWritable center, int k) {
     super();
-    this.center = center;
+    this.center = center.getVector().deepCopy();
     this.kTimesIncremented = k;
   }
 
-  public final void plus(Vector c) {
-    double[] vector = c.getVector();
-    double[] thisVector = center.getVector();
-
-    for (int i = 0; i < thisVector.length; i++) {
-      thisVector[i] = thisVector[i] + vector[i];
-    }
-
+  public final void plus(VectorWritable c) {
+    center = center.add(c.getVector());
     kTimesIncremented++;
   }
 
-  public final void divideByInternalIncrement() {
-    double[] thisVector = center.getVector();
-
-    for (int i = 0; i < thisVector.length; i++) {
-      thisVector[i] = thisVector[i] / (double) kTimesIncremented;
-    }
+  public final void divideByK() {
+    center = center.divide(kTimesIncremented);
   }
 
-  public final ClusterCenter average(ClusterCenter c, boolean local) {
-    int newk = kTimesIncremented;
-    if (!local) {
-      newk += c.kTimesIncremented;
-    }
-    return average(c.getCenter(), newk);
+  public final ClusterCenter average(ClusterCenter c) {
+    int newk = kTimesIncremented + c.kTimesIncremented;
+    return average(c.getCenterVector(), newk);
   }
 
-  final ClusterCenter average(Vector c, int newk) {
-    double[] vector = c.getVector();
-    double[] thisVector = Arrays.copyOf(center.getVector(),
-        center.getVector().length);
-    for (int i = 0; i < vector.length; i++) {
-      thisVector[i] = thisVector[i] + (vector[i] / newk)
-          - (thisVector[i] / newk);
-    }
-    newk++;
-    return new ClusterCenter(new Vector(thisVector), newk);
+  public final ClusterCenter average(DoubleVector c) {
+    return average(c, kTimesIncremented);
+  }
+
+  final ClusterCenter average(final DoubleVector c, int newk) {
+    DoubleVector apply = this.getCenterVector().apply(c,
+        new RunningAverageFunction(newk));
+    return new ClusterCenter(new VectorWritable(apply), newk + 1);
   }
 
   public final boolean converged(ClusterCenter c) {
-    return calculateError(c.getCenter()) > 0;
+    return calculateError(c.getCenterVector()) > 0;
   }
 
   public final boolean converged(ClusterCenter c, double error) {
-    return calculateError(c.getCenter()) > error;
+    return calculateError(c.getCenterVector()) > error;
   }
 
-  final double calculateError(Vector v) {
-    int length = v.getVector().length;
-    double[] vector = center.getVector();
-    double[] otherVector = v.getVector();
-
-    double err = 0.0d;
-    for (int i = 0; i < length; i++) {
-      double abs = Math.abs(vector[i] - otherVector[i]);
-      err += (abs * abs);
-    }
-    return err;
+  final double calculateError(DoubleVector v) {
+    return Math.sqrt(center.subtract(v).abs().sum());
   }
 
   @Override
   public final void write(DataOutput out) throws IOException {
-    center.write(out);
+    VectorWritable.writeVector(center, out);
     out.writeInt(kTimesIncremented);
   }
 
   @Override
   public final void readFields(DataInput in) throws IOException {
-    this.center = new Vector();
-    center.readFields(in);
+    this.center = VectorWritable.readVector(in);
     kTimesIncremented = in.readInt();
   }
 
   @Override
   public final int compareTo(ClusterCenter o) {
-    return center.compareTo(o.getCenter());
+    return VectorWritable.compareVector(center, o.getCenterVector());
   }
 
   /**
    * @return the center
    */
-  public final Vector getCenter() {
+  public final DoubleVector getCenterVector() {
     return center;
   }
 
