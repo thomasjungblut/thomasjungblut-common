@@ -95,7 +95,7 @@ public class SimpleCosineRecommender {
               double measureDistance = measure.measureDistance(colVec,
                   otherColVec);
               if (measureDistance > -1 && measureDistance < distanceThreshold)
-                output.set(col, otherCol, measureDistance);
+                output.set(otherCol, col, measureDistance);
             }
           }
         }
@@ -147,6 +147,5 @@ public class SimpleCosineRecommender {
           System.out.println(movieLookupTable.get(index) + " | " + score);
       }
     }
-
   }
 }
