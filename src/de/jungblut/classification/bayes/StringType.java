@@ -20,8 +20,8 @@ public class StringType implements Type {
 
   @Override
   public void addInput(String input) {
-    inputList.add(new HashSet<String>(Arrays.asList(Tokenizer
-        .tokenize(input, 3))));
+    inputList.add(new HashSet<String>(Arrays.asList(Tokenizer.nGrammTokenize(
+        input, 3))));
   }
 
   @Override
@@ -30,7 +30,7 @@ public class StringType implements Type {
     // input string
     double bestMatch = 0.0;
     final Set<String> inputTokens = new HashSet<String>(Arrays.asList(Tokenizer
-        .tokenize(input, 3)));
+        .nGrammTokenize(input, 3)));
     for (Set<String> term : inputList) {
       final double distance = similarity.measureDocumentSimilarity(
           term.toArray(new String[term.size()]),

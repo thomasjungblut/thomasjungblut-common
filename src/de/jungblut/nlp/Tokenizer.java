@@ -5,8 +5,10 @@ import java.util.List;
 
 public final class Tokenizer {
 
-  // basic n-gram tokenizer
-  public static String[] tokenize(String key, int size) {
+  /**
+   * N-Gramm tokenizer.
+   */
+  public static String[] nGrammTokenize(String key, int size) {
     List<String> list = new LinkedList<>();
     if (key.length() < size) {
       list.add(key);
@@ -17,6 +19,13 @@ public final class Tokenizer {
       list.add(key.substring(i, upperBound));
     }
     return list.toArray(new String[list.size()]);
+  }
+
+  /**
+   * Tokenizes on normal whitespaces "\s" in java regex.
+   */
+  public static String[] whiteSpaceTokenize(String text) {
+    return text.split("\\s+");
   }
 
 }
