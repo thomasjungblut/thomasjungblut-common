@@ -1,5 +1,7 @@
 package de.jungblut.classification.bayes;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -18,7 +20,8 @@ public class StringType implements Type {
 
   @Override
   public void addInput(String input) {
-    inputList.add(Tokenizer.tokenize(input, 3));
+    inputList.add(new HashSet<String>(Arrays.asList(Tokenizer
+        .tokenize(input, 3))));
   }
 
   @Override
@@ -26,7 +29,8 @@ public class StringType implements Type {
     // measure the mean similarity of all terms in the input list to the
     // input string
     double bestMatch = 0.0;
-    final Set<String> inputTokens = Tokenizer.tokenize(input, 3);
+    final Set<String> inputTokens = new HashSet<String>(Arrays.asList(Tokenizer
+        .tokenize(input, 3)));
     for (Set<String> term : inputList) {
       final double distance = similarity.measureDocumentSimilarity(
           term.toArray(new String[term.size()]),
