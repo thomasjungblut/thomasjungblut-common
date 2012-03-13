@@ -12,7 +12,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class SimpleCrawler {
+import de.jungblut.crawl.extraction.ExtractionLogic;
+import de.jungblut.crawl.extraction.OutlinkExtractor;
+
+public class SimpleCrawler<T extends FetchResult> {
 
   private static int MAX_FETCHES = 100000;
 
@@ -21,20 +24,30 @@ public class SimpleCrawler {
   private static final int THREAD_POOL_SIZE = 32;
   private final ExecutorService threadPool = Executors
       .newFixedThreadPool(THREAD_POOL_SIZE);
-  static FetchResultPersister persister;
+
   private final String url;
   private final int fetches;
+  private final ExtractionLogic<T> extractor;
+  private final Thread persisterThread;
+  private final FetchResultPersister<T> persister;
 
-  private SimpleCrawler(String url, int fetches) {
+  public SimpleCrawler(String url, int fetches, ExtractionLogic<T> extractor,
+      ResultWriter<T> writer) throws IOException {
     this.url = url;
     this.fetches = fetches;
+    this.extractor = extractor;
+
+    // start the persisting thread
+    persister = new FetchResultPersister<T>(writer);
+    persisterThread = new Thread(persister);
+    persisterThread.start();
   }
 
-  private void process() throws IOException, InterruptedException,
+  public void process() throws IOException, InterruptedException,
       ExecutionException {
     final Deque<String> linksToCrawl = new LinkedList<>();
     final HashSet<String> visited = new HashSet<>();
-    final CompletionService<Set<String>> completionService = new ExecutorCompletionService<>(
+    final CompletionService<Set<T>> completionService = new ExecutorCompletionService<>(
         threadPool);
 
     long start = System.currentTimeMillis();
@@ -43,31 +56,39 @@ public class SimpleCrawler {
     MAX_FETCHES = fetches;
     System.out.println("Set fetches to " + MAX_FETCHES);
 
-    // start the persisting thread
-    persister = new FetchResultPersister();
-    Thread persisterThread = new Thread(persister);
-    persisterThread.start();
     long count = 0L;
     int currentRunningThreads = 0;
-    // begin to crawl
+    // seed our to crawl set with the start url
     linksToCrawl.offer(url);
     while (true) {
       final String urlToCrawl = linksToCrawl.poll();
       if (urlToCrawl != null) {
-        completionService.submit(new FetchThread(urlToCrawl));
+        // TODO a single fetcher should take multiple URLs in a batch
+        completionService.submit(new FetchThread<T>(urlToCrawl, extractor));
         currentRunningThreads++;
-        Future<Set<String>> poll;
+        Future<Set<T>> poll;
         if (linksToCrawl.isEmpty() || currentRunningThreads > THREAD_POOL_SIZE) {
           poll = completionService.take();
         } else {
           poll = completionService.poll();
         }
-        if (poll != null && poll.get() != null) {
-          count++;
-          if (running) {
-            for (String v : poll.get()) {
-              if (visited.add(v))
-                linksToCrawl.offer(v);
+        if (poll != null) {
+          Set<T> set = poll.get();
+          if (set != null) {
+            count++;
+            if (running) {
+              // for each of our crawling results
+              for (T v : set) {
+                // go through the found outlinks
+                for (String out : v.outlinks) {
+                  // if we haven't visited them yet
+                  if (visited.add(out)) {
+                    // queue them up
+                    linksToCrawl.offer(out);
+                  }
+                }
+                persister.add(v);
+              }
             }
           }
         }
@@ -107,9 +128,11 @@ public class SimpleCrawler {
       ExecutionException, IOException {
     String seedUrl = "http://news.google.de/";
     if (args.length > 0) {
-      new SimpleCrawler(seedUrl, Integer.valueOf(args[0])).process();
+      new SimpleCrawler<FetchResult>(seedUrl, Integer.valueOf(args[0]),
+          new OutlinkExtractor(), new SimpleResultWriter()).process();
     } else {
-      new SimpleCrawler(seedUrl, MAX_FETCHES).process();
+      new SimpleCrawler<FetchResult>(seedUrl, MAX_FETCHES,
+          new OutlinkExtractor(), new SimpleResultWriter()).process();
     }
   }
 

@@ -1,30 +1,31 @@
 package de.jungblut.crawl;
 
 import java.io.IOException;
-import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.Text;
 
-class FetchResultPersister implements Runnable {
+public class FetchResultPersister<T extends FetchResult> implements Runnable {
 
-  private final ConcurrentLinkedQueue<FetchResult> queue = new ConcurrentLinkedQueue<>();
-  private SequenceFile.Writer writer = null;
   public boolean running = true;
 
-  public FetchResultPersister() throws IOException {
+  private final ConcurrentLinkedQueue<T> queue = new ConcurrentLinkedQueue<>();
+  private final SequenceFile.Writer writer;
+  private final ResultWriter<T> resWriter;
+
+  public FetchResultPersister(ResultWriter<T> resWriter) throws IOException {
+    this.resWriter = resWriter;
     final Configuration conf = new Configuration();
     FileSystem fs = FileSystem.get(conf);
-    Path out = new Path("files/crawl/result.seq");
+    Path out = resWriter.getOutputPath();
     fs.delete(out, true);
-    writer = new SequenceFile.Writer(fs, conf, out, Text.class, Text.class);
+    writer = resWriter.getWriterInstance();
   }
 
-  public final void add(final FetchResult result) {
+  public final void add(final T result) {
     queue.offer(result);
   }
 
@@ -32,10 +33,10 @@ class FetchResultPersister implements Runnable {
   public final void run() {
     long retrieved = 0L;
     while (running) {
-      final FetchResult poll = queue.poll();
+      final T poll = queue.poll();
       if (poll != null) {
         try {
-          writer.append(new Text(poll.url), asText(poll.outlinks));
+          resWriter.write(writer, poll);
           retrieved++;
           if (retrieved % 100 == 0) {
             System.out.println("Retrieved " + retrieved + " sites!");
@@ -55,31 +56,26 @@ class FetchResultPersister implements Runnable {
     int toWrite = queue.size();
     try {
       while (!queue.isEmpty()) {
-        final FetchResult poll = queue.poll();
+        final T poll = queue.poll();
         System.out.println(toWrite-- + " results to write before stopping...");
-        writer.append(new Text(poll.url), asText(poll.outlinks));
+        resWriter.write(writer, poll);
         retrieved++;
         if (retrieved % 100 == 0) {
           System.out.println("Retrieved " + retrieved + " sites!");
         }
       }
-      writer.close();
     } catch (IOException e) {
       e.printStackTrace();
+    } finally {
+      if (writer != null) {
+        try {
+          writer.close();
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
     }
     System.out.println("Retrieved " + retrieved + " sites in total!");
-  }
-
-  private Text asText(final Set<String> set) {
-    Text text = new Text();
-
-    final StringBuilder sb = new StringBuilder();
-    for (String s : set) {
-      sb.append(s);
-      sb.append(";");
-    }
-    text.set(sb.toString());
-    return text;
   }
 
 }

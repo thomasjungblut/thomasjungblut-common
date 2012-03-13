@@ -2,7 +2,7 @@ package de.jungblut.crawl;
 
 import java.util.HashSet;
 
-class FetchResult {
+public class FetchResult {
 
   final String url;
   final HashSet<String> outlinks;
@@ -36,6 +36,14 @@ class FetchResult {
     } else if (!url.equals(other.url))
       return false;
     return true;
+  }
+
+  public String getUrl() {
+    return url;
+  }
+
+  public HashSet<String> getOutlinks() {
+    return outlinks;
   }
 
 }
