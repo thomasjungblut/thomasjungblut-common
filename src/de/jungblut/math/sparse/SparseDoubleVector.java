@@ -154,8 +154,8 @@ public class SparseDoubleVector implements DoubleVector {
   @Override
   public DoubleVector multiply(DoubleVector s) {
     DoubleVector vec = new SparseDoubleVector(s.getDimension());
-    DoubleVector smallestVector = s.getLength() > getLength() ? s : this;
-    DoubleVector largerVector = smallestVector == this ? s : s;
+    DoubleVector smallestVector = s.getLength() < getLength() ? s : this;
+    DoubleVector largerVector = smallestVector == this ? s : this;
     Iterator<DoubleVectorElement> it = smallestVector.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement next = it.next();
@@ -241,8 +241,8 @@ public class SparseDoubleVector implements DoubleVector {
   @Override
   public double dot(DoubleVector s) {
     double dotProduct = 0.0d;
-    DoubleVector smallestVector = s.getLength() > getLength() ? s : this;
-    DoubleVector largerVector = smallestVector == this ? s : s;
+    DoubleVector smallestVector = s.getLength() < getLength() ? s : this;
+    DoubleVector largerVector = smallestVector == this ? s : this;
     Iterator<DoubleVectorElement> it = smallestVector.iterateNonZero();
 
     while (it.hasNext()) {
