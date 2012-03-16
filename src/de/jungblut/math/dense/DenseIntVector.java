@@ -1,6 +1,7 @@
 package de.jungblut.math.dense;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 
 public final class DenseIntVector {
@@ -10,6 +11,18 @@ public final class DenseIntVector {
   public DenseIntVector(int[] arr) {
     // normally, we should make a deep copy
     this.vector = arr;
+  }
+
+  public DenseIntVector(int size) {
+    this(new int[size]);
+  }
+
+  public DenseIntVector(Collection<Integer> prediction) {
+    this.vector = new int[prediction.size()];
+    int index = 0;
+    for (Integer i : prediction) {
+      vector[index++] = i.intValue();
+    }
   }
 
   public final int get(int index) {
@@ -72,6 +85,19 @@ public final class DenseIntVector {
 
   public final int[] toArray() {
     return vector;
+  }
+
+  public DenseIntVector slice(int length) {
+    return slice(0, length);
+  }
+
+  public DenseIntVector slice(int offset, int length) {
+    DenseIntVector nv = new DenseIntVector(length - offset);
+    for (int i = offset; i < length - offset; i++) {
+      nv.set(i, vector[i]);
+    }
+
+    return nv;
   }
 
   @Override

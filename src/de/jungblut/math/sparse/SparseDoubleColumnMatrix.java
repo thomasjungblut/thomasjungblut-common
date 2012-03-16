@@ -423,5 +423,10 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
   public int[] columnIndices() {
     return matrix.keys();
   }
+  
+  @Override
+  public String toString() {
+    return numRows + "x" + numColumns;
+  }
 
 }

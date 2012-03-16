@@ -1,5 +1,6 @@
 package de.jungblut.classification.bayes;
 
+import java.io.File;
 import java.util.Iterator;
 import java.util.List;
 
@@ -11,6 +12,7 @@ import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 import de.jungblut.nlp.Vectorizer;
 import de.jungblut.util.Tuple;
+import de.jungblut.util.Tuple3;
 
 /**
  * Simple multinomial naive bayes classifier.
@@ -27,7 +29,7 @@ public final class MultinomialNaiveBayesClassifier {
       SparseDoubleColumnMatrix documentWordCounts, DenseIntVector prediction) {
 
     final int numDistinctElements = prediction
-        .getNumberOfDistinctElementsFast();
+        .getNumberOfDistinctElementsFast() + 1;
     probabilityMatrix = new DenseDoubleMatrix(numDistinctElements,
         documentWordCounts.getRowCount(), 1.0d);
 
@@ -50,7 +52,7 @@ public final class MultinomialNaiveBayesClassifier {
       for (int col = 0; col < documentWordCounts.getRowCount(); col++) {
         double currentWordCount = probabilityMatrix.get(row, col);
         double logNormalized = Math.log(currentWordCount
-            / (tokenPerClass[col] + documentWordCounts.getRowCount() - 1));
+            / (tokenPerClass[row] + documentWordCounts.getRowCount() - 1));
         probabilityMatrix.set(row, col, logNormalized);
       }
     }
@@ -67,7 +69,7 @@ public final class MultinomialNaiveBayesClassifier {
   /**
    * Returns the maximum likely class.
    */
-  public final int predictClass(DoubleVector document) {
+  public final int classify(DoubleVector document) {
     return getProbabilityDistribution(document).maxIndex();
   }
 
@@ -113,15 +115,44 @@ public final class MultinomialNaiveBayesClassifier {
   }
 
   public static void main(String[] args) {
+
     MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
+    Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups = TwentyNewsgroupReader
+        .readTwentyNewsgroups(new File("files/20news-bydate/"));
 
-    // does this also work with IDF?
+    // tf-idf has superior performance over plain wordcount 91% vs 99% accuracy
     List<DoubleVector> wordFrequencyVectorize = Vectorizer
-        .wordFrequencyVectorize(args);
-    DenseIntVector prediction = new DenseIntVector(new int[] { 1, 0 });
+        .tfIdfVectorize(readTwentyNewsgroups.getFirst());
 
-    classifier.train(new SparseDoubleColumnMatrix(wordFrequencyVectorize),
-        prediction);
+    // I know that there is the cutoff after 7532 between test and training set,
+    // so just split there.
+    List<DoubleVector> testSetVectors = wordFrequencyVectorize.subList(0, 7533);
+    List<DoubleVector> inputList = wordFrequencyVectorize.subList(7533,
+        wordFrequencyVectorize.size());
+
+    DenseIntVector prediction = readTwentyNewsgroups.getSecond();
+    DenseIntVector predictionTest = prediction.slice(0, 7533);
+    DenseIntVector predictionInput = prediction.slice(7533,
+        prediction.getLength());
+
+    SparseDoubleColumnMatrix input = new SparseDoubleColumnMatrix(inputList);
+
+    classifier.train(input, predictionInput);
+
+    int truePositive = 0;
+    int index = 0;
+    for (DoubleVector document : testSetVectors) {
+      int classify = classifier.classify(document);
+      if (classify == predictionTest.get(index)) {
+        truePositive++;
+      }
+    }
+
+    System.out
+        .println("Classified correctly: " + truePositive + " of "
+            + testSetVectors.size() + ". "
+            + (truePositive / (double) testSetVectors.size() * 100)
+            + "% accuracy!");
 
   }
 }
