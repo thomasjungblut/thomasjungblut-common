@@ -3,6 +3,7 @@ package de.jungblut.math.sparse;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.util.Iterator;
+import java.util.List;
 
 import de.jungblut.math.BooleanMatrix;
 import de.jungblut.math.BooleanVector;
@@ -29,6 +30,16 @@ public class SparseDoubleColumnMatrix implements DoubleMatrix {
     for (int i = 0; i < numColumns; i++) {
       setColumnVector(i, mat.getColumnVector(i));
     }
+  }
+
+  public SparseDoubleColumnMatrix(List<DoubleVector> vec) {
+    this(vec.get(0).getDimension(), vec.size());
+
+    int key = 0;
+    for (DoubleVector value : vec) {
+      matrix.put(key++, new SparseDoubleVector(value));
+    }
+
   }
 
   @Override

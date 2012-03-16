@@ -236,6 +236,19 @@ public final class DenseDoubleVector implements DoubleVector {
     return max;
   }
 
+  public int maxIndex() {
+    double max = Double.MIN_VALUE;
+    int maxIndex = 0;
+    for (int i = 0; i < getLength(); i++) {
+      double d = vector[i];
+      if (d > max) {
+        max = d;
+        maxIndex = i;
+      }
+    }
+    return maxIndex;
+  }
+
   @Override
   public double min() {
     double min = Double.MAX_VALUE;
@@ -246,6 +259,19 @@ public final class DenseDoubleVector implements DoubleVector {
       }
     }
     return min;
+  }
+
+  public int minIndex() {
+    double min = Double.MAX_VALUE;
+    int minIndex = 0;
+    for (int i = 0; i < getLength(); i++) {
+      double d = vector[i];
+      if (d < min) {
+        min = d;
+        minIndex = i;
+      }
+    }
+    return minIndex;
   }
 
   @Override
