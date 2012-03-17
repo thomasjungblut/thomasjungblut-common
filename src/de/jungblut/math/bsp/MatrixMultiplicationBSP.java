@@ -116,7 +116,7 @@ public final class MatrixMultiplicationBSP extends
     Configuration conf = new Configuration();
     conf.set("bsp.local.tasks.maximum", "8");
 
-    for (int n = 2; n < 100; n++) {
+    for (int n = 200; n < 300; n++) {
       System.out.println(n + "x" + n);
       // use constant seeds to get reproducable results
       DenseDoubleMatrix a = new DenseDoubleMatrix(n, n, new Random(42L));
