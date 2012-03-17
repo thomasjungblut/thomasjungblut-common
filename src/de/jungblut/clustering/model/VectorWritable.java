@@ -12,6 +12,13 @@ import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
+/**
+ * Writable and comparable wrapper for sparse and dense vectors. <br/>
+ * TODO this must be moved out of the clustering model section
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class VectorWritable implements WritableComparable<VectorWritable> {
 
   private DoubleVector vector;
