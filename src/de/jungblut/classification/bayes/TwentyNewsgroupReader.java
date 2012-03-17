@@ -36,9 +36,10 @@ public class TwentyNewsgroupReader {
             while ((line = br.readLine()) != null) {
               document.append(line);
             }
-            String[] whiteSpaceTokens = Tokenizer.whiteSpaceTokenize(document
-                .toString());
-            docList.add(whiteSpaceTokens);
+            // tokenize into 3-gramms uses huge amounts of resources, but gives
+            // 100% accuracy with tf-idf
+            String[] tokens = Tokenizer.nGrammTokenize(document.toString(), 3);
+            docList.add(tokens);
             prediction.add(classIndex);
           } catch (IOException e) {
             e.printStackTrace();
@@ -52,5 +53,4 @@ public class TwentyNewsgroupReader {
     return new Tuple3<List<String[]>, DenseIntVector, String[]>(docList,
         new DenseIntVector(prediction), leastSeenNameMapping);
   }
-
 }
