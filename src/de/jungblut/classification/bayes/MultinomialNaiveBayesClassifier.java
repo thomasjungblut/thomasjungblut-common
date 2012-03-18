@@ -6,6 +6,7 @@ import java.util.List;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
+import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
@@ -21,17 +22,16 @@ import de.jungblut.util.Tuple3;
  */
 public final class MultinomialNaiveBayesClassifier {
 
-  private SparseDoubleColumnMatrix probabilityMatrix;
+  private DenseDoubleMatrix probabilityMatrix;
   private DenseDoubleVector classProbability;
 
-  // TODO laplace smoothing is not working correctly.
-  public final Tuple<SparseDoubleColumnMatrix, DenseDoubleVector> train(
+  public final Tuple<DenseDoubleMatrix, DenseDoubleVector> train(
       SparseDoubleColumnMatrix documentWordCounts, DenseIntVector prediction) {
 
     final int numDistinctElements = prediction
         .getNumberOfDistinctElementsFast();
-    probabilityMatrix = new SparseDoubleColumnMatrix(numDistinctElements,
-        documentWordCounts.getRowCount());
+    probabilityMatrix = new DenseDoubleMatrix(numDistinctElements,
+        documentWordCounts.getRowCount(), 1.0d);
 
     int[] columnIndices = documentWordCounts.columnIndices();
     int[] tokenPerClass = new int[numDistinctElements];
@@ -52,10 +52,9 @@ public final class MultinomialNaiveBayesClassifier {
     for (int row = 0; row < numDistinctElements; row++) {
       for (int col = 0; col < probabilityMatrix.getColumnCount(); col++) {
         double currentWordCount = probabilityMatrix.get(row, col);
-        if (currentWordCount != 0.0d) {
-          probabilityMatrix.set(row, col, currentWordCount
-              / (tokenPerClass[row] + 1));
-        }
+        double logLikelyhood = Math.log(currentWordCount
+            / (tokenPerClass[row] + numDistinctElements - 1));
+        probabilityMatrix.set(row, col, logLikelyhood);
       }
     }
 
@@ -64,8 +63,8 @@ public final class MultinomialNaiveBayesClassifier {
       classProbability.set(i, (numDocumentsPerClass[i] + 1)
           / (double) columnIndices.length);
     }
-    return new Tuple<SparseDoubleColumnMatrix, DenseDoubleVector>(
-        probabilityMatrix, classProbability);
+    return new Tuple<DenseDoubleMatrix, DenseDoubleVector>(probabilityMatrix,
+        classProbability);
   }
 
   /**
@@ -103,7 +102,7 @@ public final class MultinomialNaiveBayesClassifier {
     // we normalize it back
     for (int i = 0; i < numClasses; i++) {
       double probability = distribution.get(i);
-      double normalizedProbability = (probability - maxProbability)
+      double normalizedProbability = Math.exp(probability - maxProbability)
           * classProbability.get(i);
       distribution.set(i, normalizedProbability);
       probabilitySum += normalizedProbability;
