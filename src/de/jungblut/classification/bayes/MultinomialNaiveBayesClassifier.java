@@ -1,10 +1,6 @@
 package de.jungblut.classification.bayes;
 
-import java.io.File;
 import java.util.Iterator;
-import java.util.List;
-
-import com.google.common.collect.HashMultiset;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
@@ -12,9 +8,7 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
-import de.jungblut.nlp.Vectorizer;
 import de.jungblut.util.Tuple;
-import de.jungblut.util.Tuple3;
 
 /**
  * Simple multinomial naive bayes classifier.
@@ -117,48 +111,4 @@ public final class MultinomialNaiveBayesClassifier {
     return distribution;
   }
 
-  public static void main(String[] args) {
-    // TODO the text normalization and stuff is wrong.
-    MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
-    Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroupsTrainingSet = TwentyNewsgroupReader
-        .readTwentyNewsgroups(new File(
-            "files/20news-bydate/20news-bydate-train/"));
-
-    // get the token and wordcount from our training set
-    Tuple<HashMultiset<String>[], String[]> trainingCountToken = Vectorizer
-        .prepareWordCountToken(readTwentyNewsgroupsTrainingSet.getFirst());
-    List<DoubleVector> inputList = Vectorizer.wordFrequencyVectorize(
-        readTwentyNewsgroupsTrainingSet.getFirst(), trainingCountToken);
-    DenseIntVector prediction = readTwentyNewsgroupsTrainingSet.getSecond();
-
-    // then from our test set, using the tokenbag from our trainingset
-    Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroupsTestSet = TwentyNewsgroupReader
-        .readTwentyNewsgroups(new File(
-            "files/20news-bydate/20news-bydate-test/"));
-
-    Tuple<HashMultiset<String>[], String[]> updatedWordFrequencyCounts = Vectorizer
-        .updateWordFrequencyCounts(readTwentyNewsgroupsTestSet.getFirst(),
-            trainingCountToken.getSecond());
-    List<DoubleVector> testInputList = Vectorizer.wordFrequencyVectorize(
-        readTwentyNewsgroupsTestSet.getFirst(), updatedWordFrequencyCounts);
-    DenseIntVector predictionTest = readTwentyNewsgroupsTestSet.getSecond();
-
-    // put the docs into a column matrix
-    SparseDoubleColumnMatrix input = new SparseDoubleColumnMatrix(inputList);
-    classifier.train(input, prediction);
-
-    int truePositive = 0;
-    int index = 0;
-    for (DoubleVector document : testInputList) {
-      int classify = classifier.classify(document);
-      if (classify == predictionTest.get(index)) {
-        truePositive++;
-      }
-    }
-
-    System.out.println("Classified correctly: " + truePositive + " of "
-        + testInputList.size() + ". "
-        + (truePositive / (double) testInputList.size() * 100) + "% accuracy!");
-
-  }
 }
