@@ -8,20 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.en.EnglishAnalyzer;
-import org.apache.lucene.util.Version;
-
 import de.jungblut.math.dense.DenseIntVector;
-import de.jungblut.nlp.LuceneNormalizer;
+import de.jungblut.nlp.Tokenizer;
 import de.jungblut.util.Tuple3;
 
 public class TwentyNewsgroupReader {
-
-  private static final Analyzer analyzer = new EnglishAnalyzer(
-      Version.LUCENE_35);
-  private static final LuceneNormalizer normalizer = new LuceneNormalizer(
-      analyzer);
 
   // docs, prediction, name mapping for prediction
   public static Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups(
@@ -43,8 +34,11 @@ public class TwentyNewsgroupReader {
           while ((l = br.readLine()) != null) {
             document.append(l);
           }
-          String[] whiteSpaceTokens = normalizer.tokenizeAndNormalize(document
-              .toString());
+          // String[] whiteSpaceTokens =
+          // normalizer.tokenizeAndNormalize(document
+          // .toString());
+          String[] whiteSpaceTokens = Tokenizer.removeEmpty(Tokenizer
+              .wordTokenize(document.toString()));
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);
         } catch (IOException e) {

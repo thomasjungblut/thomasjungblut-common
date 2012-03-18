@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 public final class Tokenizer {
+
+  private static final String SEPARATORS = " \r\n\t.,;:'\"()?!";
 
   /**
    * Fully consumes a lucene tokenstream and returns a string array.
@@ -68,7 +71,21 @@ public final class Tokenizer {
    * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!]
    */
   public static String[] wordTokenize(String text) {
-    return text.split("[ \r\n\t.,;:'\"()?!]");
+    ArrayList<String> list = new ArrayList<String>();
+    StringTokenizer tokenizer = new StringTokenizer(text, SEPARATORS);
+    while (tokenizer.hasMoreElements()) {
+      list.add((String) tokenizer.nextElement());
+    }
+    return list.toArray(new String[list.size()]);
+  }
+
+  public static String[] removeEmpty(String[] arr) {
+    ArrayList<String> list = new ArrayList<String>();
+    for (String s : arr) {
+      if (!s.isEmpty())
+        list.add(s);
+    }
+    return list.toArray(new String[list.size()]);
   }
 
   /**

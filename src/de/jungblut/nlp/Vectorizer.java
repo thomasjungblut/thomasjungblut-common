@@ -49,10 +49,10 @@ public final class Vectorizer {
    */
   public static List<DoubleVector> wordFrequencyVectorize(
       List<String[]> setList,
-      Tuple<HashMultiset<String>[], String[]> prepareWordCountToken) {
+      Tuple<HashMultiset<String>[], String[]> wordCounts) {
 
-    HashMultiset<String>[] multiSets = prepareWordCountToken.getFirst();
-    String[] tokenBagArray = prepareWordCountToken.getSecond();
+    HashMultiset<String>[] multiSets = wordCounts.getFirst();
+    String[] tokenBagArray = wordCounts.getSecond();
 
     List<DoubleVector> vectorList = new ArrayList<DoubleVector>(setList.size());
     int i = 0;
@@ -63,7 +63,8 @@ public final class Vectorizer {
         int foundIndex = Arrays.binarySearch(tokenBagArray, s);
         // simply ignore tokens we don't know
         if (foundIndex >= 0) {
-          vector.set(foundIndex, hashMultiset.count(s));
+          int count = hashMultiset.count(s);
+          vector.set(foundIndex, count);
         }
       }
       vectorList.add(vector);
