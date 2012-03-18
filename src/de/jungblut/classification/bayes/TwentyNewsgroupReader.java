@@ -17,38 +17,35 @@ public class TwentyNewsgroupReader {
   // docs, prediction, name mapping for prediction
   public static Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups(
       File directory) {
+    String[] classList = directory.list();
+    Arrays.sort(classList);
     List<String[]> docList = new ArrayList<String[]>();
     List<Integer> prediction = new ArrayList<Integer>();
-    String[] leastSeenNameMapping = null;
-    for (File trainDirectory : directory.listFiles()) {
-      String[] classList = trainDirectory.list();
-      Arrays.sort(classList);
-      String[] nameMapping = new String[classList.length];
-      int classIndex = 0;
-      for (String classDirString : classList) {
-        File classDir = new File(trainDirectory, classDirString);
-        String[] fileList = classDir.list();
-        for (String fileDoc : fileList) {
-          try (BufferedReader br = new BufferedReader(new FileReader(new File(
-              classDir, fileDoc)))) {
-            StringBuilder document = new StringBuilder();
-            String line = null;
-            while ((line = br.readLine()) != null) {
-              document.append(line);
-            }
-            String[] tokens = Tokenizer.whiteSpaceTokenize(document.toString());
-            docList.add(tokens);
-            prediction.add(classIndex);
-          } catch (IOException e) {
-            e.printStackTrace();
+    String[] nameMapping = new String[classList.length];
+    int classIndex = 0;
+    for (String classDirString : classList) {
+      File classDir = new File(directory, classDirString);
+      String[] fileList = classDir.list();
+      for (String fileDoc : fileList) {
+        try (BufferedReader br = new BufferedReader(new FileReader(new File(
+            classDir, fileDoc)))) {
+          StringBuilder document = new StringBuilder();
+          String l = null;
+          while ((l = br.readLine()) != null) {
+            document.append(l);
           }
+          String[] whiteSpaceTokens = Tokenizer.wordTokenize(document
+              .toString());
+          docList.add(whiteSpaceTokens);
+          prediction.add(classIndex);
+        } catch (IOException e) {
+          e.printStackTrace();
         }
-        nameMapping[classIndex++] = classDirString;
       }
-      leastSeenNameMapping = nameMapping;
+      nameMapping[classIndex++] = classDirString;
     }
 
     return new Tuple3<List<String[]>, DenseIntVector, String[]>(docList,
-        new DenseIntVector(prediction), leastSeenNameMapping);
+        new DenseIntVector(prediction), nameMapping);
   }
 }

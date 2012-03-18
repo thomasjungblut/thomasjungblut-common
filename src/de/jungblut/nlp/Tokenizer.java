@@ -28,6 +28,13 @@ public final class Tokenizer {
   }
 
   /**
+   * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!]
+   */
+  public static String[] wordTokenize(String text) {
+    return text.split("[ \r\n\t.,;:'\"()?!]");
+  }
+
+  /**
    * This tokenizer first splits on whitespaces and then concatenates the words
    * based on size.
    */
