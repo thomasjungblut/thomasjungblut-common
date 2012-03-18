@@ -52,8 +52,10 @@ public final class MultinomialNaiveBayesClassifier {
     for (int row = 0; row < numDistinctElements; row++) {
       for (int col = 0; col < probabilityMatrix.getColumnCount(); col++) {
         double currentWordCount = probabilityMatrix.get(row, col);
-        double logLikelyhood = Math.log(currentWordCount
-            / (tokenPerClass[row] + numDistinctElements - 1));
+        double logLikelyhood = Math.log(currentWordCount + 1.0d
+            / (tokenPerClass[row] + probabilityMatrix.getColumnCount()));
+        // in case it would be zero without smoothing, these are constant
+        // factors per class
         probabilityMatrix.set(row, col, logLikelyhood);
       }
     }

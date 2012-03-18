@@ -226,7 +226,7 @@ public final class DenseDoubleVector implements DoubleVector {
 
   @Override
   public double max() {
-    double max = Double.MIN_VALUE;
+    double max = -Double.MAX_VALUE;
     for (int i = 0; i < getLength(); i++) {
       double d = vector[i];
       if (d > max) {
@@ -237,7 +237,7 @@ public final class DenseDoubleVector implements DoubleVector {
   }
 
   public int maxIndex() {
-    double max = Double.MIN_VALUE;
+    double max = -Double.MAX_VALUE;
     int maxIndex = 0;
     for (int i = 0; i < getLength(); i++) {
       double d = vector[i];
