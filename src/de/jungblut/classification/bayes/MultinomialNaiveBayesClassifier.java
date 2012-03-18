@@ -1,6 +1,8 @@
 package de.jungblut.classification.bayes;
 
+import java.io.File;
 import java.util.Iterator;
+import java.util.List;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
@@ -9,6 +11,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 import de.jungblut.util.Tuple;
+import de.jungblut.util.Tuple3;
 
 /**
  * Simple multinomial naive bayes classifier.
@@ -109,6 +112,18 @@ public final class MultinomialNaiveBayesClassifier {
     distribution = (DenseDoubleVector) distribution.divide(probabilitySum);
 
     return distribution;
+  }
+
+  public static void main(String[] args) {
+
+    Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups = TwentyNewsgroupReader
+        .readTwentyNewsgroups(new File(
+            "files/20news-bydate/20news-bydate-train/"));
+    
+    readTwentyNewsgroups.getFirst();
+    
+    
+
   }
 
 }

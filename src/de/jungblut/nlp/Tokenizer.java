@@ -1,9 +1,46 @@
 package de.jungblut.nlp;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.lucene.analysis.TokenStream;
+import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
+
 public final class Tokenizer {
+
+  /**
+   * Fully consumes a lucene tokenstream and returns a string array.
+   * 
+   * @throws IOException
+   */
+  public static String[] consumeTokenStream(TokenStream stream) {
+    ArrayList<String> list = new ArrayList<String>();
+    try {
+      stream.reset();
+
+      CharTermAttribute termAttribute = stream
+          .getAttribute(CharTermAttribute.class);
+      while (stream.incrementToken()) {
+        list.add(termAttribute.toString());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      try {
+        stream.end();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+      try {
+        stream.close();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    return list.toArray(new String[list.size()]);
+  }
 
   /**
    * N-Gramm tokenizer.

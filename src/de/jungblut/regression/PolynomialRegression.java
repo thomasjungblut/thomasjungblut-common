@@ -5,7 +5,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
-import de.jungblut.normalize.Normalizer;
+import de.jungblut.math.normalize.Normalizer;
 import de.jungblut.util.Tuple3;
 
 public final class PolynomialRegression {

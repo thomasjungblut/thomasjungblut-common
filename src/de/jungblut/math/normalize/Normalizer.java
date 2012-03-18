@@ -1,4 +1,4 @@
-package de.jungblut.normalize;
+package de.jungblut.math.normalize;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
