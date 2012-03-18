@@ -277,7 +277,7 @@ public class SparseDoubleVector implements DoubleVector {
 
   @Override
   public double max() {
-    double res = Double.MIN_VALUE;
+    double res = -Double.MAX_VALUE;
     Iterator<DoubleVectorElement> it = this.iterateNonZero();
     while (it.hasNext()) {
       DoubleVectorElement e = it.next();
