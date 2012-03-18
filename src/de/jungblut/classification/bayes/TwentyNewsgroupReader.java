@@ -36,9 +36,7 @@ public class TwentyNewsgroupReader {
             while ((line = br.readLine()) != null) {
               document.append(line);
             }
-            // tokenize into 3-gramms uses huge amounts of resources, but gives
-            // 100% accuracy with tf-idf
-            String[] tokens = Tokenizer.nGrammTokenize(document.toString(), 3);
+            String[] tokens = Tokenizer.whiteSpaceTokenize(document.toString());
             docList.add(tokens);
             prediction.add(classIndex);
           } catch (IOException e) {

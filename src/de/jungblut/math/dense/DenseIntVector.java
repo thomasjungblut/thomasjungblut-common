@@ -93,8 +93,9 @@ public final class DenseIntVector {
 
   public DenseIntVector slice(int offset, int length) {
     DenseIntVector nv = new DenseIntVector(length - offset);
-    for (int i = offset; i < length - offset; i++) {
-      nv.set(i, vector[i]);
+    int index = 0;
+    for (int i = offset; i < length; i++) {
+      nv.set(index++, vector[i]);
     }
 
     return nv;

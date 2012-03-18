@@ -6,7 +6,6 @@ import java.util.List;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
-import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
@@ -22,16 +21,17 @@ import de.jungblut.util.Tuple3;
  */
 public final class MultinomialNaiveBayesClassifier {
 
-  private DenseDoubleMatrix probabilityMatrix;
+  private SparseDoubleColumnMatrix probabilityMatrix;
   private DenseDoubleVector classProbability;
 
-  public final Tuple<DenseDoubleMatrix, DenseDoubleVector> train(
+  // TODO laplace smoothing is not working correctly.
+  public final Tuple<SparseDoubleColumnMatrix, DenseDoubleVector> train(
       SparseDoubleColumnMatrix documentWordCounts, DenseIntVector prediction) {
 
     final int numDistinctElements = prediction
-        .getNumberOfDistinctElementsFast() + 1;
-    probabilityMatrix = new DenseDoubleMatrix(numDistinctElements,
-        documentWordCounts.getRowCount(), 1.0d);
+        .getNumberOfDistinctElementsFast();
+    probabilityMatrix = new SparseDoubleColumnMatrix(numDistinctElements,
+        documentWordCounts.getRowCount());
 
     int[] columnIndices = documentWordCounts.columnIndices();
     int[] tokenPerClass = new int[numDistinctElements];
@@ -47,13 +47,15 @@ public final class MultinomialNaiveBayesClassifier {
       probabilityMatrix.set(predictedClass, columnIndex, document.getLength());
     }
 
-    // log normalize
+    // know we know the token distribution per class, we can calculate the
+    // probability
     for (int row = 0; row < numDistinctElements; row++) {
-      for (int col = 0; col < documentWordCounts.getRowCount(); col++) {
+      for (int col = 0; col < probabilityMatrix.getColumnCount(); col++) {
         double currentWordCount = probabilityMatrix.get(row, col);
-        double logNormalized = Math.log(currentWordCount
-            / (tokenPerClass[row] + documentWordCounts.getRowCount() - 1));
-        probabilityMatrix.set(row, col, logNormalized);
+        if (currentWordCount != 0.0d) {
+          probabilityMatrix.set(row, col, currentWordCount
+              / (tokenPerClass[row] + 1));
+        }
       }
     }
 
@@ -62,8 +64,8 @@ public final class MultinomialNaiveBayesClassifier {
       classProbability.set(i, (numDocumentsPerClass[i] + 1)
           / (double) columnIndices.length);
     }
-    return new Tuple<DenseDoubleMatrix, DenseDoubleVector>(probabilityMatrix,
-        classProbability);
+    return new Tuple<SparseDoubleColumnMatrix, DenseDoubleVector>(
+        probabilityMatrix, classProbability);
   }
 
   /**
@@ -96,13 +98,12 @@ public final class MultinomialNaiveBayesClassifier {
       distribution.set(i, probability);
     }
 
-    // now it contains the log probabilities of a class
     double maxProbability = distribution.max();
     double probabilitySum = 0.0d;
     // we normalize it back
     for (int i = 0; i < numClasses; i++) {
-      double logProbability = distribution.get(i);
-      double normalizedProbability = Math.exp(logProbability - maxProbability)
+      double probability = distribution.get(i);
+      double normalizedProbability = (probability - maxProbability)
           * classProbability.get(i);
       distribution.set(i, normalizedProbability);
       probabilitySum += normalizedProbability;
@@ -120,9 +121,8 @@ public final class MultinomialNaiveBayesClassifier {
     Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups = TwentyNewsgroupReader
         .readTwentyNewsgroups(new File("files/20news-bydate/"));
 
-    // tf-idf has superior performance over plain wordcount 91% vs 99% accuracy
     List<DoubleVector> wordFrequencyVectorize = Vectorizer
-        .tfIdfVectorize(readTwentyNewsgroups.getFirst());
+        .wordFrequencyVectorize(readTwentyNewsgroups.getFirst());
 
     // I know that there is the cutoff after 7532 between test and training set,
     // so just split there.
@@ -131,8 +131,8 @@ public final class MultinomialNaiveBayesClassifier {
         wordFrequencyVectorize.size());
 
     DenseIntVector prediction = readTwentyNewsgroups.getSecond();
-    DenseIntVector predictionTest = prediction.slice(0, 7533);
-    DenseIntVector predictionInput = prediction.slice(7533,
+    DenseIntVector predictionTest = prediction.slice(0, 7532);
+    DenseIntVector predictionInput = prediction.slice(7532,
         prediction.getLength());
 
     SparseDoubleColumnMatrix input = new SparseDoubleColumnMatrix(inputList);

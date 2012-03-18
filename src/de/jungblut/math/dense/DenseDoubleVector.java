@@ -216,9 +216,9 @@ public final class DenseDoubleVector implements DoubleVector {
   @Override
   public DoubleVector slice(int offset, int length) {
     DoubleVector nv = new DenseDoubleVector(length - offset);
-
-    for (int i = offset; i < length - offset; i++) {
-      nv.set(i, vector[i]);
+    int index = 0;
+    for (int i = offset; i < length; i++) {
+      nv.set(index++, vector[i]);
     }
 
     return nv;
