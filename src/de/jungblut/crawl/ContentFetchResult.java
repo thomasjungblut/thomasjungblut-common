@@ -33,5 +33,5 @@ public class ContentFetchResult extends FetchResult {
   public String getText() {
     return text;
   }
-  
+
 }

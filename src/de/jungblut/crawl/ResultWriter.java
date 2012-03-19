@@ -11,7 +11,6 @@ public interface ResultWriter<T extends FetchResult> {
 
   public SequenceFile.Writer getWriterInstance() throws IOException;
 
-  public void write(SequenceFile.Writer writer, T result)
-      throws IOException;
+  public void write(SequenceFile.Writer writer, T result) throws IOException;
 
 }

@@ -44,6 +44,7 @@ public class TwentyNewsgroupReader {
           while ((l = br.readLine()) != null) {
             document.append(l);
           }
+          // plain word tokenizing gives 60,5% accuracy
           // String[] whiteSpaceTokens = Tokenizer.removeEmpty(Tokenizer
           // .wordTokenize(document.toString()));
           String[] whiteSpaceTokens = Tokenizer
