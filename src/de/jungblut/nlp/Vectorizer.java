@@ -48,8 +48,7 @@ public final class Vectorizer {
    * Vectorizes a list of documents with the given wordcounts and tokens.
    */
   public static List<DoubleVector> wordFrequencyVectorize(
-      List<String[]> setList,
-      Tuple<HashMultiset<String>[], String[]> wordCounts) {
+      List<String[]> setList, Tuple<HashMultiset<String>[], String[]> wordCounts) {
 
     HashMultiset<String>[] multiSets = wordCounts.getFirst();
     String[] tokenBagArray = wordCounts.getSecond();
@@ -107,30 +106,40 @@ public final class Vectorizer {
   }
 
   /**
-   * Calculates the tf-idf of the given documents.
+   * Calculates the tf-idf of given documents with the given prepared
+   * wordcounts.
    */
-  public static List<DoubleVector> tfIdfVectorize(List<String[]> setList) {
-    List<DoubleVector> vectorList = new ArrayList<DoubleVector>(setList.size());
-
-    Tuple<HashMultiset<String>[], String[]> prepareWordCountToken = prepareWordCountToken(setList);
+  public static List<DoubleVector> tfIdfVectorize(List<String[]> setList,
+      Tuple<HashMultiset<String>[], String[]> prepareWordCountToken) {
     HashMultiset<String>[] multiSets = prepareWordCountToken.getFirst();
     String[] tokenBagArray = prepareWordCountToken.getSecond();
 
+    List<DoubleVector> vectorList = new ArrayList<DoubleVector>(setList.size());
     int i = 0;
     for (String[] arr : setList) {
       DoubleVector vector = new SparseDoubleVector(tokenBagArray.length);
       HashMultiset<String> hashMultiset = multiSets[i];
       for (String s : arr) {
         int foundIndex = Arrays.binarySearch(tokenBagArray, s);
-        int wordCount = hashMultiset.count(s);
-        double tfIdf = Math.log((double) arr.length / wordCount + 1.0d);
-        vector.set(foundIndex, tfIdf);
+        if (foundIndex >= 0) {
+          int wordCount = hashMultiset.count(s);
+          double tfIdf = Math.log((double) arr.length / wordCount + 1.0d);
+          vector.set(foundIndex, tfIdf);
+        }
       }
       vectorList.add(vector);
       i++;
     }
 
     return vectorList;
+  }
+
+  /**
+   * Calculates the tf-idf of the given documents.
+   */
+  public static List<DoubleVector> tfIdfVectorize(List<String[]> setList) {
+    Tuple<HashMultiset<String>[], String[]> prepareWordCountToken = prepareWordCountToken(setList);
+    return tfIdfVectorize(setList, prepareWordCountToken);
   }
 
 }
