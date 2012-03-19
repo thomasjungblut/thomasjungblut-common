@@ -4,15 +4,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.util.Version;
+
+import de.jungblut.datastructure.StringPool;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.nlp.Tokenizer;
 import de.jungblut.util.Tuple3;
 
 public class TwentyNewsgroupReader {
+
+  private static final StringPool HASH_STRING_POOL = StringPool.getPool();
+  private static final Analyzer ENGLISH_ANALYZER = new EnglishAnalyzer(
+      Version.LUCENE_35);
 
   // docs, prediction, name mapping for prediction
   public static Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups(
@@ -34,11 +44,14 @@ public class TwentyNewsgroupReader {
           while ((l = br.readLine()) != null) {
             document.append(l);
           }
-          // String[] whiteSpaceTokens =
-          // normalizer.tokenizeAndNormalize(document
-          // .toString());
-          String[] whiteSpaceTokens = Tokenizer.removeEmpty(Tokenizer
-              .wordTokenize(document.toString()));
+          // String[] whiteSpaceTokens = Tokenizer.removeEmpty(Tokenizer
+          // .wordTokenize(document.toString()));
+          String[] whiteSpaceTokens = Tokenizer
+              .consumeTokenStream(ENGLISH_ANALYZER.tokenStream(null,
+                  new StringReader(document.toString())));
+          for (int i = 0; i < whiteSpaceTokens.length; i++) {
+            whiteSpaceTokens[i] = HASH_STRING_POOL.pool(whiteSpaceTokens[i]);
+          }
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);
         } catch (IOException e) {
