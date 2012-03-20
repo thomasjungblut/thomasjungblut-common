@@ -131,9 +131,9 @@ public final class MultinomialNaiveBayesClassifier {
    * accuracy. It prints to STDOUT.
    */
   public void evaluateModel(List<DoubleVector> testSetInputVector,
-      DenseIntVector testSetPrediction) {
+      DenseIntVector testSetPrediction, String[] classNames) {
     int[][] confusionMatrix = new int[classProbability.getLength()][classProbability
-        .getLength()];
+        .getLength() + 2];
 
     int truePositives = 0;
     int index = 0;
@@ -142,9 +142,12 @@ public final class MultinomialNaiveBayesClassifier {
       int realClass = testSetPrediction.get(index);
       if (classifiedClass == realClass) {
         truePositives++;
+      } else {
+        confusionMatrix[classifiedClass][classProbability.getLength() + 1]++;
       }
 
-      confusionMatrix[realClass][classifiedClass]++;
+      confusionMatrix[classifiedClass][realClass]++;
+      confusionMatrix[classifiedClass][classProbability.getLength()]++;
 
       index++;
     }
@@ -153,12 +156,19 @@ public final class MultinomialNaiveBayesClassifier {
         + testSetInputVector.size() + " documents! That's accuracy of "
         + (truePositives / (double) testSetInputVector.size() * 100) + "%");
 
-    System.out.println("Confusion matrix:");
+    System.out.println("\nConfusion matrix:\n");
 
     for (int i = 0; i < classProbability.getLength(); i++) {
-      for (int j = 0; j < classProbability.getLength(); j++) {
+      System.out.format("%5d", i);
+    }
+
+    System.out.println("  SUM  FALSE\n");
+
+    for (int i = 0; i < classProbability.getLength(); i++) {
+      for (int j = 0; j < classProbability.getLength() + 2; j++) {
         System.out.format("%5d", confusionMatrix[i][j]);
       }
+      System.out.println(" <- " + i + " classfied as " + classNames[i]);
     }
 
   }
@@ -190,6 +200,7 @@ public final class MultinomialNaiveBayesClassifier {
     List<DoubleVector> testSetInputVector = Vectorizer.wordFrequencyVectorize(
         testDocuments, updatedWordFrequency);
     DenseIntVector testSetPrediction = testSet.getSecond();
-
+    classifier.evaluateModel(testSetInputVector, testSetPrediction,
+        trainingSet.getThird());
   }
 }
