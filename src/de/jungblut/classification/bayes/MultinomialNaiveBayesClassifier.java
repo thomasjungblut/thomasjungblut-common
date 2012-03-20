@@ -126,6 +126,43 @@ public final class MultinomialNaiveBayesClassifier {
     return distribution;
   }
 
+  /**
+   * This method prints a confusion matrix along with several metrics like
+   * accuracy. It prints to STDOUT.
+   */
+  public void evaluateModel(List<DoubleVector> testSetInputVector,
+      DenseIntVector testSetPrediction) {
+    int[][] confusionMatrix = new int[classProbability.getLength()][classProbability
+        .getLength()];
+
+    int truePositives = 0;
+    int index = 0;
+    for (DoubleVector v : testSetInputVector) {
+      int classifiedClass = this.classify(v);
+      int realClass = testSetPrediction.get(index);
+      if (classifiedClass == realClass) {
+        truePositives++;
+      }
+
+      confusionMatrix[realClass][classifiedClass]++;
+
+      index++;
+    }
+
+    System.out.println("Classified correctly: " + truePositives + " out of "
+        + testSetInputVector.size() + " documents! That's accuracy of "
+        + (truePositives / (double) testSetInputVector.size() * 100) + "%");
+
+    System.out.println("Confusion matrix:");
+
+    for (int i = 0; i < classProbability.getLength(); i++) {
+      for (int j = 0; j < classProbability.getLength(); j++) {
+        System.out.format("%5d", confusionMatrix[i][j]);
+      }
+    }
+
+  }
+
   public static void main(String[] args) {
 
     Tuple3<List<String[]>, DenseIntVector, String[]> trainingSet = TwentyNewsgroupReader
@@ -153,22 +190,6 @@ public final class MultinomialNaiveBayesClassifier {
     List<DoubleVector> testSetInputVector = Vectorizer.wordFrequencyVectorize(
         testDocuments, updatedWordFrequency);
     DenseIntVector testSetPrediction = testSet.getSecond();
-
-    int truePositives = 0;
-    int index = 0;
-    for (DoubleVector v : testSetInputVector) {
-      int classifiedClass = classifier.classify(v);
-      int prediction = testSetPrediction.get(index);
-      if (classifiedClass == prediction) {
-        truePositives++;
-      }
-
-      index++;
-    }
-
-    System.out.println("True Positives: " + truePositives + " out of "
-        + testSetInputVector.size() + " documents! That's accuracy of "
-        + (truePositives / (double) testSetInputVector.size() * 100) + "%");
 
   }
 }
