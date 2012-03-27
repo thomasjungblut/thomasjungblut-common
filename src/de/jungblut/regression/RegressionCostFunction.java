@@ -5,7 +5,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
-import de.jungblut.util.Tuple;
+import de.jungblut.math.tuple.Tuple;
 
 public class RegressionCostFunction implements CostFunction {
 

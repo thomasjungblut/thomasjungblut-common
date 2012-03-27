@@ -21,7 +21,7 @@ import de.jungblut.crawl.ContentFetchResult;
 import de.jungblut.crawl.FetchResult;
 import de.jungblut.crawl.ResultWriter;
 import de.jungblut.crawl.SimpleCrawler;
-import de.jungblut.util.Tuple;
+import de.jungblut.math.tuple.Tuple;
 import de.l3s.boilerpipe.BoilerpipeExtractor;
 import de.l3s.boilerpipe.BoilerpipeProcessingException;
 import de.l3s.boilerpipe.extractors.LargestContentExtractor;

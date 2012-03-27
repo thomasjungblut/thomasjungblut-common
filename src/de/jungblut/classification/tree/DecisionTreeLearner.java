@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import de.jungblut.math.dense.DenseIntMatrix;
 import de.jungblut.math.dense.DenseIntVector;
-import de.jungblut.util.Tuple;
+import de.jungblut.math.tuple.Tuple;
 
 /**
  * Decision tree for nominal attributes and binary classification. <br/>

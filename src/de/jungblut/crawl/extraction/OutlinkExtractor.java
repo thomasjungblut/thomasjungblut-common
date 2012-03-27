@@ -18,7 +18,7 @@ import org.htmlparser.util.ParserException;
 import org.htmlparser.util.SimpleNodeIterator;
 
 import de.jungblut.crawl.FetchResult;
-import de.jungblut.util.Tuple;
+import de.jungblut.math.tuple.Tuple;
 
 public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
 

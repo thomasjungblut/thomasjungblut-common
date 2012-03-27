@@ -17,10 +17,10 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
+import de.jungblut.math.tuple.Tuple;
 import de.jungblut.partition.BlockPartitioner;
 import de.jungblut.partition.Boundaries.Range;
 import de.jungblut.recommendation.MovieLensReader;
-import de.jungblut.util.Tuple;
 
 public class SimpleCosineRecommender {
 

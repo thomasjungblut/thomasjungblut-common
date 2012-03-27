@@ -1,7 +1,7 @@
 package de.jungblut.math.minimize;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.util.Tuple;
+import de.jungblut.math.tuple.Tuple;
 
 public interface CostFunction {
 

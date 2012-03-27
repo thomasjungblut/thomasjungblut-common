@@ -12,9 +12,9 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
+import de.jungblut.math.tuple.Tuple;
+import de.jungblut.math.tuple.Tuple3;
 import de.jungblut.nlp.Vectorizer;
-import de.jungblut.util.Tuple;
-import de.jungblut.util.Tuple3;
 
 /**
  * Simple multinomial naive bayes classifier.

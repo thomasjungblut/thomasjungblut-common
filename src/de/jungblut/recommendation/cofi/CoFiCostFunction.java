@@ -11,7 +11,7 @@ import de.jungblut.math.dense.DenseBooleanMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
-import de.jungblut.util.Tuple;
+import de.jungblut.math.tuple.Tuple;
 
 public final class CoFiCostFunction implements CostFunction {
 

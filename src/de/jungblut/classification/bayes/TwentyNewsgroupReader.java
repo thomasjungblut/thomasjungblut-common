@@ -15,8 +15,8 @@ import org.apache.lucene.util.Version;
 
 import de.jungblut.datastructure.StringPool;
 import de.jungblut.math.dense.DenseIntVector;
+import de.jungblut.math.tuple.Tuple3;
 import de.jungblut.nlp.Tokenizer;
-import de.jungblut.util.Tuple3;
 
 public class TwentyNewsgroupReader {
 
