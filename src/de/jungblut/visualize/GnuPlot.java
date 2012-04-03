@@ -14,10 +14,9 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.regression.PolynomialRegression;
 
-// for windows only and only if gnuplot 4.4 can be found in the path
-public class GnuPlot {
+public final class GnuPlot {
 
-  public static String GNUPLOT_PATH = "\"/Program Files (x86)/gnuplot/bin/gnuplot\"";
+  public static String GNUPLOT_PATH = "gnuplot";
   public static String TMP_PATH = "/";
 
   public static void plot(DenseDoubleMatrix x, DoubleVector y,
@@ -72,6 +71,46 @@ public class GnuPlot {
       exec = "set xzeroaxis; set yzeroaxis ; plot '" + TMP_PATH
           + "gnuplot.in' with points";
     }
+    if (functionFile != null) {
+      exec += ",'" + functionFile + "' with lines;";
+    }
+    try {
+      Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
+          exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+          StandardOpenOption.TRUNCATE_EXISTING);
+      Process exec2 = Runtime.getRuntime().exec(
+          new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
+      Scanner scan = new Scanner(System.in);
+      scan.nextLine();
+      exec2.destroy();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  public static void drawPointsPerIndex(DenseDoubleMatrix x, DoubleVector y,
+      String functionFile, String featureOneTitle, String featureTwoTitle) {
+
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
+        TMP_PATH + "gnuplot1.in")))) {
+      for (int i = 0; i < y.getLength(); i++) {
+        bw.write(i + " " + y.get(i) + "\n");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
+        TMP_PATH + "gnuplot2.in")))) {
+      for (int i = 0; i < y.getLength(); i++) {
+        bw.write(i + " " + x.get(i, 0) + "\n");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    String exec = "set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '" + TMP_PATH
+        + "gnuplot1.in' title \"" + featureOneTitle + "\" with points, '"
+        + TMP_PATH + "gnuplot2.in' title \"" + featureTwoTitle
+        + "\" with points";
     if (functionFile != null) {
       exec += ",'" + functionFile + "' with lines;";
     }
