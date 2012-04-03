@@ -108,9 +108,9 @@ public final class GnuPlot {
       e.printStackTrace();
     }
     String exec = "set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '" + TMP_PATH
-        + "gnuplot1.in' title \"" + featureOneTitle + "\" with points, '"
+        + "gnuplot1.in' title \"" + featureOneTitle + "\" with linespoints, '"
         + TMP_PATH + "gnuplot2.in' title \"" + featureTwoTitle
-        + "\" with points";
+        + "\" with linespoints";
     if (functionFile != null) {
       exec += ",'" + functionFile + "' with lines;";
     }
