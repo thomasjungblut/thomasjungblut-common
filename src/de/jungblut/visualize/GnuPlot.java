@@ -94,7 +94,7 @@ public final class GnuPlot {
     try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
         TMP_PATH + "gnuplot1.in")))) {
       for (int i = 0; i < y.getLength(); i++) {
-        bw.write(i + " " + y.get(i) + "\n");
+        bw.write(i + " " + x.get(i, 0) + "\n");
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -102,7 +102,7 @@ public final class GnuPlot {
     try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
         TMP_PATH + "gnuplot2.in")))) {
       for (int i = 0; i < y.getLength(); i++) {
-        bw.write(i + " " + x.get(i, 0) + "\n");
+        bw.write(i + " " + y.get(i) + "\n");
       }
     } catch (IOException e) {
       e.printStackTrace();
