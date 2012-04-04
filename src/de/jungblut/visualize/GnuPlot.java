@@ -107,10 +107,20 @@ public final class GnuPlot {
     } catch (IOException e) {
       e.printStackTrace();
     }
-    String exec = "set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '" + TMP_PATH
-        + "gnuplot1.in' title \"" + featureOneTitle + "\" with linespoints, '"
-        + TMP_PATH + "gnuplot2.in' title \"" + featureTwoTitle
-        + "\" with linespoints";
+
+    /*
+     * For pictures: String exec =
+     * "set terminal png size 1920,1080 ; set output \"/img/"
+     * +id+".png\" ; set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '" +
+     * TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle +
+     * "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \"" +
+     * featureTwoTitle +
+     * "\" with linespoints ; set terminal wxt size 1920,1080 ;";
+     */
+    String exec = "set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '"
+        + TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle
+        + "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \""
+        + featureTwoTitle + "\" with linespoints";
     if (functionFile != null) {
       exec += ",'" + functionFile + "' with lines;";
     }
