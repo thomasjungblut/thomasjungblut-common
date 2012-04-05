@@ -138,6 +138,68 @@ public final class GnuPlot {
     }
   }
 
+  public static void drawPointsPerIndexWithErrors(DenseDoubleMatrix x,
+      DoubleVector y, DoubleVector errors, int translation,
+      String functionFile, String featureOneTitle, String featureTwoTitle,
+      boolean displayYErrorBars) {
+
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
+        TMP_PATH + "gnuplot1.in")))) {
+      for (int i = 0; i < y.getLength(); i++) {
+        bw.write(i + " " + x.get(i, 0) + "\n");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
+        TMP_PATH + "gnuplot2.in")))) {
+      for (int i = 0; i < y.getLength(); i++) {
+        bw.write(i + " " + y.get(i) + "\n");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
+        TMP_PATH + "gnuplot3.in")))) {
+      for (int i = 0; i < errors.getLength(); i++) {
+        bw.write((translation + i) + " " + errors.get(i) + "\n");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+    /*
+     * For pictures: String exec =
+     * "set terminal png size 1920,1080 ; set output \"/img/"
+     * +id+".png\" ; set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '" +
+     * TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle +
+     * "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \"" +
+     * featureTwoTitle +
+     * "\" with linespoints ; set terminal wxt size 1920,1080 ;";
+     */
+    String exec = "set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '"
+        + TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle
+        + "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \""
+        + featureTwoTitle + "\" with linespoints, '" + TMP_PATH
+        + "gnuplot3.in' title \"Predicted\" with "
+        + (displayYErrorBars ? " yerr" : " linespoints");
+    if (functionFile != null) {
+      exec += ",'" + functionFile + "' with lines;";
+    }
+    try {
+      Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
+          exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+          StandardOpenOption.TRUNCATE_EXISTING);
+      Process exec2 = Runtime.getRuntime().exec(
+          new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
+      Scanner scan = new Scanner(System.in);
+      scan.nextLine();
+      exec2.destroy();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
   public static String modelToGNUPlot(DoubleVector p) {
     String s = "";
     for (int i = 0; i < p.getLength(); i++) {
