@@ -7,7 +7,7 @@ import java.util.HashSet;
 
 import org.apache.hama.bsp.BSPMessage;
 
-class HashSetMessage extends BSPMessage {
+public class HashSetMessage extends BSPMessage {
 
   private HashSet<Long> set;
 

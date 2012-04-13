@@ -6,15 +6,15 @@ import java.io.IOException;
 
 import org.apache.hama.bsp.BSPMessage;
 
-public class LongMessage extends BSPMessage {
+public class IntIntMessage extends BSPMessage {
 
-  private long tag;
-  private String data;
+  int tag;
+  int data;
 
-  public LongMessage() {
+  public IntIntMessage() {
   }
 
-  public LongMessage(long tag, String data) {
+  public IntIntMessage(int tag, int data) {
     super();
     this.tag = tag;
     this.data = data;
@@ -22,23 +22,23 @@ public class LongMessage extends BSPMessage {
 
   @Override
   public void readFields(DataInput in) throws IOException {
-    tag = in.readLong();
-    data = in.readUTF();
+    tag = in.readInt();
+    data = in.readInt();
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
-    out.writeLong(tag);
-    out.writeUTF(data);
+    out.writeInt(tag);
+    out.writeInt(data);
   }
 
   @Override
-  public Long getTag() {
+  public Integer getTag() {
     return tag;
   }
 
   @Override
-  public String getData() {
+  public Integer getData() {
     return data;
   }
 
