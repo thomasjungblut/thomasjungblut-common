@@ -3,8 +3,9 @@ package de.jungblut.bsp;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -24,19 +25,21 @@ import org.apache.hama.bsp.SequenceFileInputFormat;
 import org.apache.hama.bsp.SequenceFileOutputFormat;
 import org.apache.hama.bsp.sync.SyncException;
 
+import de.jungblut.datastructure.ListUtils;
+
 public final class SamplingSort extends
     BSP<IntWritable, NullWritable, IntWritable, NullWritable> {
 
   private final NullWritable val = NullWritable.get();
 
+  @SuppressWarnings("unchecked")
   @Override
   public void bsp(
       BSPPeer<IntWritable, NullWritable, IntWritable, NullWritable> peer)
       throws IOException, SyncException, InterruptedException {
     int numPeers = peer.getNumPeers();
     int[] pivotArray = new int[numPeers];
-    @SuppressWarnings("unchecked")
-    LinkedList<IntWritable>[] partitions = new LinkedList[numPeers];
+    List<IntWritable>[] partitions = new List[numPeers];
 
     if (isMaster(peer)) {
       // setup pivots by simply choosing the first n-items
@@ -72,7 +75,7 @@ public final class SamplingSort extends
       for (int i = 0; i < numPeers; i++) {
         if (pivotArray[i] > value) {
           if (partitions[i] == null) {
-            partitions[i] = new LinkedList<IntWritable>();
+            partitions[i] = new ArrayList<IntWritable>();
           }
           partitions[i].add(clone);
           break;
@@ -81,33 +84,27 @@ public final class SamplingSort extends
     }
     for (int i = 0; i < numPeers; i++) {
       if (partitions[i] != null) {
+        // sort before we send
+        Collections.sort(partitions[i]);
         peer.send(peer.getPeerName(i), new PartitionMessage(partitions[i]));
+        partitions[i] = null;
       }
     }
-
     peer.sync();
 
-    // merge to a single array
-    List<IntWritable[]> msgBuffer = new LinkedList<IntWritable[]>();
-    int size = 0;
+    // just merge to a single list
+    List<IntWritable> singleList = null;
     PartitionMessage partMsg = null;
     while ((partMsg = (PartitionMessage) peer.getCurrentMessage()) != null) {
-      msgBuffer.add(partMsg.outArray);
-      size += partMsg.outArray.length;
+      if (singleList == null) {
+        singleList = partMsg.list;
+      } else {
+        singleList = ListUtils.merge(singleList, partMsg.list);
+      }
     }
-    System.out.println(peer.getPeerName() + " -> " + size);
-    IntWritable[] input = new IntWritable[size];
-    int index = 0;
-    for (IntWritable[] partitionMessage : msgBuffer) {
-      System.arraycopy(partitionMessage, 0, input, index,
-          partitionMessage.length);
-      index += partitionMessage.length;
-    }
+    System.out.println(peer.getPeerName() + " -> " + singleList.size());
 
-    // sort it in-place with java code
-    Arrays.sort(input);
-
-    for (IntWritable i : input) {
+    for (IntWritable i : singleList) {
       peer.write(i, val);
     }
 
@@ -120,33 +117,31 @@ public final class SamplingSort extends
 
   final class PartitionMessage extends BSPMessage {
 
-    int size;
-    IntWritable[] outArray;
+    List<IntWritable> list;
 
     public PartitionMessage() {
     }
 
-    public PartitionMessage(LinkedList<IntWritable> in) {
-      this.outArray = in.toArray(new IntWritable[in.size()]);
-      this.size = in.size();
+    public PartitionMessage(List<IntWritable> in) {
+      this.list = in;
     }
 
     @Override
     public void write(DataOutput out) throws IOException {
-      out.writeInt(size);
-      for (IntWritable writable : outArray) {
+      out.writeInt(list.size());
+      for (IntWritable writable : list) {
         writable.write(out);
       }
     }
 
     @Override
     public void readFields(DataInput in) throws IOException {
-      this.size = in.readInt();
-      this.outArray = new IntWritable[size];
+      int size = in.readInt();
+      this.list = new ArrayList<IntWritable>(size);
       for (int i = 0; i < size; i++) {
         IntWritable intWritable = new IntWritable();
         intWritable.readFields(in);
-        outArray[i] = intWritable;
+        list.add(intWritable);
       }
     }
 

@@ -4,18 +4,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-public class ListUtils {
+public final class ListUtils {
 
-  public static List<Integer> merge(List<Integer> list1, List<Integer> list2) {
-    List<Integer> newList = new ArrayList<>(list1.size() + list2.size());
+  public static <K extends Comparable<K>> List<K> merge(List<K> list1,
+      List<K> list2) {
+    List<K> newList = new ArrayList<>(list1.size() + list2.size());
 
     int offset1 = 0;
     int offset2 = 0;
 
     while (!list1.isEmpty() && !list2.isEmpty()) {
-      Integer item1 = list1.get(offset1);
-      Integer item2 = list2.get(offset2);
-      if (item1 <= item2) {
+      K item1 = list1.get(offset1);
+      K item2 = list2.get(offset2);
+      if (item1.compareTo(item2) <= 0) {
         newList.add(item1);
         list1.remove(offset1);
       } else {
