@@ -144,17 +144,12 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
   }
 
   public static int compareVector(VectorWritable a, VectorWritable o) {
-    if (!a.equals(o))
-      return 1;
-    else
-      return 0;
+    return compareVector(a.getVector(), o.getVector());
   }
 
   public static int compareVector(DoubleVector a, DoubleVector o) {
-    if (!a.equals(o))
-      return 1;
-    else
-      return 0;
+    DoubleVector subtract = a.subtract(o);
+    return (int) subtract.sum();
   }
 
   public static VectorWritable wrap(DoubleVector a) {
