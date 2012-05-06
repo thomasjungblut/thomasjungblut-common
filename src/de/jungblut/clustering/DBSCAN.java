@@ -90,7 +90,6 @@ public final class DBSCAN {
       // if our range scan found at least minPoints, add them to the adjacency
       // list.
       if (possibleNeighbours.size() >= minPoints) {
-        System.out.println(points.get(col) + " | " + possibleNeighbours);
         adjacencyList.put(col, toArray(possibleNeighbours));
       }
     }
@@ -137,7 +136,7 @@ public final class DBSCAN {
       for (int val : values) {
         list.add(points.get(val));
       }
-      System.out.println(iterator.key() + ": " + list);
+      System.out.println("Cluster " + iterator.key() + ": " + list);
       map.put(iterator.key(), list);
     }
 
@@ -182,7 +181,7 @@ public final class DBSCAN {
     int numPoints = 100;
     int doubleScale = 100;
     int minPoints = 2;
-    double epsilon = 2.5d;
+    double epsilon = 7.5d;
     DistanceMeasurer measurer = new EuclidianDistance();
     DBSCAN clusterer = new DBSCAN();
 
