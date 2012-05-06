@@ -22,12 +22,12 @@ import de.jungblut.visualize.GnuPlot;
 public final class DBSCAN {
 
   /**
-   * PLAN: 1. compute distance matrix between the points <br/>
+   * PLAN: <br/>
+   * 
+   * 1. compute distance matrix between the points <br/>
    * 2. extract adjacent points via threshold epsilon and minpoints s <br/>
-   * 3. run some kind of connected components <br/>
-   * 4. decouple clusters <br/>
-   * 5. ??? <br/>
-   * 6. PROFIT!
+   * 3. run connected components (here BFS)<br/>
+   * 4. PROFIT!
    */
 
   /**
@@ -42,6 +42,7 @@ public final class DBSCAN {
       list.add(new DenseDoubleVector(new double[] {
           random.nextDouble() * upperX, random.nextDouble() * upperY }));
     }
+
     return list;
   }
 
@@ -89,6 +90,7 @@ public final class DBSCAN {
       // if our range scan found at least minPoints, add them to the adjacency
       // list.
       if (possibleNeighbours.size() >= minPoints) {
+        System.out.println(points.get(col) + " | " + possibleNeighbours);
         adjacencyList.put(col, toArray(possibleNeighbours));
       }
     }
@@ -165,6 +167,7 @@ public final class DBSCAN {
     int[] is = adjacencyMatrix.get(start);
     // check for null,because not all points may be included
     if (is != null) {
+      set.add(start);
       for (int i : is) {
         if (!set.contains(i)) {
           set.add(i);
@@ -179,7 +182,7 @@ public final class DBSCAN {
     int numPoints = 100;
     int doubleScale = 100;
     int minPoints = 2;
-    double epsilon = 10.0d;
+    double epsilon = 2.5d;
     DistanceMeasurer measurer = new EuclidianDistance();
     DBSCAN clusterer = new DBSCAN();
 
