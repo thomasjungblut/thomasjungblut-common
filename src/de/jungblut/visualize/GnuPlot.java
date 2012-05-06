@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.List;
 import java.util.Scanner;
 
 import de.jungblut.math.DoubleVector;
@@ -49,6 +50,34 @@ public final class GnuPlot {
 
     drawPoints(x, y, TMP_PATH + "gnuplot_function.in");
 
+  }
+
+  public static void drawPoints(List<DenseDoubleVector> points) {
+    try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
+        TMP_PATH + "gnuplot.in")))) {
+      for (int i = 0; i < points.size(); i++) {
+        DenseDoubleVector denseDoubleVector = points.get(i);
+        bw.write(denseDoubleVector.get(0) + " " + denseDoubleVector.get(1)
+            + "\n");
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    String exec = "set xzeroaxis; set yzeroaxis ; plot '" + TMP_PATH
+        + "gnuplot.in' with points";
+    
+    try {
+      Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
+          exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
+          StandardOpenOption.TRUNCATE_EXISTING);
+      Process exec2 = Runtime.getRuntime().exec(
+          new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
+      Scanner scan = new Scanner(System.in);
+      scan.nextLine();
+      exec2.destroy();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 
   public static void drawPoints(DenseDoubleMatrix x, DoubleVector y,
