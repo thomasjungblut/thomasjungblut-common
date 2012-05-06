@@ -147,7 +147,8 @@ public final class DBSCAN {
       List<DenseDoubleVector> points) {
     List<DenseDoubleVector> noise = new ArrayList<>();
     HashSet<DenseDoubleVector> hashSet = new HashSet<>();
-    for (List<DenseDoubleVector> component : connectedComponents.valueCollection()) {
+    for (List<DenseDoubleVector> component : connectedComponents
+        .valueCollection()) {
       hashSet.addAll(component);
     }
 
@@ -176,13 +177,14 @@ public final class DBSCAN {
 
   public static void main(String[] args) {
     int numPoints = 100;
-    int minPoints = 5;
+    int doubleScale = 100;
+    int minPoints = 2;
     double epsilon = 10.0d;
     DistanceMeasurer measurer = new EuclidianDistance();
     DBSCAN clusterer = new DBSCAN();
 
     List<DenseDoubleVector> points = clusterer.generateRandomPoints(numPoints,
-        100, 100);
+        doubleScale, doubleScale);
     DenseDoubleMatrix distanceMatrix = clusterer.generateDistanceMatrix(
         measurer, points);
     // generate adjacency list
