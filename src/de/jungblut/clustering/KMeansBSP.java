@@ -88,17 +88,21 @@ public final class KMeansBSP extends
     // this is the update step
     ClusterCenter[] msgCenters = new ClusterCenter[centers.length];
     CenterMessage msg;
+    // basically just summing incoming vectors
     while ((msg = (CenterMessage) peer.getCurrentMessage()) != null) {
       ClusterCenter oldCenter = msgCenters[msg.getTag()];
       ClusterCenter newCenter = msg.getData();
       if (oldCenter == null) {
         msgCenters[msg.getTag()] = newCenter;
       } else {
-        ClusterCenter average = oldCenter.average(newCenter);
-        msgCenters[msg.getTag()] = average;
+        oldCenter.plus(newCenter);
       }
     }
-
+    // divide by how often we globally summed vectors
+    for (ClusterCenter c : msgCenters) {
+      c.divideByK();
+    }
+    // finally check the convergence
     long convergedCounter = 0L;
     for (int i = 0; i < msgCenters.length; i++) {
       final ClusterCenter oldCenter = centers[i];
@@ -126,8 +130,8 @@ public final class KMeansBSP extends
       if (clusterCenter == null) {
         newCenterArray[lowestDistantCenter] = new ClusterCenter(key);
       } else {
-        newCenterArray[lowestDistantCenter] = newCenterArray[lowestDistantCenter]
-            .average(key.getVector());
+        // add the vector to the center
+        newCenterArray[lowestDistantCenter].plus(key);
       }
     }
     for (int i = 0; i < newCenterArray.length; i++) {

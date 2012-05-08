@@ -7,12 +7,11 @@ import java.io.IOException;
 import org.apache.hadoop.io.WritableComparable;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.function.RunningAverageFunction;
 
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
   private DoubleVector center;
-  private int kTimesIncremented = 2;
+  private int kTimesIncremented = 1;
 
   public ClusterCenter() {
     super();
@@ -33,34 +32,18 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     this.center = center.getVector().deepCopy();
   }
 
-  private ClusterCenter(VectorWritable center, int k) {
-    super();
-    this.center = center.getVector().deepCopy();
-    this.kTimesIncremented = k;
-  }
-
   public final void plus(VectorWritable c) {
     center = center.add(c.getVector());
     kTimesIncremented++;
   }
+  
+  public final void plus(ClusterCenter c) {
+    kTimesIncremented+=c.kTimesIncremented;
+    center = center.add(c.getCenterVector());
+  }
 
   public final void divideByK() {
     center = center.divide(kTimesIncremented);
-  }
-
-  public final ClusterCenter average(ClusterCenter c) {
-    int newk = kTimesIncremented + c.kTimesIncremented;
-    return average(c.getCenterVector(), newk);
-  }
-
-  public final ClusterCenter average(DoubleVector c) {
-    return average(c, kTimesIncremented);
-  }
-
-  final ClusterCenter average(final DoubleVector c, int newk) {
-    DoubleVector apply = this.getCenterVector().apply(c,
-        new RunningAverageFunction(newk));
-    return new ClusterCenter(new VectorWritable(apply), newk + 1);
   }
 
   public final boolean converged(ClusterCenter c) {
