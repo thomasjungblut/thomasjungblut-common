@@ -29,7 +29,6 @@ import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.visualize.GnuPlot;
 
 public final class KMeansBSP extends
     BSP<VectorWritable, NullWritable, ClusterCenter, VectorWritable> {
@@ -109,8 +108,6 @@ public final class KMeansBSP extends
     for (ClusterCenter c : msgCenters) {
       // and only if we really have an update for c
       if (c != null) {
-        LOG.info(peer.getPeerName() + ": " + c.getCenterVector() + " / "
-            + c.kTimesIncremented + " in superstep " + peer.getSuperstepCount());
         c.divideByK();
       }
     }
@@ -121,8 +118,6 @@ public final class KMeansBSP extends
       if (msgCenters[i] != null) {
         double calculateError = oldCenter.calculateError(msgCenters[i]
             .getCenterVector());
-        LOG.info(peer.getPeerName() + ": " + calculateError + " in superstep "
-            + peer.getSuperstepCount());
         if (calculateError > 0.0d) {
           centers[i] = msgCenters[i];
           convergedCounter++;
@@ -138,17 +133,6 @@ public final class KMeansBSP extends
     // each task has all the centers, if a center has been updated it
     // needs to be broadcasted.
     final ClusterCenter[] newCenterArray = new ClusterCenter[centers.length];
-    /**
-     * TODO here is a bug since the second superstep:<br/>
-     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:1: [131178.0,
-     * 295456.0] / 441 in superstep 2 <br/>
-     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:0: [190753.0,
-     * 430426.0] / 637 in superstep 2<br/>
-     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:1: [366809.0,
-     * 206552.0] / 559 in superstep 2<br/>
-     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:0: [530712.0,
-     * 305631.0] / 814 in superstep 2<br/>
-     */
     // we have an assignment step
     final NullWritable value = NullWritable.get();
     final VectorWritable key = new VectorWritable();
@@ -165,7 +149,11 @@ public final class KMeansBSP extends
     for (int i = 0; i < newCenterArray.length; i++) {
       if (newCenterArray[i] != null) {
         for (String peerName : peer.getAllPeerNames()) {
-          peer.send(peerName, new CenterMessage(i, newCenterArray[i]));
+          // we need a new instance here because otherwise the same instance
+          // will
+          // be shared among different threads creating strange results.
+          peer.send(peerName, new CenterMessage(i, new ClusterCenter(
+              newCenterArray[i])));
         }
       }
     }
@@ -236,9 +224,6 @@ public final class KMeansBSP extends
     conf.set("centroid.path", center.toString());
     Path out = new Path("files/clustering/out");
 
-    /*
-     * TODO currently there is a bug in parallel mode...
-     */
     // number of cores on my machine
     conf.set("bsp.local.tasks.maximum", "2");
 
@@ -268,7 +253,7 @@ public final class KMeansBSP extends
     job.waitForCompletion(true);
 
     // reads the output
-    // readOutput(conf, out, fs);
+    readOutput(conf, out, fs);
   }
 
   private static void readOutput(HamaConfiguration conf, Path out, FileSystem fs)
@@ -303,9 +288,9 @@ public final class KMeansBSP extends
     int centerId = clusterIds++;
     map.put(centerId,
         Arrays.asList(centerMap.keySet().toArray(new DenseDoubleVector[0])));
-    GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
-    GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
-    GnuPlot.drawPoints(map);
+//    GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
+//    GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
+//    GnuPlot.drawPoints(map);
   }
 
   private static void prepareInput(int count, int k, int dimension,

@@ -25,6 +25,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
   public ClusterCenter(ClusterCenter center) {
     super();
     this.center = center.center.deepCopy();
+    this.kTimesIncremented = center.kTimesIncremented;
   }
 
   public ClusterCenter(VectorWritable center) {
