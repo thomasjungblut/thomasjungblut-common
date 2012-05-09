@@ -1,7 +1,12 @@
 package de.jungblut.clustering;
 
+import gnu.trove.map.hash.TIntObjectHashMap;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.logging.Log;
@@ -22,7 +27,9 @@ import de.jungblut.clustering.model.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.distance.DistanceMeasurer;
-import de.jungblut.distance.ManhattanDistance;
+import de.jungblut.distance.EuclidianDistance;
+import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.visualize.GnuPlot;
 
 public final class KMeansBSP extends
     BSP<VectorWritable, NullWritable, ClusterCenter, VectorWritable> {
@@ -57,7 +64,7 @@ public final class KMeansBSP extends
       this.centers = centers.toArray(new ClusterCenter[centers.size()]);
     }
 
-    distanceMeasurer = new ManhattanDistance();
+    distanceMeasurer = new EuclidianDistance();
 
     maxIterations = peer.getConfiguration()
         .getInt("k.means.max.iterations", -1);
@@ -100,15 +107,26 @@ public final class KMeansBSP extends
     }
     // divide by how often we globally summed vectors
     for (ClusterCenter c : msgCenters) {
-      c.divideByK();
+      // and only if we really have an update for c
+      if (c != null) {
+        LOG.info(peer.getPeerName() + ": " + c.getCenterVector() + " / "
+            + c.kTimesIncremented + " in superstep " + peer.getSuperstepCount());
+        c.divideByK();
+      }
     }
-    // finally check the convergence
+    // finally check for convergence
     long convergedCounter = 0L;
     for (int i = 0; i < msgCenters.length; i++) {
       final ClusterCenter oldCenter = centers[i];
-      if (msgCenters[i] != null && oldCenter.converged(msgCenters[i])) {
-        centers[i] = msgCenters[i];
-        convergedCounter++;
+      if (msgCenters[i] != null) {
+        double calculateError = oldCenter.calculateError(msgCenters[i]
+            .getCenterVector());
+        LOG.info(peer.getPeerName() + ": " + calculateError + " in superstep "
+            + peer.getSuperstepCount());
+        if (calculateError > 0.0d) {
+          centers[i] = msgCenters[i];
+          convergedCounter++;
+        }
       }
     }
     return convergedCounter;
@@ -120,7 +138,17 @@ public final class KMeansBSP extends
     // each task has all the centers, if a center has been updated it
     // needs to be broadcasted.
     final ClusterCenter[] newCenterArray = new ClusterCenter[centers.length];
-
+    /**
+     * TODO here is a bug since the second superstep:<br/>
+     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:1: [131178.0,
+     * 295456.0] / 441 in superstep 2 <br/>
+     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:0: [190753.0,
+     * 430426.0] / 637 in superstep 2<br/>
+     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:1: [366809.0,
+     * 206552.0] / 559 in superstep 2<br/>
+     * 12/05/09 14:23:05 INFO clustering.KMeansBSP: local:0: [530712.0,
+     * 305631.0] / 814 in superstep 2<br/>
+     */
     // we have an assignment step
     final NullWritable value = NullWritable.get();
     final VectorWritable key = new VectorWritable();
@@ -208,8 +236,11 @@ public final class KMeansBSP extends
     conf.set("centroid.path", center.toString());
     Path out = new Path("files/clustering/out");
 
+    /*
+     * TODO currently there is a bug in parallel mode...
+     */
     // number of cores on my machine
-    conf.set("bsp.local.tasks.maximum", "12");
+    conf.set("bsp.local.tasks.maximum", "2");
 
     BSPJob job = new BSPJob(conf, KMeansBSP.class);
     job.setJobName("KMeans Clustering");
@@ -237,12 +268,15 @@ public final class KMeansBSP extends
     job.waitForCompletion(true);
 
     // reads the output
-    readOutput(conf, out, fs);
+    // readOutput(conf, out, fs);
   }
 
   private static void readOutput(HamaConfiguration conf, Path out, FileSystem fs)
       throws IOException {
     FileStatus[] stati = fs.listStatus(out);
+    HashMap<DenseDoubleVector, Integer> centerMap = new HashMap<>();
+    TIntObjectHashMap<List<DenseDoubleVector>> map = new TIntObjectHashMap<>();
+    int clusterIds = 0;
     for (FileStatus status : stati) {
       if (!status.isDir()) {
         Path path = status.getPath();
@@ -250,16 +284,28 @@ public final class KMeansBSP extends
         SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
         ClusterCenter key = new ClusterCenter();
         VectorWritable v = new VectorWritable();
-        int count = 0;
         while (reader.next(key, v)) {
-          LOG.info(key + " / " + v);
-          if (count++ > 5) {
-            break;
+          Integer integer = centerMap.get(key.getCenterVector());
+          if (integer == null) {
+            integer = clusterIds++;
+            centerMap.put((DenseDoubleVector) key.getCenterVector(), integer);
           }
+          List<DenseDoubleVector> list = map.get(integer.intValue());
+          if (list == null) {
+            list = new ArrayList<DenseDoubleVector>();
+            map.put(integer.intValue(), list);
+          }
+          list.add((DenseDoubleVector) v.getVector().deepCopy());
         }
         reader.close();
       }
     }
+    int centerId = clusterIds++;
+    map.put(centerId,
+        Arrays.asList(centerMap.keySet().toArray(new DenseDoubleVector[0])));
+    GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
+    GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
+    GnuPlot.drawPoints(map);
   }
 
   private static void prepareInput(int count, int k, int dimension,

@@ -11,7 +11,7 @@ import de.jungblut.math.DoubleVector;
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
   private DoubleVector center;
-  private int kTimesIncremented = 1;
+  public int kTimesIncremented = 1;
 
   public ClusterCenter() {
     super();
@@ -54,7 +54,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     return calculateError(c.getCenterVector()) > error;
   }
 
-  final double calculateError(DoubleVector v) {
+  public final double calculateError(DoubleVector v) {
     return Math.sqrt(center.subtract(v).abs().sum());
   }
 
