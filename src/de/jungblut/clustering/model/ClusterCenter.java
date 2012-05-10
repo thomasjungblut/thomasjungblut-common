@@ -34,12 +34,16 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
   }
 
   public final void plus(VectorWritable c) {
-    center = center.add(c.getVector());
+    plus(c.getVector());
+  }
+
+  public final void plus(DoubleVector c) {
+    center = center.add(c);
     kTimesIncremented++;
   }
-  
+
   public final void plus(ClusterCenter c) {
-    kTimesIncremented+=c.kTimesIncremented;
+    kTimesIncremented += c.kTimesIncremented;
     center = center.add(c.getCenterVector());
   }
 

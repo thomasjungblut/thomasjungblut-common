@@ -30,6 +30,7 @@ import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.EuclidianDistance;
+import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
 public final class KMeansBSP extends
@@ -37,6 +38,7 @@ public final class KMeansBSP extends
 
   private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
   private ClusterCenter[] centers;
+  private List<DoubleVector> cache = new ArrayList<>();
   private int maxIterations;
   private DistanceMeasurer distanceMeasurer;
 
@@ -146,16 +148,30 @@ public final class KMeansBSP extends
     // needs to be broadcasted.
     final ClusterCenter[] newCenterArray = new ClusterCenter[centers.length];
     // we have an assignment step
-    final NullWritable value = NullWritable.get();
-    final VectorWritable key = new VectorWritable();
-    while (peer.readNext(key, value)) {
-      final int lowestDistantCenter = getNearestCenter(key);
-      final ClusterCenter clusterCenter = newCenterArray[lowestDistantCenter];
-      if (clusterCenter == null) {
-        newCenterArray[lowestDistantCenter] = new ClusterCenter(key);
-      } else {
-        // add the vector to the center
-        newCenterArray[lowestDistantCenter].plus(key);
+    if (cache.isEmpty()) {
+      final NullWritable value = NullWritable.get();
+      final VectorWritable key = new VectorWritable();
+      while (peer.readNext(key, value)) {
+        cache.add(key.getVector().deepCopy());
+        final int lowestDistantCenter = getNearestCenter(key.getVector());
+        final ClusterCenter clusterCenter = newCenterArray[lowestDistantCenter];
+        if (clusterCenter == null) {
+          newCenterArray[lowestDistantCenter] = new ClusterCenter(key);
+        } else {
+          // add the vector to the center
+          newCenterArray[lowestDistantCenter].plus(key);
+        }
+      }
+    } else {
+      for(DoubleVector key : cache) {
+        final int lowestDistantCenter = getNearestCenter(key);
+        final ClusterCenter clusterCenter = newCenterArray[lowestDistantCenter];
+        if (clusterCenter == null) {
+          newCenterArray[lowestDistantCenter] = new ClusterCenter(key);
+        } else {
+          // add the vector to the center
+          newCenterArray[lowestDistantCenter].plus(key);
+        }
       }
     }
     for (int i = 0; i < newCenterArray.length; i++) {
@@ -170,12 +186,12 @@ public final class KMeansBSP extends
     }
   }
 
-  private int getNearestCenter(VectorWritable key) {
+  private int getNearestCenter(DoubleVector key) {
     int lowestDistantCenter = 0;
     double lowestDistance = Double.MAX_VALUE;
     for (int i = 0; i < centers.length; i++) {
       double estimatedDistance = distanceMeasurer.measureDistance(
-          centers[i].getCenterVector(), key.getVector());
+          centers[i].getCenterVector(), key);
       // check if we have a can assign a new center, because we
       // got a lower distance
       if (estimatedDistance < lowestDistance) {
@@ -192,7 +208,7 @@ public final class KMeansBSP extends
     final NullWritable value = NullWritable.get();
     final VectorWritable key = new VectorWritable();
     while (peer.readNext(key, value)) {
-      final int lowestDistantCenter = getNearestCenter(key);
+      final int lowestDistantCenter = getNearestCenter(key.getVector());
       peer.write(centers[lowestDistantCenter], key);
     }
     // writeFinalCenters(peer);

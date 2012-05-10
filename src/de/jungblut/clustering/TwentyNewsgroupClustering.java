@@ -49,7 +49,7 @@ public final class TwentyNewsgroupClustering {
     conf.set("k.means.max.iterations", "1000");
     // TODO try different measurements to see that cosine is the best
     conf.set("distance.measure.class", CosineDistance.class.getCanonicalName());
-    conf.set("bsp.local.tasks.maximum", "2");
+    conf.set("bsp.local.tasks.maximum", "1");
     FileSystem fs = FileSystem.get(conf);
     Path in = new Path("files/vectorized-in/input.seq");
     Path center = new Path("files/centers/centers.seq");
