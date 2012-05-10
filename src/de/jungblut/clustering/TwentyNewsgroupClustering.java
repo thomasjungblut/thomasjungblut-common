@@ -28,17 +28,17 @@ public final class TwentyNewsgroupClustering {
 
   public static void main(String[] args) throws IOException,
       ClassNotFoundException, InterruptedException {
-    Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups = TwentyNewsgroupReader
-        .readTwentyNewsgroups(new File("files/20news-bydate"));
-    List<String[]> documents = readTwentyNewsgroups.getFirst();
-    DenseIntVector predictedClass = readTwentyNewsgroups.getSecond();
-    String[] classNames = readTwentyNewsgroups.getThird();
-
-    Tuple<HashMultiset<String>[], String[]> wordCountTokenTuple = Vectorizer
-        .prepareWordCountToken(documents);
-    String[] bagOfWords = wordCountTokenTuple.getSecond();
-    List<DoubleVector> tfIdfVectorized = Vectorizer.tfIdfVectorize(documents,
-        wordCountTokenTuple);
+//    Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups = TwentyNewsgroupReader
+//        .readTwentyNewsgroups(new File("files/20news-bydate"));
+//    List<String[]> documents = readTwentyNewsgroups.getFirst();
+//    DenseIntVector predictedClass = readTwentyNewsgroups.getSecond();
+//    String[] classNames = readTwentyNewsgroups.getThird();
+//
+//    Tuple<HashMultiset<String>[], String[]> wordCountTokenTuple = Vectorizer
+//        .prepareWordCountToken(documents);
+//    String[] bagOfWords = wordCountTokenTuple.getSecond();
+//    List<DoubleVector> tfIdfVectorized = Vectorizer.tfIdfVectorize(documents,
+//        wordCountTokenTuple);
 
     System.out.println("Finished vectorization!");
 
@@ -46,7 +46,7 @@ public final class TwentyNewsgroupClustering {
 
     // TODO play arround with it and make some accuracy to iterations estimation
     // chart
-    conf.set("k.means.max.iterations", "");
+    conf.set("k.means.max.iterations", "1000");
     // TODO try different measurements to see that cosine is the best
     conf.set("distance.measure.class", CosineDistance.class.getCanonicalName());
     conf.set("bsp.local.tasks.maximum", "2");
@@ -57,6 +57,24 @@ public final class TwentyNewsgroupClustering {
     Path out = new Path("files/newgroup-out/");
     BSPJob job = KMeansBSP.createJob(conf, in, out);
 
+//    prepareInput(tfIdfVectorized, conf, fs, in, center, out);
+
+    job.waitForCompletion(true);
+
+  }
+
+  /**
+   * @param tfIdfVectorized
+   * @param conf
+   * @param fs
+   * @param in
+   * @param center
+   * @param out
+   * @throws IOException
+   */
+  public static void prepareInput(List<DoubleVector> tfIdfVectorized,
+      Configuration conf, FileSystem fs, Path in, Path center, Path out)
+      throws IOException {
     if (fs.exists(out))
       fs.delete(out, true);
 
@@ -88,8 +106,5 @@ public final class TwentyNewsgroupClustering {
       System.out.println(i + "/" + tfIdfVectorized.size());
     }
     dataWriter.close();
-
-    job.waitForCompletion(true);
-
   }
 }
