@@ -4,14 +4,10 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
-import java.util.PriorityQueue;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.DoubleWritable;
-import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -103,9 +99,7 @@ public class WebGraphProcessingJob {
 
   }
 
-
-  
-
+  @SuppressWarnings("unused")
   private static void runPagerank() throws IOException, InterruptedException,
       ClassNotFoundException {
     Configuration conf = new Configuration();

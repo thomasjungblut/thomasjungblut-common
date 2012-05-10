@@ -11,6 +11,7 @@ import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -22,6 +23,7 @@ import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
+import org.apache.hama.util.ReflectionUtils;
 
 import de.jungblut.clustering.model.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
@@ -64,6 +66,16 @@ public final class KMeansBSP extends
     }
 
     distanceMeasurer = new EuclidianDistance();
+    String distanceClass = peer.getConfiguration()
+        .get("distance.measure.class");
+    if (distanceClass != null) {
+      LOG.info("Using " + distanceClass + " for distance measurement!");
+      try {
+        distanceMeasurer = ReflectionUtils.newInstance(distanceClass);
+      } catch (ClassNotFoundException e) {
+        e.printStackTrace();
+      }
+    }
 
     maxIterations = peer.getConfiguration()
         .getInt("k.means.max.iterations", -1);
@@ -150,8 +162,7 @@ public final class KMeansBSP extends
       if (newCenterArray[i] != null) {
         for (String peerName : peer.getAllPeerNames()) {
           // we need a new instance here because otherwise the same instance
-          // will
-          // be shared among different threads creating strange results.
+          // will be shared among different threads creating strange results.
           peer.send(peerName, new CenterMessage(i, new ClusterCenter(
               newCenterArray[i])));
         }
@@ -201,6 +212,22 @@ public final class KMeansBSP extends
     }
   }
 
+  public static BSPJob createJob(Configuration cnf, Path in, Path out)
+      throws IOException {
+    HamaConfiguration conf = new HamaConfiguration(cnf);
+    BSPJob job = new BSPJob(conf, KMeansBSP.class);
+    job.setJobName("KMeans Clustering");
+    job.setJarByClass(KMeansBSP.class);
+    job.setBspClass(KMeansBSP.class);
+    job.setInputPath(in);
+    job.setOutputPath(out);
+    job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
+    job.setOutputFormat(org.apache.hama.bsp.SequenceFileOutputFormat.class);
+    job.setOutputKeyClass(ClusterCenter.class);
+    job.setOutputValueClass(VectorWritable.class);
+    return job;
+  }
+
   public static void main(String[] args) throws IOException,
       ClassNotFoundException, InterruptedException {
 
@@ -208,46 +235,31 @@ public final class KMeansBSP extends
       LOG.info("USAGE: <COUNT> <K> <DIMENSION OF VECTORS> <MAXITERATIONS> <optional: num of tasks>");
       return;
     }
-    HamaConfiguration conf = new HamaConfiguration();
+
+    Path in = new Path("files/clustering/in/data.seq");
+    Path center = new Path("files/clustering/in/center/cen.seq");
+    Path out = new Path("files/clustering/out");
+
+    Configuration conf = new Configuration();
+    conf.set("centroid.path", center.toString());
+    conf.set("bsp.local.tasks.maximum", "2");
+    BSPJob job = createJob(conf, in, out);
+
     // count = 7000000 spawns arround 6 tasks for 32mb block size
     int count = Integer.parseInt(args[0]);
     int k = Integer.parseInt(args[1]);
     int dimension = Integer.parseInt(args[2]);
 
-    conf.setInt("k.means.max.iterations", Integer.parseInt(args[3]));
-
     LOG.info("N: " + count + " k: " + k + " Dimension: " + dimension
         + " Iterations: " + args[3]);
-
-    Path in = new Path("files/clustering/in/data.seq");
-    Path center = new Path("files/clustering/in/center/cen.seq");
-    conf.set("centroid.path", center.toString());
-    Path out = new Path("files/clustering/out");
-
-    // number of cores on my machine
-    conf.set("bsp.local.tasks.maximum", "2");
-
-    BSPJob job = new BSPJob(conf, KMeansBSP.class);
-    job.setJobName("KMeans Clustering");
-
-    if (args.length == 5) {
-      job.setNumBspTask(Integer.parseInt(args[4]));
-    }
-
-    job.setJarByClass(KMeansBSP.class);
-    job.setBspClass(KMeansBSP.class);
-
-    job.setInputPath(in);
-    job.setOutputPath(out);
-    job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
-    job.setOutputFormat(org.apache.hama.bsp.SequenceFileOutputFormat.class);
-
-    job.setOutputKeyClass(ClusterCenter.class);
-    job.setOutputValueClass(VectorWritable.class);
+    conf.setInt("k.means.max.iterations", Integer.parseInt(args[3]));
 
     FileSystem fs = FileSystem.get(conf);
     // prepare the input, like deleting old versions and creating centers
     prepareInput(count, k, dimension, conf, in, center, out, fs);
+    if (args.length == 5) {
+      job.setNumBspTask(Integer.parseInt(args[4]));
+    }
 
     // just submit the job
     job.waitForCompletion(true);
@@ -256,7 +268,7 @@ public final class KMeansBSP extends
     readOutput(conf, out, fs);
   }
 
-  private static void readOutput(HamaConfiguration conf, Path out, FileSystem fs)
+  private static void readOutput(Configuration conf, Path out, FileSystem fs)
       throws IOException {
     FileStatus[] stati = fs.listStatus(out);
     HashMap<DenseDoubleVector, Integer> centerMap = new HashMap<>();
@@ -288,13 +300,13 @@ public final class KMeansBSP extends
     int centerId = clusterIds++;
     map.put(centerId,
         Arrays.asList(centerMap.keySet().toArray(new DenseDoubleVector[0])));
-//    GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
-//    GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
-//    GnuPlot.drawPoints(map);
+    // GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
+    // GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
+    // GnuPlot.drawPoints(map);
   }
 
   private static void prepareInput(int count, int k, int dimension,
-      HamaConfiguration conf, Path in, Path center, Path out, FileSystem fs)
+      Configuration conf, Path in, Path center, Path out, FileSystem fs)
       throws IOException {
     if (fs.exists(out))
       fs.delete(out, true);
