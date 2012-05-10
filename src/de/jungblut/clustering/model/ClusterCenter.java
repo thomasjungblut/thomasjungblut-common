@@ -11,7 +11,8 @@ import de.jungblut.math.DoubleVector;
 public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
   private DoubleVector center;
-  public int kTimesIncremented = 1;
+  private int kTimesIncremented = 1;
+  public int clusterIndex;
 
   public ClusterCenter() {
     super();
@@ -67,12 +68,14 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
   public final void write(DataOutput out) throws IOException {
     VectorWritable.writeVector(center, out);
     out.writeInt(kTimesIncremented);
+    out.writeInt(clusterIndex);
   }
 
   @Override
   public final void readFields(DataInput in) throws IOException {
     this.center = VectorWritable.readVector(in);
     kTimesIncremented = in.readInt();
+    clusterIndex = in.readInt();
   }
 
   @Override

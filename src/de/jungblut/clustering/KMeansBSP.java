@@ -71,7 +71,6 @@ public final class KMeansBSP extends
     String distanceClass = peer.getConfiguration()
         .get("distance.measure.class");
     if (distanceClass != null) {
-      LOG.info("Using " + distanceClass + " for distance measurement!");
       try {
         distanceMeasurer = ReflectionUtils.newInstance(distanceClass);
       } catch (ClassNotFoundException e) {
@@ -163,7 +162,7 @@ public final class KMeansBSP extends
         }
       }
     } else {
-      for(DoubleVector key : cache) {
+      for (DoubleVector key : cache) {
         final int lowestDistantCenter = getNearestCenter(key);
         final ClusterCenter clusterCenter = newCenterArray[lowestDistantCenter];
         if (clusterCenter == null) {
@@ -209,6 +208,7 @@ public final class KMeansBSP extends
     final VectorWritable key = new VectorWritable();
     while (peer.readNext(key, value)) {
       final int lowestDistantCenter = getNearestCenter(key.getVector());
+      centers[lowestDistantCenter].clusterIndex = lowestDistantCenter;
       peer.write(centers[lowestDistantCenter], key);
     }
     // writeFinalCenters(peer);
@@ -281,9 +281,10 @@ public final class KMeansBSP extends
     job.waitForCompletion(true);
 
     // reads the output
-    readOutput(conf, out, fs);
+//    readOutput(conf, out, fs);
   }
 
+  @SuppressWarnings("unused")
   private static void readOutput(Configuration conf, Path out, FileSystem fs)
       throws IOException {
     FileStatus[] stati = fs.listStatus(out);
@@ -298,17 +299,19 @@ public final class KMeansBSP extends
         ClusterCenter key = new ClusterCenter();
         VectorWritable v = new VectorWritable();
         while (reader.next(key, v)) {
-          Integer integer = centerMap.get(key.getCenterVector());
+          DenseDoubleVector centerVector = new DenseDoubleVector(key
+              .getCenterVector().toArray());
+          Integer integer = centerMap.get(centerVector);
           if (integer == null) {
             integer = clusterIds++;
-            centerMap.put((DenseDoubleVector) key.getCenterVector(), integer);
+            centerMap.put(centerVector, integer);
           }
           List<DenseDoubleVector> list = map.get(integer.intValue());
           if (list == null) {
             list = new ArrayList<DenseDoubleVector>();
             map.put(integer.intValue(), list);
           }
-          list.add((DenseDoubleVector) v.getVector().deepCopy());
+          list.add(new DenseDoubleVector(v.getVector().deepCopy().toArray()));
         }
         reader.close();
       }

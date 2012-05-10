@@ -82,7 +82,7 @@ public final class Tokenizer {
   public static String[] removeEmpty(String[] arr) {
     ArrayList<String> list = new ArrayList<String>();
     for (String s : arr) {
-      if (!s.isEmpty())
+      if (s != null && !s.isEmpty())
         list.add(s);
     }
     return list.toArray(new String[list.size()]);

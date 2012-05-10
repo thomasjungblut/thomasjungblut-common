@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import org.apache.lucene.analysis.Analyzer;
@@ -20,9 +21,16 @@ import de.jungblut.nlp.Tokenizer;
 
 public class TwentyNewsgroupReader {
 
+  static HashSet<Object> set = new HashSet<>();
+  static {
+    set.addAll(EnglishAnalyzer.getDefaultStopSet());
+    set.addAll(Arrays.asList("from", "subject", "re", "you", "i", "stuff",
+        "us", "have", "too", "me", "your", "my"));
+  }
+
   private static final StringPool HASH_STRING_POOL = StringPool.getPool();
   private static final Analyzer ENGLISH_ANALYZER = new EnglishAnalyzer(
-      Version.LUCENE_35);
+      Version.LUCENE_35, set);
 
   // docs, prediction, name mapping for prediction
   public static Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups(
@@ -44,15 +52,17 @@ public class TwentyNewsgroupReader {
           while ((l = br.readLine()) != null) {
             document.append(l);
           }
-          // plain word tokenizing gives 60,5% accuracy
-          // String[] whiteSpaceTokens = Tokenizer.removeEmpty(Tokenizer
-          // .wordTokenize(document.toString()));
           String[] whiteSpaceTokens = Tokenizer
               .consumeTokenStream(ENGLISH_ANALYZER.tokenStream(null,
                   new StringReader(document.toString())));
           for (int i = 0; i < whiteSpaceTokens.length; i++) {
-            whiteSpaceTokens[i] = HASH_STRING_POOL.pool(whiteSpaceTokens[i]);
+            if (!whiteSpaceTokens[i].matches("\\d+")) {
+              whiteSpaceTokens[i] = HASH_STRING_POOL.pool(whiteSpaceTokens[i]);
+            } else {
+              whiteSpaceTokens[i] = null;
+            }
           }
+          whiteSpaceTokens = Tokenizer.removeEmpty(whiteSpaceTokens);
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);
         } catch (IOException e) {

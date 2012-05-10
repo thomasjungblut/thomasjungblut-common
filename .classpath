@@ -39,7 +39,7 @@
 	<classpathentry kind="lib" path="lib/hadoop-0.20.2-core.jar" sourcepath="/hadoop-20.2"/>
 	<classpathentry kind="lib" path="lib/lucene-core-3.5.0.jar" sourcepath="/lucene-3.5"/>
 	<classpathentry kind="lib" path="lib/lucene-analyzers-3.5.0.jar"/>
-	<classpathentry kind="lib" path="lib/tjungblut-math-1.0.jar" sourcepath="/tjungblut-math"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="lib" path="lib/tjungblut-math-1.0.jar" sourcepath="/tjungblut-math"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
