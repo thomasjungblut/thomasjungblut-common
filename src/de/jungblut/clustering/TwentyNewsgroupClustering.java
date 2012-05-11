@@ -1,12 +1,10 @@
 package de.jungblut.clustering;
 
-import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntObjectHashMap;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -42,6 +40,8 @@ import de.jungblut.nlp.Vectorizer;
  */
 public final class TwentyNewsgroupClustering {
 
+  private static final int K_MEANS_NUM = 30 + 1;
+
   public static void main(String[] args) throws IOException,
       ClassNotFoundException, InterruptedException {
     Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups = TwentyNewsgroupReader
@@ -66,12 +66,10 @@ public final class TwentyNewsgroupClustering {
 
     Configuration conf = new Configuration();
 
-    // TODO play arround with it and make some accuracy to iterations estimation
-    // chart
-    conf.set("k.means.max.iterations", "100");
-    // TODO try different measurements to see that cosine is the best
+    // TODO play arround with it and make some accuracy to iterations
+    conf.set("k.means.max.iterations", "10");
     conf.set("distance.measure.class", CosineDistance.class.getCanonicalName());
-    conf.set("bsp.local.tasks.maximum", "8");
+    conf.set("bsp.local.tasks.maximum", "4");
     FileSystem fs = FileSystem.get(conf);
     Path in = new Path("files/vectorized-in/input.seq");
     Path center = new Path("files/centers/centers.seq");
@@ -83,7 +81,7 @@ public final class TwentyNewsgroupClustering {
     job.waitForCompletion(true);
 
     readOutput(classNames, conf, fs, out, bagOfWords);
-
+    // readOutput(null, conf, fs, out, null);
   }
 
   private static void readOutput(String[] classNames, Configuration conf,
@@ -94,6 +92,10 @@ public final class TwentyNewsgroupClustering {
     HashMap<Integer, Integer> centerMap = new HashMap<>();
     TIntObjectHashMap<List<DoubleVector>> map = new TIntObjectHashMap<>();
     int clusterIds = 0;
+    // TODO euclidian?
+    CosineDistance dist = new CosineDistance();
+    double errorPercent = 0.0d;
+    int num = 0;
     for (FileStatus status : stati) {
       if (!status.isDir()) {
         Path path = status.getPath();
@@ -101,7 +103,13 @@ public final class TwentyNewsgroupClustering {
         ClusterCenter key = new ClusterCenter();
         VectorWritable v = new VectorWritable();
         while (reader.next(key, v)) {
+          if (v.getVector().getLength() == 0)
+            continue;
           DoubleVector centerVector = key.getCenterVector();
+          double measureDistance = dist.measureDistance(centerVector,
+              v.getVector());
+          num++;
+          errorPercent += measureDistance;
           centers.add(centerVector);
           Integer integer = centerMap.get(key.clusterIndex);
           if (integer == null) {
@@ -118,30 +126,32 @@ public final class TwentyNewsgroupClustering {
         reader.close();
       }
     }
+    System.out.println("Error with " + (K_MEANS_NUM - 1) + " is "
+        + (errorPercent / num));
 
-    for (DoubleVector v : centers) {
-      System.out.println(getSignificantWords(v, tokens));
-    }
-
-    TIntObjectIterator<List<DoubleVector>> iterator = map.iterator();
-    while (iterator.hasNext()) {
-      iterator.advance();
-      int clusterKey = iterator.key();
-      int[] assignments = new int[classNames.length];
-      for (DoubleVector v : iterator.value()) {
-        assignments[((IdentifiableDoubleVector) v).getId()]++;
-      }
-      int maxI = 0;
-      int maxVal = Integer.MIN_VALUE;
-      for (int i = 0; i < assignments.length; i++) {
-        if (assignments[i] > maxVal) {
-          maxVal = assignments[i];
-          maxI = i;
-        }
-      }
-      System.out.println(clusterKey + " has following assignments: "
-          + Arrays.toString(assignments) + " probably class " + maxI);
-    }
+    // for (DoubleVector v : centers) {
+    // System.out.println(getSignificantWords(v, tokens));
+    // }
+    //
+    // TIntObjectIterator<List<DoubleVector>> iterator = map.iterator();
+    // while (iterator.hasNext()) {
+    // iterator.advance();
+    // int clusterKey = iterator.key();
+    // int[] assignments = new int[classNames.length];
+    // for (DoubleVector v : iterator.value()) {
+    // assignments[((IdentifiableDoubleVector) v).getId()]++;
+    // }
+    // int maxI = 0;
+    // int maxVal = Integer.MIN_VALUE;
+    // for (int i = 0; i < assignments.length; i++) {
+    // if (assignments[i] > maxVal) {
+    // maxVal = assignments[i];
+    // maxI = i;
+    // }
+    // }
+    // System.out.println(clusterKey + " has following assignments: "
+    // + Arrays.toString(assignments) + " probably class " + maxI);
+    // }
   }
 
   public static String getSignificantWords(DoubleVector vector, String[] tokens) {
@@ -190,16 +200,14 @@ public final class TwentyNewsgroupClustering {
         in, VectorWritable.class, NullWritable.class, CompressionType.NONE);
 
     int k = 0;
-    int lastId = -1;
     for (DoubleVector vec : tfIdfVectorized) {
-      int id = ((IdentifiableDoubleVector) vec).getId();
+      // int id = ((IdentifiableDoubleVector) vec).getId();
       VectorWritable vector = new VectorWritable(vec);
       dataWriter.append(vector, value);
-      if (lastId != id) {
+      if (k < K_MEANS_NUM) {
         centerWriter.append(new ClusterCenter(vector), value);
-        lastId = id;
         k++;
-      } else if (k == 6) {
+      } else if (k == K_MEANS_NUM) {
         centerWriter.close();
       }
     }
