@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.StringReader;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -65,11 +66,11 @@ public class TwentyNewsgroupReader {
           while ((l = br.readLine()) != null) {
             document.append(l);
           }
-          // String[] whiteSpaceTokens = Tokenizer
-          // .consumeTokenStream(ENGLISH_ANALYZER.tokenStream(null,
-          // new StringReader(document.toString())));
-          String[] whiteSpaceTokens = Tokenizer.wordTokenize(document
-              .toString());
+          String[] whiteSpaceTokens = Tokenizer
+              .consumeTokenStream(ENGLISH_ANALYZER.tokenStream(null,
+                  new StringReader(document.toString())));
+          // String[] whiteSpaceTokens = Tokenizer.wordTokenize(document
+          // .toString());
           for (int i = 0; i < whiteSpaceTokens.length; i++) {
             if (!whiteSpaceTokens[i].matches("\\d+")
                 && !set.contains(whiteSpaceTokens[i])
@@ -80,7 +81,8 @@ public class TwentyNewsgroupReader {
             }
           }
           whiteSpaceTokens = Tokenizer.removeEmpty(whiteSpaceTokens);
-          whiteSpaceTokens = Tokenizer.whiteSpaceTokenizeNGramms(whiteSpaceTokens, 2);
+          whiteSpaceTokens = Tokenizer.whiteSpaceTokenizeNGramms(
+              whiteSpaceTokens, 2);
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);
         } catch (IOException e) {

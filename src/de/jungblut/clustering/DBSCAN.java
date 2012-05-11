@@ -11,9 +11,10 @@ import java.util.Random;
 
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.EuclidianDistance;
+import de.jungblut.math.DoubleMatrix;
+import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.visualize.GnuPlot;
 
 /**
  * Sequential version of DBSCAN to evaluate if this algorithm is suitable for
@@ -33,10 +34,10 @@ public final class DBSCAN {
   /**
    * Generates some random double 2D vectors that have a given x and y scaling.
    */
-  public List<DenseDoubleVector> generateRandomPoints(int num, double upperX,
+  public List<DoubleVector> generateRandomPoints(int num, double upperX,
       double upperY) {
 
-    List<DenseDoubleVector> list = new ArrayList<>(num);
+    List<DoubleVector> list = new ArrayList<>(num);
     Random random = new Random();
     for (int i = 0; i < num; i++) {
       list.add(new DenseDoubleVector(new double[] {
@@ -49,8 +50,8 @@ public final class DBSCAN {
   /**
    * A distance matrix (NxN) based on n given points and a distance measurer.
    */
-  public DenseDoubleMatrix generateDistanceMatrix(DistanceMeasurer measurer,
-      List<DenseDoubleVector> pointList) {
+  public DoubleMatrix generateDistanceMatrix(DistanceMeasurer measurer,
+      List<DoubleVector> pointList) {
 
     final int n = pointList.size();
     DenseDoubleMatrix matrix = new DenseDoubleMatrix(n, n);
@@ -72,7 +73,7 @@ public final class DBSCAN {
    * At this point you can see that never assigned points are possible noise.
    */
   public TIntObjectHashMap<int[]> generateAdjacencyMatrix(
-      DenseDoubleMatrix distanceMatrix, List<DenseDoubleVector> points,
+      DoubleMatrix distanceMatrix, List<DoubleVector> points,
       int minPoints, double epsilon) {
 
     TIntObjectHashMap<int[]> adjacencyList = new TIntObjectHashMap<>();
@@ -107,8 +108,8 @@ public final class DBSCAN {
   /**
    * Returns a mapping between a cluster ID and its associated points.
    */
-  public TIntObjectHashMap<List<DenseDoubleVector>> findConnectedComponents(
-      List<DenseDoubleVector> points, TIntObjectHashMap<int[]> adjacencyMatrix) {
+  public TIntObjectHashMap<List<DoubleVector>> findConnectedComponents(
+      List<DoubleVector> points, TIntObjectHashMap<int[]> adjacencyMatrix) {
     TIntObjectHashMap<int[]> connectedComponents = new TIntObjectHashMap<>();
     TIntHashSet globallyVisitedVertices = new TIntHashSet();
     int clusterId = 0;
@@ -126,13 +127,13 @@ public final class DBSCAN {
       }
     }
     // translate the adjacents back to the points
-    TIntObjectHashMap<List<DenseDoubleVector>> map = new TIntObjectHashMap<>();
+    TIntObjectHashMap<List<DoubleVector>> map = new TIntObjectHashMap<>();
 
     TIntObjectIterator<int[]> iterator = connectedComponents.iterator();
     while (iterator.hasNext()) {
       iterator.advance();
       int[] values = iterator.value();
-      List<DenseDoubleVector> list = new ArrayList<>(values.length);
+      List<DoubleVector> list = new ArrayList<>(values.length);
       for (int val : values) {
         list.add(points.get(val));
       }
@@ -143,17 +144,17 @@ public final class DBSCAN {
     return map;
   }
 
-  private List<DenseDoubleVector> findNoise(
-      TIntObjectHashMap<List<DenseDoubleVector>> connectedComponents,
-      List<DenseDoubleVector> points) {
-    List<DenseDoubleVector> noise = new ArrayList<>();
-    HashSet<DenseDoubleVector> hashSet = new HashSet<>();
-    for (List<DenseDoubleVector> component : connectedComponents
+  private List<DoubleVector> findNoise(
+      TIntObjectHashMap<List<DoubleVector>> connectedComponents,
+      List<DoubleVector> points) {
+    List<DoubleVector> noise = new ArrayList<>();
+    HashSet<DoubleVector> hashSet = new HashSet<>();
+    for (List<DoubleVector> component : connectedComponents
         .valueCollection()) {
       hashSet.addAll(component);
     }
 
-    for (DenseDoubleVector point : points) {
+    for (DoubleVector point : points) {
       if (!hashSet.contains(point)) {
         noise.add(point);
       }
@@ -185,22 +186,22 @@ public final class DBSCAN {
     DistanceMeasurer measurer = new EuclidianDistance();
     DBSCAN clusterer = new DBSCAN();
 
-    List<DenseDoubleVector> points = clusterer.generateRandomPoints(numPoints,
+    List<DoubleVector> points = clusterer.generateRandomPoints(numPoints,
         doubleScale, doubleScale);
-    DenseDoubleMatrix distanceMatrix = clusterer.generateDistanceMatrix(
+    DoubleMatrix distanceMatrix = clusterer.generateDistanceMatrix(
         measurer, points);
     // generate adjacency list
     TIntObjectHashMap<int[]> adjacencyMatrix = clusterer
         .generateAdjacencyMatrix(distanceMatrix, points, minPoints, epsilon);
     // find connected components in this graph
-    TIntObjectHashMap<List<DenseDoubleVector>> connectedComponents = clusterer
+    TIntObjectHashMap<List<DoubleVector>> connectedComponents = clusterer
         .findConnectedComponents(points, adjacencyMatrix);
     // reconstruct the noise
-    List<DenseDoubleVector> noise = clusterer.findNoise(connectedComponents,
+    List<DoubleVector> noise = clusterer.findNoise(connectedComponents,
         points);
     System.out.println("Noise: " + noise);
     connectedComponents.put(connectedComponents.size(), noise);
-    GnuPlot.drawPoints(connectedComponents);
+//    GnuPlot.drawPoints(connectedComponents);
   }
 
 }

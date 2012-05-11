@@ -27,6 +27,7 @@ import de.jungblut.classification.bayes.TwentyNewsgroupReader;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.distance.CosineDistance;
+import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseIntVector;
@@ -40,7 +41,7 @@ import de.jungblut.nlp.Vectorizer;
  */
 public final class TwentyNewsgroupClustering {
 
-  private static final int K_MEANS_NUM = 30 + 1;
+  private static final int K_MEANS_NUM = 8 + 1;
 
   public static void main(String[] args) throws IOException,
       ClassNotFoundException, InterruptedException {
@@ -68,7 +69,7 @@ public final class TwentyNewsgroupClustering {
 
     // TODO play arround with it and make some accuracy to iterations
     conf.set("k.means.max.iterations", "10");
-    conf.set("distance.measure.class", CosineDistance.class.getCanonicalName());
+//    conf.set("distance.measure.class", CosineDistance.class.getCanonicalName());
     conf.set("bsp.local.tasks.maximum", "4");
     FileSystem fs = FileSystem.get(conf);
     Path in = new Path("files/vectorized-in/input.seq");
@@ -93,8 +94,10 @@ public final class TwentyNewsgroupClustering {
     TIntObjectHashMap<List<DoubleVector>> map = new TIntObjectHashMap<>();
     int clusterIds = 0;
     // TODO euclidian?
+    EuclidianDistance dist2 = new EuclidianDistance();
     CosineDistance dist = new CosineDistance();
     double errorPercent = 0.0d;
+    double errorPercent2 = 0.0d;
     int num = 0;
     for (FileStatus status : stati) {
       if (!status.isDir()) {
@@ -110,6 +113,7 @@ public final class TwentyNewsgroupClustering {
               v.getVector());
           num++;
           errorPercent += measureDistance;
+          errorPercent2+= dist2.measureDistance(centerVector, v.getVector());
           centers.add(centerVector);
           Integer integer = centerMap.get(key.clusterIndex);
           if (integer == null) {
@@ -128,6 +132,8 @@ public final class TwentyNewsgroupClustering {
     }
     System.out.println("Error with " + (K_MEANS_NUM - 1) + " is "
         + (errorPercent / num));
+    System.out.println("Error euclidian with " + (K_MEANS_NUM - 1) + " is "
+        + (errorPercent2 / num));
 
     // for (DoubleVector v : centers) {
     // System.out.println(getSignificantWords(v, tokens));
