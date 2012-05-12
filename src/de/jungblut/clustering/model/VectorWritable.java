@@ -7,7 +7,6 @@ import java.util.Iterator;
 
 import org.apache.hadoop.io.WritableComparable;
 
-import de.jungblut.clustering.IdentifiableDoubleVector;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -107,12 +106,6 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
   public static void writeVector(DoubleVector vector, DataOutput out)
       throws IOException {
     out.writeBoolean(vector.isSparse());
-    if(vector instanceof IdentifiableDoubleVector){
-      out.writeBoolean(true);
-      out.writeInt(((IdentifiableDoubleVector) vector).getId());
-    } else {
-      out.writeBoolean(false);
-    }
     out.writeInt(vector.getLength());
     if (vector.isSparse()) {
       out.writeInt(vector.getDimension());
@@ -131,18 +124,11 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
 
   public static DoubleVector readVector(DataInput in) throws IOException {
     boolean sparse = in.readBoolean();
-    boolean idVector = in.readBoolean();
-    int id = 0;
-    if(idVector)
-      id = in.readInt();
     int length = in.readInt();
     DoubleVector vector = null;
     if (sparse) {
       int dim = in.readInt();
       vector = new SparseDoubleVector(dim);
-      if(idVector){
-        vector = new IdentifiableDoubleVector(id, vector);
-      }
       for (int i = 0; i < length; i++) {
         int index = in.readInt();
         double value = in.readDouble();

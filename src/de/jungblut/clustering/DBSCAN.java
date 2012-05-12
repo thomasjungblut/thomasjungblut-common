@@ -73,8 +73,8 @@ public final class DBSCAN {
    * At this point you can see that never assigned points are possible noise.
    */
   public TIntObjectHashMap<int[]> generateAdjacencyMatrix(
-      DoubleMatrix distanceMatrix, List<DoubleVector> points,
-      int minPoints, double epsilon) {
+      DoubleMatrix distanceMatrix, List<DoubleVector> points, int minPoints,
+      double epsilon) {
 
     TIntObjectHashMap<int[]> adjacencyList = new TIntObjectHashMap<>();
     for (int col = 0; col < distanceMatrix.getColumnCount(); col++) {
@@ -149,8 +149,7 @@ public final class DBSCAN {
       List<DoubleVector> points) {
     List<DoubleVector> noise = new ArrayList<>();
     HashSet<DoubleVector> hashSet = new HashSet<>();
-    for (List<DoubleVector> component : connectedComponents
-        .valueCollection()) {
+    for (List<DoubleVector> component : connectedComponents.valueCollection()) {
       hashSet.addAll(component);
     }
 
@@ -188,8 +187,8 @@ public final class DBSCAN {
 
     List<DoubleVector> points = clusterer.generateRandomPoints(numPoints,
         doubleScale, doubleScale);
-    DoubleMatrix distanceMatrix = clusterer.generateDistanceMatrix(
-        measurer, points);
+    DoubleMatrix distanceMatrix = clusterer.generateDistanceMatrix(measurer,
+        points);
     // generate adjacency list
     TIntObjectHashMap<int[]> adjacencyMatrix = clusterer
         .generateAdjacencyMatrix(distanceMatrix, points, minPoints, epsilon);
@@ -197,11 +196,10 @@ public final class DBSCAN {
     TIntObjectHashMap<List<DoubleVector>> connectedComponents = clusterer
         .findConnectedComponents(points, adjacencyMatrix);
     // reconstruct the noise
-    List<DoubleVector> noise = clusterer.findNoise(connectedComponents,
-        points);
+    List<DoubleVector> noise = clusterer.findNoise(connectedComponents, points);
     System.out.println("Noise: " + noise);
     connectedComponents.put(connectedComponents.size(), noise);
-//    GnuPlot.drawPoints(connectedComponents);
+    // GnuPlot.drawPoints(connectedComponents);
   }
 
 }

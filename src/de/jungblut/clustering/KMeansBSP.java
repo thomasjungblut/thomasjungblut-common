@@ -281,7 +281,7 @@ public final class KMeansBSP extends
     job.waitForCompletion(true);
 
     // reads the output
-//    readOutput(conf, out, fs);
+    // readOutput(conf, out, fs);
   }
 
   @SuppressWarnings("unused")

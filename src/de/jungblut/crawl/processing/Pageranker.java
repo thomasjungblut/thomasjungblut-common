@@ -30,7 +30,8 @@ import au.com.bytecode.opencsv.CSVReader;
 import au.com.bytecode.opencsv.CSVWriter;
 
 /**
- * Some 20% time project to rank my work's homepage via linkages and Hama's Pagerank.
+ * Some 20% time project to rank my work's homepage via linkages and Hama's
+ * Pagerank.
  */
 public final class Pageranker {
 
