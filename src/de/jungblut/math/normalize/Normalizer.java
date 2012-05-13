@@ -55,13 +55,12 @@ public class Normalizer {
       DoubleMatrix x, boolean normalizeLastColumn) {
     DenseDoubleMatrix toReturn = new DenseDoubleMatrix(x.getRowCount(),
         x.getColumnCount());
-    DoubleVector meanVector = new DenseDoubleVector(x.getColumnCount());
-    DoubleVector stddevVector = new DenseDoubleVector(x.getColumnCount());
-
     int length = x.getColumnCount();
     if (!normalizeLastColumn) {
       length = length - 1;
     }
+    DoubleVector meanVector = new DenseDoubleVector(length);
+    DoubleVector stddevVector = new DenseDoubleVector(length);
     for (int col = 0; col < length; col++) {
       DoubleVector column = x.getColumnVector(col);
       double mean = column.sum() / column.getLength();
