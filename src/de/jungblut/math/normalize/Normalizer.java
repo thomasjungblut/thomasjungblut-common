@@ -53,8 +53,8 @@ public class Normalizer {
       DoubleVector column = x.getColumnVector(col);
       double mean = column.sum() / column.getLength();
       meanVector.set(col, mean);
-      double var = column.subtract(mean).pow(2).sum() * 1
-          / (column.getLength() - 1);
+      double var = column.subtract(mean).pow(2).sum() 
+          / column.getLength();
       stddevVector.set(col, Math.sqrt(var));
     }
 
