@@ -44,21 +44,33 @@ public class Normalizer {
    */
   public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
       DoubleMatrix x) {
+    return featureNormalize(x, false);
+  }
+
+  /**
+   * @return the normalized (0 mean and stddev of 1) as well as the mean and the
+   *         stddev.
+   */
+  public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
+      DoubleMatrix x, boolean normalizeLastColumn) {
     DenseDoubleMatrix toReturn = new DenseDoubleMatrix(x.getRowCount(),
         x.getColumnCount());
     DoubleVector meanVector = new DenseDoubleVector(x.getColumnCount());
     DoubleVector stddevVector = new DenseDoubleVector(x.getColumnCount());
 
-    for (int col = 0; col < x.getColumnCount(); col++) {
+    int length = x.getColumnCount();
+    if (!normalizeLastColumn) {
+      length = length - 1;
+    }
+    for (int col = 0; col < length; col++) {
       DoubleVector column = x.getColumnVector(col);
       double mean = column.sum() / column.getLength();
       meanVector.set(col, mean);
-      double var = column.subtract(mean).pow(2).sum() 
-          / column.getLength();
+      double var = column.subtract(mean).pow(2).sum() / column.getLength();
       stddevVector.set(col, Math.sqrt(var));
     }
 
-    for (int col = 0; col < x.getColumnCount(); col++) {
+    for (int col = 0; col < length; col++) {
       DoubleVector column = x.getColumnVector(col)
           .subtract(meanVector.get(col)).divide(stddevVector.get(col));
       toReturn.setColumn(col, column.toArray());
