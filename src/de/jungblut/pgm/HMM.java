@@ -1,8 +1,10 @@
 package de.jungblut.pgm;
 
 import java.util.List;
+
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultiset;
+
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple3;
@@ -36,7 +38,7 @@ public final class HMM {
   }
 
   public void trainBaumWelch(List<Enum<?>[]> observations) {
-    //gamma and xi arrays are those defined by Rabiner and Juang
+    // gamma and xi arrays are those defined by Rabiner and Juang
     // allGamma[n] = gamma array associated to observation sequence n
     double allGamma[][][] = new double[observations.size()][][];
 
@@ -50,65 +52,49 @@ public final class HMM {
     double aijDen[] = new double[initialProbability.getLength()];
 
     int g = 0;
-    /*for (Enum<?>[] obsSeq : observations) {
-      ForwardBackwardCalculator fbc = generateForwardBackwardCalculator(obsSeq,
-          hmm);
+    // TODO rest ommitted
 
-      double xi[][][] = estimateXi(obsSeq, fbc, hmm);
-      double gamma[][] = allGamma[g++] = estimateGamma(xi, fbc);
-
-      for (int i = 0; i < initialProbability.getLength(); i++)
-        for (int t = 0; t < obsSeq.length - 1; t++) {
-          aijDen[i] += gamma[t][i];
-
-          for (int j = 0; j < initialProbability.getLength(); j++)
-            aijNum[i][j] += xi[t][i][j];
-        }
-    }
-    /*
-    for (int i = 0; i < initialProbability.getLength(); i++) {
-      if (aijDen[i] == 0.) // State i is not reachable
-        for (int j = 0; j < initialProbability.getLength(); j++)
-          nhmm.setAij(i, j, hmm.getAij(i, j));
-      else
-        for (int j = 0; j < initialProbability.getLength(); j++)
-          nhmm.setAij(i, j, aijNum[i][j] / aijDen[i]);
-    }
-
-    // pi computation
-    for (int i = 0; i < initialProbability.getLength(); i++)
-      nhmm.setPi(i, 0.);
-
-    for (int o = 0; o < sequences.size(); o++)
-      for (int i = 0; i < initialProbability.getLength(); i++)
-        nhmm.setPi(i, nhmm.getPi(i) + allGamma[o][0][i] / sequences.size());
-
-    // pdfs computation
-    for (int i = 0; i < initialProbability.getLength(); i++) {
-      List<O> observations = KMeansLearner.flat(sequences);
-      double[] weights = new double[observations.size()];
-      double sum = 0.;
-      int j = 0;
-
-      int o = 0;
-      for (List<? extends O> obsSeq : sequences) {
-        for (int t = 0; t < obsSeq.size(); t++, j++)
-          sum += weights[j] = allGamma[o][t][i];
-        o++;
-      }
-
-      for (j--; j >= 0; j--)
-        weights[j] /= sum;
-
-      Opdf<O> opdf = nhmm.getOpdf(i);
-      opdf.fit(observations, weights);
-    }*/
   }
-  
-  public Tuple3<double[][], double[][], Double> computeAlphaBetaAndProbability(){
+
+  public Tuple3<double[][], double[][], Double> computeAlphaBetaAndProbability(
+      Enum<?>[] seq) {
+    double[][] alpha = new double[seq.length][initialProbability.getLength()];
+
+    for (int i = 0; i < initialProbability.getLength(); i++) {
+      // computeAlphaInit(hmm, oseq.get(0), i);
+      // alpha[0][i] = hmm.getPi(i) * hmm.getOpdf(i).probability(o);
+    }
+
+    // TODO why is it starting by t=1 and not zero?
+    for (int t = 1; t < seq.length; t++) {
+      Enum<?> observation = seq[t];
+
+      for (int i = 0; i < initialProbability.getLength(); i++) {
+        // computeAlphaStep(hmm, observation, t, i);
+        // double sum = 0.;
+        // for (int i = 0; i < hmm.nbStates(); i++)
+        // sum += alpha[t - 1][i] * hmm.getAij(i, j);
+        // alpha[t][j] = sum * hmm.getOpdf(j).probability(o);
+      }
+    }
+
+    // compute the backward step
+    double[][] beta = new double[seq.length][initialProbability.getLength()];
+    for (int i = 0; i < initialProbability.getLength(); i++) {
+      beta[seq.length - 1][i] = 1.0;
+    }
+    for (int t = seq.length - 2; t >= 0; t--) {
+      for (int i = 0; i < initialProbability.getLength(); i++) {
+//        computeBetaStep(hmm, oseq.get(t + 1), t, i);
+        // double sum = 0.;
+        // for (int j = 0; j < initialProbability.getLength(); j++)
+        // sum += beta[t + 1][j] * hmm.getAij(i, j)
+        // * hmm.getOpdf(j).probability(o);
+        // beta[t][i] = sum;
+      }
+    }
+
     return null;
   }
-  
-  
 
 }
