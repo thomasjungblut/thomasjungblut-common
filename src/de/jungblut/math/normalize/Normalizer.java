@@ -44,7 +44,7 @@ public class Normalizer {
    */
   public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
       DoubleMatrix x) {
-    return featureNormalize(x, false);
+    return featureNormalize(x, true);
   }
 
   /**
