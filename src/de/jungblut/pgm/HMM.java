@@ -3,6 +3,7 @@ package de.jungblut.pgm;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import com.google.common.base.Preconditions;
 
@@ -38,6 +39,20 @@ public final class HMM {
         1.0d / numStates);
     this.emissionProbabilities = new DenseDoubleMatrix(numStates,
         numOutputStates, 1.0d / numOutputStates);
+  }
+
+  public HMM(int numStates, int numOutputStates,
+      DenseDoubleVector initialProbabilities,
+      DenseDoubleMatrix transitionProbabilities,
+      DenseDoubleMatrix emissionProbabilities) {
+    Preconditions.checkArgument(numStates > 1);
+    Preconditions.checkArgument(initialProbabilities.getLength() == numStates);
+    Preconditions.checkArgument(numOutputStates > 0);
+    this.initialProbability = initialProbabilities;
+    this.transitionProbabilities = transitionProbabilities;
+    this.numStates = numStates;
+    this.numOutputStates = numOutputStates;
+    this.emissionProbabilities = emissionProbabilities;
   }
 
   public double getProbability(int time, int stateI, int stateJ,
@@ -216,19 +231,23 @@ public final class HMM {
   }
 
   public static void main(String[] args) {
-    HMM model = new HMM(2, 2);
-    List<DenseDoubleVector> observations = new ArrayList<>();
-    observations.add(new DenseDoubleVector(new double[] { 0, 1 }));
-    observations.add(new DenseDoubleVector(new double[] { 1, 1 }));
-    observations.add(new DenseDoubleVector(new double[] { 1, 0 }));
-    model.trainBaumWelch(observations, 3);
+    HMM model = new HMM(
+        2,
+        2,
+        new DenseDoubleVector(new double[] { 0.95, 0.05 }),
+        new DenseDoubleMatrix(new double[][] { { 0.95, 0.05 }, { 0.05, 0.9 } }),
+        new DenseDoubleMatrix(new double[][] { { 0.95, 0.05 }, { 0.2, 0.8 } }));
+
+    List<DenseDoubleVector> observations = new ArrayList<>(200);
+    Random r = new Random();
+    for (int i = 0; i < 200; i++) {
+      observations.add(new DenseDoubleVector(new double[] {
+          r.nextBoolean() ? 1 : 0, r.nextBoolean() ? 1 : 1 }));
+    }
     model.print();
-    DenseDoubleVector test = new DenseDoubleVector(new double[] { 0, 1 });
-    double probability = model.getProbability(0, 0, 1, test);
-    System.out.println("Probability for " + test + " = " + probability);
-    DenseDoubleVector test2 = new DenseDoubleVector(new double[] { 1, 1 });
-    double probability2 = model.getProbability(0, 1, 0, test2);
-    System.out.println("Probability for " + test2 + " = " + probability2);
+    System.out.println("Training model!");
+    model.trainBaumWelch(observations, 10);
+    model.print();
   }
 
 }
