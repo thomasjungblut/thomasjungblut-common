@@ -32,6 +32,7 @@ import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.visualize.GnuPlot;
 
 public final class KMeansBSP extends
     BSP<VectorWritable, NullWritable, ClusterCenter, VectorWritable> {
@@ -281,15 +282,14 @@ public final class KMeansBSP extends
     job.waitForCompletion(true);
 
     // reads the output
-    // readOutput(conf, out, fs);
+    readOutput(conf, out, fs);
   }
 
-  @SuppressWarnings("unused")
   private static void readOutput(Configuration conf, Path out, FileSystem fs)
       throws IOException {
     FileStatus[] stati = fs.listStatus(out);
-    HashMap<DenseDoubleVector, Integer> centerMap = new HashMap<>();
-    TIntObjectHashMap<List<DenseDoubleVector>> map = new TIntObjectHashMap<>();
+    HashMap<DoubleVector, Integer> centerMap = new HashMap<>();
+    TIntObjectHashMap<List<DoubleVector>> map = new TIntObjectHashMap<>();
     int clusterIds = 0;
     for (FileStatus status : stati) {
       if (!status.isDir()) {
@@ -306,9 +306,9 @@ public final class KMeansBSP extends
             integer = clusterIds++;
             centerMap.put(centerVector, integer);
           }
-          List<DenseDoubleVector> list = map.get(integer.intValue());
+          List<DoubleVector> list = map.get(integer.intValue());
           if (list == null) {
-            list = new ArrayList<DenseDoubleVector>();
+            list = new ArrayList<DoubleVector>();
             map.put(integer.intValue(), list);
           }
           list.add(new DenseDoubleVector(v.getVector().deepCopy().toArray()));
@@ -318,10 +318,10 @@ public final class KMeansBSP extends
     }
     int centerId = clusterIds++;
     map.put(centerId,
-        Arrays.asList(centerMap.keySet().toArray(new DenseDoubleVector[0])));
-    // GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
-    // GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
-    // GnuPlot.drawPoints(map);
+        Arrays.asList(centerMap.keySet().toArray(new DoubleVector[0])));
+//    GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
+//    GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
+    GnuPlot.drawPoints(map);
   }
 
   private static void prepareInput(int count, int k, int dimension,

@@ -15,6 +15,7 @@ import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.visualize.GnuPlot;
 
 /**
  * Sequential version of DBSCAN to evaluate if this algorithm is suitable for
@@ -199,7 +200,7 @@ public final class DBSCAN {
     List<DoubleVector> noise = clusterer.findNoise(connectedComponents, points);
     System.out.println("Noise: " + noise);
     connectedComponents.put(connectedComponents.size(), noise);
-    // GnuPlot.drawPoints(connectedComponents);
+    GnuPlot.drawPoints(connectedComponents);
   }
 
 }

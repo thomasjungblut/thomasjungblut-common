@@ -56,14 +56,14 @@ public final class GnuPlot {
   }
 
   public static void drawPoints(
-      TIntObjectHashMap<List<DenseDoubleVector>> points) {
+      TIntObjectHashMap<List<DoubleVector>> points) {
     final int size = points.size();
     for (int clusterId : points.keys()) {
       try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
           TMP_PATH + "gnuplot_" + clusterId + ".in")))) {
-        List<DenseDoubleVector> list = points.get(clusterId);
+        List<DoubleVector> list = points.get(clusterId);
         for (int i = 0; i < list.size(); i++) {
-          DenseDoubleVector denseDoubleVector = list.get(i);
+          DoubleVector denseDoubleVector = list.get(i);
           bw.write(denseDoubleVector.get(0) + " " + denseDoubleVector.get(1)
               + "\n");
         }
