@@ -1,6 +1,7 @@
 package de.jungblut.pgm;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
@@ -29,14 +30,21 @@ public final class HMM {
 
   public HMM(int numStates, int numOutputStates) {
     Preconditions.checkArgument(numStates > 1);
-    Preconditions.checkArgument(numOutputStates > 1);
+    Preconditions.checkArgument(numOutputStates > 0);
     this.numStates = numStates;
     this.numOutputStates = numOutputStates;
     this.initialProbability = new DenseDoubleVector(numStates, 1.0d / numStates);
     this.transitionProbabilities = new DenseDoubleMatrix(numStates, numStates,
         1.0d / numStates);
     this.emissionProbabilities = new DenseDoubleMatrix(numStates,
-        numOutputStates);
+        numOutputStates, 1.0d / numOutputStates);
+  }
+
+  public double getProbability(int time, int stateI, int stateJ,
+      DenseDoubleVector observation) {
+    return getProbability(time, stateI, stateJ, observation,
+        calculateForwardProbabilities(observation),
+        calculateBackwardProbabilities(observation));
   }
 
   public double getProbability(int time, int stateI, int stateJ,
@@ -103,9 +111,19 @@ public final class HMM {
         }
       }
       // TODO calculate the kullback leibler divergence of the output
-      // pi = pi1;
-      // a = a1;
-      // b = b1;
+      for (int i = 0; i < initialProbability.getLength(); i++) {
+        initialProbability.set(i, pi1[i]);
+      }
+      for (int col = 0; col < transitionProbabilities.getColumnCount(); col++) {
+        for (int row = 0; row < transitionProbabilities.getRowCount(); row++) {
+          transitionProbabilities.set(row, col, a1[row][col]);
+        }
+      }
+      for (int col = 0; col < emissionProbabilities.getColumnCount(); col++) {
+        for (int row = 0; row < emissionProbabilities.getRowCount(); row++) {
+          emissionProbabilities.set(row, col, b1[row][col]);
+        }
+      }
     }
   }
 
@@ -113,16 +131,17 @@ public final class HMM {
     double[][] fwd = new double[numStates][o.getLength()];
 
     // initialization (time 0)
-    for (int i = 0; i < numStates; i++)
+    for (int i = 0; i < numStates; i++) {
       fwd[i][0] = initialProbability.get(i)
           * emissionProbabilities.get(i, ((int) o.get(0)));
-
+    }
     // induction
     for (int t = 0; t <= o.getLength() - 2; t++) {
       for (int j = 0; j < numStates; j++) {
         fwd[j][t + 1] = 0;
-        for (int i = 0; i < numStates; i++)
+        for (int i = 0; i < numStates; i++) {
           fwd[j][t + 1] += (fwd[i][t] * transitionProbabilities.get(i, j));
+        }
         fwd[j][t + 1] *= emissionProbabilities.get(j, (int) o.get(t + 1));
       }
     }
@@ -142,9 +161,10 @@ public final class HMM {
     for (int t = o.getLength() - 2; t >= 0; t--) {
       for (int i = 0; i < numStates; i++) {
         bwd[i][t] = 0;
-        for (int j = 0; j < numStates; j++)
+        for (int j = 0; j < numStates; j++) {
           bwd[i][t] += (bwd[j][t + 1] * transitionProbabilities.get(i, j) * emissionProbabilities
               .get(j, (int) o.get(t + 1)));
+        }
       }
     }
 
@@ -163,33 +183,52 @@ public final class HMM {
   }
 
   private void print() {
+    System.out.println("States: " + numStates + " | OutputStates: "
+        + numOutputStates);
+    System.out.println();
     DecimalFormat fmt = new DecimalFormat();
     fmt.setMinimumFractionDigits(5);
     fmt.setMaximumFractionDigits(5);
 
-    for (int i = 0; i < numStates; i++)
+    for (int i = 0; i < numStates; i++) {
       System.out.println("pi(" + i + ") = "
           + fmt.format(initialProbability.get(i)));
+    }
     System.out.println();
 
     for (int i = 0; i < numStates; i++) {
-      for (int j = 0; j < numStates; j++)
+      for (int j = 0; j < numStates; j++) {
         System.out.print("a(" + i + "," + j + ") = "
             + fmt.format(transitionProbabilities.get(i, j)) + "  ");
+      }
       System.out.println();
     }
 
     System.out.println();
     for (int i = 0; i < numStates; i++) {
-      for (int k = 0; k < numOutputStates; k++)
+      for (int k = 0; k < numOutputStates; k++) {
         System.out.print("b(" + i + "," + k + ") = "
             + fmt.format(emissionProbabilities.get(i, k)) + "  ");
+      }
       System.out.println();
     }
+    System.out.println();
   }
 
   public static void main(String[] args) {
-
+    HMM model = new HMM(2, 2);
+    List<DenseDoubleVector> observations = new ArrayList<>();
+    observations.add(new DenseDoubleVector(new double[] { 0, 1 }));
+    observations.add(new DenseDoubleVector(new double[] { 1, 1 }));
+    observations.add(new DenseDoubleVector(new double[] { 1, 0 }));
+    model.trainBaumWelch(observations, 3);
+    model.print();
+    DenseDoubleVector test = new DenseDoubleVector(new double[] { 0, 1 });
+    double probability = model.getProbability(0, 0, 1, test);
+    System.out.println("Probability for " + test + " = " + probability);
+    DenseDoubleVector test2 = new DenseDoubleVector(new double[] { 1, 1 });
+    double probability2 = model.getProbability(0, 1, 0, test2);
+    System.out.println("Probability for " + test2 + " = " + probability2);
   }
 
 }
