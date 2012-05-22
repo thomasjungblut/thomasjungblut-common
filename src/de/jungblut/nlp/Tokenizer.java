@@ -11,7 +11,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 public final class Tokenizer {
 
-  private static final String SEPARATORS = " \r\n\t.,;:'\"()?!";
+  public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-";
 
   /**
    * Fully consumes a lucene tokenstream and returns a string array.
@@ -46,6 +46,22 @@ public final class Tokenizer {
   }
 
   /**
+   * Applies given regex on tokens and may optionally delete when a token gets
+   * empty.
+   */
+  public static String[] removeMatchingRegex(String regex, String replacement,
+      String[] tokens, boolean removeEmpty) {
+    String[] tk = new String[tokens.length];
+    for (int i = 0; i < tokens.length; i++) {
+      tk[i] = tokens[i].replaceAll(regex, replacement);
+    }
+    if (removeEmpty) {
+      tk = removeEmpty(tk);
+    }
+    return tk;
+  }
+
+  /**
    * N-Gramm tokenizer.
    */
   public static String[] nGrammTokenize(String key, int size) {
@@ -71,8 +87,12 @@ public final class Tokenizer {
    * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!]
    */
   public static String[] wordTokenize(String text) {
+    return wordTokenize(text, SEPARATORS);
+  }
+
+  public static String[] wordTokenize(String text, String regex) {
     ArrayList<String> list = new ArrayList<String>();
-    StringTokenizer tokenizer = new StringTokenizer(text, SEPARATORS);
+    StringTokenizer tokenizer = new StringTokenizer(text, regex);
     while (tokenizer.hasMoreElements()) {
       list.add((String) tokenizer.nextElement());
     }
