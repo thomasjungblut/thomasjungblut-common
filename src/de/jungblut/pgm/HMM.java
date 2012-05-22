@@ -125,6 +125,7 @@ public final class HMM {
           }
         }
       }
+      
       // TODO calculate the kullback leibler divergence of the output
       for (int i = 0; i < initialProbability.getLength(); i++) {
         initialProbability.set(i, pi1[i]);
@@ -139,6 +140,8 @@ public final class HMM {
           emissionProbabilities.set(row, col, b1[row][col]);
         }
       }
+      System.out.println("Step " + s);
+      print();
     }
   }
 
@@ -206,14 +209,14 @@ public final class HMM {
     fmt.setMaximumFractionDigits(5);
 
     for (int i = 0; i < numStates; i++) {
-      System.out.println("pi(" + i + ") = "
+      System.out.println("init(" + i + ") = "
           + fmt.format(initialProbability.get(i)));
     }
     System.out.println();
 
     for (int i = 0; i < numStates; i++) {
       for (int j = 0; j < numStates; j++) {
-        System.out.print("a(" + i + "," + j + ") = "
+        System.out.print("transition(" + i + "," + j + ") = "
             + fmt.format(transitionProbabilities.get(i, j)) + "  ");
       }
       System.out.println();
@@ -222,7 +225,7 @@ public final class HMM {
     System.out.println();
     for (int i = 0; i < numStates; i++) {
       for (int k = 0; k < numOutputStates; k++) {
-        System.out.print("b(" + i + "," + k + ") = "
+        System.out.print("emission(" + i + "," + k + ") = "
             + fmt.format(emissionProbabilities.get(i, k)) + "  ");
       }
       System.out.println();
