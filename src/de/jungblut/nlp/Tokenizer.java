@@ -2,6 +2,7 @@ package de.jungblut.nlp;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -11,7 +12,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 public final class Tokenizer {
 
-  private static final String SEPARATORS = " \r\n\t.,;:'\"()?!";
+  public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-";
 
   /**
    * Fully consumes a lucene tokenstream and returns a string array.
@@ -46,6 +47,22 @@ public final class Tokenizer {
   }
 
   /**
+   * Applies given regex on tokens and may optionally delete when a token gets
+   * empty.
+   */
+  public static String[] removeMatchingRegex(String regex, String replacement,
+      String[] tokens, boolean removeEmpty) {
+    String[] tk = new String[tokens.length];
+    for (int i = 0; i < tokens.length; i++) {
+      tk[i] = tokens[i].replaceAll(regex, replacement);
+    }
+    if (removeEmpty) {
+      tk = removeEmpty(tk);
+    }
+    return tk;
+  }
+
+  /**
    * N-Gramm tokenizer.
    */
   public static String[] nGrammTokenize(String key, int size) {
@@ -68,11 +85,26 @@ public final class Tokenizer {
   }
 
   /**
-   * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!]
+   * Deduplicates the given tokens, but maintains the order.
+   */
+  public static String[] deduplicateTokens(String[] tokens) {
+    LinkedHashSet<String> set = new LinkedHashSet<>();
+    for (String s : tokens) {
+      set.add(s);
+    }
+    return set.toArray(new String[set.size()]);
+  }
+
+  /**
+   * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!\\-]
    */
   public static String[] wordTokenize(String text) {
+    return wordTokenize(text, SEPARATORS);
+  }
+
+  public static String[] wordTokenize(String text, String regex) {
     ArrayList<String> list = new ArrayList<String>();
-    StringTokenizer tokenizer = new StringTokenizer(text, SEPARATORS);
+    StringTokenizer tokenizer = new StringTokenizer(text, regex);
     while (tokenizer.hasMoreElements()) {
       list.add((String) tokenizer.nextElement());
     }
@@ -110,6 +142,18 @@ public final class Tokenizer {
       list.add(tokens[i] + " " + tokens[i + 1]);
     }
     return list.toArray(new String[list.size()]);
+  }
+
+  /**
+   * Concats the given tokens with the given delimiter.
+   */
+  public static String concat(String[] tokens, String delimiter) {
+    StringBuilder sb = new StringBuilder();
+    for (String token : tokens) {
+      sb.append(token);
+      sb.append(delimiter);
+    }
+    return sb.toString();
   }
 
 }

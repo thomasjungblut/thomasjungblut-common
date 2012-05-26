@@ -51,34 +51,9 @@ public class KMeansClusteringJob {
     if (fs.exists(in))
       fs.delete(out, true);
 
-    final SequenceFile.Writer centerWriter = SequenceFile.createWriter(fs,
-        conf, center, ClusterCenter.class, IntWritable.class);
-    final IntWritable value = new IntWritable(0);
-    centerWriter.append(new ClusterCenter(new VectorWritable(1, 1)), value);
-    centerWriter.append(new ClusterCenter(new VectorWritable(5, 5)), value);
-    centerWriter.close();
+    writeExampleCenters(conf, center, fs);
 
-    final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs, conf,
-        in, ClusterCenter.class, VectorWritable.class);
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(1, 2));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(16, 3));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(3, 3));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(2, 2));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(2, 3));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(25, 1));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(7, 6));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(6, 5));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(-1, -23));
-    dataWriter.close();
+    writeExampleVectors(conf, in, fs);
 
     SequenceFileOutputFormat.setOutputPath(job, out);
     job.setInputFormatClass(SequenceFileInputFormat.class);
@@ -138,6 +113,41 @@ public class KMeansClusteringJob {
         reader.close();
       }
     }
+  }
+
+  public static void writeExampleVectors(Configuration conf, Path in,
+      FileSystem fs) throws IOException {
+    final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs, conf,
+        in, ClusterCenter.class, VectorWritable.class);
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(1, 2));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(16, 3));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(3, 3));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(2, 2));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(2, 3));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(25, 1));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(7, 6));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(6, 5));
+    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+        new VectorWritable(-1, -23));
+    dataWriter.close();
+  }
+
+  public static void writeExampleCenters(Configuration conf, Path center,
+      FileSystem fs) throws IOException {
+    final SequenceFile.Writer centerWriter = SequenceFile.createWriter(fs,
+        conf, center, ClusterCenter.class, IntWritable.class);
+    final IntWritable value = new IntWritable(0);
+    centerWriter.append(new ClusterCenter(new VectorWritable(1, 1)), value);
+    centerWriter.append(new ClusterCenter(new VectorWritable(5, 5)), value);
+    centerWriter.close();
   }
 
 }

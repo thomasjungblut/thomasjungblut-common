@@ -125,6 +125,7 @@ public final class HMM {
           }
         }
       }
+
       // TODO calculate the kullback leibler divergence of the output
       for (int i = 0; i < initialProbability.getLength(); i++) {
         initialProbability.set(i, pi1[i]);
@@ -206,14 +207,14 @@ public final class HMM {
     fmt.setMaximumFractionDigits(5);
 
     for (int i = 0; i < numStates; i++) {
-      System.out.println("pi(" + i + ") = "
+      System.out.println("init(" + i + ") = "
           + fmt.format(initialProbability.get(i)));
     }
     System.out.println();
 
     for (int i = 0; i < numStates; i++) {
       for (int j = 0; j < numStates; j++) {
-        System.out.print("a(" + i + "," + j + ") = "
+        System.out.print("transition(" + i + "," + j + ") = "
             + fmt.format(transitionProbabilities.get(i, j)) + "  ");
       }
       System.out.println();
@@ -222,7 +223,7 @@ public final class HMM {
     System.out.println();
     for (int i = 0; i < numStates; i++) {
       for (int k = 0; k < numOutputStates; k++) {
-        System.out.print("b(" + i + "," + k + ") = "
+        System.out.print("emission(" + i + "," + k + ") = "
             + fmt.format(emissionProbabilities.get(i, k)) + "  ");
       }
       System.out.println();
@@ -231,21 +232,21 @@ public final class HMM {
   }
 
   public static void main(String[] args) {
-    HMM model = new HMM(
-        2,
-        2,
-        new DenseDoubleVector(new double[] { 0.95, 0.05 }),
-        new DenseDoubleMatrix(new double[][] { { 0.95, 0.05 }, { 0.05, 0.9 } }),
-        new DenseDoubleMatrix(new double[][] { { 0.95, 0.05 }, { 0.2, 0.8 } }));
+    // wikipedia example HMM
+    HMM model = new HMM(2, 3, new DenseDoubleVector(new double[] { 0.6, 0.4 }),
+        new DenseDoubleMatrix(new double[][] { { 0.7, 0.3 }, { 0.4, 0.6 } }),
+        new DenseDoubleMatrix(new double[][] { { 0.1, 0.4, 0.5 },
+            { 0.6, 0.3, 0.1 } }));
 
-    List<DenseDoubleVector> observations = new ArrayList<>(200);
+    int obsLength = 100;
+    List<DenseDoubleVector> observations = new ArrayList<>(obsLength);
     Random r = new Random();
-    for (int i = 0; i < 200; i++) {
+    for (int i = 0; i < obsLength; i++) {
+      int index = r.nextInt(3) - 1;
       observations.add(new DenseDoubleVector(new double[] {
-          r.nextBoolean() ? 1 : 0, r.nextBoolean() ? 1 : 1 }));
+          index == 0 ? 1.0 : 0.0, index == 1 ? 1.0 : 0.0,
+          index == 2 ? 1.0 : 0.0 }));
     }
-    model.print();
-    System.out.println("Training model!");
     model.trainBaumWelch(observations, 10);
     model.print();
   }
