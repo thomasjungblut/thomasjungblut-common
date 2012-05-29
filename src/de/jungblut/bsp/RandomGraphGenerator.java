@@ -59,10 +59,12 @@ public class RandomGraphGenerator {
         rowCount = length;
       }
 
+      @Override
       public long getLength() throws IOException {
         return 0;
       }
 
+      @Override
       public String[] getLocations() throws IOException {
         return new String[] {};
       }
@@ -90,10 +92,12 @@ public class RandomGraphGenerator {
       long totalRows;
       private LongWritable key;
 
+      @Override
       public void close() throws IOException {
         // NOTHING
       }
 
+      @Override
       public float getProgress() throws IOException {
         return finishedRows / (float) totalRows;
       }
