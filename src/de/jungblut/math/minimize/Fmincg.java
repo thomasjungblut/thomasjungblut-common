@@ -5,7 +5,6 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
 /**
- * 
  * Minimize a continuous differentialble multivariate function. Starting point <br/>
  * is given by "X" (D by 1), and the function named in the string "f", must<br/>
  * return a function value and a vector of partial derivatives. The Polack-<br/>

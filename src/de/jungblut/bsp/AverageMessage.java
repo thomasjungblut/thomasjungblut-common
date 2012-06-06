@@ -1,4 +1,4 @@
-package de.jungblut.clustering.model;
+package de.jungblut.bsp;
 
 import java.io.DataInput;
 import java.io.DataOutput;

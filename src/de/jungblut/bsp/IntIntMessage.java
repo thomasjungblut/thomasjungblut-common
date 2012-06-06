@@ -32,14 +32,18 @@ public class IntIntMessage extends BSPMessage {
     out.writeInt(data);
   }
 
+  /*
+   * Not used because of boxing primitives.
+   */
+
   @Override
   public Integer getTag() {
-    return tag;
+    return null;
   }
 
   @Override
   public Integer getData() {
-    return data;
+    return null;
   }
 
 }

@@ -1,4 +1,4 @@
-package de.jungblut.math.bsp;
+package de.jungblut.bsp;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -13,7 +13,6 @@ public final class ResultMessage extends BSPMessage {
   private double value;
 
   public ResultMessage() {
-
   }
 
   public ResultMessage(int targetRow, int targetColumn, double value) {

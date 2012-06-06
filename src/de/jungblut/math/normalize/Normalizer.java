@@ -9,6 +9,9 @@ import de.jungblut.math.tuple.Tuple3;
 
 public class Normalizer {
 
+  /**
+   * @return normalized matrix (0 mean and stddev of 1) as well as the mean.
+   */
   public static Tuple<DoubleMatrix, DoubleVector> meanNormalizeRows(
       DoubleMatrix matrix) {
 
@@ -39,8 +42,8 @@ public class Normalizer {
   }
 
   /**
-   * @return the normalized (0 mean and stddev of 1) as well as the mean and the
-   *         stddev.
+   * @return the normalized matrix (0 mean and stddev of 1) as well as the mean
+   *         and the stddev.
    */
   public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
       DoubleMatrix x) {
@@ -48,8 +51,8 @@ public class Normalizer {
   }
 
   /**
-   * @return the normalized (0 mean and stddev of 1) as well as the mean and the
-   *         stddev.
+   * @return the normalized matrix (0 mean and stddev of 1) as well as the mean
+   *         and the stddev.
    */
   public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
       DoubleMatrix x, boolean normalizeLastColumn) {

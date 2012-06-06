@@ -7,8 +7,6 @@ import java.util.Arrays;
  * Cleaned and improved algorithm from {@link http
  * ://www.cs.huji.ac.il/~omrif01/Strassen}.
  * <p/>
- * <br/>
- * Contains "HAMA" tags for a first scratch of a BSP port.
  * 
  * @author thomas.jungblut
  */
@@ -16,10 +14,6 @@ public class StrassenMatrixMultiplication {
 
   /**
    * Multiplies two quadratic (length must be a power of 2) matrices.
-   * 
-   * @param a
-   * @param b
-   * @return
    */
   private static double[][] multiply(double[][] a, double[][] b) {
     checkInput(a, b);

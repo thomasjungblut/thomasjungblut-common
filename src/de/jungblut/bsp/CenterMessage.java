@@ -1,10 +1,12 @@
-package de.jungblut.clustering.model;
+package de.jungblut.bsp;
 
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
 import org.apache.hama.bsp.BSPMessage;
+
+import de.jungblut.clustering.model.ClusterCenter;
 
 public final class CenterMessage extends BSPMessage {
 

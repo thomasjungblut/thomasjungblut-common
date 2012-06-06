@@ -17,6 +17,12 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 
+/**
+ * Shows off some real time usage of Hama.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public class DataStreamProcessing extends
     BSP<NullWritable, NullWritable, NullWritable, NullWritable> {
 

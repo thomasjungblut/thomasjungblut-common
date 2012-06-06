@@ -21,10 +21,6 @@ public class ForkJoinStrassenMatrixMultiplication {
 
   /**
    * Multiplies two quadratic (length must be a power of 2) matrices.
-   * 
-   * @param a
-   * @param b
-   * @return
    */
   private static double[][] multiply(double[][] a, double[][] b)
       throws InterruptedException, ExecutionException {

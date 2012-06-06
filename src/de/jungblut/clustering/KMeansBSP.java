@@ -25,7 +25,7 @@ import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
 import org.apache.hama.util.ReflectionUtils;
 
-import de.jungblut.clustering.model.CenterMessage;
+import de.jungblut.bsp.CenterMessage;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.distance.DistanceMeasurer;
