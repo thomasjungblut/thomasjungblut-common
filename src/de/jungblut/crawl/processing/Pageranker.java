@@ -19,9 +19,10 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hama.examples.PageRank;
 import org.apache.hama.graph.VertexArrayWritable;
 import org.apache.hama.graph.VertexWritable;
@@ -159,12 +160,12 @@ public final class Pageranker {
     job.setNumReduceTasks(1);
     job.setInputFormatClass(SequenceFileInputFormat.class);
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
-    SequenceFileInputFormat.addInputPath(job, new Path(
+    FileInputFormat.addInputPath(job, new Path(
         "/Users/thomas.jungblut/Downloads/crawled/"));
     FileSystem fs = FileSystem.get(conf);
     Path out = new Path("/Users/thomas.jungblut/Downloads/crawledProcessed");
     fs.delete(out, true);
-    TextOutputFormat.setOutputPath(job, out);
+    FileOutputFormat.setOutputPath(job, out);
 
     job.waitForCompletion(true);
   }

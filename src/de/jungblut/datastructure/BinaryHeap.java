@@ -6,6 +6,7 @@ public class BinaryHeap {
 
   private int[] heap;
   private int size = 0;
+  private int index;
 
   public BinaryHeap() {
     heap = new int[10];
@@ -23,7 +24,8 @@ public class BinaryHeap {
     size++;
   }
 
-  public void upHeap(int index) {
+  public void upHeap(int pIndex) {
+    this.index = pIndex;
     boolean finished = false;
     while (!finished) {
       int parentIndex = getIndexOfParent(index);
@@ -70,16 +72,16 @@ public class BinaryHeap {
     heap = temp;
   }
 
-  private int getIndexOfParent(int i) {
+  private static int getIndexOfParent(int i) {
     return (int) Math.floor((i - 1) / 2);
   }
 
-  private int getIndexOfLeftChild(int i) {
+  private static int getIndexOfLeftChild(int i) {
     return 2 * i + 1;
   }
 
   @SuppressWarnings("unused")
-  private int getIndexOfRightChild(int i) {
+  private static int getIndexOfRightChild(int i) {
     return getIndexOfLeftChild(i) + 1;
   }
 
@@ -104,7 +106,7 @@ public class BinaryHeap {
       int index = 0;
       boolean finished = false;
       while (!finished) {
-        int children = heapClass.getIndexOfLeftChild(index);
+        int children = BinaryHeap.getIndexOfLeftChild(index);
 
         if (heapClass.heap[children] < heapClass.heap[children + 1]) {
           children++;

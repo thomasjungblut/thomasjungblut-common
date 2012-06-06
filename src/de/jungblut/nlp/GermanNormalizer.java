@@ -60,7 +60,7 @@ public class GermanNormalizer implements Normalizer {
     return list.toArray(new String[0]);
   }
 
-  private final ArrayList<String> mergeDigitsWithFollowUpToken(
+  private final static ArrayList<String> mergeDigitsWithFollowUpToken(
       ArrayList<String> list) {
     ArrayList<String> toReturn = new ArrayList<String>();
     Iterator<String> it = list.iterator();
@@ -89,7 +89,7 @@ public class GermanNormalizer implements Normalizer {
     return toReturn;
   }
 
-  protected final boolean isDigitToken(String token) {
+  public static boolean isDigitToken(String token) {
     char[] chars = token.toCharArray();
     for (int i = 0; i < chars.length; i++) {
       if (!Character.isDigit(chars[i]))
@@ -98,7 +98,7 @@ public class GermanNormalizer implements Normalizer {
     return true;
   }
 
-  protected final boolean isWhitespaceToken(String token) {
+  public static boolean isWhitespaceToken(String token) {
     char[] chars = token.toCharArray();
     for (int i = 0; i < chars.length; i++) {
       if (!Character.isWhitespace(chars[i]))

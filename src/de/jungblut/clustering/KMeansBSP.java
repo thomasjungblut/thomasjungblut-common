@@ -319,8 +319,8 @@ public final class KMeansBSP extends
     int centerId = clusterIds++;
     map.put(centerId,
         Arrays.asList(centerMap.keySet().toArray(new DoubleVector[0])));
-//    GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
-//    GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
+    // GnuPlot.GNUPLOT_PATH = "\"C:/Program Files (x86)/gnuplot/bin/gnuplot\"";
+    // GnuPlot.TMP_PATH = "C:/tmp/gnuplot/";
     GnuPlot.drawPoints(map);
   }
 

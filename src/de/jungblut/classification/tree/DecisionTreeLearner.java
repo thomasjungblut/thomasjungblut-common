@@ -15,7 +15,6 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class DecisionTreeLearner {
 
-  private EntropyCalculator attributeChooser = new EntropyCalculator();
   private DenseIntMatrix algorithmInputFeatures;
 
   /**
@@ -48,7 +47,7 @@ public final class DecisionTreeLearner {
       return new DecisionTree(outputVariable.get(0));
     }
     // we look which attribute has the lowest entropy
-    final int bestAttributeIndex = attributeChooser.getColumnWithHighestGain(
+    final int bestAttributeIndex = EntropyCalculator.getColumnWithHighestGain(
         inputFeatures, outputVariable, filteredAttributes);
     if (bestAttributeIndex != -1) {
       // look how many attribute values exist
@@ -89,7 +88,7 @@ public final class DecisionTreeLearner {
    * 
    * @return the same node or a node that has been turned to a leaf.
    */
-  private final DecisionTree mergeSameChildren(final int[] attributeValues,
+  private static DecisionTree mergeSameChildren(final int[] attributeValues,
       final DecisionTree node) {
     final int[] predictionChildCount = new int[2];
     // merge children with the same prediction
@@ -115,7 +114,7 @@ public final class DecisionTreeLearner {
    * 
    * @return either 0 or 1, based on majority of counts.
    */
-  private final int getMajorityPrediction(DenseIntVector v) {
+  private static int getMajorityPrediction(DenseIntVector v) {
     final int[] counts = new int[2];
     for (int i = 0; i < v.getLength(); i++) {
       counts[v.get(i)]++;
@@ -134,7 +133,7 @@ public final class DecisionTreeLearner {
    * @return a new tuple of matrix and DenseIntVector where the rows with the
    *         given attributeIndex and attributeValue are not included.
    */
-  private final Tuple<DenseIntMatrix, DenseIntVector> filterAttribute(
+  private static Tuple<DenseIntMatrix, DenseIntVector> filterAttribute(
       DenseIntMatrix inputFeatures, DenseIntVector outputVariable,
       int attributeIndex, int attributeValue) {
     final ArrayList<int[]> rowList = new ArrayList<int[]>();
@@ -163,7 +162,7 @@ public final class DecisionTreeLearner {
    * 
    * @return a brand new array of given given one.
    */
-  private final boolean[] cloneArray(boolean[] arr) {
+  private static boolean[] cloneArray(boolean[] arr) {
     final boolean[] toReturn = new boolean[arr.length];
     System.arraycopy(arr, 0, toReturn, 0, arr.length);
     return toReturn;

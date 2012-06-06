@@ -55,8 +55,7 @@ public final class GnuPlot {
 
   }
 
-  public static void drawPoints(
-      TIntObjectHashMap<List<DoubleVector>> points) {
+  public static void drawPoints(TIntObjectHashMap<List<DoubleVector>> points) {
     final int size = points.size();
     for (int clusterId : points.keys()) {
       try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(

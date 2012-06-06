@@ -110,7 +110,7 @@ public final class SamplingSort extends
 
   }
 
-  public boolean isMaster(
+  public static boolean isMaster(
       BSPPeer<IntWritable, NullWritable, IntWritable, NullWritable> peer) {
     return peer.getPeerName().equals(peer.getPeerName(0));
   }

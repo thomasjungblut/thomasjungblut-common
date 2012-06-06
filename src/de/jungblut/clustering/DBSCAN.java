@@ -35,7 +35,7 @@ public final class DBSCAN {
   /**
    * Generates some random double 2D vectors that have a given x and y scaling.
    */
-  public List<DoubleVector> generateRandomPoints(int num, double upperX,
+  public static List<DoubleVector> generateRandomPoints(int num, double upperX,
       double upperY) {
 
     List<DoubleVector> list = new ArrayList<>(num);
@@ -51,7 +51,7 @@ public final class DBSCAN {
   /**
    * A distance matrix (NxN) based on n given points and a distance measurer.
    */
-  public DoubleMatrix generateDistanceMatrix(DistanceMeasurer measurer,
+  public static DoubleMatrix generateDistanceMatrix(DistanceMeasurer measurer,
       List<DoubleVector> pointList) {
 
     final int n = pointList.size();
@@ -73,7 +73,7 @@ public final class DBSCAN {
    * and epsilon (maximum distance between two points). <br/>
    * At this point you can see that never assigned points are possible noise.
    */
-  public TIntObjectHashMap<int[]> generateAdjacencyMatrix(
+  public static TIntObjectHashMap<int[]> generateAdjacencyMatrix(
       DoubleMatrix distanceMatrix, List<DoubleVector> points, int minPoints,
       double epsilon) {
 
@@ -145,7 +145,7 @@ public final class DBSCAN {
     return map;
   }
 
-  private List<DoubleVector> findNoise(
+  private static List<DoubleVector> findNoise(
       TIntObjectHashMap<List<DoubleVector>> connectedComponents,
       List<DoubleVector> points) {
     List<DoubleVector> noise = new ArrayList<>();
@@ -186,18 +186,18 @@ public final class DBSCAN {
     DistanceMeasurer measurer = new EuclidianDistance();
     DBSCAN clusterer = new DBSCAN();
 
-    List<DoubleVector> points = clusterer.generateRandomPoints(numPoints,
+    List<DoubleVector> points = DBSCAN.generateRandomPoints(numPoints,
         doubleScale, doubleScale);
-    DoubleMatrix distanceMatrix = clusterer.generateDistanceMatrix(measurer,
+    DoubleMatrix distanceMatrix = DBSCAN.generateDistanceMatrix(measurer,
         points);
     // generate adjacency list
-    TIntObjectHashMap<int[]> adjacencyMatrix = clusterer
+    TIntObjectHashMap<int[]> adjacencyMatrix = DBSCAN
         .generateAdjacencyMatrix(distanceMatrix, points, minPoints, epsilon);
     // find connected components in this graph
     TIntObjectHashMap<List<DoubleVector>> connectedComponents = clusterer
         .findConnectedComponents(points, adjacencyMatrix);
     // reconstruct the noise
-    List<DoubleVector> noise = clusterer.findNoise(connectedComponents, points);
+    List<DoubleVector> noise = DBSCAN.findNoise(connectedComponents, points);
     System.out.println("Noise: " + noise);
     connectedComponents.put(connectedComponents.size(), noise);
     GnuPlot.drawPoints(connectedComponents);

@@ -107,7 +107,7 @@ public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
   }
 
   // TODO this can be optimized with a single precompiled regex
-  private boolean isValid(final String s) {
+  private static boolean isValid(final String s) {
     return !(!s.startsWith("http") || s.matches("javascript:.*|mailto:.*"))
         && !(s.endsWith(".pdf") || s.endsWith(".jpg") || s.endsWith(".png") || s
             .endsWith(".gif"));

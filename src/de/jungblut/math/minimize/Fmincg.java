@@ -79,14 +79,15 @@ public class Fmincg {
    * for more information.
    * 
    * @param f the cost function to minimize.
-   * @param input the input vector, also called starting point
+   * @param pInput the input vector, also called starting point
    * @param length the number of iterations to make
    * @param verbose output the progress to STDOUT
    * @return a vector containing the optimized input
    */
   public static DoubleVector minimizeFunction(CostFunction f,
-      DoubleVector input, int length, boolean verbose) {
+      DoubleVector pInput, int length, boolean verbose) {
 
+    DoubleVector input = pInput;
     int M = 0;
     int i = 0; // zero the run length counter
     int red = 1; // starting point

@@ -63,7 +63,7 @@ public final class DecisionTree {
     return classifyInstanceInternal(example);
   }
 
-  private final int classifyInstanceInternal(final DenseIntVector example) {
+  private int classifyInstanceInternal(final DenseIntVector example) {
     if (children != null) {
       final int i = example.get(attributeIndex);
       if (children.length <= i) {
@@ -116,7 +116,7 @@ public final class DecisionTree {
     return toStringInternal(0, new StringBuilder());
   }
 
-  private final String toStringInternal(int depth, StringBuilder buffer) {
+  private String toStringInternal(int depth, StringBuilder buffer) {
     buffer.append(repeat("\t", depth));
     buffer.append("***");
     if (attributeIndex != -1) {
@@ -144,7 +144,7 @@ public final class DecisionTree {
     return buffer.toString();
   }
 
-  private final String repeat(String s, int times) {
+  private static String repeat(String s, int times) {
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < times; i++) {
       sb.append(s);

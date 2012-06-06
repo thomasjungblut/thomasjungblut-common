@@ -83,10 +83,10 @@ public class SimpleCosineRecommender {
 
     @Override
     public Integer call() throws Exception {
-      int start = assignedRange.getStart();
-      int end = assignedRange.getEnd();
+      final int start = assignedRange.getStart();
+      final int end = assignedRange.getEnd();
       int[] columnIndices = input.columnIndices();
-      for (int col = start; col < end; col++) {
+      for (int col = start; col <= end; col++) {
         DoubleVector colVec = input.getColumnVector(col);
         if (colVec != null) {
           for (int otherCol : columnIndices) {
@@ -127,24 +127,25 @@ public class SimpleCosineRecommender {
 
     for (int j = 0; j < 20; j++) {
       DoubleVector myPredictions = recommendation.predict(j);
+      if (myPredictions != null) {
+        List<Tuple<Double, Integer>> sort = DenseDoubleVector.sort(
+            myPredictions, Collections.reverseOrder(new Comparator<Double>() {
+              @Override
+              public int compare(Double o1, Double o2) {
+                return Double.compare(o2, o1);
+              }
+            }));
 
-      List<Tuple<Double, Integer>> sort = DenseDoubleVector.sort(myPredictions,
-          Collections.reverseOrder(new Comparator<Double>() {
-            @Override
-            public int compare(Double o1, Double o2) {
-              return Double.compare(o2, o1);
-            }
-          }));
-
-      System.out.println("\nPredictions for user " + j);
-      for (int i = 0; i < 10; i++) {
-        if (i >= sort.size())
-          break;
-        Tuple<Double, Integer> tuple = sort.get(i);
-        double score = tuple.getFirst();
-        int index = tuple.getSecond();
-        if (index > 0)
-          System.out.println(movieLookupTable.get(index) + " | " + score);
+        System.out.println("\nPredictions for user " + j);
+        for (int i = 0; i < 10; i++) {
+          if (i >= sort.size())
+            break;
+          Tuple<Double, Integer> tuple = sort.get(i);
+          double score = tuple.getFirst();
+          int index = tuple.getSecond();
+          if (index > 0)
+            System.out.println(movieLookupTable.get(index) + " | " + score);
+        }
       }
     }
   }

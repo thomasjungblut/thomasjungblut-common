@@ -24,6 +24,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
@@ -59,10 +60,12 @@ public class RandomGraphGenerator {
         rowCount = length;
       }
 
+      @Override
       public long getLength() throws IOException {
         return 0;
       }
 
+      @Override
       public String[] getLocations() throws IOException {
         return new String[] {};
       }
@@ -90,10 +93,12 @@ public class RandomGraphGenerator {
       long totalRows;
       private LongWritable key;
 
+      @Override
       public void close() throws IOException {
         // NOTHING
       }
 
+      @Override
       public float getProgress() throws IOException {
         return finishedRows / (float) totalRows;
       }
@@ -220,7 +225,7 @@ public class RandomGraphGenerator {
     FileOutputFormat.setOutputPath(job, new Path(args[3]));
     FileSystem.get(conf).delete(new Path(args[3]), true);
     job.setJobName("Random Vertex Writer");
-    SequenceFileInputFormat.addInputPath(job, generated);
+    FileInputFormat.addInputPath(job, generated);
     job.setMapperClass(RandomMapper.class);
     job.setReducerClass(Reducer.class);
     job.setMapOutputKeyClass(Text.class);

@@ -22,7 +22,7 @@ public final class EntropyCalculator {
    *         not target columns are already used
    * @throws MatrixFormatException
    */
-  public final int getColumnWithHighestGain(DenseIntMatrix matrix,
+  public static int getColumnWithHighestGain(DenseIntMatrix matrix,
       DenseIntVector outputVariable, boolean[] columnsAlreadyUsed) {
     /*
      * Choose the column/attribute with the highest information gain. Gain(S, A)
@@ -48,7 +48,7 @@ public final class EntropyCalculator {
     return column;
   }
 
-  public final double getWeightedEntropySum(DenseIntMatrix matrix,
+  public static double getWeightedEntropySum(DenseIntMatrix matrix,
       DenseIntVector outputVariable, int col) {
 
     final int[][] m = matrix.getValues();
@@ -80,7 +80,7 @@ public final class EntropyCalculator {
     return sum;
   }
 
-  private final double getEntropy(int[] predictionCounts, int sum) {
+  private static double getEntropy(int[] predictionCounts, int sum) {
     double entropy = 0.0;
     for (int prediction : predictionCounts) {
       if (prediction != 0 && prediction != sum) {

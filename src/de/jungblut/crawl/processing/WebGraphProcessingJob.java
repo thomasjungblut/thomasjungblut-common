@@ -12,7 +12,9 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 public class WebGraphProcessingJob {
@@ -111,11 +113,11 @@ public class WebGraphProcessingJob {
     job.setOutputValueClass(Text.class);
     job.setInputFormatClass(SequenceFileInputFormat.class);
     job.setOutputFormatClass(TextOutputFormat.class);
-    SequenceFileInputFormat.addInputPath(job, new Path("files/crawl/"));
+    FileInputFormat.addInputPath(job, new Path("files/crawl/"));
     FileSystem fs = FileSystem.get(conf);
     Path out = new Path("files/crawl/processed/");
     fs.delete(out, true);
-    TextOutputFormat.setOutputPath(job, out);
+    FileOutputFormat.setOutputPath(job, out);
 
     job.waitForCompletion(true);
   }

@@ -37,7 +37,7 @@ public class SimpleResultWriter implements ResultWriter<FetchResult> {
     return new Path("files/crawl/result.seq");
   }
 
-  private Text asText(final Set<String> set) {
+  private static Text asText(final Set<String> set) {
     Text text = new Text();
 
     final StringBuilder sb = new StringBuilder();

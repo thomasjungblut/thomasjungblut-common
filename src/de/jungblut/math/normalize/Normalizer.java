@@ -19,7 +19,7 @@ public class Normalizer {
       int nonZeroElements = 0;
       for (int column = 0; column < matrix.getColumnCount(); column++) {
         double val = matrix.get(row, column);
-        if (val != DenseDoubleMatrix.NOT_FLAGGED) {
+        if (val != DoubleMatrix.NOT_FLAGGED) {
           mean += val;
           nonZeroElements++;
         }
@@ -29,7 +29,7 @@ public class Normalizer {
       meanVector.set(row, mean);
       for (int column = 0; column < matrix.getColumnCount(); column++) {
         double val = matrix.get(row, column);
-        if (val != DenseDoubleMatrix.NOT_FLAGGED) {
+        if (val != DoubleMatrix.NOT_FLAGGED) {
           matrix.set(row, column, val - mean);
         }
       }

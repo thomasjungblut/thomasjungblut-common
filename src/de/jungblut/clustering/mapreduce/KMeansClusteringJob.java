@@ -11,7 +11,9 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import de.jungblut.clustering.model.ClusterCenter;
@@ -40,7 +42,7 @@ public class KMeansClusteringJob {
     job.setReducerClass(KMeansReducer.class);
     job.setJarByClass(KMeansMapper.class);
 
-    SequenceFileInputFormat.addInputPath(job, in);
+    FileInputFormat.addInputPath(job, in);
     FileSystem fs = FileSystem.get(conf);
     if (fs.exists(out))
       fs.delete(out, true);
@@ -55,7 +57,7 @@ public class KMeansClusteringJob {
 
     writeExampleVectors(conf, in, fs);
 
-    SequenceFileOutputFormat.setOutputPath(job, out);
+    FileOutputFormat.setOutputPath(job, out);
     job.setInputFormatClass(SequenceFileInputFormat.class);
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
 
@@ -81,11 +83,11 @@ public class KMeansClusteringJob {
       in = new Path("files/clustering/depth_" + (iteration - 1) + "/");
       out = new Path("files/clustering/depth_" + iteration);
 
-      SequenceFileInputFormat.addInputPath(job, in);
+      FileInputFormat.addInputPath(job, in);
       if (fs.exists(out))
         fs.delete(out, true);
 
-      SequenceFileOutputFormat.setOutputPath(job, out);
+      FileOutputFormat.setOutputPath(job, out);
       job.setInputFormatClass(SequenceFileInputFormat.class);
       job.setOutputFormatClass(SequenceFileOutputFormat.class);
       job.setOutputKeyClass(ClusterCenter.class);
