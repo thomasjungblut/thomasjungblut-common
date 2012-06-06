@@ -16,6 +16,7 @@ import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.math.DoubleVector;
 
 // calculate a new clustercenter for these vertices
+@SuppressWarnings("deprecation")
 public class KMeansReducer extends
     Reducer<ClusterCenter, VectorWritable, ClusterCenter, VectorWritable> {
 

@@ -12,7 +12,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
 
   private DoubleVector center;
   private int kTimesIncremented = 1;
-  public int clusterIndex;
+  private int clusterIndex;
 
   public ClusterCenter() {
     super();
@@ -29,11 +29,13 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     this.kTimesIncremented = center.kTimesIncremented;
   }
 
+  @SuppressWarnings("deprecation")
   public ClusterCenter(VectorWritable center) {
     super();
     this.center = center.getVector().deepCopy();
   }
 
+  @SuppressWarnings("deprecation")
   public final void plus(VectorWritable c) {
     plus(c.getVector());
   }
@@ -64,6 +66,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     return Math.sqrt(center.subtract(v).abs().sum());
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public final void write(DataOutput out) throws IOException {
     VectorWritable.writeVector(center, out);
@@ -71,6 +74,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     out.writeInt(clusterIndex);
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public final void readFields(DataInput in) throws IOException {
     this.center = VectorWritable.readVector(in);
@@ -78,6 +82,7 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     clusterIndex = in.readInt();
   }
 
+  @SuppressWarnings("deprecation")
   @Override
   public final int compareTo(ClusterCenter o) {
     return VectorWritable.compareVector(center, o.getCenterVector());
@@ -88,6 +93,17 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
    */
   public final DoubleVector getCenterVector() {
     return center;
+  }
+
+  /**
+   * @return the index of the cluster in a datastructure.
+   */
+  public int getClusterIndex() {
+    return clusterIndex;
+  }
+
+  public void setClusterIndex(int clusterIndex) {
+    this.clusterIndex = clusterIndex;
   }
 
   @Override

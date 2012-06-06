@@ -1,4 +1,4 @@
-package de.jungblut.clustering.model;
+package de.jungblut.writable;
 
 import java.io.DataInput;
 import java.io.DataOutput;
@@ -10,17 +10,18 @@ import org.apache.hadoop.io.WritableComparable;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.named.NamedDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
 /**
- * Writable and comparable wrapper for sparse and dense vectors. <br/>
+ * New and updated VectorWritable class that has all the other fancy
+ * combinations of vectors that are possible in my math library.<br/>
+ * This class is not compatible to the one in the clustering package that has a
+ * totally other byte alignment in binary files.
  * 
  * @author thomas.jungblut
- * @deprecated use de.jungblut.writable.VectorWritable instead, but it is not
- *             compatible to this class here.
  * 
  */
-@Deprecated
 public final class VectorWritable implements WritableComparable<VectorWritable> {
 
   private DoubleVector vector;
@@ -35,22 +36,6 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
 
   public VectorWritable(DoubleVector v) {
     this.vector = v;
-  }
-
-  /*
-   * Some oldschool compatibility convenience constructors
-   */
-
-  public VectorWritable(double x) {
-    this.vector = new DenseDoubleVector(new double[] { x });
-  }
-
-  public VectorWritable(double x, double y) {
-    this.vector = new DenseDoubleVector(new double[] { x, y });
-  }
-
-  public VectorWritable(double[] arr) {
-    this.vector = new SparseDoubleVector(arr);
   }
 
   @Override
@@ -94,7 +79,7 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
   }
 
   /**
-   * @return the vector
+   * @return the embedded vector
    */
   public DoubleVector getVector() {
     return vector;
@@ -122,6 +107,12 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
         out.writeDouble(vector.get(i));
       }
     }
+    if (vector.isNamed() && vector.getName() != null) {
+      out.writeBoolean(true);
+      out.writeUTF(vector.getName());
+    } else {
+      out.writeBoolean(false);
+    }
   }
 
   public static DoubleVector readVector(DataInput in) throws IOException {
@@ -142,6 +133,9 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
         vector.set(i, in.readDouble());
       }
     }
+    if (in.readBoolean()) {
+      vector = new NamedDoubleVector(in.readUTF(), vector);
+    }
     return vector;
   }
 
@@ -157,5 +151,4 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
   public static VectorWritable wrap(DoubleVector a) {
     return new VectorWritable(a);
   }
-
 }

@@ -17,6 +17,7 @@ import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.ManhattanDistance;
 
 // first iteration, k-random centers, in every follow-up iteration we have new calculated centers
+@SuppressWarnings("deprecation")
 class KMeansMapper extends
     Mapper<ClusterCenter, VectorWritable, ClusterCenter, VectorWritable> {
 

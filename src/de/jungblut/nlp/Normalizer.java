@@ -8,6 +8,9 @@ package de.jungblut.nlp;
  */
 public interface Normalizer {
 
+  /**
+   * Tokenizes and normalizes the given string.
+   */
   public String[] tokenizeAndNormalize(String s);
 
 }

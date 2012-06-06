@@ -19,6 +19,7 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.VectorWritable;
 
+@SuppressWarnings("deprecation")
 public class KMeansClusteringJob {
 
   private static final Log LOG = LogFactory.getLog(KMeansClusteringJob.class);

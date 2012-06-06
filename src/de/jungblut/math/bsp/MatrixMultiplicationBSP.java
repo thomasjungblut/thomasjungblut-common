@@ -21,10 +21,10 @@ import org.apache.hama.bsp.SequenceFileOutputFormat;
 import org.apache.hama.bsp.sync.SyncException;
 
 import de.jungblut.bsp.ResultMessage;
-import de.jungblut.clustering.model.VectorWritable;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
+import de.jungblut.writable.VectorWritable;
 
 public final class MatrixMultiplicationBSP extends
     BSP<IntWritable, VectorWritable, IntWritable, VectorWritable> {

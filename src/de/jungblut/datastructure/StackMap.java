@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
-class StackMap<K, V> {
+public class StackMap<K, V> {
 
   private final HashMap<K, V> map = new HashMap<>();
   private final Deque<K> stack = new LinkedList<>();

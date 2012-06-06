@@ -191,8 +191,8 @@ public final class DBSCAN {
     DoubleMatrix distanceMatrix = DBSCAN.generateDistanceMatrix(measurer,
         points);
     // generate adjacency list
-    TIntObjectHashMap<int[]> adjacencyMatrix = DBSCAN
-        .generateAdjacencyMatrix(distanceMatrix, points, minPoints, epsilon);
+    TIntObjectHashMap<int[]> adjacencyMatrix = DBSCAN.generateAdjacencyMatrix(
+        distanceMatrix, points, minPoints, epsilon);
     // find connected components in this graph
     TIntObjectHashMap<List<DoubleVector>> connectedComponents = clusterer
         .findConnectedComponents(points, adjacencyMatrix);

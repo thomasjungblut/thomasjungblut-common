@@ -6,41 +6,58 @@ import java.io.IOException;
 
 import org.apache.hama.bsp.BSPMessage;
 
-import de.jungblut.clustering.model.ClusterCenter;
+import de.jungblut.math.DoubleVector;
+import de.jungblut.writable.VectorWritable;
 
 public final class CenterMessage extends BSPMessage {
 
-  private int oldCenterId;
-  private ClusterCenter newCenter;
+  private int centerIndex;
+  private DoubleVector newCenter;
+  private int incrementCounter;
 
   public CenterMessage() {
   }
 
-  public CenterMessage(int key, ClusterCenter value) {
-    this.oldCenterId = key;
+  public CenterMessage(int key, DoubleVector value) {
+    this.centerIndex = key;
+    this.newCenter = value;
+  }
+
+  public CenterMessage(int key, int increment, DoubleVector value) {
+    this.centerIndex = key;
+    this.incrementCounter = increment;
     this.newCenter = value;
   }
 
   @Override
   public final void readFields(DataInput in) throws IOException {
-    oldCenterId = in.readInt();
-    newCenter = new ClusterCenter();
-    newCenter.readFields(in);
+    centerIndex = in.readInt();
+    incrementCounter = in.readInt();
+    newCenter = VectorWritable.readVector(in);
   }
 
   @Override
   public final void write(DataOutput out) throws IOException {
-    out.writeInt(oldCenterId);
-    newCenter.write(out);
+    out.writeInt(centerIndex);
+    out.writeInt(incrementCounter);
+    VectorWritable.writeVector(newCenter, out);
+  }
+
+  public int getCenterIndex() {
+    return centerIndex;
+  }
+
+  public int getIncrementCounter() {
+    return incrementCounter;
   }
 
   @Override
   public final Integer getTag() {
-    return oldCenterId;
+    return centerIndex;
   }
 
   @Override
-  public final ClusterCenter getData() {
+  public final DoubleVector getData() {
     return newCenter;
   }
 

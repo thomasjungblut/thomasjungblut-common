@@ -22,31 +22,41 @@ import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.tuple.Tuple3;
 import de.jungblut.nlp.Tokenizer;
 
-public class TwentyNewsgroupReader {
+/**
+ * Reads the "20news-bydate" dataset into a vector space model as well as
+ * predictions based on the category.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
+public final class TwentyNewsgroupReader {
 
-  static HashSet<String> set = new HashSet<>();
-  static HashSet<String> vocab = new HashSet<>();
+  private static final HashSet<String> STOP_WORD_SET = new HashSet<>();
+  private static final HashSet<String> PREDEFINED_VOCABULARY = new HashSet<>();
   static {
     for (Object o : EnglishAnalyzer.getDefaultStopSet()) {
-      set.add(new String((char[]) o));
+      STOP_WORD_SET.add(new String((char[]) o));
     }
-    set.addAll(Arrays.asList("from", "subject", "re", "you", "i", "stuff",
-        "us", "have", "too", "me", "your", "my"));
+    STOP_WORD_SET.addAll(Arrays.asList("from", "subject", "re", "you", "i",
+        "stuff", "us", "have", "too", "me", "your", "my"));
 
     try {
-      vocab.addAll(Files.readAllLines(
-          FileSystems.getDefault().getPath("files/vocabulary.txt"),
-          Charset.defaultCharset()));
+      PREDEFINED_VOCABULARY.addAll(Files.readAllLines(FileSystems.getDefault()
+          .getPath("files/vocabulary.txt"), Charset.defaultCharset()));
     } catch (IOException e) {
       e.printStackTrace();
     }
   }
-
   private static final StringPool HASH_STRING_POOL = StringPool.getPool();
   private static final Analyzer ENGLISH_ANALYZER = new EnglishAnalyzer(
-      Version.LUCENE_35, set);
+      Version.LUCENE_35, STOP_WORD_SET);
 
-  // docs, prediction, name mapping for prediction
+  /**
+   * Needs the "20news-bydate" directory that has test and train subdirectories
+   * given.
+   * 
+   * @return in tuple3 order: docs, prediction, name mapping for prediction
+   */
   public static Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups(
       File directory) {
     String[] classList = directory.list();
@@ -69,12 +79,10 @@ public class TwentyNewsgroupReader {
           String[] whiteSpaceTokens = Tokenizer
               .consumeTokenStream(ENGLISH_ANALYZER.tokenStream(null,
                   new StringReader(document.toString())));
-          // String[] whiteSpaceTokens = Tokenizer.wordTokenize(document
-          // .toString());
           for (int i = 0; i < whiteSpaceTokens.length; i++) {
             if (!whiteSpaceTokens[i].matches("\\d+")
-                && !set.contains(whiteSpaceTokens[i])
-                && vocab.contains(whiteSpaceTokens[i])) {
+                && !STOP_WORD_SET.contains(whiteSpaceTokens[i])
+                && PREDEFINED_VOCABULARY.contains(whiteSpaceTokens[i])) {
               whiteSpaceTokens[i] = HASH_STRING_POOL.pool(whiteSpaceTokens[i]);
             } else {
               whiteSpaceTokens[i] = null;
