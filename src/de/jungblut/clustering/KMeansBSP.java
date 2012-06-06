@@ -306,7 +306,7 @@ public final class KMeansBSP extends
   }
 
   /**
-   * TODO this has to be reinvented :D
+   * Reads the outputs and plots it with gnuplot.
    */
   private static void readOutput(Configuration conf, Path out, Path centerPath,
       FileSystem fs) throws IOException {
@@ -325,7 +325,7 @@ public final class KMeansBSP extends
     for (FileStatus status : stati) {
       if (!status.isDir()) {
         Path path = status.getPath();
-        LOG.debug("FOUND " + path.toString());
+        LOG.info("Found output file: " + path.toString());
         SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
         IntWritable key = new IntWritable();
         VectorWritable v = new VectorWritable();
