@@ -22,14 +22,9 @@ public final class GnuPlot {
 
   public static String GNUPLOT_PATH = "gnuplot";
   public static String TMP_PATH = "/tmp/gnuplot/";
-
+  
   public static void plot(DenseDoubleMatrix x, DoubleVector y,
       DoubleVector theta, int polyCount, DoubleVector mean, DoubleVector sigma) {
-    /*
-     * set xrange [" + (x.min(0) - 15) + ":" + (x.max(0) + 15) +
-     * "] ; set yrange [" + (y.min() - 15) + ":" + (y.max() + 15) + "] ;
-     */
-
     // calculate a few points
     DenseDoubleVector fromUpTo = DenseDoubleVector.fromUpTo(x.min(0) - 15,
         x.max(0) + 15, 0.05);
@@ -174,16 +169,6 @@ public final class GnuPlot {
     } catch (IOException e) {
       e.printStackTrace();
     }
-
-    /*
-     * For pictures: String exec =
-     * "set terminal png size 1920,1080 ; set output \"/img/"
-     * +id+".png\" ; set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '" +
-     * TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle +
-     * "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \"" +
-     * featureTwoTitle +
-     * "\" with linespoints ; set terminal wxt size 1920,1080 ;";
-     */
     String exec = "set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '"
         + TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle
         + "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \""
@@ -235,15 +220,6 @@ public final class GnuPlot {
       e.printStackTrace();
     }
 
-    /*
-     * For pictures: String exec =
-     * "set terminal png size 1920,1080 ; set output \"/img/"
-     * +id+".png\" ; set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '" +
-     * TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle +
-     * "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \"" +
-     * featureTwoTitle +
-     * "\" with linespoints ; set terminal wxt size 1920,1080 ;";
-     */
     String exec = "set pointsize 2; set xzeroaxis; set yzeroaxis ; plot '"
         + TMP_PATH + "gnuplot1.in' title \"" + featureOneTitle
         + "\" with linespoints, '" + TMP_PATH + "gnuplot2.in' title \""

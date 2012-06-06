@@ -50,8 +50,8 @@ public class SimpleCosineRecommender {
         threadPool);
 
     int columnCount = input.getColumnCount();
-    Set<Range> parts = new BlockPartitioner().partition(numCores, columnCount)
-        .getBoundaries();
+    Set<Range> parts = new BlockPartitioner().partition(numCores,
+        columnCount - 1).getBoundaries();
 
     for (Range r : parts) {
       completionService.submit(new CosineCalculator(r, input));

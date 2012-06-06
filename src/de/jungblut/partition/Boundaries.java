@@ -6,10 +6,9 @@ import java.io.IOException;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 
-public class Boundaries implements Writable {
+public class Boundaries {
 
   private Set<Range> boundaries = new TreeSet<Range>();
 
@@ -133,24 +132,6 @@ public class Boundaries implements Writable {
 
   public Set<Range> getBoundaries() {
     return boundaries;
-  }
-
-  @Override
-  public void write(DataOutput out) throws IOException {
-    out.writeInt(boundaries.size());
-    for (Range r : boundaries) {
-      r.write(out);
-    }
-  }
-
-  @Override
-  public void readFields(DataInput in) throws IOException {
-    int size = in.readInt();
-    for (int i = 0; i < size; i++) {
-      Range r = new Range();
-      r.readFields(in);
-      boundaries.add(r);
-    }
   }
 
   @Override

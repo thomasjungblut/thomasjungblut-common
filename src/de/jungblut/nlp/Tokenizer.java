@@ -10,14 +10,18 @@ import java.util.StringTokenizer;
 import org.apache.lucene.analysis.TokenStream;
 import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
+/**
+ * Nifty text utility for majorly tokenizing tasks.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class Tokenizer {
 
   public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-";
 
   /**
    * Fully consumes a lucene tokenstream and returns a string array.
-   * 
-   * @throws IOException
    */
   public static String[] consumeTokenStream(TokenStream stream) {
     ArrayList<String> list = new ArrayList<String>();

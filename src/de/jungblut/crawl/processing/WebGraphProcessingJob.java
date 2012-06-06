@@ -17,7 +17,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
-public class WebGraphProcessingJob {
+public final class WebGraphProcessingJob {
 
   static class WebGraphMapper extends Mapper<Text, Text, Text, Text> {
 
@@ -55,17 +55,7 @@ public class WebGraphProcessingJob {
     }
 
     public static String extractDomain(URL url) {
-      String host = url.getHost();
-      // check for subdomains and strip them out
-      // String[] split = host.split("\\.");
-      String domain;
-      // if (split.length >= 2) {
-      // domain = split[split.length - 2] + "."
-      // + split[split.length - 1];
-      // } else {
-      domain = host;
-      // }
-      return domain;
+      return url.getHost();
     }
 
   }
