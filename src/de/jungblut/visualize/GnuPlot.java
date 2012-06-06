@@ -22,7 +22,7 @@ public final class GnuPlot {
 
   public static String GNUPLOT_PATH = "gnuplot";
   public static String TMP_PATH = "/tmp/gnuplot/";
-
+  
   public static void plot(DenseDoubleMatrix x, DoubleVector y,
       DoubleVector theta, int polyCount, DoubleVector mean, DoubleVector sigma) {
     // calculate a few points
