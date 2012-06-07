@@ -1,5 +1,6 @@
 package de.jungblut.kaggle;
 
+import gnu.trove.map.hash.TIntDoubleHashMap;
 import gnu.trove.map.hash.TIntIntHashMap;
 
 import java.io.BufferedWriter;
@@ -18,7 +19,6 @@ import java.util.TreeSet;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterators;
 
 import de.jungblut.nlp.Tokenizer;
@@ -38,7 +38,8 @@ public class FacebookCompetition {
   private static final String TEST_FILE = "/Users/thomas.jungblut/Downloads/FB/test/test.csv";
   private static final String TEST_OUT_FILE = "/Users/thomas.jungblut/Downloads/FB/test/test_out.csv";
   private static final String HAMA_GRAPH_IN_FILE = "/Users/thomas.jungblut/Downloads/FB/hama-graph-in/graph.csv";
-  private static final String HAMA_PR_OUT_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr.csv";
+  private static final String HAMA_PR_OUT_30_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr_30.csv";
+  private static final String HAMA_PR_OUT_85_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr_85.csv";
   private static final String HAMA_INLNK_OUT_FILE = "/Users/thomas.jungblut/Downloads/FB/inlnk-out/inlink.csv";
 
   /**
@@ -81,9 +82,12 @@ public class FacebookCompetition {
 
   /**
    * Recommends up to ten friends for each vertex in the given testfiles.
+   * 
+   * @param pagerank
    */
   public void recommendFriends(HashMultimap<String, String> graph,
-      HashMultimap<String, String> allMissingEdges, TIntIntHashMap inlinkCount) {
+      HashMultimap<String, String> allMissingEdges, TIntIntHashMap inlinkCount,
+      TIntDoubleHashMap pagerank) {
     try {
       StringBuilder sb = new StringBuilder();
       sb.append("source_node,destination_nodes\n");
@@ -97,7 +101,7 @@ public class FacebookCompetition {
         String predVertex = iterator.next();
         Set<String> set = allMissingEdges.get(predVertex);
         List<String> recEdges = recommendFriendsInternal(set, graph,
-            allMissingEdges, inlinkCount);
+            allMissingEdges, inlinkCount, pagerank);
         Preconditions.checkArgument(recEdges.size() <= 10,
             "Friendlist was too long: " + recEdges.size());
         String append = "";
@@ -120,36 +124,38 @@ public class FacebookCompetition {
 
     final String name;
     final int inlinkCount;
+    final double rank;
 
-    public InlinkDTO(String name, int inlinkCount) {
+    public InlinkDTO(String name, int inlinkCount, double rank) {
       super();
       this.name = name;
       this.inlinkCount = inlinkCount;
+      this.rank = rank;
     }
 
     @Override
     public int compareTo(InlinkDTO o) {
       // return Integer.compare(o.inlinkCount, inlinkCount);
       return Integer.compare(inlinkCount, o.inlinkCount);
+      // return Double.compare(o.rank, rank);
     }
 
   }
 
   /**
-   * Internal logic for friend recommendation.<br/>
-   * ->Recommends up to ten friends with lowest inlink numbers (we ignore 0 and
-   * 1 since this are spammers?)
+   * Internal logic for friend recommendation.
    */
   private static List<String> recommendFriendsInternal(Set<String> set,
       HashMultimap<String, String> graph,
-      HashMultimap<String, String> allMissingEdges, TIntIntHashMap inlinkCount) {
+      HashMultimap<String, String> allMissingEdges, TIntIntHashMap inlinkCount,
+      TIntDoubleHashMap pagerank) {
     List<String> out = new LinkedList<>();
     PriorityQueue<InlinkDTO> queue = new PriorityQueue<>();
     for (String s : set) {
-      int count = inlinkCount.get(Integer.parseInt(s));
-      if (count > 1) {
-        queue.add(new InlinkDTO(s, count));
-      }
+      int id = Integer.parseInt(s);
+      int count = inlinkCount.get(id);
+      double rank = pagerank.get(id);
+      queue.add(new InlinkDTO(s, count, rank));
     }
 
     for (int i = 0; i < 10; i++) {
@@ -188,31 +194,33 @@ public class FacebookCompetition {
     }
   }
 
-  private TIntIntHashMap readInlinkCount() {
+  private static TIntIntHashMap readInlinkCount() {
     TIntIntHashMap map = new TIntIntHashMap();
-    HashMultiset<Integer> distribution = HashMultiset.create();
     try {
       List<String> readAllLines = Files.readAllLines(FileSystems.getDefault()
           .getPath(HAMA_INLNK_OUT_FILE), Charset.defaultCharset());
       for (String line : readAllLines) {
         String[] split = line.split("\t");
         map.put(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
-        distribution.add(Integer.parseInt(split[1]));
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
 
-    BufferedWriter writer = null;
+    return map;
+  }
+
+  private static TIntDoubleHashMap readPagerank() {
+    TIntDoubleHashMap map = new TIntDoubleHashMap();
     try {
-      writer = new BufferedWriter(new FileWriter(HAMA_INLNK_OUT_FILE
-          + "_dist.csv"));
-      for (int i : distribution.elementSet()) {
-        writer.write(i + "\t" + distribution.count(i) + "\n");
+      List<String> readAllLines = Files.readAllLines(FileSystems.getDefault()
+          .getPath(HAMA_PR_OUT_85_FILE), Charset.defaultCharset());
+      for (String line : readAllLines) {
+        String[] split = line.split("\t");
+        map.put(Integer.parseInt(split[0]), Double.parseDouble(split[1]));
       }
-      writer.close();
     } catch (IOException e) {
-      e.printStackTrace();
+      throw new RuntimeException(e);
     }
 
     return map;
@@ -223,8 +231,9 @@ public class FacebookCompetition {
     final HashMultimap<String, String> graph = readTrainFile();
     final HashMultimap<String, String> allMissingEdges = comp
         .getAllMissingEdges(graph);
-    final TIntIntHashMap inlinkCount = comp.readInlinkCount();
-    comp.recommendFriends(graph, allMissingEdges, inlinkCount);
+    final TIntIntHashMap inlinkCount = readInlinkCount();
+    final TIntDoubleHashMap pagerank = readPagerank();
+    comp.recommendFriends(graph, allMissingEdges, inlinkCount, pagerank);
   }
 
 }
