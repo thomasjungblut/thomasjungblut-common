@@ -19,6 +19,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Iterators;
 
@@ -39,7 +40,7 @@ public class FacebookCompetition {
   private static final String TEST_FILE = "/Users/thomas.jungblut/Downloads/FB/test/test.csv";
   private static final String TEST_OUT_FILE = "/Users/thomas.jungblut/Downloads/FB/test/test_out.csv";
   private static final String HAMA_GRAPH_IN_FILE = "/Users/thomas.jungblut/Downloads/FB/hama-graph-in/graph.csv";
-  private static final String HAMA_PR_OUT_30_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr_30.csv";
+//  private static final String HAMA_PR_OUT_30_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr_30.csv";
   private static final String HAMA_PR_OUT_85_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr_85.csv";
   private static final String HAMA_INLNK_OUT_FILE = "/Users/thomas.jungblut/Downloads/FB/inlnk-out/inlink.csv";
 
@@ -100,11 +101,15 @@ public class FacebookCompetition {
       Iterators.skip(iterator, 1);
       while (iterator.hasNext()) {
         String predVertex = iterator.next();
-        Set<String> set = allMissingEdges.get(predVertex);
-        // add friends of friends of friends to this set
-        set.addAll(getFriendsOfFriends(graph, predVertex, 3));
-        List<String> recEdges = recommendFriendsInternal(predVertex, set,
-            graph, allMissingEdges, inlinkCount, pagerank);
+        HashSet<String> candidates = new HashSet<>();
+        Set<String> missingEdges = allMissingEdges.get(predVertex);
+        HashSet<String> friendsOfFriends = getFriendsOfFriends(graph,
+            predVertex, 3);
+        candidates.addAll(missingEdges);
+        candidates.addAll(friendsOfFriends);
+        List<String> recEdges = recommendFriendsInternal(predVertex,
+            candidates, missingEdges, graph, allMissingEdges, inlinkCount,
+            pagerank);
         Preconditions.checkArgument(recEdges.size() <= 10,
             "Friendlist was too long: " + recEdges.size());
         String append = "";
@@ -130,36 +135,34 @@ public class FacebookCompetition {
     final double rank;
     final int commonFriends;
     final double weight;
+    final boolean strongRecommendation;
 
     public InlinkDTO(String name, int inlinkCount, int outlinkCount,
-        double rank, int commonFriends) {
+        double rank, int commonFriends, boolean strongRecommendation) {
       super();
       this.name = name;
       this.inlinkCount = inlinkCount;
       this.outlinkCount = outlinkCount;
       this.rank = rank;
       this.commonFriends = commonFriends;
+      this.strongRecommendation = strongRecommendation;
       weight = (inlinkCount / (outlinkCount + 1)) * 0.3 + rank * 0.7;
-    }
-
-    // TODO make the comparator of DOOM! that takes all three metrices into
-    // account!
-    @Override
-    public int compareTo(InlinkDTO o) {
-      int common = Integer.compare(o.commonFriends, commonFriends);
-      // if there is no distinction, we use a weighted mixture of pagerank and
-      // inlinkCount/outlinkcount
-      if (common == 0) {
-        return Double.compare(o.weight, weight);
-      }
-      return common;
     }
 
     @Override
     public String toString() {
       return "InlinkDTO [name=" + name + ", inlinkCount=" + inlinkCount
           + ", outlinkCount=" + outlinkCount + ", rank=" + rank
-          + ", commonFriends=" + commonFriends + ", weight=" + weight + "]";
+          + ", commonFriends=" + commonFriends + ", weight=" + weight
+          + ", strongRecommendation=" + strongRecommendation + "]";
+    }
+
+    @Override
+    public int compareTo(InlinkDTO o) {
+      return ComparisonChain.start()
+          .compare(o.strongRecommendation, strongRecommendation)
+          .compare(o.commonFriends, commonFriends).compare(o.weight, weight)
+          .result();
     }
 
   }
@@ -168,7 +171,8 @@ public class FacebookCompetition {
    * Internal logic for friend recommendation.
    */
   private List<String> recommendFriendsInternal(String vertex,
-      Set<String> candidates, HashMultimap<String, String> graph,
+      Set<String> candidates, Set<String> missingEdges,
+      HashMultimap<String, String> graph,
       HashMultimap<String, String> allMissingEdges, TIntIntHashMap inlinkCount,
       TIntDoubleHashMap pagerank) {
     List<String> out = new LinkedList<>();
@@ -180,8 +184,12 @@ public class FacebookCompetition {
         int count = inlinkCount.get(id);
         double rank = pagerank.get(id);
         int commonFriends = countCommonFriends(graph, vertex, s);
+        boolean strongRecommendation = false;
+        if (missingEdges.contains(s)) {
+          strongRecommendation = true;
+        }
         queue.add(new InlinkDTO(s, count, graph.get(s).size(), rank,
-            commonFriends));
+            commonFriends, strongRecommendation));
       }
     }
 
