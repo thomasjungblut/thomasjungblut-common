@@ -41,10 +41,6 @@ public class FacebookCompetition {
   private static final String TEST_FILE = "/Users/thomas.jungblut/Downloads/FB/test/test.csv";
   private static final String TEST_OUT_FILE = "/Users/thomas.jungblut/Downloads/FB/test/test_out.csv";
   private static final String HAMA_GRAPH_IN_FILE = "/Users/thomas.jungblut/Downloads/FB/hama-graph-in/graph.csv";
-<<<<<<< HEAD
-=======
-//  private static final String HAMA_PR_OUT_30_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr_30.csv";
->>>>>>> 24d598d8df33dbdbb90beff600316d5aac049595
   private static final String HAMA_PR_OUT_85_FILE = "/Users/thomas.jungblut/Downloads/FB/pr-out/pr_85.csv";
   private static final String HAMA_INLNK_OUT_FILE = "/Users/thomas.jungblut/Downloads/FB/inlnk-out/inlink.csv";
 
@@ -103,7 +99,6 @@ public class FacebookCompetition {
       Iterators.skip(iterator, 1);
       while (iterator.hasNext()) {
         String predVertex = iterator.next();
-<<<<<<< HEAD
         List<String> recEdges = null;
         // start at minus one, because in the first iteration we don't have so
         // much new recommendations usually
@@ -127,20 +122,6 @@ public class FacebookCompetition {
         StringBuilder appender = new StringBuilder();
         appender.append(predVertex);
         appender.append(',');
-=======
-        HashSet<String> candidates = new HashSet<>();
-        Set<String> missingEdges = allMissingEdges.get(predVertex);
-        HashSet<String> friendsOfFriends = getFriendsOfFriends(graph,
-            predVertex, 3);
-        candidates.addAll(missingEdges);
-        candidates.addAll(friendsOfFriends);
-        List<String> recEdges = recommendFriendsInternal(predVertex,
-            candidates, missingEdges, graph, allMissingEdges, inlinkCount,
-            pagerank);
-        Preconditions.checkArgument(recEdges.size() <= 10,
-            "Friendlist was too long: " + recEdges.size());
-        String append = "";
->>>>>>> 24d598d8df33dbdbb90beff600316d5aac049595
         for (String s : recEdges) {
           appender.append(s);
           appender.append(' ');
@@ -173,7 +154,6 @@ public class FacebookCompetition {
       this.name = name;
       this.commonFriends = commonFriends;
       this.strongRecommendation = strongRecommendation;
-<<<<<<< HEAD
       this.weight = (inlinkCount / (outlinkCount + 1)) * 0.3 + rank * 0.7;
     }
 
@@ -185,20 +165,6 @@ public class FacebookCompetition {
     }
 
     @Override
-=======
-      weight = (inlinkCount / (outlinkCount + 1)) * 0.3 + rank * 0.7;
-    }
-
-    @Override
-    public String toString() {
-      return "InlinkDTO [name=" + name + ", inlinkCount=" + inlinkCount
-          + ", outlinkCount=" + outlinkCount + ", rank=" + rank
-          + ", commonFriends=" + commonFriends + ", weight=" + weight
-          + ", strongRecommendation=" + strongRecommendation + "]";
-    }
-
-    @Override
->>>>>>> 24d598d8df33dbdbb90beff600316d5aac049595
     public int compareTo(InlinkDTO o) {
       return ComparisonChain.start()
           .compare(o.strongRecommendation, strongRecommendation)
