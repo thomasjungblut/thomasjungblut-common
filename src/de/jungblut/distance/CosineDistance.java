@@ -3,7 +3,7 @@ package de.jungblut.distance;
 import de.jungblut.math.DoubleVector;
 
 // from mahout 5.0
-public class CosineDistance implements DistanceMeasurer {
+public final class CosineDistance implements DistanceMeasurer {
 
   @Override
   public double measureDistance(double[] set1, double[] set2) {

@@ -147,12 +147,15 @@ public class FacebookCompetition {
     final int commonFriends;
     final double weight;
     final boolean strongRecommendation;
+    final double jaccardCoefficient;
 
     public InlinkDTO(String name, int inlinkCount, int outlinkCount,
-        double rank, int commonFriends, boolean strongRecommendation) {
+        double rank, int commonFriends, double jaccardCoefficient,
+        boolean strongRecommendation) {
       super();
       this.name = name;
       this.commonFriends = commonFriends;
+      this.jaccardCoefficient = jaccardCoefficient;
       this.strongRecommendation = strongRecommendation;
       this.weight = (inlinkCount / (outlinkCount + 1)) * 0.3 + rank * 0.7;
     }
@@ -168,8 +171,9 @@ public class FacebookCompetition {
     public int compareTo(InlinkDTO o) {
       return ComparisonChain.start()
           .compare(o.strongRecommendation, strongRecommendation)
-          .compare(o.commonFriends, commonFriends).compare(o.weight, weight)
-          .result();
+          .compare(o.commonFriends, commonFriends)
+          .compare(o.jaccardCoefficient, jaccardCoefficient)
+          .compare(o.weight, weight).result();
     }
 
   }
@@ -191,12 +195,13 @@ public class FacebookCompetition {
         int count = inlinkCount.get(id);
         double rank = pagerank.get(id);
         int commonFriends = countCommonFriends(graph, vertex, s);
+        double jaccardCoefficient = measureJaccardCoefficient(graph, vertex, s);
         boolean strongRecommendation = false;
         if (missingEdges.contains(s)) {
           strongRecommendation = true;
         }
         queue.add(new InlinkDTO(s, count, graph.get(s).size(), rank,
-            commonFriends, strongRecommendation));
+            commonFriends, jaccardCoefficient, strongRecommendation));
       }
     }
 
@@ -248,6 +253,19 @@ public class FacebookCompetition {
       }
     }
     return count;
+  }
+
+  public double measureJaccardCoefficient(HashMultimap<String, String> graph,
+      String left, String right) {
+    Set<String> leftEdges = graph.get(left);
+    Set<String> rightEdges = graph.get(right);
+    int count = 0;
+    for (String e : rightEdges) {
+      if (leftEdges.contains(e)) {
+        count++;
+      }
+    }
+    return (count / ((double) (leftEdges.size() + rightEdges.size() - count)));
   }
 
   @SuppressWarnings("unused")

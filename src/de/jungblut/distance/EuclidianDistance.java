@@ -2,7 +2,7 @@ package de.jungblut.distance;
 
 import de.jungblut.math.DoubleVector;
 
-public class EuclidianDistance implements DistanceMeasurer {
+public final class EuclidianDistance implements DistanceMeasurer {
 
   @Override
   public double measureDistance(double[] set1, double[] set2) {
