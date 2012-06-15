@@ -101,7 +101,7 @@ public class Fmincg {
     // steepest
 
     double d1 = s.multiply(-1.0d).dot(s); // this is the slope
-    double z1 = (double) red / (1.0 - d1); // initial step is red/(|s|+1)
+    double z1 = red / (1.0 - d1); // initial step is red/(|s|+1)
 
     while (i < Math.abs(length)) {// while not finished
       i = i + (length > 0 ? 1 : 0);// count iterations?!

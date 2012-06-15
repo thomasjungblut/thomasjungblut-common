@@ -61,7 +61,7 @@ public final class CollaborativeFiltering {
             { theta.getRowCount(), theta.getColumnCount() } });
 
     DenseDoubleMatrix computedTheta = unfoldMatrices[1];
-    p = (DenseDoubleMatrix) x.multiply(computedTheta.transpose());
+    p = x.multiply(computedTheta.transpose());
     return p;
   }
 

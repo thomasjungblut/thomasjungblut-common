@@ -22,7 +22,7 @@ public final class GnuPlot {
 
   public static String GNUPLOT_PATH = "gnuplot";
   public static String TMP_PATH = "/tmp/gnuplot/";
-  
+
   public static void plot(DenseDoubleMatrix x, DoubleVector y,
       DoubleVector theta, int polyCount, DoubleVector mean, DoubleVector sigma) {
     // calculate a few points
@@ -33,8 +33,8 @@ public final class GnuPlot {
         .createPolynomials(new DenseDoubleMatrix(fromUpTo), polyCount);
 
     DenseDoubleMatrix xPolyNormalized = new DenseDoubleMatrix(
-        DenseDoubleVector.ones(fromUpTo.getLength()),
-        (DenseDoubleMatrix) createPolynomials.subtract(mean).divide(sigma));
+        DenseDoubleVector.ones(fromUpTo.getLength()), createPolynomials
+            .subtract(mean).divide(sigma));
 
     DoubleVector multiplyVector = xPolyNormalized.multiplyVector(theta);
     try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(

@@ -100,7 +100,7 @@ public class SimpleCrawler<T extends FetchResult> {
         long deltaSeconds = (System.currentTimeMillis() - start) / 1000;
         System.out.println(count + " sites crawled. Took " + deltaSeconds
             + "s for a 100 element chunk!");
-        System.out.println("TP of : " + (100.0f / (float) deltaSeconds)
+        System.out.println("TP of : " + (100.0f / deltaSeconds)
             + " sites per second!");
         start = System.currentTimeMillis();
         if (!running) {
