@@ -1,12 +1,24 @@
 package de.jungblut.classification.nn;
 
 import java.io.IOException;
+import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
+import org.apache.hama.bsp.BSPJob;
 import org.apache.hama.bsp.BSPPeer;
+import org.apache.hama.bsp.NullOutputFormat;
 import org.apache.hama.bsp.sync.SyncException;
 
+import com.google.common.base.Preconditions;
+
+import de.jungblut.clustering.KMeansBSP;
+import de.jungblut.math.DoubleVector;
 import de.jungblut.writable.VectorWritable;
 
 /**
@@ -31,8 +43,30 @@ public final class BatchBackpropagationBSP extends
 
   /*
    * VectorWritable as key input, having the prediction in the last index.
-   * Output is nothing, but the network can be exported to be queried elsewhere.
+   * Output is nothing, but the network (the weights) can be exported from the
+   * master task to be queried elsewhere.
    */
+  private static final String NETWORK_LAYOUT_KEY = "ann.network.layout";
+
+  @Override
+  public void setup(
+      BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> peer)
+      throws IOException, SyncException, InterruptedException {
+
+    Configuration configuration = peer.getConfiguration();
+    String layout = configuration.get(NETWORK_LAYOUT_KEY);
+    String[] layers = layout.split(" ");
+    for (int i = 0; i < layers.length; i++) {
+      // input layer
+      if (i == 0) {
+
+      } else if (i == (layers.length - 1)) { // output layer
+
+      } else {
+
+      }
+    }
+  }
 
   @Override
   public void bsp(
@@ -41,8 +75,62 @@ public final class BatchBackpropagationBSP extends
 
   }
 
-  public static void main(String[] args) {
+  @Override
+  public void cleanup(
+      BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> peer)
+      throws IOException {
+    // TODO safe the network weights and stuff
+  }
+
+  public static BSPJob createJob(Configuration cnf, Path in) throws IOException {
+    HamaConfiguration conf = new HamaConfiguration(cnf);
+    BSPJob job = new BSPJob(conf, KMeansBSP.class);
+    job.setJobName("Neural network batch training");
+    job.setJarByClass(BatchBackpropagationBSP.class);
+    job.setBspClass(BatchBackpropagationBSP.class);
+    job.setInputPath(in);
+    job.setInputFormat(org.apache.hama.bsp.SequenceFileInputFormat.class);
+    job.setOutputFormat(NullOutputFormat.class);
+    return job;
+  }
+
+  public static void writeInput(Configuration conf, Path in,
+      List<DoubleVector> data) throws IOException {
+    SequenceFile.Writer writer = null;
+    try {
+      writer = new SequenceFile.Writer(FileSystem.get(conf), conf, new Path(in,
+          "input.seq"), VectorWritable.class, NullWritable.class);
+      for (DoubleVector v : data) {
+        writer.append(new VectorWritable(v), NullWritable.get());
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    } finally {
+      if (writer != null) {
+        writer.close();
+      }
+    }
 
   }
 
+  public static void main(String[] args) throws IOException,
+      ClassNotFoundException, InterruptedException {
+    // dataset contains features and prediction in the last element
+    List<DoubleVector> dataset = MushroomReader.readMushroomDataset();
+    Preconditions.checkArgument(dataset != null && dataset.size() > 0);
+    // this layout is separating the layers with a whitespace
+    // so we have 22 input neurons, a hidden layer with 12 neurons and an
+    // output layer with a single neuron
+    String standardLayout = "22 12 1";
+
+    Path in = new Path("files/neuralnet/input/");
+    Configuration conf = new Configuration();
+    conf.set(NETWORK_LAYOUT_KEY, standardLayout);
+
+    writeInput(conf, in, dataset);
+
+    BSPJob job = createJob(conf, in);
+    job.waitForCompletion(true);
+
+  }
 }
