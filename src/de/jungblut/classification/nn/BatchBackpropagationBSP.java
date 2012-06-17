@@ -3,6 +3,8 @@ package de.jungblut.classification.nn;
 import java.io.IOException;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -46,7 +48,15 @@ public final class BatchBackpropagationBSP extends
    * Output is nothing, but the network (the weights) can be exported from the
    * master task to be queried elsewhere.
    */
+  private static final Log LOG = LogFactory
+      .getLog(BatchBackpropagationBSP.class);
   private static final String NETWORK_LAYOUT_KEY = "ann.network.layout";
+  private static final String NUM_EPOCHS_KEY = "ann.num.epochs";
+  private static final String MAXIMUM_GLOBAL_ERROR_KEY = "ann.max.error";
+
+  private MultilayerPerceptron network;
+  private double maxError = Double.MAX_VALUE;
+  private int maxIterations;
 
   @Override
   public void setup(
@@ -55,24 +65,40 @@ public final class BatchBackpropagationBSP extends
 
     Configuration configuration = peer.getConfiguration();
     String layout = configuration.get(NETWORK_LAYOUT_KEY);
+    Preconditions.checkNotNull(layout);
     String[] layers = layout.split(" ");
+    int[] layerArray = new int[layers.length];
     for (int i = 0; i < layers.length; i++) {
-      // input layer
-      if (i == 0) {
+      layerArray[i] = Integer.parseInt(layers[i]);
+    }
 
-      } else if (i == (layers.length - 1)) { // output layer
-
-      } else {
-
-      }
+    network = new MultilayerPerceptron(layerArray);
+    maxIterations = configuration.getInt(NUM_EPOCHS_KEY, 0);
+    String val = configuration.get(MAXIMUM_GLOBAL_ERROR_KEY);
+    if (val != null) {
+      maxError = Double.parseDouble(val);
     }
   }
 
   @Override
   public void bsp(
-      BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> arg0)
+      BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> peer)
       throws IOException, SyncException, InterruptedException {
 
+    double currentMse = Double.MAX_VALUE;
+    while (true) {
+      // TODO do forward step and broadcast the sum of all prediction
+      // differences and send the accumulated weights
+      peer.sync();
+      // TODO do a global backward step
+      peer.reopenInput();
+
+      if (currentMse < maxError)
+        break;
+      if (maxIterations > 0 && maxIterations < peer.getSuperstepCount())
+        break;
+    }
+    LOG.info("Finished! Overall error in the net of " + currentMse);
   }
 
   @Override
@@ -80,6 +106,7 @@ public final class BatchBackpropagationBSP extends
       BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> peer)
       throws IOException {
     // TODO safe the network weights and stuff
+    LOG.info(network);
   }
 
   public static BSPJob createJob(Configuration cnf, Path in) throws IOException {
@@ -110,7 +137,6 @@ public final class BatchBackpropagationBSP extends
         writer.close();
       }
     }
-
   }
 
   public static void main(String[] args) throws IOException,
@@ -126,6 +152,7 @@ public final class BatchBackpropagationBSP extends
     Path in = new Path("files/neuralnet/input/");
     Configuration conf = new Configuration();
     conf.set(NETWORK_LAYOUT_KEY, standardLayout);
+    conf.setInt(NUM_EPOCHS_KEY, 1000);
 
     writeInput(conf, in, dataset);
 

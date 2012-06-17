@@ -144,4 +144,5 @@ public final class MultilayerPerceptron {
     }
     return new DenseDoubleVector(errorList.toArray());
   }
+
 }
