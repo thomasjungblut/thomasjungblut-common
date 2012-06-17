@@ -6,6 +6,11 @@ import de.jungblut.math.tuple.Tuple;
 
 public final class XorTest {
 
+  public static void main(String[] args) {
+    testManualTraining();
+    testAutomaticTraining();
+  }
+
   public static Tuple<DoubleVector[], DoubleVector[]> getXORTraining() {
     DoubleVector[] xor = new DoubleVector[4];
     DoubleVector[] xorOutcome = new DoubleVector[4];
