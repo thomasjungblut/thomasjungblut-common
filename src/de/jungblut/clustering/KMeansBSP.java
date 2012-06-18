@@ -24,6 +24,8 @@ import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.sync.SyncException;
 import org.apache.hama.util.ReflectionUtils;
 
+import com.google.common.base.Preconditions;
+
 import de.jungblut.bsp.CenterMessage;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.EuclidianDistance;
@@ -35,9 +37,7 @@ import de.jungblut.writable.VectorWritable;
 
 /**
  * K-Means in BSP that reads a bunch of vectors from input system and a given
- * centroid path that contains initial centers. It outputs an integer, which is
- * the index of the assignment of the input vector in the given centroid path.
- * Of course, as well the vector that has been clustered to the given index.
+ * centroid path that contains initial centers.
  * 
  * @author thomas.jungblut
  * 
@@ -47,14 +47,18 @@ public final class KMeansBSP extends
 
   private static final String CENTER_OUT_PATH = "center.out.path";
   private static final String MAX_ITERATIONS_KEY = "k.means.max.iterations";
+  private static final String CACHING_ENABLED_KEY = "k.means.caching.enabled";
   private static final String DISTANCE_MEASURE_CLASS = "distance.measure.class";
   private static final String CENTER_IN_PATH = "center.in.path";
 
   private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
+  // a task local copy of our cluster centers
   private DoubleVector[] centers;
   // simple cache to speed up computation, because the algorithm is disk based
-  private List<DoubleVector> cache = new ArrayList<>();
+  private List<DoubleVector> cache;
+  // numbers of maximum iterations to do
   private int maxIterations;
+  // our distance measurement
   private DistanceMeasurer distanceMeasurer;
 
   @Override
@@ -75,12 +79,9 @@ public final class KMeansBSP extends
       }
     }
 
-    if (centers.size() == 0) {
-      throw new IllegalArgumentException(
-          "Centers file must contain at least a single center!");
-    } else {
-      this.centers = centers.toArray(new DoubleVector[centers.size()]);
-    }
+    Preconditions.checkArgument(centers.size() > 0,
+        "Centers file must contain at least a single center!");
+    this.centers = centers.toArray(new DoubleVector[centers.size()]);
 
     distanceMeasurer = new EuclidianDistance();
     String distanceClass = peer.getConfiguration().get(DISTANCE_MEASURE_CLASS);
@@ -93,6 +94,10 @@ public final class KMeansBSP extends
     }
 
     maxIterations = peer.getConfiguration().getInt(MAX_ITERATIONS_KEY, -1);
+    // enable caching to store vectors in ram to get additional speed
+    if (peer.getConfiguration().getBoolean(CACHING_ENABLED_KEY, true)) {
+      cache = new ArrayList<>();
+    }
   }
 
   @Override
@@ -112,6 +117,7 @@ public final class KMeansBSP extends
     }
     LOG.info("Finished! Writing the assignments...");
     recalculateAssignmentsAndWrite(peer);
+    LOG.info("Done.");
   }
 
   private long updateCenters(
@@ -139,13 +145,12 @@ public final class KMeansBSP extends
         msgCenters[i] = msgCenters[i].divide(incrementSum[i]);
       }
     }
-    // finally check for convergence
+    // finally check for convergence by the absolute difference
     long convergedCounter = 0L;
     for (int i = 0; i < msgCenters.length; i++) {
       final DoubleVector oldCenter = centers[i];
       if (msgCenters[i] != null) {
-        double calculateError = Math.sqrt(oldCenter.subtract(msgCenters[i])
-            .abs().sum());
+        double calculateError = oldCenter.subtract(msgCenters[i]).abs().sum();
         if (calculateError > 0.0d) {
           centers[i] = msgCenters[i];
           convergedCounter++;
@@ -162,34 +167,30 @@ public final class KMeansBSP extends
     // needs to be broadcasted.
     final DoubleVector[] newCenterArray = new DoubleVector[centers.length];
     final int[] summationCount = new int[centers.length];
-    // we have an assignment step
-    if (cache.isEmpty()) {
+    // if our cache is not enabled, iterate over the disk items
+    if (cache == null) {
+      // we have an assignment step
       final NullWritable value = NullWritable.get();
       final VectorWritable key = new VectorWritable();
       while (peer.readNext(key, value)) {
-        cache.add(key.getVector().deepCopy());
-        final int lowestDistantCenter = getNearestCenter(key.getVector());
-        final DoubleVector clusterCenter = newCenterArray[lowestDistantCenter];
-        if (clusterCenter == null) {
-          newCenterArray[lowestDistantCenter] = key.getVector();
-        } else {
-          // add the vector to the center
-          newCenterArray[lowestDistantCenter] = newCenterArray[lowestDistantCenter]
-              .add(key.getVector());
-          summationCount[lowestDistantCenter]++;
-        }
+        assignCentersInternal(newCenterArray, summationCount, key.getVector()
+            .deepCopy());
       }
     } else {
-      for (DoubleVector key : cache) {
-        final int lowestDistantCenter = getNearestCenter(key);
-        final DoubleVector clusterCenter = newCenterArray[lowestDistantCenter];
-        if (clusterCenter == null) {
-          newCenterArray[lowestDistantCenter] = key;
-        } else {
-          // add the vector to the center
-          newCenterArray[lowestDistantCenter] = newCenterArray[lowestDistantCenter]
-              .add(key);
-          summationCount[lowestDistantCenter]++;
+      // if our cache is enabled but empty, we have to read it from disk first
+      if (cache.isEmpty()) {
+        final NullWritable value = NullWritable.get();
+        final VectorWritable key = new VectorWritable();
+        while (peer.readNext(key, value)) {
+          DoubleVector deepCopy = key.getVector().deepCopy();
+          cache.add(deepCopy);
+          // but do the assignment directly
+          assignCentersInternal(newCenterArray, summationCount, deepCopy);
+        }
+      } else {
+        // now we can iterate in memory and check against the centers
+        for (DoubleVector v : cache) {
+          assignCentersInternal(newCenterArray, summationCount, v);
         }
       }
     }
@@ -201,6 +202,20 @@ public final class KMeansBSP extends
               newCenterArray[i]));
         }
       }
+    }
+  }
+
+  private void assignCentersInternal(final DoubleVector[] newCenterArray,
+      final int[] summationCount, final DoubleVector key) {
+    final int lowestDistantCenter = getNearestCenter(key);
+    final DoubleVector clusterCenter = newCenterArray[lowestDistantCenter];
+    if (clusterCenter == null) {
+      newCenterArray[lowestDistantCenter] = key;
+    } else {
+      // add the vector to the center
+      newCenterArray[lowestDistantCenter] = newCenterArray[lowestDistantCenter]
+          .add(key);
+      summationCount[lowestDistantCenter]++;
     }
   }
 
@@ -224,12 +239,22 @@ public final class KMeansBSP extends
       BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable> peer)
       throws IOException {
     final NullWritable value = NullWritable.get();
-    final VectorWritable key = new VectorWritable();
-    IntWritable keyWrite = new IntWritable();
-    while (peer.readNext(key, value)) {
-      final int lowestDistantCenter = getNearestCenter(key.getVector());
-      keyWrite.set(lowestDistantCenter);
-      peer.write(keyWrite, key);
+    // also use our cache to speed up the final writes if exists
+    if (cache == null) {
+      final VectorWritable key = new VectorWritable();
+      IntWritable keyWrite = new IntWritable();
+      while (peer.readNext(key, value)) {
+        final int lowestDistantCenter = getNearestCenter(key.getVector());
+        keyWrite.set(lowestDistantCenter);
+        peer.write(keyWrite, key);
+      }
+    } else {
+      IntWritable keyWrite = new IntWritable();
+      for (DoubleVector v : cache) {
+        final int lowestDistantCenter = getNearestCenter(v);
+        keyWrite.set(lowestDistantCenter);
+        peer.write(keyWrite, new VectorWritable(v));
+      }
     }
     // just on the first task write the centers to filesystem to prevent
     // collisions
@@ -247,6 +272,9 @@ public final class KMeansBSP extends
     }
   }
 
+  /**
+   * Creates a basic job with sequencefiles as in and output.
+   */
   public static BSPJob createJob(Configuration cnf, Path in, Path out)
       throws IOException {
     HamaConfiguration conf = new HamaConfiguration(cnf);
@@ -279,7 +307,11 @@ public final class KMeansBSP extends
     Configuration conf = new Configuration();
     conf.set(CENTER_IN_PATH, center.toString());
     conf.set(CENTER_OUT_PATH, centerOut.toString());
+    // if you're in local mode, you can increase this to match your core sizes
     conf.set("bsp.local.tasks.maximum", "2");
+    // deactivate (set to false) if you want to iterate over disk, else it will
+    // cache the input vectors in memory
+    conf.setBoolean(CACHING_ENABLED_KEY, true);
     BSPJob job = createJob(conf, in, out);
 
     // count = 7000000 spawns arround 6 tasks for 32mb block size
@@ -301,13 +333,16 @@ public final class KMeansBSP extends
     // just submit the job
     job.waitForCompletion(true);
 
-    // reads the output
-    readOutput(conf, out, centerOut, fs);
+    // reads the output and plots it with gnuplot
+    // readOutput(conf, out, centerOut, fs);
   }
 
   /**
-   * Reads the outputs and plots it with gnuplot.
+   * Reads the outputs and plots it with gnuplot. Normally deactivated, can be
+   * used to do some fancy plots. It will hang until you send enter to the
+   * console.
    */
+  @SuppressWarnings("unused")
   private static void readOutput(Configuration conf, Path out, Path centerPath,
       FileSystem fs) throws IOException {
     FileStatus[] stati = fs.listStatus(out);
@@ -346,6 +381,10 @@ public final class KMeansBSP extends
     GnuPlot.drawPoints(map);
   }
 
+  /**
+   * Create some random vectors as input and assign the first k vectors as
+   * intial centers.
+   */
   private static void prepareInput(int count, int k, int dimension,
       Configuration conf, Path in, Path center, Path out, FileSystem fs)
       throws IOException {
