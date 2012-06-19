@@ -111,10 +111,11 @@ public final class BatchBackpropagationBSP extends
     LOG.info("Finished! Overall error in the net of " + currentMse);
   }
 
-  private void sendErrorAndWeightsToAllPeers(
+  private static void sendErrorAndWeightsToAllPeers(
       BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer,
       DenseDoubleVector predictionErrorSum) throws IOException {
     // TODO send the weights of the NN
+    // TODO send how often we summed
     // TODO develop an efficient way to send them
     for (String peerName : peer.getAllPeerNames()) {
       peer.send(peerName, new VectorWritableMessage(predictionErrorSum));
