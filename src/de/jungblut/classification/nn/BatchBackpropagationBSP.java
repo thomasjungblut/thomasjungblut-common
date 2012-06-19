@@ -1,6 +1,7 @@
 package de.jungblut.classification.nn;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -19,8 +20,10 @@ import org.apache.hama.bsp.sync.SyncException;
 
 import com.google.common.base.Preconditions;
 
+import de.jungblut.bsp.VectorWritableMessage;
 import de.jungblut.clustering.KMeansBSP;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.writable.VectorWritable;
 
 /**
@@ -41,12 +44,12 @@ import de.jungblut.writable.VectorWritable;
  * 
  */
 public final class BatchBackpropagationBSP extends
-    BSP<VectorWritable, NullWritable, NullWritable, NullWritable> {
+    BSP<VectorWritable, VectorWritable, NullWritable, NullWritable> {
 
   /*
-   * VectorWritable as key input, having the prediction in the last index.
-   * Output is nothing, but the network (the weights) can be exported from the
-   * master task to be queried elsewhere.
+   * VectorWritable as key input, having the prediction as the value. Output is
+   * nothing, but the network (the weights) can be exported from the master task
+   * to be queried elsewhere.
    */
   private static final Log LOG = LogFactory
       .getLog(BatchBackpropagationBSP.class);
@@ -55,12 +58,13 @@ public final class BatchBackpropagationBSP extends
   private static final String MAXIMUM_GLOBAL_ERROR_KEY = "ann.max.error";
 
   private MultilayerPerceptron network;
+  private int outputLayerSize;
   private double maxError = Double.MAX_VALUE;
   private int maxIterations;
 
   @Override
-  public void setup(
-      BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> peer)
+  public final void setup(
+      BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer)
       throws IOException, SyncException, InterruptedException {
 
     Configuration configuration = peer.getConfiguration();
@@ -71,6 +75,7 @@ public final class BatchBackpropagationBSP extends
     for (int i = 0; i < layers.length; i++) {
       layerArray[i] = Integer.parseInt(layers[i]);
     }
+    outputLayerSize = layerArray[layers.length - 1];
 
     network = new MultilayerPerceptron(layerArray);
     maxIterations = configuration.getInt(NUM_EPOCHS_KEY, 0);
@@ -81,18 +86,23 @@ public final class BatchBackpropagationBSP extends
   }
 
   @Override
-  public void bsp(
-      BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> peer)
+  public final void bsp(
+      BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer)
       throws IOException, SyncException, InterruptedException {
 
+    // error list can be used to track convergence of the neural network
+    List<Double> errorList = new ArrayList<>();
     double currentMse = Double.MAX_VALUE;
     while (true) {
-      // TODO do forward step and broadcast the sum of all prediction
-      // differences and send the accumulated weights
+      network.resetGradients();
+      DenseDoubleVector predictionErrorSum = forwardStep(peer);
+      sendErrorAndWeightsToAllPeers(peer, predictionErrorSum);
+      // sync to exchange messages
       peer.sync();
-      // TODO do a global backward step
+      // TODO do a global backward step after summing the weights and setting
+      // the predicted error sum
       peer.reopenInput();
-
+      errorList.add(currentMse);
       if (currentMse < maxError)
         break;
       if (maxIterations > 0 && maxIterations < peer.getSuperstepCount())
@@ -101,9 +111,34 @@ public final class BatchBackpropagationBSP extends
     LOG.info("Finished! Overall error in the net of " + currentMse);
   }
 
+  private void sendErrorAndWeightsToAllPeers(
+      BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer,
+      DenseDoubleVector predictionErrorSum) throws IOException {
+    // TODO send the weights of the NN
+    // TODO develop an efficient way to send them
+    for (String peerName : peer.getAllPeerNames()) {
+      peer.send(peerName, new VectorWritableMessage(predictionErrorSum));
+    }
+  }
+
+  private DenseDoubleVector forwardStep(
+      BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer)
+      throws IOException {
+    final DenseDoubleVector outputLayerError = new DenseDoubleVector(
+        outputLayerSize);
+    final VectorWritable key = new VectorWritable();
+    final VectorWritable val = new VectorWritable();
+    while (peer.readNext(key, val)) {
+      // forward and accumulate the error to a global summation
+      outputLayerError
+          .add(network.forwardStep(key.getVector(), val.getVector()));
+    }
+    return outputLayerError;
+  }
+
   @Override
-  public void cleanup(
-      BSPPeer<VectorWritable, NullWritable, NullWritable, NullWritable> peer)
+  public final void cleanup(
+      BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer)
       throws IOException {
     // TODO safe the network weights and stuff
     LOG.info(network);
@@ -128,7 +163,8 @@ public final class BatchBackpropagationBSP extends
       writer = new SequenceFile.Writer(FileSystem.get(conf), conf, new Path(in,
           "input.seq"), VectorWritable.class, NullWritable.class);
       for (DoubleVector v : data) {
-        writer.append(new VectorWritable(v), NullWritable.get());
+        writer.append(new VectorWritable(v.slice(v.getLength() - 1)),
+            new VectorWritable(v.slice(v.getLength() - 1, v.getLength())));
       }
     } catch (IOException e) {
       e.printStackTrace();
@@ -153,6 +189,8 @@ public final class BatchBackpropagationBSP extends
     Configuration conf = new Configuration();
     conf.set(NETWORK_LAYOUT_KEY, standardLayout);
     conf.setInt(NUM_EPOCHS_KEY, 1000);
+    // use 2 threads for locally debugging
+    conf.setInt("bsp.local.tasks.maximum", 2);
 
     writeInput(conf, in, dataset);
 
