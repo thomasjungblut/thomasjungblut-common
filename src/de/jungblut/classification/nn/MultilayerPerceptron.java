@@ -1,8 +1,15 @@
 package de.jungblut.classification.nn;
 
 import gnu.trove.list.array.TDoubleArrayList;
+
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.writable.VectorWritable;
 
 /**
  * Multilayer perceptron by my collegue Marvin Ritter using my math library. <br/>
@@ -37,6 +44,14 @@ public final class MultilayerPerceptron {
     for (int i = 0; i < weights.length; i++) {
       weights[i] = new WeightMatrix(layers[i], layers[i + 1]);
     }
+  }
+
+  /**
+   * Custom serialization constructor for already trained networks.
+   */
+  public MultilayerPerceptron(Layer[] layers, WeightMatrix[] weights) {
+    this.layers = layers;
+    this.weights = weights;
   }
 
   /**
@@ -95,7 +110,8 @@ public final class MultilayerPerceptron {
   /**
    * After a full forward and backward step we can adjust the weights by
    * normalizing the via the learningrate and lambda. Here we also need the
-   * number of training examples seen.
+   * number of training examples seen.<br/>
+   * TODO adjust the weights by using FminCG to get to the minimum faster
    */
   public void adjustWeights(int numTrainingExamples, double learningRate,
       double lambda) {
@@ -145,4 +161,70 @@ public final class MultilayerPerceptron {
     return new DenseDoubleVector(errorList.toArray());
   }
 
+  public static MultilayerPerceptron deserialize(DataInput in)
+      throws IOException {
+    int numLayers = in.readInt();
+    Layer[] layers = new Layer[numLayers];
+    for (int i = 0; i < numLayers; i++) {
+      int layerLength = in.readInt();
+      DoubleVector activations = VectorWritable.readVector(in);
+      DoubleVector errors = VectorWritable.readVector(in);
+      layers[i] = new Layer(layerLength, (DenseDoubleVector) activations,
+          (DenseDoubleVector) errors);
+    }
+
+    WeightMatrix[] weights = new WeightMatrix[numLayers - 1];
+    for (int i = 0; i < weights.length; i++) {
+      DenseDoubleMatrix derivatives = new DenseDoubleMatrix(in.readInt(),
+          in.readInt());
+      for (int row = 0; row < derivatives.getRowCount(); row++) {
+        for (int col = 0; col < derivatives.getColumnCount(); col++) {
+          derivatives.set(row, col, in.readDouble());
+        }
+      }
+      DenseDoubleMatrix weightMatrix = new DenseDoubleMatrix(in.readInt(),
+          in.readInt());
+      for (int row = 0; row < weightMatrix.getRowCount(); row++) {
+        for (int col = 0; col < weightMatrix.getColumnCount(); col++) {
+          weightMatrix.set(row, col, in.readDouble());
+        }
+      }
+      weights[i] = new WeightMatrix(layers[i], layers[i + 1], weightMatrix,
+          derivatives);
+    }
+
+    MultilayerPerceptron net = new MultilayerPerceptron(layers, weights);
+    return net;
+  }
+
+  public static void serialize(MultilayerPerceptron model, DataOutput out)
+      throws IOException {
+    out.writeInt(model.layers.length);
+    // first write all the layers
+    for (Layer l : model.layers) {
+      out.writeInt(l.getLength());
+      VectorWritable.writeVector(l.getActivations(), out);
+      VectorWritable.writeVector(l.getErrors(), out);
+    }
+    // TODO write a matrix writable class for that
+    // write the weight matrices
+    for (WeightMatrix mat : model.weights) {
+      DenseDoubleMatrix derivatives = mat.getDerivatives();
+      out.writeInt(derivatives.getRowCount());
+      out.writeInt(derivatives.getColumnCount());
+      for (int row = 0; row < derivatives.getRowCount(); row++) {
+        for (int col = 0; col < derivatives.getColumnCount(); col++) {
+          out.writeDouble(derivatives.get(row, col));
+        }
+      }
+      DenseDoubleMatrix weights = mat.getWeights();
+      out.writeInt(weights.getRowCount());
+      out.writeInt(weights.getColumnCount());
+      for (int row = 0; row < weights.getRowCount(); row++) {
+        for (int col = 0; col < weights.getColumnCount(); col++) {
+          out.writeDouble(weights.get(row, col));
+        }
+      }
+    }
+  }
 }

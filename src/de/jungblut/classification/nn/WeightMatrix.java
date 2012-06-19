@@ -25,6 +25,14 @@ public final class WeightMatrix {
         weights.getColumnCount());
   }
 
+  public WeightMatrix(Layer leftLayer, Layer rightLayer,
+      DenseDoubleMatrix weights, DenseDoubleMatrix derivatives) {
+    this.leftLayer = leftLayer;
+    this.rightLayer = rightLayer;
+    this.weights = weights;
+    this.derivatives = derivatives;
+  }
+
   public void updateWeights(int m, double learningRate, double lambda) {
     DoubleMatrix d = derivatives.divide(m).add(weights.multiply(lambda));
     weights = (DenseDoubleMatrix) weights.subtract(d.multiply(learningRate));
@@ -61,6 +69,14 @@ public final class WeightMatrix {
   public void forward() {
     rightLayer.setInputs(weights.multiplyVector(leftLayer
         .getActivationsWithBias()));
+  }
+
+  public DenseDoubleMatrix getWeights() {
+    return weights;
+  }
+
+  public DenseDoubleMatrix getDerivatives() {
+    return derivatives;
   }
 
   @Override

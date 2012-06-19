@@ -16,6 +16,13 @@ public final class Layer {
     errors = new DenseDoubleVector(neuronCount);
   }
 
+  public Layer(int neuronCount, DenseDoubleVector activations,
+      DenseDoubleVector errors) {
+    this.length = neuronCount;
+    this.activations = activations;
+    this.errors = errors;
+  }
+
   public DenseDoubleVector getActivations() {
     return activations;
   }

@@ -7,6 +7,8 @@ import java.util.List;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
@@ -54,6 +56,7 @@ public final class BatchBackpropagationBSP extends
   private static final Log LOG = LogFactory
       .getLog(BatchBackpropagationBSP.class);
   private static final String NETWORK_LAYOUT_KEY = "ann.network.layout";
+  private static final String NETWORK_OUTPUT_PATH_KEY = "ann.output.path";
   private static final String NUM_EPOCHS_KEY = "ann.num.epochs";
   private static final String MAXIMUM_GLOBAL_ERROR_KEY = "ann.max.error";
   private static final String LAMBDA_KEY = "ann.lambda";
@@ -119,7 +122,7 @@ public final class BatchBackpropagationBSP extends
       currentMse = globalAvgError.abs().sum();
       peer.reopenInput();
       errorList.add(currentMse);
-      System.out.println(peer.getSuperstepCount() + " -> " + currentMse);
+      LOG.info(peer.getSuperstepCount() + " - " + currentMse);
       if (currentMse < maxError)
         break;
       if (maxIterations > 0 && maxIterations < peer.getSuperstepCount())
@@ -139,8 +142,7 @@ public final class BatchBackpropagationBSP extends
       predictionErrorSum = predictionErrorSum.add(msg.getData());
       sum += msg.getOperations();
     }
-
-    DoubleVector avgError = predictionErrorSum.divide(sum);
+    DoubleVector avgError = predictionErrorSum.divide(peer.getNumPeers());
     network.backwardStep(avgError);
 
     network.adjustWeights(sum, learningRate, lambda);
@@ -165,6 +167,7 @@ public final class BatchBackpropagationBSP extends
     final VectorWritable key = new VectorWritable();
     final VectorWritable val = new VectorWritable();
     while (peer.readNext(key, val)) {
+      // we only need to count in the first superstep
       if (peer.getSuperstepCount() == 0L) {
         itemsRead++;
       }
@@ -175,12 +178,31 @@ public final class BatchBackpropagationBSP extends
     return outputLayerError;
   }
 
+  /**
+   * Write the final network as binary to the configured file system, output can
+   * be found under configured path of key "__ann.output.path__/model.bin".
+   */
   @Override
   public final void cleanup(
       BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer)
       throws IOException {
-    // TODO safe the network weights and stuff
-    LOG.info(network);
+    // only first task writes that!
+    if (peer.getPeerName().equals(peer.getPeerName(0))) {
+      Path outPath = new Path(peer.getConfiguration().get(
+          NETWORK_OUTPUT_PATH_KEY), "model.bin");
+      FileSystem fs = FileSystem.get(peer.getConfiguration());
+      FSDataOutputStream stream = null;
+      try {
+        stream = fs.create(outPath);
+        MultilayerPerceptron.serialize(network, stream);
+      } catch (IOException e) {
+        e.printStackTrace();
+      } finally {
+        if (stream != null) {
+          stream.close();
+        }
+      }
+    }
   }
 
   public static BSPJob createJob(Configuration cnf, Path in) throws IOException {
@@ -225,7 +247,10 @@ public final class BatchBackpropagationBSP extends
     String standardLayout = "22 12 1";
 
     Path in = new Path("files/neuralnet/input/");
+    // trained model can be found here
+    Path networkOut = new Path("files/neuralnet/output/");
     Configuration conf = new Configuration();
+    conf.set(NETWORK_OUTPUT_PATH_KEY, networkOut.toString());
     conf.set(NETWORK_LAYOUT_KEY, standardLayout);
     conf.setInt(NUM_EPOCHS_KEY, 1000);
     conf.set(MAXIMUM_GLOBAL_ERROR_KEY, 0.001d + "");
@@ -237,5 +262,36 @@ public final class BatchBackpropagationBSP extends
     BSPJob job = createJob(conf, in);
     job.waitForCompletion(true);
 
+    // now read it back from the path
+    FileSystem fs = FileSystem.get(conf);
+    FSDataInputStream inputStream = fs.open(new Path(networkOut, "model.bin"));
+    MultilayerPerceptron network = MultilayerPerceptron
+        .deserialize(inputStream);
+    // MultilayerPerceptron network = getSequentialNet(dataset);
+
+    for (DoubleVector vec : dataset) {
+      DenseDoubleVector prediction = network
+          .predict(vec.slice(vec.getLength() - 1));
+      LOG.info("Trained network predicted " + prediction
+          + " for the real outcome of "
+          + vec.slice(vec.getLength() - 1, vec.getLength()));
+    }
+  }
+
+  @SuppressWarnings("unused")
+  private static MultilayerPerceptron getSequentialNet(
+      List<DoubleVector> dataset) {
+    MultilayerPerceptron network = new MultilayerPerceptron(new int[] { 22, 12,
+        1 });
+    DoubleVector[] x = new DenseDoubleVector[dataset.size()];
+    DoubleVector[] y = new DenseDoubleVector[dataset.size()];
+    int index = 0;
+    for (DoubleVector vec : dataset) {
+      x[index] = vec.slice(vec.getLength() - 1);
+      y[index] = vec.slice(vec.getLength() - 1, vec.getLength());
+      index++;
+    }
+    network.train(x, y, 1000, 0.001d, 0.4d, 2d, true);
+    return network;
   }
 }
