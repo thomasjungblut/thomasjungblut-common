@@ -3,6 +3,7 @@ package de.jungblut.classification.nn;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -238,13 +239,9 @@ public final class BatchBackpropagationBSP extends
 
   public static void main(String[] args) throws IOException,
       ClassNotFoundException, InterruptedException {
-    // dataset contains features and prediction in the last element
-    List<DoubleVector> dataset = MushroomReader.readMushroomDataset();
+    List<DoubleVector> dataset = sampleXOR(50000);
     Preconditions.checkArgument(dataset != null && dataset.size() > 0);
-    // this layout is separating the layers with a whitespace
-    // so we have 22 input neurons, a hidden layer with 12 neurons and an
-    // output layer with a single neuron
-    String standardLayout = "22 12 1";
+    String standardLayout = "2 3 1";
 
     Path in = new Path("files/neuralnet/input/");
     // trained model can be found here
@@ -276,6 +273,20 @@ public final class BatchBackpropagationBSP extends
           + " for the real outcome of "
           + vec.slice(vec.getLength() - 1, vec.getLength()));
     }
+  }
+
+  private static List<DoubleVector> sampleXOR(int i) {
+    List<DoubleVector> list = new ArrayList<>();
+    Random r = new Random();
+    for (int k = 0; k < i; k++) {
+      boolean a = r.nextBoolean();
+      boolean b = r.nextBoolean();
+      boolean outcome = a ^ b;
+      list.add(new DenseDoubleVector(new double[] { a ? 1.0 : 0.0,
+          b ? 1.0 : 0.0, outcome ? 1.0 : 0.0 }));
+    }
+
+    return list;
   }
 
   @SuppressWarnings("unused")
