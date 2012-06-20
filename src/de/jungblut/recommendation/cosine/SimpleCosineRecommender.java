@@ -20,7 +20,7 @@ import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.partition.BlockPartitioner;
 import de.jungblut.partition.Boundaries.Range;
-import de.jungblut.recommendation.MovieLensReader;
+import de.jungblut.reader.MovieLensReader;
 
 public class SimpleCosineRecommender {
 

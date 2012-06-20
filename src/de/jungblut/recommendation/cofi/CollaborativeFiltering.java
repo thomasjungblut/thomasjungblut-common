@@ -15,7 +15,7 @@ import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.normalize.Normalizer;
 import de.jungblut.math.tuple.Tuple;
-import de.jungblut.recommendation.MovieLensReader;
+import de.jungblut.reader.MovieLensReader;
 
 public final class CollaborativeFiltering {
 

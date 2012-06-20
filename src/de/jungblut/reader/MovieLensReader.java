@@ -1,4 +1,4 @@
-package de.jungblut.recommendation;
+package de.jungblut.reader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

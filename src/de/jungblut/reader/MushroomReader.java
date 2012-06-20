@@ -1,4 +1,4 @@
-package de.jungblut.classification.nn;
+package de.jungblut.reader;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -13,6 +13,7 @@ import com.google.common.collect.HashMultimap;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.tuple.Tuple;
 
 /**
  * Dataset vectorizer for the mushroom dataset. Parses the nominal values into
@@ -23,7 +24,7 @@ public final class MushroomReader {
 
   private static final String MUSHROOM_DATASET_PATH = "files/mushroom/mushroom_dataset.csv";
 
-  public static List<DoubleVector> readMushroomDataset() {
+  public static Tuple<DoubleVector[], DoubleVector[]> readMushroomDataset() {
     List<DoubleVector> list = new ArrayList<>();
     List<String[]> buffer = new ArrayList<String[]>();
     HashMultimap<Integer, String> multiMap = HashMultimap.create();
@@ -75,7 +76,15 @@ public final class MushroomReader {
       list.add(vec);
     }
 
-    return list;
-  }
+    DoubleVector[] features = new DoubleVector[list.size()];
+    DoubleVector[] outcome = new DoubleVector[list.size()];
+    for (int i = 0; i < list.size(); i++) {
+      DoubleVector doubleVector = list.get(i);
+      features[i] = doubleVector.slice(doubleVector.getLength() - 1);
+      outcome[i] = doubleVector.slice(doubleVector.getLength() - 1,
+          doubleVector.getLength());
+    }
 
+    return new Tuple<DoubleVector[], DoubleVector[]>(features, outcome);
+  }
 }

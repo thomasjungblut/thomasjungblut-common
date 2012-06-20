@@ -1,4 +1,4 @@
-package de.jungblut.classification.bayes;
+package de.jungblut.reader;
 
 import java.io.BufferedReader;
 import java.io.File;

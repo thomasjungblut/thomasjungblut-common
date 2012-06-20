@@ -15,6 +15,7 @@ import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
 import de.jungblut.nlp.Vectorizer;
+import de.jungblut.reader.TwentyNewsgroupReader;
 
 /**
  * Simple multinomial naive bayes classifier.
