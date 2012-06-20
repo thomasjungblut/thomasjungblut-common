@@ -163,7 +163,7 @@ public final class BatchBackpropagationBSP extends
       }
     }
 
-    network.setAccumulatedWeights(peer.getNumPeers(),weights, derivatives);
+    network.setAccumulatedWeights(peer.getNumPeers(), weights, derivatives);
 
     DoubleVector avgError = predictionErrorSum.divide(peer.getNumPeers());
     network.backwardStep(avgError);
@@ -177,8 +177,6 @@ public final class BatchBackpropagationBSP extends
       DoubleVector predictionErrorSum, int itemsRead,
       WeightMatrix[] weightMatrices) throws IOException {
     for (String peerName : peer.getAllPeerNames()) {
-      // TODO do we need to send the derivatives? They will be recacled by
-      // backward step anyways
       peer.send(peerName, new VectorWeightWritableMessage(predictionErrorSum,
           itemsRead, weightMatrices));
     }
@@ -197,7 +195,7 @@ public final class BatchBackpropagationBSP extends
       }
       // forward and accumulate the error to a global summation
       outputLayerError = outputLayerError.add(network.forwardStep(
-          key.getVector(), val.getVector()));
+          key.getVector(), val.getVector()).abs());
     }
     return outputLayerError;
   }
