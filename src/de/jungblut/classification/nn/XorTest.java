@@ -9,6 +9,7 @@ public final class XorTest {
   public static void main(String[] args) {
     testManualTraining();
     testAutomaticTraining();
+    // testBatchTraining();
   }
 
   public static Tuple<DoubleVector[], DoubleVector[]> getXORTraining() {
@@ -74,6 +75,25 @@ public final class XorTest {
       nn.adjustWeights(xor.length, 1.0, 0.0d);
     }
     return nn;
+  }
+
+  public static void testBatchTraining() {
+    Tuple<DoubleVector[], DoubleVector[]> xorTraining = getXORTraining();
+    DoubleVector[] xor = xorTraining.getFirst();
+    DoubleVector[] xorOutcome = xorTraining.getSecond();
+    MultilayerPerceptron nn = new MultilayerPerceptron(new int[] { 2, 3, 1 });
+    for (int iteration = 0; iteration < 10000; iteration++) {
+      nn.resetGradients();
+      DoubleVector difference = new DenseDoubleVector(1);
+      for (int i = 0; i < xor.length; i++) {
+        difference = difference
+            .add(nn.forwardStep(xor[i], xorOutcome[i]).abs());
+      }
+      System.out.println(difference);
+      nn.backwardStep(difference);
+      nn.adjustWeights(xor.length, 1.0, 0.0d);
+    }
+    checkOutcome(xorTraining, nn);
   }
 
 }

@@ -112,7 +112,6 @@ public final class MultilayerPerceptron {
    * After a full forward and backward step we can adjust the weights by
    * normalizing the via the learningrate and lambda. Here we also need the
    * number of training examples seen.<br/>
-   * TODO adjust the weights by using FminCG to get to the minimum faster
    */
   public void adjustWeights(int numTrainingExamples, double learningRate,
       double lambda) {
@@ -164,19 +163,6 @@ public final class MultilayerPerceptron {
 
   public WeightMatrix[] getWeights() {
     return weights;
-  }
-
-  /**
-   * Used to set a global weight and derivative to this network.
-   */
-  public void setAccumulatedWeights(int numNetworks,
-      DenseDoubleMatrix[] weights, DenseDoubleMatrix[] derivatives) {
-    for (int i = 0; i < this.weights.length; i++) {
-      this.weights[i].setWeights((DenseDoubleMatrix) weights[i]
-          .divide(numNetworks));
-      this.weights[i].setDerivatives((DenseDoubleMatrix) derivatives[i]
-          .divide(numNetworks));
-    }
   }
 
   public static MultilayerPerceptron deserialize(DataInput in)
