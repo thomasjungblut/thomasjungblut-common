@@ -9,6 +9,7 @@ import java.io.IOException;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.writable.MatrixWritable;
 import de.jungblut.writable.VectorWritable;
 
 /**
@@ -161,6 +162,23 @@ public final class MultilayerPerceptron {
     return new DenseDoubleVector(errorList.toArray());
   }
 
+  public WeightMatrix[] getWeights() {
+    return weights;
+  }
+
+  /**
+   * Used to set a global weight and derivative to this network.
+   */
+  public void setAccumulatedWeights(int numNetworks,
+      DenseDoubleMatrix[] weights, DenseDoubleMatrix[] derivatives) {
+    for (int i = 0; i < this.weights.length; i++) {
+      this.weights[i].setWeights((DenseDoubleMatrix) weights[i]
+          .divide(numNetworks));
+      this.weights[i].setDerivatives((DenseDoubleMatrix) derivatives[i]
+          .divide(numNetworks));
+    }
+  }
+
   public static MultilayerPerceptron deserialize(DataInput in)
       throws IOException {
     int numLayers = in.readInt();
@@ -175,20 +193,10 @@ public final class MultilayerPerceptron {
 
     WeightMatrix[] weights = new WeightMatrix[numLayers - 1];
     for (int i = 0; i < weights.length; i++) {
-      DenseDoubleMatrix derivatives = new DenseDoubleMatrix(in.readInt(),
-          in.readInt());
-      for (int row = 0; row < derivatives.getRowCount(); row++) {
-        for (int col = 0; col < derivatives.getColumnCount(); col++) {
-          derivatives.set(row, col, in.readDouble());
-        }
-      }
-      DenseDoubleMatrix weightMatrix = new DenseDoubleMatrix(in.readInt(),
-          in.readInt());
-      for (int row = 0; row < weightMatrix.getRowCount(); row++) {
-        for (int col = 0; col < weightMatrix.getColumnCount(); col++) {
-          weightMatrix.set(row, col, in.readDouble());
-        }
-      }
+      DenseDoubleMatrix derivatives = (DenseDoubleMatrix) MatrixWritable
+          .read(in);
+      DenseDoubleMatrix weightMatrix = (DenseDoubleMatrix) MatrixWritable
+          .read(in);
       weights[i] = new WeightMatrix(layers[i], layers[i + 1], weightMatrix,
           derivatives);
     }
@@ -206,25 +214,13 @@ public final class MultilayerPerceptron {
       VectorWritable.writeVector(l.getActivations(), out);
       VectorWritable.writeVector(l.getErrors(), out);
     }
-    // TODO write a matrix writable class for that
     // write the weight matrices
     for (WeightMatrix mat : model.weights) {
       DenseDoubleMatrix derivatives = mat.getDerivatives();
-      out.writeInt(derivatives.getRowCount());
-      out.writeInt(derivatives.getColumnCount());
-      for (int row = 0; row < derivatives.getRowCount(); row++) {
-        for (int col = 0; col < derivatives.getColumnCount(); col++) {
-          out.writeDouble(derivatives.get(row, col));
-        }
-      }
+      MatrixWritable.write(derivatives, out);
       DenseDoubleMatrix weights = mat.getWeights();
-      out.writeInt(weights.getRowCount());
-      out.writeInt(weights.getColumnCount());
-      for (int row = 0; row < weights.getRowCount(); row++) {
-        for (int col = 0; col < weights.getColumnCount(); col++) {
-          out.writeDouble(weights.get(row, col));
-        }
-      }
+      MatrixWritable.write(weights, out);
     }
   }
+
 }

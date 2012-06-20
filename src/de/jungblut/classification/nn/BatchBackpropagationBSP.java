@@ -23,9 +23,9 @@ import org.apache.hama.bsp.sync.SyncException;
 
 import com.google.common.base.Preconditions;
 
-import de.jungblut.bsp.VectorWritableMessage;
 import de.jungblut.clustering.KMeansBSP;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.writable.VectorWritable;
 
@@ -116,7 +116,8 @@ public final class BatchBackpropagationBSP extends
     while (true) {
       network.resetGradients();
       DoubleVector predictionErrorSum = forwardStep(peer);
-      sendErrorAndWeightsToAllPeers(peer, predictionErrorSum, itemsRead);
+      sendErrorAndWeightsToAllPeers(peer, predictionErrorSum, itemsRead,
+          network.getWeights());
       // sync to exchange messages
       peer.sync();
       DoubleVector globalAvgError = accumulateAndBackwardStep(peer);
@@ -137,12 +138,33 @@ public final class BatchBackpropagationBSP extends
       throws IOException {
 
     DoubleVector predictionErrorSum = new DenseDoubleVector(outputLayerSize);
+    // accumulated weights and derivatives
+    DenseDoubleMatrix[] weights = null;
+    DenseDoubleMatrix[] derivatives = null;
     int sum = 0;
-    VectorWritableMessage msg = null;
-    while ((msg = (VectorWritableMessage) peer.getCurrentMessage()) != null) {
+    VectorWeightWritableMessage msg = null;
+    while ((msg = (VectorWeightWritableMessage) peer.getCurrentMessage()) != null) {
       predictionErrorSum = predictionErrorSum.add(msg.getData());
       sum += msg.getOperations();
+      if (weights == null) {
+        final int length = msg.getWeights().length;
+        weights = new DenseDoubleMatrix[length];
+        derivatives = new DenseDoubleMatrix[length];
+        for (int i = 0; i < weights.length; i++) {
+          weights[i] = msg.getWeights()[i];
+          derivatives[i] = msg.getDerivatives()[i];
+        }
+      } else {
+        for (int i = 0; i < weights.length; i++) {
+          weights[i] = (DenseDoubleMatrix) weights[i].add(msg.getWeights()[i]);
+          derivatives[i] = (DenseDoubleMatrix) derivatives[i].add(msg
+              .getDerivatives()[i]);
+        }
+      }
     }
+
+    network.setAccumulatedWeights(peer.getNumPeers(),weights, derivatives);
+
     DoubleVector avgError = predictionErrorSum.divide(peer.getNumPeers());
     network.backwardStep(avgError);
 
@@ -152,12 +174,13 @@ public final class BatchBackpropagationBSP extends
 
   private static void sendErrorAndWeightsToAllPeers(
       BSPPeer<VectorWritable, VectorWritable, NullWritable, NullWritable> peer,
-      DoubleVector predictionErrorSum, int itemsRead) throws IOException {
-    // TODO send the weights of the NN
-    // TODO develop an efficient way to send them
+      DoubleVector predictionErrorSum, int itemsRead,
+      WeightMatrix[] weightMatrices) throws IOException {
     for (String peerName : peer.getAllPeerNames()) {
-      peer.send(peerName, new VectorWritableMessage(predictionErrorSum,
-          itemsRead));
+      // TODO do we need to send the derivatives? They will be recacled by
+      // backward step anyways
+      peer.send(peerName, new VectorWeightWritableMessage(predictionErrorSum,
+          itemsRead, weightMatrices));
     }
   }
 
@@ -257,21 +280,23 @@ public final class BatchBackpropagationBSP extends
     writeInput(conf, in, dataset);
 
     BSPJob job = createJob(conf, in);
-    job.waitForCompletion(true);
+    if (job.waitForCompletion(true)) {
 
-    // now read it back from the path
-    FileSystem fs = FileSystem.get(conf);
-    FSDataInputStream inputStream = fs.open(new Path(networkOut, "model.bin"));
-    MultilayerPerceptron network = MultilayerPerceptron
-        .deserialize(inputStream);
-    // MultilayerPerceptron network = getSequentialNet(dataset);
+      // now read it back from the path
+      FileSystem fs = FileSystem.get(conf);
+      FSDataInputStream inputStream = fs
+          .open(new Path(networkOut, "model.bin"));
+      MultilayerPerceptron network = MultilayerPerceptron
+          .deserialize(inputStream);
+      // MultilayerPerceptron network = getSequentialNet(dataset);
 
-    for (DoubleVector vec : dataset) {
-      DenseDoubleVector prediction = network
-          .predict(vec.slice(vec.getLength() - 1));
-      LOG.info("Trained network predicted " + prediction
-          + " for the real outcome of "
-          + vec.slice(vec.getLength() - 1, vec.getLength()));
+      for (DoubleVector vec : dataset) {
+        DenseDoubleVector prediction = network.predict(vec.slice(vec
+            .getLength() - 1));
+        LOG.info("Trained network predicted " + prediction
+            + " for the real outcome of "
+            + vec.slice(vec.getLength() - 1, vec.getLength()));
+      }
     }
   }
 

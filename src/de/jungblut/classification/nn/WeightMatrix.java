@@ -79,6 +79,14 @@ public final class WeightMatrix {
     return derivatives;
   }
 
+  public void setDerivatives(DenseDoubleMatrix derivatives) {
+    this.derivatives = derivatives;
+  }
+
+  public void setWeights(DenseDoubleMatrix weights) {
+    this.weights = weights;
+  }
+
   @Override
   public String toString() {
     return weights.toString();
