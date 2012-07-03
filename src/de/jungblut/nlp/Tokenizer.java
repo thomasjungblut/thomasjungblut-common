@@ -141,9 +141,15 @@ public final class Tokenizer {
     if (tokens.length < size) {
       return tokens;
     }
-    List<String> list = new LinkedList<>();
-    for (int i = 0; i < tokens.length - 1; i++) {
-      list.add(tokens[i] + " " + tokens[i + 1]);
+    List<String> list = new ArrayList<>();
+    final int endIndex = tokens.length - size + 1;
+    for (int i = 0; i < endIndex; i++) {
+      String tkn = tokens[i];
+      final int tokenEndIndex = (i + size);
+      for (int j = i + 1; j < tokenEndIndex; j++) {
+        tkn += " " + tokens[j];
+      }
+      list.add(tkn);
     }
     return list.toArray(new String[list.size()]);
   }
