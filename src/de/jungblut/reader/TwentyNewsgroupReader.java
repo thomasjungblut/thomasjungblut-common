@@ -89,7 +89,7 @@ public final class TwentyNewsgroupReader {
             }
           }
           whiteSpaceTokens = Tokenizer.removeEmpty(whiteSpaceTokens);
-          whiteSpaceTokens = Tokenizer.whiteSpaceTokenizeNGramms(
+          whiteSpaceTokens = Tokenizer.buildNGramms(
               whiteSpaceTokens, 2);
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);

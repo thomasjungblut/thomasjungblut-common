@@ -130,14 +130,14 @@ public final class Tokenizer {
    */
   public static String[] whiteSpaceTokenizeNGramms(String text, int size) {
     String[] whiteSpaceTokenize = whiteSpaceTokenize(text);
-    return whiteSpaceTokenizeNGramms(whiteSpaceTokenize, size);
+    return buildNGramms(whiteSpaceTokenize, size);
   }
 
   /**
    * This tokenizer uses the given tokens and then concatenates the words based
    * on size.
    */
-  public static String[] whiteSpaceTokenizeNGramms(String[] tokens, int size) {
+  public static String[] buildNGramms(String[] tokens, int size) {
     if (tokens.length < size) {
       return tokens;
     }
