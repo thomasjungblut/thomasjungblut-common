@@ -129,11 +129,11 @@ public final class MultinomialNaiveBayesClassifier {
 
   /**
    * This method prints a confusion matrix along with several metrics like
-   * accuracy. It prints to STDOUT.
+   * accuracy. It prints to STDOUT if verbose.
    */
   public Tuple<Double, Double> evaluateModel(
       List<DoubleVector> testSetInputVector, DenseIntVector testSetPrediction,
-      String[] classNames) {
+      String[] classNames, boolean verbose) {
 
     // we add two columns to the confusion matrix to add false sums and overall
     // sums to the rows
@@ -163,9 +163,11 @@ public final class MultinomialNaiveBayesClassifier {
     }
 
     double accuracy = truePositives / (double) testSetInputVector.size();
-    System.out.println("Classified correctly: " + truePositives + " out of "
-        + testSetInputVector.size() + " documents! That's accuracy of "
-        + (accuracy * 100) + "%");
+    if (verbose) {
+      System.out.println("Classified correctly: " + truePositives + " out of "
+          + testSetInputVector.size() + " documents! That's accuracy of "
+          + (accuracy * 100) + "%");
+    }
 
     // calculate the quadratic weighted kappa
     final int numRatings = classProbability.getLength();
@@ -184,22 +186,23 @@ public final class MultinomialNaiveBayesClassifier {
       }
     }
     double kappa = 1.0d - numerator / denominator;
-    System.out.println("Quadratic weighted Kappa: " + kappa);
+    if (verbose) {
+      System.out.println("Quadratic weighted Kappa: " + kappa);
+      System.out.println("\nConfusion matrix:\n");
 
-    System.out.println("\nConfusion matrix:\n");
-
-    for (int i = 0; i < classProbability.getLength(); i++) {
-      System.out.format("%5d", i);
-    }
-
-    System.out.println("  SUM  FALSE\n");
-
-    for (int i = 0; i < classProbability.getLength(); i++) {
-      for (int j = 0; j < columnLength; j++) {
-        System.out.format("%5d", confusionMatrix[i][j]);
+      for (int i = 0; i < classProbability.getLength(); i++) {
+        System.out.format("%5d", i);
       }
-      String clz = classNames != null ? classNames[i] : i + "";
-      System.out.println(" <- " + i + " classfied as " + clz);
+
+      System.out.println("  SUM  FALSE\n");
+
+      for (int i = 0; i < classProbability.getLength(); i++) {
+        for (int j = 0; j < columnLength; j++) {
+          System.out.format("%5d", confusionMatrix[i][j]);
+        }
+        String clz = classNames != null ? classNames[i] : i + "";
+        System.out.println(" <- " + i + " classfied as " + clz);
+      }
     }
     return new Tuple<Double, Double>(accuracy, kappa);
   }
@@ -232,6 +235,6 @@ public final class MultinomialNaiveBayesClassifier {
         testDocuments, updatedWordFrequency);
     DenseIntVector testSetPrediction = testSet.getSecond();
     classifier.evaluateModel(testSetInputVector, testSetPrediction,
-        trainingSet.getThird());
+        trainingSet.getThird(), true);
   }
 }
