@@ -169,14 +169,8 @@ public final class MultinomialNaiveBayesClassifier {
       for (int j = 0; j < classProbability.getLength() + 2; j++) {
         System.out.format("%5d", confusionMatrix[i][j]);
       }
-<<<<<<< HEAD
       String clz = classNames != null ? classNames[i] : i + "";
       System.out.println(" <- " + i + " classfied as " + clz);
-=======
-      System.out
-          .println(" <- " + i + " classfied as " + classNames == null ? classNames[i]
-              : i);
->>>>>>> 5f584c934306aea8f4fe12eb948d5a8772867a8b
     }
 
   }
