@@ -131,8 +131,9 @@ public final class MultinomialNaiveBayesClassifier {
    * This method prints a confusion matrix along with several metrics like
    * accuracy. It prints to STDOUT.
    */
-  public void evaluateModel(List<DoubleVector> testSetInputVector,
-      DenseIntVector testSetPrediction, String[] classNames) {
+  public Tuple<Double, Double> evaluateModel(
+      List<DoubleVector> testSetInputVector, DenseIntVector testSetPrediction,
+      String[] classNames) {
 
     // we add two columns to the confusion matrix to add false sums and overall
     // sums to the rows
@@ -161,9 +162,10 @@ public final class MultinomialNaiveBayesClassifier {
       index++;
     }
 
+    double accuracy = truePositives / (double) testSetInputVector.size();
     System.out.println("Classified correctly: " + truePositives + " out of "
         + testSetInputVector.size() + " documents! That's accuracy of "
-        + (truePositives / (double) testSetInputVector.size() * 100) + "%");
+        + (accuracy * 100) + "%");
 
     // calculate the quadratic weighted kappa
     final int numRatings = classProbability.getLength();
@@ -199,7 +201,7 @@ public final class MultinomialNaiveBayesClassifier {
       String clz = classNames != null ? classNames[i] : i + "";
       System.out.println(" <- " + i + " classfied as " + clz);
     }
-
+    return new Tuple<Double, Double>(accuracy, kappa);
   }
 
   public static void main(String[] args) {
