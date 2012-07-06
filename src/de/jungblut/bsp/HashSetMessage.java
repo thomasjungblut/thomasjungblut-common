@@ -5,9 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.HashSet;
 
-import org.apache.hama.bsp.BSPMessage;
+import org.apache.hadoop.io.Writable;
 
-public class HashSetMessage extends BSPMessage {
+public class HashSetMessage implements Writable {
 
   private HashSet<Long> set;
 
@@ -21,15 +21,8 @@ public class HashSetMessage extends BSPMessage {
     this.set = set;
   }
 
-  @Override
   public HashSet<Long> getData() {
     return set;
-  }
-
-  // not used
-  @Override
-  public Object getTag() {
-    return null;
   }
 
   @Override

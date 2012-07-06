@@ -4,9 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hama.bsp.BSPMessage;
+import org.apache.hadoop.io.Writable;
 
-public class LongMessage extends BSPMessage {
+public class LongMessage implements Writable {
 
   private long tag;
   private String data;
@@ -32,12 +32,10 @@ public class LongMessage extends BSPMessage {
     out.writeUTF(data);
   }
 
-  @Override
-  public Long getTag() {
+  public long getTag() {
     return tag;
   }
 
-  @Override
   public String getData() {
     return data;
   }

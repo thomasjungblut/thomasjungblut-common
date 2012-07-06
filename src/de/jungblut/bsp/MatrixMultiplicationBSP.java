@@ -1,4 +1,4 @@
-package de.jungblut.math.bsp;
+package de.jungblut.bsp;
 
 import java.io.IOException;
 import java.util.Map.Entry;
@@ -18,16 +18,17 @@ import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.Partitioner;
 import org.apache.hama.bsp.SequenceFileInputFormat;
 import org.apache.hama.bsp.SequenceFileOutputFormat;
+import org.apache.hama.bsp.message.MessageManager;
 import org.apache.hama.bsp.sync.SyncException;
 
-import de.jungblut.bsp.ResultMessage;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.writable.VectorWritable;
 
-public final class MatrixMultiplicationBSP extends
-    BSP<IntWritable, VectorWritable, IntWritable, VectorWritable> {
+public final class MatrixMultiplicationBSP
+    extends
+    BSP<IntWritable, VectorWritable, IntWritable, VectorWritable, ResultMessage> {
 
   private static final String HAMA_MAT_MULT_B_PATH = "hama.mat.mult.B.path";
 
@@ -35,7 +36,7 @@ public final class MatrixMultiplicationBSP extends
 
   @Override
   public void setup(
-      BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable> peer)
+      BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, ResultMessage> peer)
       throws IOException, SyncException, InterruptedException {
     Configuration conf = peer.getConfiguration();
     reopenOtherMatrix(conf);
@@ -43,7 +44,7 @@ public final class MatrixMultiplicationBSP extends
 
   @Override
   public void bsp(
-      BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable> peer)
+      BSPPeer<IntWritable, VectorWritable, IntWritable, VectorWritable, ResultMessage> peer)
       throws IOException, SyncException, InterruptedException {
 
     // properties for our output matrix C
@@ -72,17 +73,12 @@ public final class MatrixMultiplicationBSP extends
     }
 
     peer.sync();
-
+    
+    //TODO we have a sorted message queue now, we can recode this better
     // a peer gets all column entries for multiple rows based on row number
-    // TODO order is not preserved, so it must use a bit more memory..
-    // TODO time to add a sorting message manager?
     TreeMap<Integer, VectorWritable> rowMap = new TreeMap<Integer, VectorWritable>();
     ResultMessage currentMessage = null;
-    while ((currentMessage = (ResultMessage) peer.getCurrentMessage()) != null) {
-      // System.out.println(peer.getPeerName() + " "
-      // + currentMessage.getTargetRow() + "x"
-      // + currentMessage.getTargetColumn() + " = "
-      // + currentMessage.getValue());
+    while ((currentMessage = peer.getCurrentMessage()) != null) {
       VectorWritable vectorWritable = rowMap.get(currentMessage.getTargetRow());
       if (vectorWritable == null) {
         VectorWritable v = new VectorWritable(
@@ -97,7 +93,6 @@ public final class MatrixMultiplicationBSP extends
     }
 
     // write all the rows out..
-
     for (Entry<Integer, VectorWritable> entry : rowMap.entrySet()) {
       peer.write(new IntWritable(entry.getKey()), entry.getValue());
     }
@@ -115,6 +110,8 @@ public final class MatrixMultiplicationBSP extends
       InterruptedException, ClassNotFoundException {
 
     Configuration conf = new Configuration();
+    conf.set(MessageManager.QUEUE_TYPE_CLASS,
+        "org.apache.hama.bsp.message.SortedMessageQueue");
     conf.set("bsp.local.tasks.maximum", "8");
 
     for (int n = 200; n < 300; n++) {

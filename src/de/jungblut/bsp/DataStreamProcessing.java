@@ -24,7 +24,7 @@ import twitter4j.TwitterFactory;
  * 
  */
 public class DataStreamProcessing extends
-    BSP<NullWritable, NullWritable, NullWritable, NullWritable> {
+    BSP<NullWritable, NullWritable, NullWritable, NullWritable, LongMessage> {
 
   private Twitter twitter;
   private String userName;
@@ -34,7 +34,7 @@ public class DataStreamProcessing extends
 
   @Override
   public void setup(
-      BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable> peer)
+      BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, LongMessage> peer)
       throws IOException, InterruptedException {
     // gets the default twitter
     twitter = new TwitterFactory().getInstance();
@@ -54,7 +54,7 @@ public class DataStreamProcessing extends
 
   @Override
   public void bsp(
-      BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable> bspPeer)
+      BSPPeer<NullWritable, NullWritable, NullWritable, NullWritable, LongMessage> bspPeer)
       throws IOException, SyncException, InterruptedException {
 
     if (isMaster) {
@@ -93,7 +93,7 @@ public class DataStreamProcessing extends
         // wait for some work...
         bspPeer.sync();
         LongMessage message;
-        while ((message = (LongMessage) bspPeer.getCurrentMessage()) != null) {
+        while ((message = bspPeer.getCurrentMessage()) != null) {
           System.out.println("Got work in form of text: " + message.getData()
               + " for the userid: " + message.getTag());
         }

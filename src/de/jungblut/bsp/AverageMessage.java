@@ -4,9 +4,9 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hama.bsp.BSPMessage;
+import org.apache.hadoop.io.Writable;
 
-public final class AverageMessage extends BSPMessage {
+public final class AverageMessage implements Writable {
 
   private int k;
   private double avg;
@@ -33,13 +33,11 @@ public final class AverageMessage extends BSPMessage {
     out.writeDouble(avg);
   }
 
-  @Override
-  public final Double getData() {
+  public final double getData() {
     return avg;
   }
 
-  @Override
-  public final Integer getTag() {
+  public final int getTag() {
     return k;
   }
 

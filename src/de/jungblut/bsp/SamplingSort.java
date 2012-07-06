@@ -16,10 +16,10 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
 import org.apache.hama.bsp.BSPJob;
-import org.apache.hama.bsp.BSPMessage;
 import org.apache.hama.bsp.BSPPeer;
 import org.apache.hama.bsp.SequenceFileInputFormat;
 import org.apache.hama.bsp.SequenceFileOutputFormat;
@@ -28,14 +28,14 @@ import org.apache.hama.bsp.sync.SyncException;
 import de.jungblut.datastructure.ListUtils;
 
 public final class SamplingSort extends
-    BSP<IntWritable, NullWritable, IntWritable, NullWritable> {
+    BSP<IntWritable, NullWritable, IntWritable, NullWritable, Writable> {
 
   private final NullWritable val = NullWritable.get();
 
   @SuppressWarnings("unchecked")
   @Override
   public void bsp(
-      BSPPeer<IntWritable, NullWritable, IntWritable, NullWritable> peer)
+      BSPPeer<IntWritable, NullWritable, IntWritable, NullWritable, Writable> peer)
       throws IOException, SyncException, InterruptedException {
     int numPeers = peer.getNumPeers();
     int[] pivotArray = new int[numPeers];
@@ -62,7 +62,7 @@ public final class SamplingSort extends
     IntIntMessage msg = null;
     while ((msg = (IntIntMessage) peer.getCurrentMessage()) != null) {
       // use direct field access to prevent autoboxing
-      pivotArray[msg.tag] = msg.data;
+      pivotArray[msg.getTag()] = msg.getData();
     }
 
     // partition
@@ -111,11 +111,11 @@ public final class SamplingSort extends
   }
 
   public static boolean isMaster(
-      BSPPeer<IntWritable, NullWritable, IntWritable, NullWritable> peer) {
+      BSPPeer<IntWritable, NullWritable, IntWritable, NullWritable, Writable> peer) {
     return peer.getPeerName().equals(peer.getPeerName(0));
   }
 
-  final class PartitionMessage extends BSPMessage {
+  final class PartitionMessage implements Writable {
 
     List<IntWritable> list;
 
@@ -143,16 +143,6 @@ public final class SamplingSort extends
         intWritable.readFields(in);
         list.add(intWritable);
       }
-    }
-
-    @Override
-    public IntWritable[] getData() {
-      return null;
-    }
-
-    @Override
-    public Integer getTag() {
-      return null;
     }
 
   }

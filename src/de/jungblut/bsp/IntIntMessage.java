@@ -4,12 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hama.bsp.BSPMessage;
+import org.apache.hadoop.io.Writable;
 
-public class IntIntMessage extends BSPMessage {
+public class IntIntMessage implements Writable {
 
-  int tag;
-  int data;
+  private int tag;
+  private int data;
 
   public IntIntMessage() {
   }
@@ -32,18 +32,12 @@ public class IntIntMessage extends BSPMessage {
     out.writeInt(data);
   }
 
-  /*
-   * Not used because of boxing primitives.
-   */
-
-  @Override
-  public Integer getTag() {
-    return null;
+  public int getTag() {
+    return tag;
   }
 
-  @Override
-  public Integer getData() {
-    return null;
+  public int getData() {
+    return data;
   }
 
 }

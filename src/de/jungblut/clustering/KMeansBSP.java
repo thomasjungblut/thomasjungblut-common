@@ -42,8 +42,9 @@ import de.jungblut.writable.VectorWritable;
  * @author thomas.jungblut
  * 
  */
-public final class KMeansBSP extends
-    BSP<VectorWritable, NullWritable, IntWritable, VectorWritable> {
+public final class KMeansBSP
+    extends
+    BSP<VectorWritable, NullWritable, IntWritable, VectorWritable, CenterMessage> {
 
   private static final String CENTER_OUT_PATH = "center.out.path";
   private static final String MAX_ITERATIONS_KEY = "k.means.max.iterations";
@@ -60,11 +61,14 @@ public final class KMeansBSP extends
   private int maxIterations;
   // our distance measurement
   private DistanceMeasurer distanceMeasurer;
+  private Configuration conf;
 
   @Override
   public final void setup(
-      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable> peer)
+      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable, CenterMessage> peer)
       throws IOException, InterruptedException {
+
+    conf = peer.getConfiguration();
 
     Path centroids = new Path(peer.getConfiguration().get(CENTER_IN_PATH));
     FileSystem fs = FileSystem.get(peer.getConfiguration());
@@ -102,7 +106,7 @@ public final class KMeansBSP extends
 
   @Override
   public final void bsp(
-      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable> peer)
+      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable, CenterMessage> peer)
       throws IOException, InterruptedException, SyncException {
     long converged;
     while (true) {
@@ -121,14 +125,14 @@ public final class KMeansBSP extends
   }
 
   private long updateCenters(
-      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable> peer)
+      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable, CenterMessage> peer)
       throws IOException {
     // this is the update step
     DoubleVector[] msgCenters = new DoubleVector[centers.length];
     int[] incrementSum = new int[centers.length];
     CenterMessage msg;
     // basically just summing incoming vectors
-    while ((msg = (CenterMessage) peer.getCurrentMessage()) != null) {
+    while ((msg = peer.getCurrentMessage()) != null) {
       DoubleVector oldCenter = msgCenters[msg.getCenterIndex()];
       DoubleVector newCenter = msg.getData();
       incrementSum[msg.getCenterIndex()] += msg.getIncrementCounter();
@@ -161,7 +165,7 @@ public final class KMeansBSP extends
   }
 
   private void assignCenters(
-      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable> peer)
+      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable, CenterMessage> peer)
       throws IOException {
     // each task has all the centers, if a center has been updated it
     // needs to be broadcasted.
@@ -236,7 +240,7 @@ public final class KMeansBSP extends
   }
 
   private void recalculateAssignmentsAndWrite(
-      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable> peer)
+      BSPPeer<VectorWritable, NullWritable, IntWritable, VectorWritable, CenterMessage> peer)
       throws IOException {
     final NullWritable value = NullWritable.get();
     // also use our cache to speed up the final writes if exists

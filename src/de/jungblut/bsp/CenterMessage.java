@@ -4,12 +4,12 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hama.bsp.BSPMessage;
+import org.apache.hadoop.io.Writable;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.writable.VectorWritable;
 
-public final class CenterMessage extends BSPMessage {
+public final class CenterMessage implements Writable {
 
   private int centerIndex;
   private DoubleVector newCenter;
@@ -51,12 +51,10 @@ public final class CenterMessage extends BSPMessage {
     return incrementCounter;
   }
 
-  @Override
-  public final Integer getTag() {
+  public final int getTag() {
     return centerIndex;
   }
 
-  @Override
   public final DoubleVector getData() {
     return newCenter;
   }

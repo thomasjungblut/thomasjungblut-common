@@ -4,9 +4,11 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hama.bsp.BSPMessage;
+import org.apache.hadoop.io.WritableComparable;
 
-public final class ResultMessage extends BSPMessage {
+import com.google.common.collect.ComparisonChain;
+
+public final class ResultMessage implements WritableComparable<ResultMessage> {
 
   private int targetRow;
   private int targetColumn;
@@ -48,18 +50,10 @@ public final class ResultMessage extends BSPMessage {
     out.writeDouble(value);
   }
 
-  /*
-   * Not used due to object overhead and wrapping
-   */
-
   @Override
-  public Object getData() {
-    return null;
-  }
-
-  @Override
-  public Object getTag() {
-    return null;
+  public int compareTo(ResultMessage o) {
+    return ComparisonChain.start().compare(targetRow, o.targetRow)
+        .compare(targetColumn, o.targetColumn).compare(value, o.value).result();
   }
 
 }
