@@ -6,9 +6,13 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import com.google.common.base.Preconditions;
+
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.minimize.DenseMatrixFolder;
+import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.writable.MatrixWritable;
 import de.jungblut.writable.VectorWritable;
 
@@ -161,8 +165,46 @@ public final class MultilayerPerceptron {
     return new DenseDoubleVector(errorList.toArray());
   }
 
+  /**
+   * Full backpropagation training method. It performs weight finding by using
+   * fmincg (conjugate gradient). <b>It currently only works for three layered
+   * neural networks (input, hidden, output).</b>
+   * 
+   * @param x the training examples
+   * @param y the outcomes for the training examples
+   * @param maxIterations the number of maximum iterations to train
+   * @param lambda the given regularization parameter
+   * @param verbose output to console with the last given errors
+   */
+  public void trainFmincg(DenseDoubleMatrix x, DenseDoubleMatrix y,
+      int maxIterations, double lambda, boolean verbose) {
+
+    Preconditions.checkArgument(getLayers().length == 3);
+
+    DenseDoubleVector pInput = DenseMatrixFolder.foldMatrices(
+        getWeights()[0].getWeights(), getWeights()[1].getWeights());
+    MultilayerPerceptronCostFunction costFunction = new MultilayerPerceptronCostFunction(
+        this, x, y, lambda);
+    DoubleVector minimizeFunction = Fmincg.minimizeFunction(costFunction,
+        pInput, maxIterations, verbose);
+    DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
+        minimizeFunction, new int[][] {
+            { getWeights()[0].getWeights().getRowCount(),
+                getWeights()[0].getWeights().getColumnCount() },
+            { getWeights()[1].getWeights().getRowCount(),
+                getWeights()[1].getWeights().getColumnCount() } });
+
+    getWeights()[0].setWeights(unfoldMatrices[0]);
+    getWeights()[1].setWeights(unfoldMatrices[1]);
+
+  }
+
   public WeightMatrix[] getWeights() {
     return weights;
+  }
+
+  public Layer[] getLayers() {
+    return layers;
   }
 
   public static MultilayerPerceptron deserialize(DataInput in)

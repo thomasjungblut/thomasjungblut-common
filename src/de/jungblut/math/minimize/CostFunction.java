@@ -3,6 +3,13 @@ package de.jungblut.math.minimize;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
+/**
+ * Cost function interface to be implemented when using with a optimizer like
+ * conjugate gradient for example.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public interface CostFunction {
 
   /**

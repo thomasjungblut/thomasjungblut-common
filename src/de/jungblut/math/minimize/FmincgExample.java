@@ -4,6 +4,13 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
+/**
+ * Some example I featured in my blog. It shows that conjugate gradient can find
+ * the global minimum with a simple parable. Could also be a good testcase.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public class FmincgExample {
 
   public static void main(String[] args) {

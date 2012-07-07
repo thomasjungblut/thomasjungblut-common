@@ -6,6 +6,9 @@ import de.jungblut.math.dense.DenseDoubleVector;
 
 public class DenseMatrixFolder {
 
+  /**
+   * Folds the given matrices column-wise into a single vector.
+   */
   public static DenseDoubleVector foldMatrices(DenseDoubleMatrix... matrices) {
     int length = 0;
     for (DenseDoubleMatrix matrix : matrices) {
@@ -25,6 +28,13 @@ public class DenseMatrixFolder {
     return v;
   }
 
+  /**
+   * Unfolds a vector into matrices by the rules defined in the sizeArray. The
+   * sizeArray must have following format: in each row the row and column count
+   * must be provided.<br/>
+   * Example: sizeArray = {{2,3},{3,2}} will unfold into matrix 0 with 2 rows
+   * and 3 columns and matrix 1 with 3 rows and 2 columns.
+   */
   public static DenseDoubleMatrix[] unfoldMatrices(DoubleVector vector,
       int[][] sizeArray) {
     DenseDoubleMatrix[] arr = new DenseDoubleMatrix[sizeArray.length];
@@ -44,22 +54,6 @@ public class DenseMatrixFolder {
     }
 
     return arr;
-  }
-
-  public static void main(String[] args) {
-    DenseDoubleMatrix a = new DenseDoubleMatrix(new double[][] { { 1, 2, 3 },
-        { 4, 5, 6 } });
-    DenseDoubleMatrix b = new DenseDoubleMatrix(new double[][] { { 7, 8, 9 },
-        { 10, 11, 12 } });
-    DoubleVector foldMatrices = foldMatrices(a, b);
-    System.out.println(foldMatrices);
-    DenseDoubleMatrix[] unfoldMatrices = unfoldMatrices(foldMatrices,
-        new int[][] { { 2, 3 }, { 2, 3 } });
-
-    for (DenseDoubleMatrix m : unfoldMatrices) {
-      System.out.println(m);
-    }
-
   }
 
 }
