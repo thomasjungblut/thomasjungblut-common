@@ -1,10 +1,7 @@
 package de.jungblut.classification.bayes;
 
-import java.io.File;
 import java.util.Iterator;
 import java.util.List;
-
-import com.google.common.collect.HashMultiset;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
@@ -13,9 +10,6 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 import de.jungblut.math.tuple.Tuple;
-import de.jungblut.math.tuple.Tuple3;
-import de.jungblut.nlp.Vectorizer;
-import de.jungblut.reader.TwentyNewsgroupReader;
 
 /**
  * Simple multinomial naive bayes classifier.
@@ -208,36 +202,5 @@ public final class MultinomialNaiveBayesClassifier {
       }
     }
     return new Tuple<Double, Double>(accuracy, kappa);
-  }
-
-  public static void main(String[] args) {
-
-    Tuple3<List<String[]>, DenseIntVector, String[]> trainingSet = TwentyNewsgroupReader
-        .readTwentyNewsgroups(new File(
-            "files/20news-bydate/20news-bydate-train/"));
-
-    List<String[]> trainingDocuments = trainingSet.getFirst();
-    Tuple<HashMultiset<String>[], String[]> trainingSetWordCounts = Vectorizer
-        .prepareWordCountToken(trainingDocuments);
-    List<DoubleVector> trainingSetInputVector = Vectorizer
-        .wordFrequencyVectorize(trainingDocuments, trainingSetWordCounts);
-
-    MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
-    classifier.train(new SparseDoubleColumnMatrix(trainingSetInputVector),
-        trainingSet.getSecond());
-
-    Tuple3<List<String[]>, DenseIntVector, String[]> testSet = TwentyNewsgroupReader
-        .readTwentyNewsgroups(new File(
-            "files/20news-bydate/20news-bydate-test/"));
-
-    List<String[]> testDocuments = testSet.getFirst();
-    Tuple<HashMultiset<String>[], String[]> updatedWordFrequency = Vectorizer
-        .updateWordFrequencyCounts(testDocuments,
-            trainingSetWordCounts.getSecond());
-    List<DoubleVector> testSetInputVector = Vectorizer.wordFrequencyVectorize(
-        testDocuments, updatedWordFrequency);
-    DenseIntVector testSetPrediction = testSet.getSecond();
-    classifier.evaluateModel(testSetInputVector, testSetPrediction,
-        trainingSet.getThird(), true);
   }
 }
