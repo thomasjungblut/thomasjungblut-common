@@ -65,8 +65,8 @@ public final class MultilayerPerceptron {
   public DenseDoubleVector predict(DoubleVector xi) {
     layers[0].setActivations(xi);
 
-    for (int i = 0; i < weights.length; i++) {
-      weights[i].forward();
+    for (WeightMatrix weight : weights) {
+      weight.forward();
     }
 
     return layers[layers.length - 1].getActivations();
@@ -78,8 +78,8 @@ public final class MultilayerPerceptron {
    */
   public void resetGradients() {
     // reset all gradients / derivatives
-    for (int k = 0; k < weights.length; k++) {
-      weights[k].resetDerivatives();
+    for (WeightMatrix weight : weights) {
+      weight.resetDerivatives();
     }
   }
 
@@ -107,8 +107,8 @@ public final class MultilayerPerceptron {
     // based on the errors we can now calculate the partial derivatives for all
     // layers and add them to the
     // internal matrix
-    for (int k = 0; k < weights.length; k++) {
-      weights[k].addDerivativesFromError();
+    for (WeightMatrix weight : weights) {
+      weight.addDerivativesFromError();
     }
   }
 
@@ -120,8 +120,8 @@ public final class MultilayerPerceptron {
   public void adjustWeights(int numTrainingExamples, double learningRate,
       double lambda) {
     // adjust weights using the given learning rate
-    for (int k = 0; k < weights.length; k++) {
-      weights[k].updateWeights(numTrainingExamples, learningRate, lambda);
+    for (WeightMatrix weight : weights) {
+      weight.updateWeights(numTrainingExamples, learningRate, lambda);
     }
   }
 
@@ -152,7 +152,7 @@ public final class MultilayerPerceptron {
         mse += difference.pow(2).sum();
         backwardStep(difference);
       }
-      adjustWeights(x.length, 1.0, 0.0d);
+      adjustWeights(x.length, learningRate, lambda);
       if (verbose) {
         System.out.println(iteration + ": " + mse);
       }
@@ -229,8 +229,7 @@ public final class MultilayerPerceptron {
           derivatives);
     }
 
-    MultilayerPerceptron net = new MultilayerPerceptron(layers, weights);
-    return net;
+    return new MultilayerPerceptron(layers, weights);
   }
 
   public static void serialize(MultilayerPerceptron model, DataOutput out)

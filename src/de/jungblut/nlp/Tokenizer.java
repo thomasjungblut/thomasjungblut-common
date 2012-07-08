@@ -2,6 +2,7 @@ package de.jungblut.nlp;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +25,7 @@ public final class Tokenizer {
    * Fully consumes a lucene tokenstream and returns a string array.
    */
   public static String[] consumeTokenStream(TokenStream stream) {
-    ArrayList<String> list = new ArrayList<String>();
+    ArrayList<String> list = new ArrayList<>();
     try {
       stream.reset();
 
@@ -93,9 +94,7 @@ public final class Tokenizer {
    */
   public static String[] deduplicateTokens(String[] tokens) {
     LinkedHashSet<String> set = new LinkedHashSet<>();
-    for (String s : tokens) {
-      set.add(s);
-    }
+    Collections.addAll(set, tokens);
     return set.toArray(new String[set.size()]);
   }
 
@@ -107,7 +106,7 @@ public final class Tokenizer {
   }
 
   public static String[] wordTokenize(String text, String regex) {
-    ArrayList<String> list = new ArrayList<String>();
+    ArrayList<String> list = new ArrayList<>();
     StringTokenizer tokenizer = new StringTokenizer(text, regex);
     while (tokenizer.hasMoreElements()) {
       list.add((String) tokenizer.nextElement());
@@ -116,7 +115,7 @@ public final class Tokenizer {
   }
 
   public static String[] removeEmpty(String[] arr) {
-    ArrayList<String> list = new ArrayList<String>();
+    ArrayList<String> list = new ArrayList<>();
     for (String s : arr) {
       if (s != null && !s.isEmpty())
         list.add(s);

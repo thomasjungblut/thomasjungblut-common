@@ -33,7 +33,7 @@ public class MovieLensReader {
   }
 
   public static HashMap<Integer, String> getMovieLookupTable() {
-    HashMap<Integer, String> map = new HashMap<Integer, String>();
+    HashMap<Integer, String> map = new HashMap<>();
     try (BufferedReader br = new BufferedReader(new FileReader(
         "files/ml-1m/movies.dat"))) {
       String line;

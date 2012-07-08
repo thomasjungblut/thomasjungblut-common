@@ -24,8 +24,6 @@ import de.jungblut.reader.MovieLensReader;
 
 public class SimpleCosineRecommender {
 
-  private ExecutorService threadPool;
-
   private final DoubleMatrix input;
   private final DistanceMeasurer measure;
   private final double distanceThreshold;
@@ -45,7 +43,7 @@ public class SimpleCosineRecommender {
         input.getRowCount(), input.getColumnCount()) : new DenseDoubleMatrix(
         input.getRowCount(), input.getColumnCount());
 
-    threadPool = Executors.newFixedThreadPool(numCores);
+    ExecutorService threadPool = Executors.newFixedThreadPool(numCores);
     ExecutorCompletionService<Integer> completionService = new ExecutorCompletionService<>(
         threadPool);
 

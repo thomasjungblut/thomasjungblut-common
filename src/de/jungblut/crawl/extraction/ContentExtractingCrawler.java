@@ -2,7 +2,6 @@ package de.jungblut.crawl.extraction;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -64,13 +63,7 @@ public class ContentExtractingCrawler implements
       result
           .add(new ContentFetchResult(site, set, title, extractedLargestText));
       return result;
-    } catch (MalformedURLException e) {
-      e.printStackTrace();
-    } catch (BoilerpipeProcessingException e) {
-      e.printStackTrace();
-    } catch (IOException e) {
-      e.printStackTrace();
-    } catch (ParserException e) {
+    } catch (ParserException | IOException | BoilerpipeProcessingException e) {
       e.printStackTrace();
     }
 
@@ -81,8 +74,8 @@ public class ContentExtractingCrawler implements
       InterruptedException, ExecutionException {
     String start = "http://www.cnet.de/tests/entertainment/41550001/nintendo_3ds_im_test_mobile_spielekonsole_mit_3d_display_ohne_brillenpflicht.htm";
 
-    SimpleCrawler<ContentFetchResult> crawler = new SimpleCrawler<ContentFetchResult>(
-        start, 2, new ContentExtractingCrawler(), new SystemOutputWriter());
+    SimpleCrawler<ContentFetchResult> crawler = new SimpleCrawler<>(start, 2,
+        new ContentExtractingCrawler(), new SystemOutputWriter());
 
     crawler.process();
 

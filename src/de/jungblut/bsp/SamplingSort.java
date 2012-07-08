@@ -75,7 +75,7 @@ public final class SamplingSort extends
       for (int i = 0; i < numPeers; i++) {
         if (pivotArray[i] > value) {
           if (partitions[i] == null) {
-            partitions[i] = new ArrayList<IntWritable>();
+            partitions[i] = new ArrayList<>();
           }
           partitions[i].add(clone);
           break;
@@ -137,7 +137,7 @@ public final class SamplingSort extends
     @Override
     public void readFields(DataInput in) throws IOException {
       int size = in.readInt();
-      this.list = new ArrayList<IntWritable>(size);
+      this.list = new ArrayList<>(size);
       for (int i = 0; i < size; i++) {
         IntWritable intWritable = new IntWritable();
         intWritable.readFields(in);
@@ -202,19 +202,14 @@ public final class SamplingSort extends
     FileSystem fs = FileSystem.get(conf);
     fs.delete(out, false);
     Random rand = new Random();
-    SequenceFile.Writer writer = null;
-    try {
-      writer = new SequenceFile.Writer(fs, conf, out, IntWritable.class,
-          NullWritable.class);
+    try (SequenceFile.Writer writer = new SequenceFile.Writer(fs, conf, out,
+        IntWritable.class, NullWritable.class)) {
       IntWritable key = new IntWritable();
       NullWritable val = NullWritable.get();
       for (int i = 0; i < count; i++) {
         key.set(rand.nextInt());
         writer.append(key, val);
       }
-    } finally {
-      if (writer != null)
-        writer.close();
     }
 
   }

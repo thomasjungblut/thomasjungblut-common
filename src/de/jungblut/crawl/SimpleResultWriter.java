@@ -12,7 +12,7 @@ import org.apache.hadoop.io.Text;
 
 public class SimpleResultWriter implements ResultWriter<FetchResult> {
 
-  private Configuration conf;
+  private final Configuration conf;
   private FileSystem fs;
 
   public SimpleResultWriter() throws IOException {

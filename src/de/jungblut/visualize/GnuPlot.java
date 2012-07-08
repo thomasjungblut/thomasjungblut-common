@@ -56,8 +56,7 @@ public final class GnuPlot {
       try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
           TMP_PATH + "gnuplot_" + clusterId + ".in")))) {
         List<DoubleVector> list = points.get(clusterId);
-        for (int i = 0; i < list.size(); i++) {
-          DoubleVector denseDoubleVector = list.get(i);
+        for (DoubleVector denseDoubleVector : list) {
           bw.write(denseDoubleVector.get(0) + " " + denseDoubleVector.get(1)
               + "\n");
         }
@@ -88,8 +87,7 @@ public final class GnuPlot {
   public static void drawPoints(List<DenseDoubleVector> points) {
     try (BufferedWriter bw = new BufferedWriter(new FileWriter(new File(
         TMP_PATH + "gnuplot.in")))) {
-      for (int i = 0; i < points.size(); i++) {
-        DenseDoubleVector denseDoubleVector = points.get(i);
+      for (DenseDoubleVector denseDoubleVector : points) {
         bw.write(denseDoubleVector.get(0) + " " + denseDoubleVector.get(1)
             + "\n");
       }

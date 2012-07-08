@@ -79,7 +79,7 @@ public final class DBSCAN {
 
     TIntObjectHashMap<int[]> adjacencyList = new TIntObjectHashMap<>();
     for (int col = 0; col < distanceMatrix.getColumnCount(); col++) {
-      List<Integer> possibleNeighbours = new ArrayList<Integer>();
+      List<Integer> possibleNeighbours = new ArrayList<>();
       for (int row = 0; row < distanceMatrix.getRowCount(); row++) {
         // don't include the same point
         if (row != col) {

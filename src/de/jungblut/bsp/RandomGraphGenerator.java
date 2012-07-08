@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -160,10 +161,8 @@ public class RandomGraphGenerator {
       }
       splits[numSplits - 1] = new RangeInputSplit(currentRow, totalRows
           - currentRow);
-      List<InputSplit> arrayList = new ArrayList<InputSplit>(splits.length);
-      for (InputSplit s : splits) {
-        arrayList.add(s);
-      }
+      List<InputSplit> arrayList = new ArrayList<>(splits.length);
+      Collections.addAll(arrayList, splits);
       return arrayList;
     }
 
@@ -183,7 +182,7 @@ public class RandomGraphGenerator {
   public static class SortGenMapper extends
       Mapper<LongWritable, NullWritable, Text, NullWritable> {
 
-    private NullWritable value = NullWritable.get();
+    private final NullWritable value = NullWritable.get();
 
     @Override
     protected void map(LongWritable k, NullWritable v, Context context)
@@ -246,7 +245,7 @@ public class RandomGraphGenerator {
       VERTICES, EDGES
     }
 
-    Random rand = new Random();
+    final Random rand = new Random();
     int maxId;
     int edges;
 

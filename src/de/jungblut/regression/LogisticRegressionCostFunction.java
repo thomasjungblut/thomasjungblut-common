@@ -51,7 +51,7 @@ public final class LogisticRegressionCostFunction implements CostFunction {
     DoubleVector gradient = (x.transpose().multiplyVector(
         sigmoidVector.subtract(y)).add(vec)).divide(m);
 
-    return new Tuple<Double, DoubleVector>(j, gradient);
+    return new Tuple<>(j, gradient);
   }
 
   /*

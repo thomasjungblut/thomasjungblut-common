@@ -268,8 +268,8 @@ public final class KMeansBSP
         final SequenceFile.Writer dataWriter = SequenceFile.createWriter(
             FileSystem.get(conf), conf, new Path(pathString),
             VectorWritable.class, NullWritable.class, CompressionType.NONE);
-        for (int i = 0; i < centers.length; i++) {
-          dataWriter.append(new VectorWritable(centers[i]), value);
+        for (DoubleVector center : centers) {
+          dataWriter.append(new VectorWritable(center), value);
         }
         dataWriter.close();
       }

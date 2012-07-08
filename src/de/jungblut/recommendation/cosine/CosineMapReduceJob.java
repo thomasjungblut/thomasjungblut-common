@@ -77,11 +77,9 @@ public class CosineMapReduceJob {
           context.write(key, new PairWritable(k.get(), measuredDistance));
         }
       }
-
-      if (reader != null) {
-        reader.close();
-        reader = reopen(context.getConfiguration(), path);
-      }
+      // reader here can't be null so we don't have to check this
+      reader.close();
+      reader = reopen(context.getConfiguration(), path);
     }
 
     public SequenceFile.Reader reopen(Configuration conf, Path p)
@@ -145,9 +143,7 @@ public class CosineMapReduceJob {
       if (getClass() != obj.getClass())
         return false;
       PairWritable other = (PairWritable) obj;
-      if (productID != other.productID)
-        return false;
-      return true;
+      return productID == other.productID;
     }
 
     @Override

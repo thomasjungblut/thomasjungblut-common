@@ -104,7 +104,7 @@ public class JCUDAMatrixUtils {
   }
 
   // seems to have problems with latest CUDA?
-  private static final void cublasDestroy(cublasHandle handle) {
+  private static void cublasDestroy(cublasHandle handle) {
     JCublas2.cublasDestroy(handle);
   }
 

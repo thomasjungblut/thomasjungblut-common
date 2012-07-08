@@ -21,7 +21,7 @@ public final class CollaborativeFiltering {
 
   private final DoubleMatrix userMovieRatings;
   final BooleanMatrix ratingMatrix;
-  private Tuple<DoubleMatrix, DoubleVector> normalizedTuple;
+  private final Tuple<DoubleMatrix, DoubleVector> normalizedTuple;
   private DoubleVector movieRatingMeanVector;
   private DoubleMatrix p;
 
@@ -66,7 +66,7 @@ public final class CollaborativeFiltering {
   }
 
   public DoubleVector predict(int userColumn) {
-    return p.getColumnVector(0).add(movieRatingMeanVector);
+    return p.getColumnVector(userColumn).add(movieRatingMeanVector);
   }
 
   public static void main(String[] args) {

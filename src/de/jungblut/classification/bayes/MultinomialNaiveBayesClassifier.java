@@ -69,8 +69,7 @@ public final class MultinomialNaiveBayesClassifier {
       classProbability.set(i, (numDocumentsPerClass[i] + 1)
           / (double) columnIndices.length);
     }
-    return new Tuple<DenseDoubleMatrix, DenseDoubleVector>(probabilityMatrix,
-        classProbability);
+    return new Tuple<>(probabilityMatrix, classProbability);
   }
 
   /**
@@ -201,6 +200,6 @@ public final class MultinomialNaiveBayesClassifier {
         System.out.println(" <- " + i + " classfied as " + clz);
       }
     }
-    return new Tuple<Double, Double>(accuracy, kappa);
+    return new Tuple<>(accuracy, kappa);
   }
 }

@@ -20,7 +20,7 @@ public final class CoFiCostFunction implements CostFunction {
   // R in octave code
   private final BooleanMatrix ratingMatrix;
   private final double lambda;
-  private int[][] foldArrays;
+  private final int[][] foldArrays;
 
   public CoFiCostFunction(DoubleMatrix userMovieRatings,
       BooleanMatrix ratingMatrix, int numUsers, int numMovies, int numFeatures,

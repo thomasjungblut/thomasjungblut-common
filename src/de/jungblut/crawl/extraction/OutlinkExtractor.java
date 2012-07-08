@@ -61,13 +61,11 @@ public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     if (encoding == null) {
       encoding = "ISO-8859-1";
     }
-    return new Tuple<InputStream, String>(con.getInputStream(), encoding);
+    return new Tuple<>(con.getInputStream(), encoding);
   }
 
   /**
    * Method to extract outlinks of a given HTML doc in string.
-   * 
-   * @return
    */
   public HashSet<String> extractOutlinks(String in) throws ParserException {
     final HashSet<String> set = new HashSet<>();

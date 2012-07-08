@@ -38,7 +38,7 @@ public class Normalizer {
       }
     }
 
-    return new Tuple<DoubleMatrix, DoubleVector>(matrix, meanVector);
+    return new Tuple<>(matrix, meanVector);
   }
 
   /**

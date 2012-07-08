@@ -73,10 +73,10 @@ public final class MatrixMultiplicationBSP
     }
 
     peer.sync();
-    
-    //TODO we have a sorted message queue now, we can recode this better
+
+    // TODO we have a sorted message queue now, we can recode this better
     // a peer gets all column entries for multiple rows based on row number
-    TreeMap<Integer, VectorWritable> rowMap = new TreeMap<Integer, VectorWritable>();
+    TreeMap<Integer, VectorWritable> rowMap = new TreeMap<>();
     ResultMessage currentMessage = null;
     while ((currentMessage = peer.getCurrentMessage()) != null) {
       VectorWritable vectorWritable = rowMap.get(currentMessage.getTargetRow());
@@ -148,19 +148,15 @@ public final class MatrixMultiplicationBSP
       for (FileStatus status : stati) {
         if (!status.isDir() && !status.getPath().getName().endsWith(".crc")) {
           Path path = status.getPath();
-          SequenceFile.Reader reader = null;
-          try {
-            reader = new SequenceFile.Reader(fs, path, conf);
+          try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
+              conf)) {
             IntWritable key = new IntWritable();
             VectorWritable value = new VectorWritable();
             while (reader.next(key, value)) {
               outputMatrix.setRowVector(key.get(), value.getVector());
             }
-          } finally {
-            if (reader != null) {
-              reader.close();
-            }
           }
+
         }
       }
 

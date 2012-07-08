@@ -61,8 +61,8 @@ public final class TwentyNewsgroupReader {
       File directory) {
     String[] classList = directory.list();
     Arrays.sort(classList);
-    List<String[]> docList = new ArrayList<String[]>();
-    List<Integer> prediction = new ArrayList<Integer>();
+    List<String[]> docList = new ArrayList<>();
+    List<Integer> prediction = new ArrayList<>();
     String[] nameMapping = new String[classList.length];
     int classIndex = 0;
     for (String classDirString : classList) {
@@ -89,8 +89,7 @@ public final class TwentyNewsgroupReader {
             }
           }
           whiteSpaceTokens = Tokenizer.removeEmpty(whiteSpaceTokens);
-          whiteSpaceTokens = Tokenizer.buildNGramms(
-              whiteSpaceTokens, 1);
+          whiteSpaceTokens = Tokenizer.buildNGramms(whiteSpaceTokens, 1);
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);
         } catch (IOException e) {
@@ -100,7 +99,6 @@ public final class TwentyNewsgroupReader {
       nameMapping[classIndex++] = classDirString;
     }
 
-    return new Tuple3<List<String[]>, DenseIntVector, String[]>(docList,
-        new DenseIntVector(prediction), nameMapping);
+    return new Tuple3<>(docList, new DenseIntVector(prediction), nameMapping);
   }
 }

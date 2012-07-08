@@ -17,7 +17,7 @@ public class BlockPartitioner implements Partitioner {
 
     int avg = Math.round(numberOfRows / sizeOfCluster);
     int neededSplits = sizeOfCluster;
-    int leftPieces = numberOfRows;
+    int leftPieces;
     int start = 0;
     while (neededSplits > 0) {
       bounds.addRange(start, start += avg);

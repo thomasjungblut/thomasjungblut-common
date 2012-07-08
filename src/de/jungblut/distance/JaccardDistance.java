@@ -22,8 +22,8 @@ public final class JaccardDistance implements DistanceMeasurer {
 
   private static double sumOfSquares(double[] set1) {
     double dotProduct = 0.0d;
-    for (int i = 0; i < set1.length; i++) {
-      dotProduct += set1[i] * set1[i];
+    for (double aSet1 : set1) {
+      dotProduct += aSet1 * aSet1;
     }
     return dotProduct;
   }

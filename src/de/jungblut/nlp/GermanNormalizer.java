@@ -20,7 +20,7 @@ public class GermanNormalizer implements Normalizer {
   private static final Pattern specialSignFilter = Pattern.compile(
       "\\p{Punct}", Pattern.CASE_INSENSITIVE);
 
-  public final static HashSet<String> GERMAN_STOP_WORDS = new HashSet<String>(
+  public final static HashSet<String> GERMAN_STOP_WORDS = new HashSet<>(
       Arrays.asList(new String[] { "and", "the", "of", "to", "einer", "eine",
           "eines", "einem", "einen", "der", "die", "das", "dass", "da\u00DF",
           "du", "er", "sie", "es", "was", "wer", "wie", "wir", "und", "oder",
@@ -40,11 +40,11 @@ public class GermanNormalizer implements Normalizer {
     final String trim = s.toLowerCase().trim();
     final String replaceAll = specialSignFilter.matcher(trim).replaceAll("");
     String[] tokens = Tokenizer.whiteSpaceTokenize(replaceAll);
-    ArrayList<String> list = new ArrayList<String>();
-    for (int i = 0; i < tokens.length; i++) {
-      if (!tokens[i].isEmpty() && !isWhitespaceToken(tokens[i])
-          && !GERMAN_STOP_WORDS.contains(tokens[i])) {
-        list.add(tokens[i]);
+    ArrayList<String> list = new ArrayList<>();
+    for (String token : tokens) {
+      if (!token.isEmpty() && !isWhitespaceToken(token)
+          && !GERMAN_STOP_WORDS.contains(token)) {
+        list.add(token);
       }
     }
 
@@ -57,14 +57,14 @@ public class GermanNormalizer implements Normalizer {
       }
     }
 
-    return list.toArray(new String[0]);
+    return list.toArray(new String[list.size()]);
   }
 
-  private final static ArrayList<String> mergeDigitsWithFollowUpToken(
+  private static ArrayList<String> mergeDigitsWithFollowUpToken(
       ArrayList<String> list) {
-    ArrayList<String> toReturn = new ArrayList<String>();
+    ArrayList<String> toReturn = new ArrayList<>();
     Iterator<String> it = list.iterator();
-    ArrayList<String> buffer = new ArrayList<String>();
+    ArrayList<String> buffer = new ArrayList<>();
     while (it.hasNext()) {
       final String next = it.next();
       if (isDigitToken(next)) {
@@ -91,8 +91,8 @@ public class GermanNormalizer implements Normalizer {
 
   public static boolean isDigitToken(String token) {
     char[] chars = token.toCharArray();
-    for (int i = 0; i < chars.length; i++) {
-      if (!Character.isDigit(chars[i]))
+    for (char aChar : chars) {
+      if (!Character.isDigit(aChar))
         return false;
     }
     return true;
@@ -100,8 +100,8 @@ public class GermanNormalizer implements Normalizer {
 
   public static boolean isWhitespaceToken(String token) {
     char[] chars = token.toCharArray();
-    for (int i = 0; i < chars.length; i++) {
-      if (!Character.isWhitespace(chars[i]))
+    for (char aChar : chars) {
+      if (!Character.isWhitespace(aChar))
         return false;
     }
     return true;

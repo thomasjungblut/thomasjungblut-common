@@ -6,7 +6,6 @@ public class BinaryHeap {
 
   private int[] heap;
   private int size = 0;
-  private int index;
 
   public BinaryHeap() {
     heap = new int[10];
@@ -25,7 +24,7 @@ public class BinaryHeap {
   }
 
   public void upHeap(int pIndex) {
-    this.index = pIndex;
+    int index = pIndex;
     boolean finished = false;
     while (!finished) {
       int parentIndex = getIndexOfParent(index);

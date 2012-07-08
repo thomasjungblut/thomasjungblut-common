@@ -2,6 +2,7 @@ package de.jungblut.nlp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
@@ -23,9 +24,7 @@ public final class Vectorizer {
     HashMultiset<String>[] multiSets = new HashMultiset[setList.size()];
     int i = 0;
     for (String[] arr : setList) {
-      for (String s : arr) {
-        tokenBagSet.add(s);
-      }
+      Collections.addAll(tokenBagSet, arr);
       multiSets[i] = HashMultiset.create();
       multiSets[i].addAll(Arrays.asList(arr));
       i++;
@@ -53,7 +52,7 @@ public final class Vectorizer {
     HashMultiset<String>[] multiSets = wordCounts.getFirst();
     String[] tokenBagArray = wordCounts.getSecond();
 
-    List<DoubleVector> vectorList = new ArrayList<DoubleVector>(setList.size());
+    List<DoubleVector> vectorList = new ArrayList<>(setList.size());
     int i = 0;
     for (String[] arr : setList) {
       DoubleVector vector = new SparseDoubleVector(tokenBagArray.length);
@@ -86,15 +85,15 @@ public final class Vectorizer {
     int i = 0;
     for (String[] arr : setList) {
       multiSets[i] = HashMultiset.create();
-      for (int index = 0; index < arr.length; index++) {
-        if (tokenBagSet.contains(arr[index])) {
-          multiSets[i].add(arr[index]);
+      for (String anArr : arr) {
+        if (tokenBagSet.contains(anArr)) {
+          multiSets[i].add(anArr);
         }
       }
       i++;
     }
 
-    return new Tuple<HashMultiset<String>[], String[]>(multiSets, tokenBag);
+    return new Tuple<>(multiSets, tokenBag);
   }
 
   public static List<DoubleVector> wordFrequencyVectorize(String[]... vars) {
@@ -114,7 +113,7 @@ public final class Vectorizer {
     HashMultiset<String>[] multiSets = prepareWordCountToken.getFirst();
     String[] tokenBagArray = prepareWordCountToken.getSecond();
 
-    List<DoubleVector> vectorList = new ArrayList<DoubleVector>(setList.size());
+    List<DoubleVector> vectorList = new ArrayList<>(setList.size());
     int i = 0;
     for (String[] arr : setList) {
       DoubleVector vector = new SparseDoubleVector(tokenBagArray.length);

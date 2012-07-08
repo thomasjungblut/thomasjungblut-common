@@ -46,7 +46,7 @@ public class RegressionCostFunction implements CostFunction {
         gradient.set(i, gradient.get(i) + lambda * (theta.get(i) / m));
     }
 
-    return new Tuple<Double, DoubleVector>(j, gradient);
+    return new Tuple<>(j, gradient);
   }
 
 }

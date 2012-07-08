@@ -26,7 +26,7 @@ public final class MushroomReader {
 
   public static Tuple<DoubleVector[], DoubleVector[]> readMushroomDataset() {
     List<DoubleVector> list = new ArrayList<>();
-    List<String[]> buffer = new ArrayList<String[]>();
+    List<String[]> buffer = new ArrayList<>();
     HashMultimap<Integer, String> multiMap = HashMultimap.create();
     try (BufferedReader br = new BufferedReader(new FileReader(
         MUSHROOM_DATASET_PATH))) {
@@ -85,6 +85,6 @@ public final class MushroomReader {
           doubleVector.getLength());
     }
 
-    return new Tuple<DoubleVector[], DoubleVector[]>(features, outcome);
+    return new Tuple<>(features, outcome);
   }
 }

@@ -10,7 +10,7 @@ import org.apache.hadoop.io.WritableComparable;
 
 public class Boundaries {
 
-  private Set<Range> boundaries = new TreeSet<Range>();
+  private final Set<Range> boundaries = new TreeSet<>();
 
   public Boundaries() {
     super();
@@ -24,10 +24,6 @@ public class Boundaries {
    * Split going from<br>
    * start -> split - 1<br>
    * split + 1 -> end <br>
-   * 
-   * @param start
-   * @param split
-   * @param end
    */
   public void splitRange(int start, int split, int end) {
     // removing the old one
@@ -102,9 +98,7 @@ public class Boundaries {
       Range other = (Range) obj;
       if (end != other.end)
         return false;
-      if (start != other.start)
-        return false;
-      return true;
+      return start == other.start;
     }
 
     @Override

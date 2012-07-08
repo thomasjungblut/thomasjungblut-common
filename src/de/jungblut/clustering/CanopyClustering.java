@@ -2,7 +2,6 @@ package de.jungblut.clustering;
 
 import gnu.trove.map.hash.TIntObjectHashMap;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -22,21 +21,20 @@ public final class CanopyClustering {
   /**
    * Creates a list of canopies. Make sure that t1 > t2!
    */
-  public static final List<DoubleVector> createCanopies(
-      List<DoubleVector> points, DistanceMeasurer measure, double t1, double t2)
-      throws IOException {
+  public static List<DoubleVector> createCanopies(List<DoubleVector> points,
+      DistanceMeasurer measure, double t1, double t2) {
 
-    HashSet<DoubleVector> pointSet = new HashSet<DoubleVector>(points);
+    HashSet<DoubleVector> pointSet = new HashSet<>(points);
 
     // build inverted index
-    TIntObjectHashMap<List<DoubleVector>> index = new TIntObjectHashMap<List<DoubleVector>>();
+    TIntObjectHashMap<List<DoubleVector>> index = new TIntObjectHashMap<>();
     for (DoubleVector v : pointSet) {
       Iterator<DoubleVectorElement> iterateNonZero = v.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
         List<DoubleVector> list = index.get(next.getIndex());
         if (list == null) {
-          list = new LinkedList<DoubleVector>();
+          list = new LinkedList<>();
           index.put(next.getIndex(), list);
         }
         list.add(v);
@@ -49,7 +47,7 @@ public final class CanopyClustering {
       DoubleVector p1 = pointSet.iterator().next();
       pointSet.remove(p1);
       removeFromIndex(p1, index);
-      List<DoubleVector> allList = new LinkedList<DoubleVector>();
+      List<DoubleVector> allList = new LinkedList<>();
       Iterator<DoubleVectorElement> iterateNonZero = p1.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
@@ -90,7 +88,7 @@ public final class CanopyClustering {
     return canopyList;
   }
 
-  private static final void removeFromIndex(DoubleVector p1,
+  private static void removeFromIndex(DoubleVector p1,
       TIntObjectHashMap<List<DoubleVector>> index) {
     Iterator<DoubleVectorElement> iterateNonZero = p1.iterateNonZero();
     while (iterateNonZero.hasNext()) {
