@@ -85,7 +85,7 @@ public class BinaryHeap {
     return getIndexOfLeftChild(i) + 1;
   }
 
-  final static class HeapSort {
+  public final static class HeapSort {
 
     public static int[] sort(int[] arr) {
       int[] temp = new int[arr.length];

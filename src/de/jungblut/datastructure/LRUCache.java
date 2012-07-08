@@ -3,7 +3,15 @@ package de.jungblut.datastructure;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-class LRUCache<K, V> {
+/**
+ * Normal LRU cache based on LinkedHashMap.
+ * 
+ * @author thomas.jungblut
+ * 
+ * @param <K>
+ * @param <V>
+ */
+public class LRUCache<K, V> {
 
   private final LinkedHashMap<K, V> map;
   private final int cacheSize;
