@@ -15,3 +15,14 @@ Have fun to browse through many things for:
 
 Since I am Apache committer, I consider everything inside of this repository 
 licensed by Apache 2.0 license, although I haven't put the usual header into the source files.
+
+Sorry for the bad package layout, I decided very late to add testcases, 
+I haven't thought that this repository will grow so big over time.
+
+Package Layout:
+
+/src -> raw source code.
+/test -> testcases for the code in /src.
+/files -> reserved directory for files in examples or ignored paths for output of applications.
+/jcuda -> the cuda 3rd party libs for the de.jungblut.math.cuda package
+/lib -> the 3rd party libs needed (if I have time I will switch to maven)

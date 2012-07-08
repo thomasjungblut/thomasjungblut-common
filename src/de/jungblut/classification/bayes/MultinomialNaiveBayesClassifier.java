@@ -130,6 +130,9 @@ public final class MultinomialNaiveBayesClassifier {
   /**
    * This method prints a confusion matrix along with several metrics like
    * accuracy. It prints to STDOUT if verbose.
+   * 
+   * @return returns accuracy and quadratic mean kappa in this order in the
+   *         tuple.
    */
   public Tuple<Double, Double> evaluateModel(
       List<DoubleVector> testSetInputVector, DenseIntVector testSetPrediction,
