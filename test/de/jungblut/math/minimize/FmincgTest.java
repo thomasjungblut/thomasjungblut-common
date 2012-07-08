@@ -1,19 +1,17 @@
 package de.jungblut.math.minimize;
 
+import junit.framework.TestCase;
+
+import org.junit.Test;
+
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
-/**
- * Some example I featured in my blog. It shows that conjugate gradient can find
- * the global minimum with a simple parable. Could also be a good testcase.
- * 
- * @author thomas.jungblut
- * 
- */
-public class FmincgExample {
+public class FmincgTest extends TestCase {
 
-  public static void main(String[] args) {
+  @Test
+  public void testSimpleParable() {
     int startPoint = -5;
     // start at x=-5
     DoubleVector start = new DenseDoubleVector(new double[] { startPoint });
@@ -33,10 +31,8 @@ public class FmincgExample {
     };
 
     DoubleVector minimizeFunction = Fmincg.minimizeFunction(inlineFunction,
-        start, 100, true);
-    // should return 4
-    System.out.println("Found a minimum at: " + minimizeFunction);
-
+        start, 100, false);
+    assertEquals(4.0d, minimizeFunction.get(0));
   }
 
 }
