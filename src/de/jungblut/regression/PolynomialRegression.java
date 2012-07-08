@@ -8,6 +8,12 @@ import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.normalize.Normalizer;
 import de.jungblut.math.tuple.Tuple3;
 
+/**
+ * Polynomial Regression.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class PolynomialRegression {
 
   private final DoubleMatrix x;
@@ -19,6 +25,14 @@ public final class PolynomialRegression {
 
   private DoubleVector theta;
 
+  /**
+   * Creates a new regression.
+   * 
+   * @param x the training input.
+   * @param y the outcome of the trainingset.
+   * @param lambda the regularization parameter.
+   * @param normalize true if trainingset should be mean center normalized.
+   */
   public PolynomialRegression(DoubleMatrix x, DoubleVector y, double lambda,
       boolean normalize) {
     super();
@@ -38,6 +52,13 @@ public final class PolynomialRegression {
     this.lambda = lambda;
   }
 
+  /**
+   * Trains the regression model with the {@link Fmincg} optimizer.
+   * 
+   * @param numIterations the number of iterations to make.
+   * @param verbose output the progress to STDOUT if true.
+   * @return the learned theta parameters.
+   */
   public DoubleVector trainModel(int numIterations, boolean verbose) {
     RegressionCostFunction f = new RegressionCostFunction(x, y, lambda);
     DoubleVector initialTheta = new DenseDoubleVector(x.getColumnCount() + 1,
@@ -46,6 +67,11 @@ public final class PolynomialRegression {
     return theta;
   }
 
+  /**
+   * Predicts the output by the given input.
+   * 
+   * @return the predicted vector.
+   */
   public DoubleVector predict(DenseDoubleMatrix input) {
     DenseDoubleMatrix in = input;
     if (normalize) {
@@ -55,8 +81,13 @@ public final class PolynomialRegression {
         .multiplyVector(theta);
   }
 
-  // mean squared error
-  public double error(DoubleVector prediction) {
+  /**
+   * Calculates the mean squared error.
+   * 
+   * @param prediction the prediction to check against the given real outcome.
+   * @return the error
+   */
+  public double meanSquaredError(DoubleVector prediction) {
     return (y.subtract(prediction).pow(2).sum() / y.getLength());
   }
 
@@ -92,10 +123,20 @@ public final class PolynomialRegression {
     return stddev;
   }
 
-  public boolean isNormalize() {
+  public boolean isNormalized() {
     return normalize;
   }
 
+  /**
+   * Creates a new matrix consisting out of polynomials of the input matrix.<br/>
+   * Considering you want to do a 2 polynomial out of 3 columns you get:<br/>
+   * (SEED: x^1 | y^1 | z^1 )| x^2 | y^2 | z^2 for the columns of the returned
+   * matrix.
+   * 
+   * @param seed matrix to add polynoms of it.
+   * @param num how many polynoms, 2 for quadratic, 3 for cubic and so forth.
+   * @return the new matrix.
+   */
   public static DenseDoubleMatrix createPolynomials(DenseDoubleMatrix seed,
       int num) {
     if (num == 1)
@@ -114,39 +155,4 @@ public final class PolynomialRegression {
     return m;
   }
 
-  public static void main(String[] args) {
-    DenseDoubleMatrix x = new DenseDoubleMatrix(new double[][] { { -15.9368 },
-        { -29.1530 }, { 36.1895 }, { 37.4922 }, { -48.0588 }, { -8.9415 },
-        { 15.3078 }, { -34.7063 }, { 1.3892 }, { -44.3838 }, { 7.0135 },
-        { 22.7627 } });
-
-    DenseDoubleVector y = new DenseDoubleVector(new double[] { 2.1343, 1.1733,
-        34.3591, 36.8380, 2.8090, 2.1211, 14.7103, 2.6142, 3.7402, 3.7317,
-        7.6277, 22.7524 });
-
-    PolynomialRegression reg = new PolynomialRegression(x, y, 1.0, false);
-    DoubleVector trainModel = reg.trainModel(200, false);
-    System.out
-        .println("linear model: "
-            + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
-                { -29 } })));
-    System.out.println("theta: " + trainModel);
-    System.out.println(reg.error(reg.predict(x)));
-
-    int numPoly = 8;
-
-    DenseDoubleMatrix xPoly = createPolynomials(x, numPoly);
-    reg = new PolynomialRegression(xPoly, y, 3.0d, true);
-    trainModel = reg.trainModel(200, false);
-    System.out
-        .println(numPoly
-            + ". polynomial model: "
-            + reg.predict(new DenseDoubleMatrix(new double[][] { { -15 },
-                { -29 } })));
-    System.out.println("theta: " + trainModel);
-    System.out.println(reg.error(reg.predict(xPoly)));
-
-    // GnuPlot.plot(x, y, trainModel, numPoly, reg.mean, reg.stddev);
-
-  }
 }

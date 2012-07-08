@@ -7,6 +7,12 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.tuple.Tuple;
 
+/**
+ * Regression cost function.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public class RegressionCostFunction implements CostFunction {
 
   private final DoubleMatrix x;
