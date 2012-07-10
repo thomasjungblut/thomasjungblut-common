@@ -17,7 +17,7 @@ public class FmincgTest extends TestCase {
     DoubleVector start = new DenseDoubleVector(new double[] { startPoint });
 
     // our function is f(x) = (4-x)^2+10
-    // the derivative is f(x)' = 2x-8
+    // the derivative is f'(x) = 2x-8
     CostFunction inlineFunction = new CostFunction() {
       @Override
       public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
