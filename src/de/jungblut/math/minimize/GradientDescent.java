@@ -29,7 +29,7 @@ public final class GradientDescent {
    */
   public static DoubleVector minimizeFunction(CostFunction f,
       DoubleVector pInput, double alpha, double limit, int length,
-      boolean verbose) {
+      final boolean verbose) {
 
     double[] lastCosts = new double[3];
     Arrays.fill(lastCosts, Double.MAX_VALUE);
@@ -37,8 +37,10 @@ public final class GradientDescent {
     DoubleVector theta = pInput;
     for (int iteration = 0; iteration < length; iteration++) {
       Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta);
-      System.out.print("Interation " + iteration + " | Cost: "
-          + evaluateCost.getFirst() + "\r");
+      if (verbose) {
+        System.out.print("Interation " + iteration + " | Cost: "
+            + evaluateCost.getFirst() + "\r");
+      }
       shiftLeft(lastCosts);
       lastCosts[lastIndex] = evaluateCost.getFirst();
       // break if we converged below the limit or have degraded into gradient

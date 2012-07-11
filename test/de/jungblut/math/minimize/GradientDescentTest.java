@@ -30,10 +30,10 @@ public class GradientDescentTest extends TestCase {
     };
 
     DoubleVector minimizeFunction = GradientDescent.minimizeFunction(
-        inlineFunction, start, 0.1d, 1E-10, 1000, true);
-    System.out.println(minimizeFunction);
-    // assertEquals(4.0d, minimizeFunction.get(0));
-
+        inlineFunction, start, 0.5d, 1E-20, 1000, true);
+    // 1E-5 is close enough to zero for the test to pass
+    assertTrue(minimizeFunction.get(0) >= 0 && minimizeFunction.get(0) < 1E-5);
+    assertTrue(minimizeFunction.get(1) >= 0 && minimizeFunction.get(1) < 1E-5);
   }
 
 }
