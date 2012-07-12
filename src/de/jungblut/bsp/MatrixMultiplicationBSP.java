@@ -66,7 +66,7 @@ public final class MatrixMultiplicationBSP
         }
         double dot = value.getVector().dot(columnVector.getVector());
         // we use row based partitioning once again to distribute the outcome
-        peer.send(peer.getPeerName(rowKey.get() & (peer.getNumPeers() - 1)),
+        peer.send(peer.getPeerName(rowKey.get() % (peer.getNumPeers() - 1)),
             new ResultMessage(rowKey.get(), bMatrixKey.get(), dot));
       }
       reopenOtherMatrix(peer.getConfiguration());
@@ -74,7 +74,8 @@ public final class MatrixMultiplicationBSP
 
     peer.sync();
 
-    // TODO we have a sorted message queue now, we can recode this better
+    // TODO we have a sorted message queue now (in hama 0.5), we can recode this
+    // better.
     // a peer gets all column entries for multiple rows based on row number
     TreeMap<Integer, VectorWritable> rowMap = new TreeMap<>();
     ResultMessage currentMessage = null;
@@ -206,7 +207,7 @@ public final class MatrixMultiplicationBSP
     @Override
     public final int getPartition(IntWritable key, VectorWritable value,
         int numTasks) {
-      return key.get() & (numTasks - 1);
+      return key.get() % (numTasks - 1);
     }
   }
 
