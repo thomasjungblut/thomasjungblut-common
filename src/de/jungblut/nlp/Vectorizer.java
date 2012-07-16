@@ -3,10 +3,16 @@ package de.jungblut.nlp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multiset.Entry;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
@@ -131,6 +137,41 @@ public final class Vectorizer {
     }
 
     return vectorList;
+  }
+
+  /**
+   * Given a multiset of generic elements we are going to return a list of all
+   * the elements, sorted descending by their frequency.
+   * 
+   * @param set the given multiset.
+   * @return a descending sorted list by frequency.
+   */
+  public static <E> ArrayList<Entry<E>> getMostFrequentItems(Multiset<E> set) {
+    return getMostFrequentItems(set, null);
+  }
+
+  /**
+   * Given a multiset of generic elements we are going to return a list of all
+   * the elements, sorted descending by their frequency. Also can apply a filter
+   * on the multiset, for example a filter for wordfrequency > 1.
+   * 
+   * @param set the given multiset.
+   * @param filter if not null it filters by the given {@link Predicate}.
+   * @return a descending sorted list by frequency.
+   */
+  public static <E> ArrayList<Entry<E>> getMostFrequentItems(Multiset<E> set,
+      Predicate<Entry<E>> filter) {
+
+    ArrayList<Entry<E>> list = Lists.newArrayList(filter == null ? set
+        .entrySet() : Iterables.filter(set.entrySet(), filter));
+    Collections.sort(list, new Comparator<Entry<E>>() {
+      @Override
+      public int compare(Entry<E> o1, Entry<E> o2) {
+        return Integer.compare(o2.getCount(), o1.getCount());
+      }
+    });
+
+    return list;
   }
 
   /**

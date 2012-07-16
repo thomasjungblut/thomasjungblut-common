@@ -20,7 +20,11 @@ import org.apache.hama.bsp.sync.SyncException;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.writable.VectorWritable;
 
-public class Icf extends
+/**
+ * Work in progress by Aditya Sarawgi, I just made some small fixes :)
+ *
+ */
+public final class Icf extends
     BSP<IntWritable, VectorWritable, IntWritable, Text, Writable> {
 
   private boolean isMaster;

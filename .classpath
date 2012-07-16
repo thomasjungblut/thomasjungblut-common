@@ -32,7 +32,7 @@
 	<classpathentry kind="lib" path="lib/xerces-2.9.1.jar"/>
 	<classpathentry kind="lib" path="lib/lucene-core-3.5.0.jar" sourcepath="/lucene-3.5"/>
 	<classpathentry kind="lib" path="lib/lucene-analyzers-3.5.0.jar"/>
-	<classpathentry kind="lib" path="lib/guava-12.0.jar"/>
+	<classpathentry kind="lib" path="lib/guava-12.0.jar" sourcepath="C:/Users/thomas.jungblut/.m2/repository/com/google/guava/guava/12.0/guava-12.0-sources.jar"/>
 	<classpathentry kind="lib" path="lib/hadoop-core-1.0.1.jar"/>
 	<classpathentry kind="lib" path="lib/hama-core-0.5.0.jar" sourcepath="/hama-core"/>
 	<classpathentry kind="lib" path="lib/hama-examples-0.5.0.jar"/>
