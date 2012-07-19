@@ -18,9 +18,11 @@ import de.jungblut.math.tuple.Tuple3;
 public final class IterativeSimilarityAggregation {
 
   private final String[] seedTokens;
-  private final Tuple3<String[], String[], DenseDoubleMatrix> bipartiteGraph;
   private final double alpha;
   private final SimilarityMeasurer similarityMeasurer;
+  private String[] termNodes;
+  private String[] contextNodes;
+  private DenseDoubleMatrix weightMatrix;
 
   /**
    * Constructs the similarity aggregation by seed tokens to expand and a given
@@ -50,7 +52,9 @@ public final class IterativeSimilarityAggregation {
       Tuple3<String[], String[], DenseDoubleMatrix> bipartiteGraph,
       double alpha, DistanceMeasurer distance) {
     this.seedTokens = seedTokens;
-    this.bipartiteGraph = bipartiteGraph;
+    this.termNodes = bipartiteGraph.getFirst();
+    this.contextNodes = bipartiteGraph.getSecond();
+    this.weightMatrix = bipartiteGraph.getThird();
     this.alpha = alpha;
     this.similarityMeasurer = new SimilarityMeasurer(distance);
   }
