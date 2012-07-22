@@ -16,7 +16,8 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
-import de.jungblut.nlp.TokenizerUtils;
+import de.jungblut.nlp.StandardTokenizer;
+import de.jungblut.nlp.Tokenizer;
 import de.jungblut.nlp.VectorizerUtils;
 
 /**
@@ -32,8 +33,9 @@ public final class IterativeSimilarityAggregation {
 
   private final double alpha;
   private final SimilarityMeasurer similarityMeasurer;
-
+  private final Tokenizer tokenizer;
   private final String[] seedTokens;
+
   private String[] termNodes;
   private String[] contextNodes;
   private DenseDoubleMatrix weightMatrix;
@@ -53,7 +55,8 @@ public final class IterativeSimilarityAggregation {
    */
   public IterativeSimilarityAggregation(String[] seedTokens,
       Tuple3<String[], String[], DenseDoubleMatrix> bipartiteGraph) {
-    this(seedTokens, bipartiteGraph, 0.5d, new CosineDistance());
+    this(seedTokens, bipartiteGraph, 0.5d, new CosineDistance(),
+        new StandardTokenizer());
   }
 
   /**
@@ -68,8 +71,9 @@ public final class IterativeSimilarityAggregation {
    */
   public IterativeSimilarityAggregation(String[] seedTokens,
       Tuple3<String[], String[], DenseDoubleMatrix> bipartiteGraph,
-      double alpha, DistanceMeasurer distance) {
+      double alpha, DistanceMeasurer distance, Tokenizer tokenizer) {
     this.seedTokens = seedTokens;
+    this.tokenizer = tokenizer;
     this.termNodes = bipartiteGraph.getFirst();
     this.contextNodes = bipartiteGraph.getSecond();
     this.weightMatrix = bipartiteGraph.getThird();
@@ -84,7 +88,7 @@ public final class IterativeSimilarityAggregation {
   public void init() {
     List<String[]> list = new ArrayList<>();
     for (String s : termNodes) {
-      String[] tokenized = TokenizerUtils.whiteSpaceTokenize(s);
+      String[] tokenized = tokenizer.tokenize(s);
       list.add(tokenized);
     }
     // we are going to add our seed tokens as well, to have them guranteed in
@@ -93,9 +97,8 @@ public final class IterativeSimilarityAggregation {
     Tuple<HashMultiset<String>[], String[]> prepareWordCountToken = VectorizerUtils
         .prepareWordCountToken(list);
     dictionary = prepareWordCountToken.getSecond();
-    // TODO maybe play arround with bi-grams
-    List<DoubleVector> vectorized = VectorizerUtils.wordFrequencyVectorize(list,
-        prepareWordCountToken);
+    List<DoubleVector> vectorized = VectorizerUtils.wordFrequencyVectorize(
+        list, prepareWordCountToken);
     // now we compute the pairwise similarity matrix
     final int n = vectorized.size();
     similarityMatrix = new DenseDoubleMatrix(n, n);

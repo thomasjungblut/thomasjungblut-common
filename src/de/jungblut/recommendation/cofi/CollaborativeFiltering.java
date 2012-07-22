@@ -9,11 +9,11 @@ import java.util.Random;
 import de.jungblut.math.BooleanMatrix;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.MathUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
-import de.jungblut.math.normalize.Normalizer;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.reader.MovieLensReader;
 
@@ -29,7 +29,7 @@ public final class CollaborativeFiltering {
     super();
     this.userMovieRatings = userMovieRatings;
     this.ratingMatrix = userMovieRatings.getNonDefaultBooleanMatrix();
-    normalizedTuple = Normalizer.meanNormalizeRows(userMovieRatings);
+    normalizedTuple = MathUtils.meanNormalizeRows(userMovieRatings);
   }
 
   public DoubleMatrix train() {

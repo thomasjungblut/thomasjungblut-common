@@ -18,6 +18,13 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
+/**
+ * Vectorizing utility for basic tf-idf and wordcount vectorizing of
+ * tokens/strings.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class VectorizerUtils {
 
   /**

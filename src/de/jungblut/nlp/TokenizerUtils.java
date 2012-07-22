@@ -68,7 +68,10 @@ public final class TokenizerUtils {
   }
 
   /**
-   * N-Gramm tokenizer.
+   * N-Gramm tokenizer. That are nGramms based on characters. If you want to use
+   * normal word tokenizers, then use {@link #wordTokenize(String)} for
+   * unigrams. To generate bigrams out of it you need to call
+   * {@link #buildNGramms(String[], int)}.
    */
   public static String[] nGrammTokenize(String key, int size) {
     if (key.length() < size) {
@@ -105,6 +108,10 @@ public final class TokenizerUtils {
     return wordTokenize(text, SEPARATORS);
   }
 
+  /**
+   * Tokenizes on several indicators of a word, regex to detect these must be
+   * given.
+   */
   public static String[] wordTokenize(String text, String regex) {
     ArrayList<String> list = new ArrayList<>();
     StringTokenizer tokenizer = new StringTokenizer(text, regex);
@@ -114,6 +121,10 @@ public final class TokenizerUtils {
     return list.toArray(new String[list.size()]);
   }
 
+  /**
+   * Removes empty tokens from given array. The empty slots will be filled with
+   * the follow-up tokens.
+   */
   public static String[] removeEmpty(String[] arr) {
     ArrayList<String> list = new ArrayList<>();
     for (String s : arr) {
@@ -157,10 +168,13 @@ public final class TokenizerUtils {
    * Concats the given tokens with the given delimiter.
    */
   public static String concat(String[] tokens, String delimiter) {
+    final int finalIndex = tokens.length - 1;
     StringBuilder sb = new StringBuilder();
-    for (String token : tokens) {
-      sb.append(token);
-      sb.append(delimiter);
+    for (int i = 0; i < tokens.length; i++) {
+      sb.append(tokens[i]);
+      if (i != finalIndex) {
+        sb.append(delimiter);
+      }
     }
     return sb.toString();
   }

@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.MathUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 
@@ -35,8 +36,7 @@ public class PolynomialRegressionTest extends TestCase {
   @Test
   public void testPolynomialRegression() {
     int numPoly = 8;
-    DenseDoubleMatrix xPoly = PolynomialRegression
-        .createPolynomials(x, numPoly);
+    DenseDoubleMatrix xPoly = MathUtils.createPolynomials(x, numPoly);
     PolynomialRegression reg = new PolynomialRegression(xPoly, y, 3.0d, true);
     DoubleVector trainModel = reg.trainModel(200, false);
 

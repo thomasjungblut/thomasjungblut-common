@@ -13,9 +13,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.MathUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.regression.PolynomialRegression;
 
 // this is really an ugly class, but does what it should do.
 public final class GnuPlot {
@@ -29,7 +29,7 @@ public final class GnuPlot {
     DenseDoubleVector fromUpTo = DenseDoubleVector.fromUpTo(x.min(0) - 15,
         x.max(0) + 15, 0.05);
 
-    DenseDoubleMatrix createPolynomials = PolynomialRegression
+    DenseDoubleMatrix createPolynomials = MathUtils
         .createPolynomials(new DenseDoubleMatrix(fromUpTo), polyCount);
 
     DenseDoubleMatrix xPolyNormalized = new DenseDoubleMatrix(
