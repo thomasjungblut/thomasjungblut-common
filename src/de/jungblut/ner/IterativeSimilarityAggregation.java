@@ -16,8 +16,8 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
-import de.jungblut.nlp.Tokenizer;
-import de.jungblut.nlp.Vectorizer;
+import de.jungblut.nlp.TokenizerUtils;
+import de.jungblut.nlp.VectorizerUtils;
 
 /**
  * Iterative similarity aggregation for named entity recognition and set
@@ -84,17 +84,17 @@ public final class IterativeSimilarityAggregation {
   public void init() {
     List<String[]> list = new ArrayList<>();
     for (String s : termNodes) {
-      String[] tokenized = Tokenizer.whiteSpaceTokenize(s);
+      String[] tokenized = TokenizerUtils.whiteSpaceTokenize(s);
       list.add(tokenized);
     }
     // we are going to add our seed tokens as well, to have them guranteed in
     // our dictionary
     list.add(seedTokens);
-    Tuple<HashMultiset<String>[], String[]> prepareWordCountToken = Vectorizer
+    Tuple<HashMultiset<String>[], String[]> prepareWordCountToken = VectorizerUtils
         .prepareWordCountToken(list);
     dictionary = prepareWordCountToken.getSecond();
     // TODO maybe play arround with bi-grams
-    List<DoubleVector> vectorized = Vectorizer.wordFrequencyVectorize(list,
+    List<DoubleVector> vectorized = VectorizerUtils.wordFrequencyVectorize(list,
         prepareWordCountToken);
     // now we compute the pairwise similarity matrix
     final int n = vectorized.size();

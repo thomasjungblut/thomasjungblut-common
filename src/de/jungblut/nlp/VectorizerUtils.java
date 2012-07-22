@@ -18,7 +18,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
-public final class Vectorizer {
+public final class VectorizerUtils {
 
   /**
    * Prepares a wordcount per document and a token bag of all documents.

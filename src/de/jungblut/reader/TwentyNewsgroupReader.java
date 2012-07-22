@@ -20,7 +20,7 @@ import org.apache.lucene.util.Version;
 import de.jungblut.datastructure.StringPool;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.tuple.Tuple3;
-import de.jungblut.nlp.Tokenizer;
+import de.jungblut.nlp.TokenizerUtils;
 
 /**
  * Reads the "20news-bydate" dataset into a vector space model as well as
@@ -76,7 +76,7 @@ public final class TwentyNewsgroupReader {
           while ((l = br.readLine()) != null) {
             document.append(l);
           }
-          String[] whiteSpaceTokens = Tokenizer
+          String[] whiteSpaceTokens = TokenizerUtils
               .consumeTokenStream(ENGLISH_ANALYZER.tokenStream(null,
                   new StringReader(document.toString())));
           for (int i = 0; i < whiteSpaceTokens.length; i++) {
@@ -88,8 +88,8 @@ public final class TwentyNewsgroupReader {
               whiteSpaceTokens[i] = null;
             }
           }
-          whiteSpaceTokens = Tokenizer.removeEmpty(whiteSpaceTokens);
-          whiteSpaceTokens = Tokenizer.buildNGramms(whiteSpaceTokens, 1);
+          whiteSpaceTokens = TokenizerUtils.removeEmpty(whiteSpaceTokens);
+          whiteSpaceTokens = TokenizerUtils.buildNGramms(whiteSpaceTokens, 1);
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);
         } catch (IOException e) {

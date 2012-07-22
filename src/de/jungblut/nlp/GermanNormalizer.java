@@ -39,7 +39,7 @@ public class GermanNormalizer implements Normalizer {
   public String[] tokenizeAndNormalize(String s) {
     final String trim = s.toLowerCase().trim();
     final String replaceAll = specialSignFilter.matcher(trim).replaceAll("");
-    String[] tokens = Tokenizer.whiteSpaceTokenize(replaceAll);
+    String[] tokens = TokenizerUtils.whiteSpaceTokenize(replaceAll);
     ArrayList<String> list = new ArrayList<>();
     for (String token : tokens) {
       if (!token.isEmpty() && !isWhitespaceToken(token)

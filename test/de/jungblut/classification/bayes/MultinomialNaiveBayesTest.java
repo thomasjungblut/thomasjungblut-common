@@ -14,7 +14,7 @@ import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
-import de.jungblut.nlp.Vectorizer;
+import de.jungblut.nlp.VectorizerUtils;
 import de.jungblut.reader.TwentyNewsgroupReader;
 
 public class MultinomialNaiveBayesTest extends TestCase {
@@ -26,9 +26,9 @@ public class MultinomialNaiveBayesTest extends TestCase {
             "files/20news-bydate/20news-bydate-train/"));
 
     List<String[]> trainingDocuments = trainingSet.getFirst();
-    Tuple<HashMultiset<String>[], String[]> trainingSetWordCounts = Vectorizer
+    Tuple<HashMultiset<String>[], String[]> trainingSetWordCounts = VectorizerUtils
         .prepareWordCountToken(trainingDocuments);
-    List<DoubleVector> trainingSetInputVector = Vectorizer
+    List<DoubleVector> trainingSetInputVector = VectorizerUtils
         .wordFrequencyVectorize(trainingDocuments, trainingSetWordCounts);
 
     MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
@@ -40,10 +40,10 @@ public class MultinomialNaiveBayesTest extends TestCase {
             "files/20news-bydate/20news-bydate-test/"));
 
     List<String[]> testDocuments = testSet.getFirst();
-    Tuple<HashMultiset<String>[], String[]> updatedWordFrequency = Vectorizer
+    Tuple<HashMultiset<String>[], String[]> updatedWordFrequency = VectorizerUtils
         .updateWordFrequencyCounts(testDocuments,
             trainingSetWordCounts.getSecond());
-    List<DoubleVector> testSetInputVector = Vectorizer.wordFrequencyVectorize(
+    List<DoubleVector> testSetInputVector = VectorizerUtils.wordFrequencyVectorize(
         testDocuments, updatedWordFrequency);
     DenseIntVector testSetPrediction = testSet.getSecond();
     Tuple<Double, Double> evaluateModel = classifier.evaluateModel(

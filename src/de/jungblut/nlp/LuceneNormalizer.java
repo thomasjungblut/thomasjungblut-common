@@ -16,7 +16,7 @@ public class LuceneNormalizer implements Normalizer {
   @Override
   public String[] tokenizeAndNormalize(String s) {
     TokenStream tokenStream = analyzer.tokenStream(null, new StringReader(s));
-    return Tokenizer.consumeTokenStream(tokenStream);
+    return TokenizerUtils.consumeTokenStream(tokenStream);
   }
 
 }
