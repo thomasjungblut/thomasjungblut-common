@@ -6,10 +6,11 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple3;
+import de.jungblut.math.tuple.Tuple;
 
 public final class IterativeSimilarityAggregationTest extends TestCase {
 
@@ -82,13 +83,12 @@ public final class IterativeSimilarityAggregationTest extends TestCase {
         { 0.89, 0.4, 0.1 }, // E
         { 0.88, 0.4, 0.1 } // F
         });
-    Tuple3<String[], String[], DenseDoubleMatrix> bipartiteGraph = new Tuple3<String[], String[], DenseDoubleMatrix>(
-        terms, new String[] { "context A", "context B", "context C" }, weights);
+    Tuple<String[], DoubleMatrix> bipartiteGraph = new Tuple<String[], DoubleMatrix>(
+        terms, weights);
 
     IterativeSimilarityAggregation aggregation = new IterativeSimilarityAggregation(
         seedStringSet, bipartiteGraph);
-    aggregation.init();
-    String[] expandedset = aggregation.startStaticThresholding(0.7, 0);
+    String[] expandedset = aggregation.startStaticThresholding(0.7, 0, false);
     // should be just [A B C D]
     assertTrue(Arrays.equals(new String[] { "A", "B", "C", "D" }, expandedset));
   }
