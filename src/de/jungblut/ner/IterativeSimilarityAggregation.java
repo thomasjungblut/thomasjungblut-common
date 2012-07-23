@@ -28,13 +28,12 @@ public final class IterativeSimilarityAggregation {
   // similarity between the term nodes are defined by the similarity of their
   // context in which they occur. So the context nodes are the feature of this
   // algorithm.
-  // TODO actually we could cache the similarity between the columns if the
-  // weight matrix has been transposed.
   private final SimilarityMeasurer similarityMeasurer;
   private final String[] seedTokens;
 
   private int[] seedIndices;
   private String[] termNodes;
+  // TODO could we really cache the similarity between the columns?
   private DoubleMatrix weightMatrix;
 
   /**
