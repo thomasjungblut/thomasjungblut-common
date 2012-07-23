@@ -27,7 +27,9 @@ public final class IterativeSimilarityAggregation {
   private final double alpha;
   // similarity between the term nodes are defined by the similarity of their
   // context in which they occur. So the context nodes are the feature of this
-  // algorithm
+  // algorithm.
+  // TODO actually we could cache the similarity between the columns if the
+  // weight matrix has been transposed.
   private final SimilarityMeasurer similarityMeasurer;
   private final String[] seedTokens;
 
@@ -63,7 +65,8 @@ public final class IterativeSimilarityAggregation {
       DistanceMeasurer distance) {
     this.seedTokens = seedTokens;
     this.termNodes = bipartiteGraph.getFirst();
-    this.weightMatrix = bipartiteGraph.getSecond();
+    // make sure we transpose to have a better distance lookup
+    this.weightMatrix = bipartiteGraph.getSecond().transpose();
     this.alpha = alpha;
     this.similarityMeasurer = new SimilarityMeasurer(distance);
     init();
@@ -205,8 +208,13 @@ public final class IterativeSimilarityAggregation {
     for (int i = 0; i < termsLength; i++) {
       double sum = 0.0d;
       for (int j : seedSet) {
-        double similarity = similarityMeasurer.measureSimilarity(
-            weightMatrix.getRowVector(i), weightMatrix.getRowVector(j));
+        DoubleVector columnVectorI = weightMatrix.getColumnVector(i);
+        DoubleVector columnVectorJ = weightMatrix.getColumnVector(j);
+        double similarity = 0.0d;
+        if (columnVectorI != null && columnVectorJ != null) {
+          similarity = similarityMeasurer.measureSimilarity(columnVectorI,
+              columnVectorJ);
+        }
         sum += similarity;
       }
       relevanceScores.set(i, constantLoss * sum);
