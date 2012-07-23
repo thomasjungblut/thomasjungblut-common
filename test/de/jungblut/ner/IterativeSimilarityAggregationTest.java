@@ -58,4 +58,15 @@ public final class IterativeSimilarityAggregationTest extends TestCase {
     assertTrue(sum < 0.001d);
   }
 
+  @Test
+  public void testGetTopRankedItems() {
+    DenseDoubleVector rankedTokens = new DenseDoubleVector(new double[] { 0.9,
+        0.8, 0.2, 0.3, 0.75 });
+    int[] relevantTokens = new int[] { 0, 1, 2, 3, 4 };
+    int[] topRankedItems = IterativeSimilarityAggregation.getTopRankedItems(
+        rankedTokens, relevantTokens, 0.7);
+    assertEquals(3, topRankedItems.length);
+    assertTrue(Arrays.equals(new int[] { 0, 1, 4 }, topRankedItems));
+  }
+
 }

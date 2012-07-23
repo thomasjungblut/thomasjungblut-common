@@ -4,6 +4,7 @@ import gnu.trove.list.array.TIntArrayList;
 
 import com.google.common.base.Preconditions;
 
+import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.distance.CosineDistance;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.SimilarityMeasurer;
@@ -94,26 +95,11 @@ public final class IterativeSimilarityAggregation {
     // the seed tokens must be defined in the term nodes to make this work
     for (int i = 0; i < seedTokens.length; i++) {
       String token = seedTokens[i];
-      int find = find(termNodes, token);
+      int find = ArrayUtils.find(termNodes, token);
       Preconditions.checkArgument(find >= 0, "Seed token \"" + token
           + "\" could not be found in the term list!");
       seedIndices[i] = find;
     }
-  }
-
-  /**
-   * Finds the key in the given array and returns the index, if nothing was
-   * found it just returns -1. We are assuming that everything here is not null.
-   */
-  static int find(String[] array, String key) {
-    int position = -1;
-    for (int i = 0; i < array.length; i++) {
-      if (array[i].equals(key)) {
-        position = i;
-        break;
-      }
-    }
-    return position;
   }
 
   /**
@@ -135,23 +121,59 @@ public final class IterativeSimilarityAggregation {
           similarityMatrix);
       DoubleVector rankedTokens = rankScores(alpha, relevanceScore,
           similarityScore);
+      int[] topRankedItems = getTopRankedItems(rankedTokens, relevantTokens,
+          similarityThreshold);
 
-      /**
-       * TODO:<br/>
-       * -sort terms descending by rank<br/>
-       * -get the top K terms by rank and build the new relevant tokens<br/>
-       * <br/>
-       * -if tokens are unchanged, break<br/>
-       * -if they are not equal, merge them by score (see paper)<br/>
-       */
+      // check the tokens for equality, order is important, their score is not
+      boolean equal = relevantTokens.length == topRankedItems.length;
+      if (equal) {
+        for (int i = 0; i < topRankedItems.length; i++) {
+          if (topRankedItems[i] != relevantTokens[i]) {
+            equal = false;
+            break;
+          }
+        }
+      }
+      
+      // TODO merge the new relevant tokens together
+//      relevantTokens = ArrayUtils.concat();
 
-      if (maxIterations > 0 && iteration > maxIterations) {
+      if (equal || (maxIterations > 0 && iteration > maxIterations)) {
         break;
       }
+      
       iteration++;
     }
 
     return seedTokens;
+  }
+
+  /**
+   * Simple selection sort with filtering function. It actually mutates the
+   * rankedTokens parameter, so please don't wonder about the side-effects. In
+   * the algorithm the ranked tokens vector isn't used anymore later.
+   */
+  static int[] getTopRankedItems(DoubleVector rankedTokens,
+      int[] relevantTokens, double similarityThreshold) {
+    TIntArrayList sorted = new TIntArrayList();
+    for (int item = 0; item < rankedTokens.getLength(); item++) {
+      int maxIndex = item;
+      for (int i = item; i < rankedTokens.getLength(); i++) {
+        if (rankedTokens.get(i) > rankedTokens.get(maxIndex)) {
+          maxIndex = i;
+        }
+      }
+      // swap the values so we don't find our max again in the next iteration
+      double tmp = rankedTokens.get(maxIndex);
+      rankedTokens.set(maxIndex, rankedTokens.get(item));
+      rankedTokens.set(item, tmp);
+      if (tmp > similarityThreshold) {
+        sorted.add(relevantTokens[maxIndex]);
+      } else {
+        break;
+      }
+    }
+    return sorted.toArray();
   }
 
   /**
