@@ -1,24 +1,15 @@
 package de.jungblut.ner;
 
 import gnu.trove.list.array.TIntArrayList;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import com.google.common.collect.HashMultiset;
-
 import de.jungblut.distance.CosineDistance;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.SimilarityMeasurer;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
 import de.jungblut.nlp.StandardTokenizer;
 import de.jungblut.nlp.Tokenizer;
-import de.jungblut.nlp.VectorizerUtils;
 
 /**
  * Iterative similarity aggregation for named entity recognition and set
@@ -86,37 +77,18 @@ public final class IterativeSimilarityAggregation {
    * Initializes the vectorized structures for algorithm use.
    */
   public void init() {
-    List<String[]> list = new ArrayList<>();
-    for (String s : termNodes) {
-      String[] tokenized = tokenizer.tokenize(s);
-      list.add(tokenized);
-    }
-    // we are going to add our seed tokens as well, to have them guranteed in
-    // our dictionary
-    list.add(seedTokens);
-    Tuple<HashMultiset<String>[], String[]> prepareWordCountToken = VectorizerUtils
-        .prepareWordCountToken(list);
-    dictionary = prepareWordCountToken.getSecond();
-    List<DoubleVector> vectorized = VectorizerUtils.wordFrequencyVectorize(
-        list, prepareWordCountToken);
-    // now we compute the pairwise similarity matrix
-    final int n = vectorized.size();
-    similarityMatrix = new DenseDoubleMatrix(n, n);
-    for (int i = 0; i < n; i++) {
-      for (int j = 0; j < n; j++) {
-        final double similarity = similarityMeasurer.measureSimilarity(
-            vectorized.get(i), vectorized.get(j));
-        similarityMatrix.set(i, j, similarity);
-      }
-    }
 
-    // finally we need to find our seed tokens in the dictionary
-    seedIndices = new int[seedTokens.length];
-    int i = 0;
-    for (String seed : seedTokens) {
-      int index = Arrays.binarySearch(dictionary, seed);
-      seedIndices[i++] = index;
-    }
+    // similarity between the term nodes are defined by the similarity of their
+    // context in which they occur.
+
+    /*
+     * First off, we need to vectorize the occurance of the terms against the
+     * context. So we have a vector like in the paper where V_canon occured in
+     * list 1 and 2 = {1,1,0,0,0}.
+     */
+    
+    
+    
 
   }
 
