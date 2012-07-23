@@ -1,9 +1,6 @@
 package de.jungblut.ner;
 
 import gnu.trove.list.array.TIntArrayList;
-
-import com.google.common.base.Preconditions;
-
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.distance.CosineDistance;
 import de.jungblut.distance.DistanceMeasurer;
@@ -28,13 +25,12 @@ public final class IterativeSimilarityAggregation {
   // similarity between the term nodes are defined by the similarity of their
   // context in which they occur. So the context nodes are the feature of this
   // algorithm.
-  // TODO actually we could cache the similarity between the columns if the
-  // weight matrix has been transposed.
   private final SimilarityMeasurer similarityMeasurer;
   private final String[] seedTokens;
 
   private int[] seedIndices;
   private String[] termNodes;
+  // could we really cache the similarity between the columns?
   private DoubleMatrix weightMatrix;
 
   /**
@@ -76,15 +72,20 @@ public final class IterativeSimilarityAggregation {
    * Initializes the vectorized structures for algorithm use.
    */
   private void init() {
-    seedIndices = new int[seedTokens.length];
+    TIntArrayList list = new TIntArrayList();
+
     // the seed tokens must be defined in the term nodes to make this work
     for (int i = 0; i < seedTokens.length; i++) {
       String token = seedTokens[i];
       int find = ArrayUtils.find(termNodes, token);
-      Preconditions.checkArgument(find >= 0, "Seed token \"" + token
-          + "\" could not be found in the term list!");
-      seedIndices[i] = find;
+      if (find >= 0) {
+        list.add(find);
+      } else {
+        System.out.println("Seed token \"" + token
+            + "\" could not be found in the term list!");
+      }
     }
+    seedIndices = list.toArray();
   }
 
   /**

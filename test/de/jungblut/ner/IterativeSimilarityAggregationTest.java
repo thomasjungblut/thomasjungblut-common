@@ -29,7 +29,6 @@ public final class IterativeSimilarityAggregationTest extends TestCase {
   double threshold = 0.69;
   double alpha = 0.5;
 
-
   @Test
   public void testThresholding() {
     int[] filterRelevantItems = IterativeSimilarityAggregation
