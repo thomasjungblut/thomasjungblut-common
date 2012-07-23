@@ -99,8 +99,8 @@ public final class IterativeSimilarityAggregation {
       int maxIterations, boolean verbose) {
 
     DenseDoubleVector relevanceScore = computeRelevanceScore(seedIndices);
-    int[] relevantTokens = filterRelevantItems(relevanceScore,
-        similarityThreshold);
+    // we start by using all seed tokens, no matter what score they have
+    int[] relevantTokens = filterRelevantItems(relevanceScore, 0.0d);
 
     int iteration = 0;
     while (true) {
