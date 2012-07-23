@@ -19,7 +19,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
  */
 public final class TokenizerUtils {
 
-  public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-";
+  public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|";
 
   /**
    * Fully consumes a lucene tokenstream and returns a string array.
@@ -102,7 +102,7 @@ public final class TokenizerUtils {
   }
 
   /**
-   * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!\\-]
+   * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!\\-/|]
    */
   public static String[] wordTokenize(String text) {
     return wordTokenize(text, SEPARATORS);

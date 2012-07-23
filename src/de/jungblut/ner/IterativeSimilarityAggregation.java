@@ -30,11 +30,7 @@ public final class IterativeSimilarityAggregation {
 
   private int[] seedIndices;
   private String[] termNodes;
-<<<<<<< HEAD
   // could we really cache the similarity between the columns?
-=======
-  // TODO could we really cache the similarity between the columns?
->>>>>>> eb67d3446f4584926e6b4015f9c8b414c128955d
   private DoubleMatrix weightMatrix;
 
   /**
