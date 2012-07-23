@@ -1,6 +1,9 @@
 package de.jungblut.ner;
 
 import gnu.trove.list.array.TIntArrayList;
+
+import com.google.common.base.Preconditions;
+
 import de.jungblut.distance.CosineDistance;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.SimilarityMeasurer;
@@ -8,8 +11,6 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple3;
-import de.jungblut.nlp.StandardTokenizer;
-import de.jungblut.nlp.Tokenizer;
 
 /**
  * Iterative similarity aggregation for named entity recognition and set
@@ -24,16 +25,12 @@ public final class IterativeSimilarityAggregation {
 
   private final double alpha;
   private final SimilarityMeasurer similarityMeasurer;
-  private final Tokenizer tokenizer;
-  private final String[] seedTokens;
-
-  private String[] termNodes;
-  private String[] contextNodes;
-  private DenseDoubleMatrix weightMatrix;
-
-  private String[] dictionary;
-  private int[] seedIndices;
   private DenseDoubleMatrix similarityMatrix;
+
+  private final String[] seedTokens;
+  private int[] seedIndices;
+  private String[] termNodes;
+  private DenseDoubleMatrix weightMatrix;
 
   /**
    * Constructs the similarity aggregation by seed tokens to expand and a given
@@ -46,8 +43,7 @@ public final class IterativeSimilarityAggregation {
    */
   public IterativeSimilarityAggregation(String[] seedTokens,
       Tuple3<String[], String[], DenseDoubleMatrix> bipartiteGraph) {
-    this(seedTokens, bipartiteGraph, 0.5d, new CosineDistance(),
-        new StandardTokenizer());
+    this(seedTokens, bipartiteGraph, 0.5d, new CosineDistance());
   }
 
   /**
@@ -62,11 +58,9 @@ public final class IterativeSimilarityAggregation {
    */
   public IterativeSimilarityAggregation(String[] seedTokens,
       Tuple3<String[], String[], DenseDoubleMatrix> bipartiteGraph,
-      double alpha, DistanceMeasurer distance, Tokenizer tokenizer) {
+      double alpha, DistanceMeasurer distance) {
     this.seedTokens = seedTokens;
-    this.tokenizer = tokenizer;
     this.termNodes = bipartiteGraph.getFirst();
-    this.contextNodes = bipartiteGraph.getSecond();
     this.weightMatrix = bipartiteGraph.getThird();
     this.alpha = alpha;
     this.similarityMeasurer = new SimilarityMeasurer(distance);
@@ -79,17 +73,47 @@ public final class IterativeSimilarityAggregation {
   public void init() {
 
     // similarity between the term nodes are defined by the similarity of their
-    // context in which they occur.
-
+    // context in which they occur. So the context nodes are the feature of this
+    // algorithm.
+    similarityMatrix = new DenseDoubleMatrix(termNodes.length, termNodes.length);
     /*
-     * First off, we need to vectorize the occurance of the terms against the
-     * context. So we have a vector like in the paper where V_canon occured in
-     * list 1 and 2 = {1,1,0,0,0}.
+     * In our case we are going to loop through the weight matrix and measuring
+     * similary between the terms (represented as rows) via their columns
+     * (features, or simply the occurances in the context).
      */
-    
-    
-    
+    for (int i = 0; i < termNodes.length; i++) {
+      for (int j = 0; j < termNodes.length; j++) {
+        if (i != j) {
+          similarityMatrix.set(i, j, similarityMeasurer.measureSimilarity(
+              weightMatrix.getRow(i), weightMatrix.getRow(j)));
+        }
+      }
+    }
 
+    seedIndices = new int[seedTokens.length];
+    // the seed tokens must be defined in the term nodes to make this work
+    for (int i = 0; i < seedTokens.length; i++) {
+      String token = seedTokens[i];
+      int find = find(termNodes, token);
+      Preconditions.checkArgument(find >= 0, "Seed token \"" + token
+          + "\" could not be found in the term list!");
+      seedIndices[i] = find;
+    }
+  }
+
+  /**
+   * Finds the key in the given array and returns the index, if nothing was
+   * found it just returns -1. We are assuming that everything here is not null.
+   */
+  static int find(String[] array, String key) {
+    int position = -1;
+    for (int i = 0; i < array.length; i++) {
+      if (array[i].equals(key)) {
+        position = i;
+        break;
+      }
+    }
+    return position;
   }
 
   /**
