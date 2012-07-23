@@ -87,6 +87,8 @@ public final class IterativeSimilarityAggregation {
         if (i != j) {
           similarityMatrix.set(i, j, similarityMeasurer.measureSimilarity(
               weightMatrix.getRow(i), weightMatrix.getRow(j)));
+        } else {
+          similarityMatrix.set(i, j, 1.0d);
         }
       }
     }
@@ -105,6 +107,9 @@ public final class IterativeSimilarityAggregation {
   /**
    * Starts the static thresholding algorithm and returns the expandedset of
    * newly found related tokens.
+   * 
+   * @param maxIterations if > 0 the algorithm will stop after reached
+   *          maxIterations.
    */
   public String[] startStaticThresholding(double similarityThreshold,
       int maxIterations) {
@@ -121,7 +126,7 @@ public final class IterativeSimilarityAggregation {
           similarityMatrix);
       DoubleVector rankedTokens = rankScores(alpha, relevanceScore,
           similarityScore);
-      int[] topRankedItems = getTopRankedItems(rankedTokens, relevantTokens,
+      int[] topRankedItems = getTopRankedItems(rankedTokens,
           similarityThreshold);
 
       // check the tokens for equality, order is important, their score is not
@@ -134,46 +139,66 @@ public final class IterativeSimilarityAggregation {
           }
         }
       }
-      
-      // TODO merge the new relevant tokens together
-//      relevantTokens = ArrayUtils.concat();
 
+      // simply exchange the old items with the newly found ones
+      relevantTokens = topRankedItems;
+      // break algorithm if tokens haven't changed or maxiterations have been
+      // reached
       if (equal || (maxIterations > 0 && iteration > maxIterations)) {
         break;
       }
-      
+
       iteration++;
     }
 
-    return seedTokens;
+    String[] tokens = new String[relevantTokens.length];
+    // translate the indices back to the tokens
+    for (int i = 0; i < relevantTokens.length; i++) {
+      tokens[i] = termNodes[relevantTokens[i]];
+    }
+
+    return tokens;
   }
 
   /**
-   * Simple selection sort with filtering function. It actually mutates the
-   * rankedTokens parameter, so please don't wonder about the side-effects. In
-   * the algorithm the ranked tokens vector isn't used anymore later.
+   * Simple selection sort with filtering function. Can be optimized with a less
+   * naive algorithm. Currently this is O(n^2+2n) which is really bad.
    */
-  static int[] getTopRankedItems(DoubleVector rankedTokens,
-      int[] relevantTokens, double similarityThreshold) {
-    TIntArrayList sorted = new TIntArrayList();
-    for (int item = 0; item < rankedTokens.getLength(); item++) {
-      int maxIndex = item;
-      for (int i = item; i < rankedTokens.getLength(); i++) {
-        if (rankedTokens.get(i) > rankedTokens.get(maxIndex)) {
-          maxIndex = i;
+  static int[] getTopRankedItems(DoubleVector pRankedTokens,
+      double similarityThreshold) {
+    DoubleVector rankedTokens = pRankedTokens.deepCopy();
+    int[] sortedIndices = new int[rankedTokens.getLength()];
+    for (int i = 0; i < sortedIndices.length; i++) {
+      sortedIndices[i] = i;
+    }
+
+    for (int j = 0; j < rankedTokens.getLength() - 1; j++) {
+      int max = j;
+      for (int i = j + 1; i < rankedTokens.getLength(); i++) {
+        if (rankedTokens.get(i) > rankedTokens.get(max)) {
+          max = i;
         }
       }
-      // swap the values so we don't find our max again in the next iteration
-      double tmp = rankedTokens.get(maxIndex);
-      rankedTokens.set(maxIndex, rankedTokens.get(item));
-      rankedTokens.set(item, tmp);
-      if (tmp > similarityThreshold) {
-        sorted.add(relevantTokens[maxIndex]);
+      if (j != max) {
+        double tmp = rankedTokens.get(max);
+        rankedTokens.set(max, rankedTokens.get(j));
+        rankedTokens.set(j, tmp);
+        ArrayUtils.swap(sortedIndices, max, j);
+      }
+    }
+
+    // filter these tokens
+    TIntArrayList list = new TIntArrayList();
+    for (int i = 0; i < sortedIndices.length; i++) {
+      final double val = pRankedTokens.get(sortedIndices[i]);
+      if (val > similarityThreshold) {
+        list.add(sortedIndices[i]);
       } else {
         break;
       }
     }
-    return sorted.toArray();
+
+    return list.toArray();
   }
 
   /**
@@ -192,8 +217,6 @@ public final class IterativeSimilarityAggregation {
     final int termsLength = similarityMatrix.getColumnCount();
     final DenseDoubleVector relevanceScores = new DenseDoubleVector(termsLength);
 
-    // TODO in the paper there is a multiplication with the number of terms, in
-    // the example there is nothing
     final double constantLoss = 1.0d / seedSet.length;
 
     for (int i = 0; i < termsLength; i++) {

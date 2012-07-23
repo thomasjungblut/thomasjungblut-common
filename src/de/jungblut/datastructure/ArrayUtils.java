@@ -13,6 +13,8 @@ import com.google.common.base.Preconditions;
 public final class ArrayUtils {
 
   // TODO implement for all primitive types...
+  // TODO what about a radix sort?
+
   /**
    * Finds the occurence of the given key in the given array. Linear search,
    * worst case running time is O(n).
@@ -52,6 +54,15 @@ public final class ArrayUtils {
     }
 
     return merged;
+  }
+
+  /**
+   * Swaps the given indices x with y in the array.
+   */
+  public static void swap(int[] array, int x, int y) {
+    int tmpIndex = array[x];
+    array[x] = array[y];
+    array[y] = tmpIndex;
   }
 
 }
