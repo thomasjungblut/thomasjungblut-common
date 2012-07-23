@@ -7,7 +7,6 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.jungblut.math.DoubleMatrix;
-import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
@@ -30,14 +29,6 @@ public final class IterativeSimilarityAggregationTest extends TestCase {
   double threshold = 0.69;
   double alpha = 0.5;
 
-  @Test
-  public void testRelevanceComputation() {
-    DenseDoubleVector relevanceScore = IterativeSimilarityAggregation
-        .computeRelevanceScore(seedSet, similarityMatrix);
-    double sum = relevanceScore.subtract(relevanceScoreResult).abs().sum();
-    assertTrue(sum >= 0.0d);
-    assertTrue(sum < 0.001d);
-  }
 
   @Test
   public void testThresholding() {
@@ -45,20 +36,6 @@ public final class IterativeSimilarityAggregationTest extends TestCase {
         .filterRelevantItems(relevanceScoreResult, threshold);
     int[] relevantItems = new int[] { 0, 1, 2, 3 };
     assertTrue(Arrays.equals(filterRelevantItems, relevantItems));
-  }
-
-  @Test
-  public void testRanking() {
-    int[] filterRelevantItems = IterativeSimilarityAggregation
-        .filterRelevantItems(relevanceScoreResult, threshold);
-    DenseDoubleVector similarityScores = IterativeSimilarityAggregation
-        .computeRelevanceScore(filterRelevantItems, similarityMatrix);
-    DoubleVector rankScores = IterativeSimilarityAggregation.rankScores(alpha,
-        relevanceScoreResult, similarityScores);
-
-    double sum = rankScores.subtract(rankingResult).sum();
-    assertTrue(sum >= 0.0d);
-    assertTrue(sum < 0.001d);
   }
 
   @Test

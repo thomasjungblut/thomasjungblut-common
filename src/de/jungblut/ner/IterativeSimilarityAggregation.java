@@ -10,7 +10,6 @@ import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.SimilarityMeasurer;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
@@ -26,10 +25,12 @@ import de.jungblut.math.tuple.Tuple;
 public final class IterativeSimilarityAggregation {
 
   private final double alpha;
+  // similarity between the term nodes are defined by the similarity of their
+  // context in which they occur. So the context nodes are the feature of this
+  // algorithm
   private final SimilarityMeasurer similarityMeasurer;
-  private DenseDoubleMatrix similarityMatrix;
-
   private final String[] seedTokens;
+
   private int[] seedIndices;
   private String[] termNodes;
   private DoubleMatrix weightMatrix;
@@ -72,30 +73,6 @@ public final class IterativeSimilarityAggregation {
    * Initializes the vectorized structures for algorithm use.
    */
   private void init() {
-    /*
-     * TODO this is too heavy for text based problems, we should calculate the similarity on the fly.
-     */
-
-    // similarity between the term nodes are defined by the similarity of their
-    // context in which they occur. So the context nodes are the feature of this
-    // algorithm.
-    similarityMatrix = new DenseDoubleMatrix(termNodes.length, termNodes.length);
-    /*
-     * In our case we are going to loop through the weight matrix and measuring
-     * similary between the terms (represented as rows) via their columns
-     * (features, or simply the occurances in the context).
-     */
-    for (int i = 0; i < termNodes.length; i++) {
-      for (int j = 0; j < termNodes.length; j++) {
-        if (i != j) {
-          similarityMatrix.set(i, j, similarityMeasurer.measureSimilarity(
-              weightMatrix.getRowVector(i), weightMatrix.getRowVector(j)));
-        } else {
-          similarityMatrix.set(i, j, 1.0d);
-        }
-      }
-    }
-
     seedIndices = new int[seedTokens.length];
     // the seed tokens must be defined in the term nodes to make this work
     for (int i = 0; i < seedTokens.length; i++) {
@@ -117,16 +94,14 @@ public final class IterativeSimilarityAggregation {
   public String[] startStaticThresholding(double similarityThreshold,
       int maxIterations, boolean verbose) {
 
-    DenseDoubleVector relevanceScore = computeRelevanceScore(seedIndices,
-        similarityMatrix);
+    DenseDoubleVector relevanceScore = computeRelevanceScore(seedIndices);
     int[] relevantTokens = filterRelevantItems(relevanceScore,
         similarityThreshold);
 
     int iteration = 0;
     while (true) {
 
-      DenseDoubleVector similarityScore = computeRelevanceScore(relevantTokens,
-          similarityMatrix);
+      DenseDoubleVector similarityScore = computeRelevanceScore(relevantTokens);
       DoubleVector rankedTokens = rankScores(alpha, relevanceScore,
           similarityScore);
       int[] topRankedItems = getTopRankedItems(rankedTokens,
@@ -215,14 +190,14 @@ public final class IterativeSimilarityAggregation {
    * 
    * @param seedSet S a subset of U, this are the indices where to find the
    *          items in the similarity matrix.
-   * @param similarityMatrix the pairwise similarity matrix of the entities.
+   * @param weightmatrix of the given bipartite graph
+   * @param termsLength the number of terms on the left side of the graph.
    * @return a vector of length of the universe of entities. Which index
    *         encapsulates the relevance described in the paper as
    *         S_rel(TERM_AT_INDEX_i,S)
    */
-  static DenseDoubleVector computeRelevanceScore(int[] seedSet,
-      DenseDoubleMatrix similarityMatrix) {
-    final int termsLength = similarityMatrix.getColumnCount();
+  private DenseDoubleVector computeRelevanceScore(int[] seedSet) {
+    final int termsLength = termNodes.length;
     final DenseDoubleVector relevanceScores = new DenseDoubleVector(termsLength);
 
     final double constantLoss = 1.0d / seedSet.length;
@@ -230,7 +205,9 @@ public final class IterativeSimilarityAggregation {
     for (int i = 0; i < termsLength; i++) {
       double sum = 0.0d;
       for (int j : seedSet) {
-        sum += similarityMatrix.get(j, i);
+        double similarity = similarityMeasurer.measureSimilarity(
+            weightMatrix.getRowVector(i), weightMatrix.getRowVector(j));
+        sum += similarity;
       }
       relevanceScores.set(i, constantLoss * sum);
     }
