@@ -102,7 +102,8 @@ public final class TokenizerUtils {
   }
 
   /**
-   * Tokenizes on several indicators of a word, regex is [ \r\n\t.,;:'\"()?!\\-/|]
+   * Tokenizes on several indicators of a word, regex is [
+   * \r\n\t.,;:'\"()?!\\-/|]
    */
   public static String[] wordTokenize(String text) {
     return wordTokenize(text, SEPARATORS);
@@ -162,6 +163,17 @@ public final class TokenizerUtils {
       list.add(tkn);
     }
     return list.toArray(new String[list.size()]);
+  }
+
+  /**
+   * Adds <START> and <END> to the beginning of the array and the end.
+   */
+  public static String[] addStartAndEndTags(String[] unigram) {
+    String[] tmp = new String[unigram.length + 2];
+    System.arraycopy(unigram, 0, tmp, 1, unigram.length);
+    tmp[0] = "<START>";
+    tmp[tmp.length - 1] = "<END>";
+    return tmp;
   }
 
   /**

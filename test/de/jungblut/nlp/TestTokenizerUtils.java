@@ -119,4 +119,17 @@ public class TestTokenizerUtils extends TestCase {
     assertEquals(result, concat);
   }
 
+  @Test
+  public void testAddStartAndEndTags() {
+    String[] uniGram = new String[] { "Hi", "this", "is", "a", "test", "for",
+        "the", "tokenizer", "function!" };
+    String[] result = TokenizerUtils.addStartAndEndTags(uniGram);
+    String[] desiredUniGramResult = new String[] { "<START>", "Hi", "this",
+        "is", "a", "test", "for", "the", "tokenizer", "function!", "<END>" };
+    for (int i = 0; i < result.length; i++) {
+      assertEquals(desiredUniGramResult[i], result[i]);
+    }
+
+  }
+
 }
