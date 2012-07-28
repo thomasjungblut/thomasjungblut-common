@@ -316,8 +316,6 @@ public final class KMeansBSP
     // deactivate (set to false) if you want to iterate over disk, else it will
     // cache the input vectors in memory
     conf.setBoolean(CACHING_ENABLED_KEY, true);
-    BSPJob job = createJob(conf, in, out);
-
     // count = 7000000 spawns arround 6 tasks for 32mb block size
     int count = Integer.parseInt(args[0]);
     int k = Integer.parseInt(args[1]);
@@ -326,6 +324,7 @@ public final class KMeansBSP
     LOG.info("N: " + count + " k: " + k + " Dimension: " + dimension
         + " Iterations: " + args[3]);
     conf.setInt(MAX_ITERATIONS_KEY, Integer.parseInt(args[3]));
+    BSPJob job = createJob(conf, in, out);
 
     FileSystem fs = FileSystem.get(conf);
     // prepare the input, like deleting old versions and creating centers
