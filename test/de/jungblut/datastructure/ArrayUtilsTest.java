@@ -25,4 +25,20 @@ public class ArrayUtilsTest extends TestCase {
     }
   }
 
+  @Test
+  public void testPartition() {
+    int[] arr1 = new int[] { 0, 4, 2, 31, 25, 1 };
+    int pivot = ArrayUtils.partition(arr1);
+
+    assertEquals(1, pivot);
+    assertArrayEquals(new int[] { 0, 1, 2, 31, 25, 4 }, arr1);
+  }
+
+  static void assertArrayEquals(int[] expected, int[] actual) {
+    assertEquals(expected.length, actual.length);
+    for (int i = 0; i < expected.length; i++) {
+      assertEquals(expected[i], actual[i]);
+    }
+  }
+
 }
