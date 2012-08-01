@@ -140,6 +140,22 @@ public final class ArrayUtils {
   }
 
   /**
+   * Copies the given array into a new one.
+   */
+  public static int[] copy(int[] array) {
+    int[] newInt = new int[array.length];
+    System.arraycopy(array, 0, newInt, 0, array.length);
+    return newInt;
+  }
+
+  /**
+   * Copies the given array into a new one.
+   */
+  public static <T> T[] copy(T[] array) {
+    return Arrays.copyOf(array, array.length);
+  }
+
+  /**
    * Swaps the given indices x with y in the array.
    */
   public static void swap(int[] array, int x, int y) {
@@ -284,9 +300,291 @@ public final class ArrayUtils {
   }
 
   /**
+   * Partitions the given array in-place and uses the last element as pivot,
+   * everything less than the pivot will be placed left and everything greater
+   * will be placed right of the pivot. It returns the index of the pivot
+   * element after partitioning.
+   */
+  public static int partition(long[] array) {
+    return partition(array, 0, array.length);
+  }
+
+  /**
+   * Partitions the given array in-place and uses the end element as pivot,
+   * everything less than the pivot will be placed left and everything greater
+   * will be placed right of the pivot. It returns the index of the pivot
+   * element after partitioning.
+   */
+  public static int partition(long[] array, int start, int end) {
+    final int ending = end - 1;
+    final long x = array[ending];
+    int i = start - 1;
+    for (int j = start; j < ending; j++) {
+      if (array[j] <= x) {
+        i++;
+        swap(array, i, j);
+      }
+    }
+    i++;
+    swap(array, i, ending);
+    return i;
+  }
+
+  /**
+   * Partitions the given array in-place and uses the last element as pivot,
+   * everything less than the pivot will be placed left and everything greater
+   * will be placed right of the pivot. It returns the index of the pivot
+   * element after partitioning.
+   */
+  public static int partition(double[] array) {
+    return partition(array, 0, array.length);
+  }
+
+  /**
+   * Partitions the given array in-place and uses the end element as pivot,
+   * everything less than the pivot will be placed left and everything greater
+   * will be placed right of the pivot. It returns the index of the pivot
+   * element after partitioning.
+   */
+  public static int partition(double[] array, int start, int end) {
+    final int ending = end - 1;
+    final double x = array[ending];
+    int i = start - 1;
+    for (int j = start; j < ending; j++) {
+      if (array[j] <= x) {
+        i++;
+        swap(array, i, j);
+      }
+    }
+    i++;
+    swap(array, i, ending);
+    return i;
+  }
+
+  /**
+   * Selects the kth smallest element in the array in linear time, if the array
+   * is smaller than or equal to 10 a radix sort will be used and the kth
+   * element will be returned. So k = 1, will return the absolutely smallest
+   * element.
+   * 
+   * @return the kth smallest index of the element.
+   */
+  public static int quickSelect(int[] array, int k) {
+    Preconditions.checkArgument(k > 0 && k <= array.length);
+    final int n = array.length;
+    if (n <= 10) {
+      radixSort(array);
+      return k - 1;
+    }
+    return quickSelect(array, 0, n, k);
+  }
+
+  /**
+   * Selects the kth smallest element in the array.
+   * 
+   * @param start the index where to start.
+   * @param end the index where to end.
+   * @return the kth smallest index of the element.
+   */
+  public static int quickSelect(int[] array, int start, int end, int k) {
+    if (start == end) {
+      return start;
+    }
+
+    final int pivot = partition(array, start, end);
+    final int length = pivot - start + 1;
+
+    if (length == k) {
+      return pivot;
+    } else if (k < length) {
+      return quickSelect(array, start, pivot - 1, k);
+    } else {
+      return quickSelect(array, pivot + 1, end, k - length);
+    }
+  }
+
+  /**
+   * Selects the kth smallest element in the array in linear time. k = 1, will
+   * return the absolutely smallest element.
+   * 
+   * @return the kth smallest index of the element.
+   */
+  public static int quickSelect(double[] array, int k) {
+    Preconditions.checkArgument(k > 0 && k <= array.length);
+    return quickSelect(array, 0, array.length, k);
+  }
+
+  /**
+   * Selects the kth smallest element in the array.
+   * 
+   * @param start the index where to start.
+   * @param end the index where to end.
+   * @return the kth smallest index of the element.
+   */
+  public static int quickSelect(double[] array, int start, int end, int k) {
+    if (start == end) {
+      return start;
+    }
+
+    final int pivot = partition(array, start, end);
+    final int length = pivot - start + 1;
+
+    if (length == k) {
+      return pivot;
+    } else if (k < length) {
+      return quickSelect(array, start, pivot - 1, k);
+    } else {
+      return quickSelect(array, pivot + 1, end, k - length);
+    }
+  }
+
+  /**
+   * Selects the kth smallest element in the array in linear time. k = 1, will
+   * return the absolutely smallest element.
+   * 
+   * @return the kth smallest index of the element.
+   */
+  public static int quickSelect(long[] array, int k) {
+    Preconditions.checkArgument(k > 0 && k <= array.length);
+    return quickSelect(array, 0, array.length, k);
+  }
+
+  /**
+   * Selects the kth smallest element in the array.
+   * 
+   * @param start the index where to start.
+   * @param end the index where to end.
+   * @return the kth smallest index of the element.
+   */
+  public static int quickSelect(long[] array, int start, int end, int k) {
+    if (start == end) {
+      return start;
+    }
+
+    final int pivot = partition(array, start, end);
+    final int length = pivot - start + 1;
+
+    if (length == k) {
+      return pivot;
+    } else if (k < length) {
+      return quickSelect(array, start, pivot - 1, k);
+    } else {
+      return quickSelect(array, pivot + 1, end, k - length);
+    }
+  }
+
+  /**
+   * Selects the kth smallest element in the array in linear time. k = 1, will
+   * return the absolutely smallest element.
+   * 
+   * @return the kth smallest index of the element.
+   */
+  public static <T extends Comparable<T>> int quickSelect(T[] array, int k) {
+    Preconditions.checkArgument(k > 0 && k <= array.length);
+    return quickSelect(array, 0, array.length, k);
+  }
+
+  /**
+   * Selects the kth smallest element in the array.
+   * 
+   * @param start the index where to start.
+   * @param end the index where to end.
+   * @return the kth smallest index of the element.
+   */
+  public static <T extends Comparable<T>> int quickSelect(T[] array, int start,
+      int end, int k) {
+    if (start == end) {
+      return start;
+    }
+
+    final int pivot = partition(array, start, end);
+    final int length = pivot - start + 1;
+
+    if (length == k) {
+      return pivot;
+    } else if (k < length) {
+      return quickSelect(array, start, pivot - 1, k);
+    } else {
+      return quickSelect(array, pivot + 1, end, k - length);
+    }
+  }
+
+  /**
+   * Finds the median of medians in the given array.
+   * 
+   * @return the index of the median of medians.
+   */
+  public static int medianOfMedians(int[] array) {
+    final int splitSize = array.length / 5;
+
+    int[] pivots = new int[splitSize];
+    for (int i = 0; i < splitSize; i++) {
+      final int start = i * 5;
+      final int end = i * 5 + 5;
+      pivots[i] = partition(array, start, end);
+    }
+
+    return pivots[splitSize / 2];
+  }
+
+  /**
+   * Creates an integer array from the given start up to a end number with a
+   * stepsize.
+   * 
+   * @param from the integer to start with.
+   * @param to the integer to end with.
+   * @param stepsize the stepsize to take
+   * @return an integer array from start to end incremented by stepsize.
+   */
+  public static int[] fromUpTo(int from, int to, int stepsize) {
+    int[] v = new int[(to - from) / stepsize];
+
+    for (int i = 0; i < v.length; i++) {
+      v[i] = from + i * stepsize;
+    }
+    return v;
+  }
+
+  /**
+   * Creates a long array from the given start up to a end number with a
+   * stepsize.
+   * 
+   * @param from the long to start with.
+   * @param to the long to end with.
+   * @param stepsize the stepsize to take
+   * @return a long array from start to end incremented by stepsize.
+   */
+  public static long[] fromUpTo(long from, long to, long stepsize) {
+    long[] v = new long[(int) ((to - from) / stepsize)];
+
+    for (int i = 0; i < v.length; i++) {
+      v[i] = from + i * stepsize;
+    }
+    return v;
+  }
+
+  /**
+   * Creates a double array from the given start up to a end number with a
+   * stepsize.
+   * 
+   * @param from the double to start with.
+   * @param to the double to end with.
+   * @param stepsize the stepsize to take
+   * @return a double array from start to end incremented by stepsize.
+   */
+  public static double[] fromUpTo(double from, double to, double stepsize) {
+    double[] v = new double[(int) (Math.round(((to - from) / stepsize) + 0.5))];
+
+    for (int i = 0; i < v.length; i++) {
+      v[i] = from + i * stepsize;
+    }
+    return v;
+  }
+
+  /**
    * Radix sorts an integer array in O(n). It only works for positive numbers,
    * so please don't come up with negative numbers, it will result in array out
-   * of bound exceptions, since they don't have a array index.
+   * of bound exceptions, since they don't have an array index.
    */
   public static void radixSort(int[] a) {
     int[] nPart = new int[2];
