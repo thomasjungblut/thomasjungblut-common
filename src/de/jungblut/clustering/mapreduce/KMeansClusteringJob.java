@@ -106,14 +106,16 @@ public class KMeansClusteringJob {
     for (FileStatus status : stati) {
       if (!status.isDir()) {
         Path path = status.getPath();
-        LOG.info("FOUND " + path.toString());
-        SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
-        ClusterCenter key = new ClusterCenter();
-        VectorWritable v = new VectorWritable();
-        while (reader.next(key, v)) {
-          LOG.info(key + " / " + v);
+        if (!path.getName().equals("_SUCCESS")) {
+          LOG.info("FOUND " + path.toString());
+          SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
+          ClusterCenter key = new ClusterCenter();
+          VectorWritable v = new VectorWritable();
+          while (reader.next(key, v)) {
+            LOG.info(key + " / " + v);
+          }
+          reader.close();
         }
-        reader.close();
       }
     }
   }

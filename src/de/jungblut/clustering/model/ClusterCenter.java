@@ -82,10 +82,9 @@ public final class ClusterCenter implements WritableComparable<ClusterCenter> {
     clusterIndex = in.readInt();
   }
 
-  @SuppressWarnings("deprecation")
   @Override
   public final int compareTo(ClusterCenter o) {
-    return VectorWritable.compareVector(center, o.getCenterVector());
+    return Integer.compare(clusterIndex, o.clusterIndex);
   }
 
   /**
