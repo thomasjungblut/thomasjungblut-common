@@ -35,8 +35,11 @@ class KMeansMapper extends
     SequenceFile.Reader reader = new SequenceFile.Reader(fs, centroids, conf);
     ClusterCenter key = new ClusterCenter();
     IntWritable value = new IntWritable();
+    int index = 0;
     while (reader.next(key, value)) {
-      centers.add(new ClusterCenter(key));
+      ClusterCenter clusterCenter = new ClusterCenter(key);
+      clusterCenter.setClusterIndex(index++);
+      centers.add(clusterCenter);
     }
     reader.close();
 
