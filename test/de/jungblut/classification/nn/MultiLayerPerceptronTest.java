@@ -25,11 +25,12 @@ public class MultiLayerPerceptronTest extends TestCase {
   @Test
   public void testXORFminCG() {
 
-    MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 3, 1 });
+    MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 });
     Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
 
-    mlp.trainFmincg(new DenseDoubleMatrix(sampleXOR.getFirst()),
-        new DenseDoubleMatrix(sampleXOR.getSecond()), 10000, 0.0d, false);
+    double error = mlp.trainFmincg(new DenseDoubleMatrix(sampleXOR.getFirst()),
+        new DenseDoubleMatrix(sampleXOR.getSecond()), 30, 0.0d, false);
+    assertTrue(error < 0.001);
     testPredictions(sampleXOR, mlp);
   }
 
