@@ -17,8 +17,9 @@ public class MultiLayerPerceptronTest extends TestCase {
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 3, 1 });
     Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
 
-    mlp.train(sampleXOR.getFirst(), sampleXOR.getSecond(), 10000, 1.E-5, 0.1,
-        0.0d, false);
+    mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
+        new DenseDoubleMatrix(sampleXOR.getSecond()), 10000, 1.E-5, 0.1, 0.0d,
+        false);
     testPredictions(sampleXOR, mlp);
   }
 

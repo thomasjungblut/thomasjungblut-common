@@ -73,6 +73,25 @@ public final class MultilayerPerceptron {
   }
 
   /**
+   * Predicts the outcome of the given input by doing a forward pass. Used for
+   * binary classification by a threshold. Everything above threshold will be
+   * considered as 1, the other case as 0.
+   */
+  public DenseDoubleVector predict(DoubleVector xi, double threshold) {
+    layers[0].setActivations(xi);
+
+    for (WeightMatrix weight : weights) {
+      weight.forward();
+    }
+    DenseDoubleVector activations = layers[layers.length - 1].getActivations();
+    for (int i = 0; i < activations.getLength(); i++) {
+      activations.set(i, activations.get(i) > threshold ? 1.0d : 0.0d);
+    }
+
+    return activations;
+  }
+
+  /**
    * At the beginning of each batch forward propagation we should reset the
    * gradients.
    */
@@ -129,17 +148,16 @@ public final class MultilayerPerceptron {
    * Full backpropagation training method. It checks whether the maximum
    * iterations have been exceeded or a given error has been archived.
    * 
-   * @param x the training examples
-   * @param y the outcomes for the training examples
-   * @param maxIterations the number of maximum iterations to train
-   * @param maximumError the maximum error when training can be stopped
-   * @param learningRate the given learning rate
-   * @param lambda the given regularization parameter
-   * @param verbose output to console with the last given errors
-   * @return the squared mean errors per iteration, can be used to plot learning
-   *         curves
+   * @param x the training examples.
+   * @param y the outcomes for the training examples.
+   * @param maxIterations the number of maximum iterations to train.
+   * @param maximumError the maximum error when training can be stopped.
+   * @param learningRate the given learning rate.
+   * @param lambda the given regularization parameter.
+   * @param verbose output to console with the last given errors.
+   * @return the last squared mean error.
    */
-  public DoubleVector train(DoubleVector[] x, DoubleVector[] y,
+  public double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
       int maxIterations, double maximumError, double learningRate,
       double lambda, boolean verbose) {
     TDoubleArrayList errorList = new TDoubleArrayList();
@@ -147,12 +165,13 @@ public final class MultilayerPerceptron {
     while (iteration < maxIterations) {
       double mse = 0.0d;
       resetGradients();
-      for (int i = 0; i < x.length; i++) {
-        DoubleVector difference = forwardStep(x[i], y[i]);
+      for (int i = 0; i < x.getRowCount(); i++) {
+        DoubleVector difference = forwardStep(x.getRowVector(i),
+            y.getRowVector(i));
         mse += difference.pow(2).sum();
         backwardStep(difference);
       }
-      adjustWeights(x.length, learningRate, lambda);
+      adjustWeights(x.getRowCount(), learningRate, lambda);
       if (verbose) {
         System.out.println(iteration + ": " + mse);
       }
@@ -162,7 +181,7 @@ public final class MultilayerPerceptron {
       if (mse < maximumError)
         break;
     }
-    return new DenseDoubleVector(errorList.toArray());
+    return errorList.getQuick(errorList.size() - 1);
   }
 
   /**
