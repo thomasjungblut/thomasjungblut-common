@@ -170,13 +170,14 @@ public final class MultilayerPerceptron {
    * fmincg (conjugate gradient). <b>It currently only works for three layered
    * neural networks (input, hidden, output).</b>
    * 
-   * @param x the training examples
-   * @param y the outcomes for the training examples
-   * @param maxIterations the number of maximum iterations to train
-   * @param lambda the given regularization parameter
-   * @param verbose output to console with the last given errors
+   * @param x the training examples.
+   * @param y the outcomes for the training examples.
+   * @param maxIterations the number of maximum iterations to train.
+   * @param lambda the given regularization parameter.
+   * @param verbose output to console with the last given errors.
+   * @return the cost of the training.
    */
-  public void trainFmincg(DenseDoubleMatrix x, DenseDoubleMatrix y,
+  public double trainFmincg(DenseDoubleMatrix x, DenseDoubleMatrix y,
       int maxIterations, double lambda, boolean verbose) {
 
     Preconditions.checkArgument(getLayers().length == 3);
@@ -197,6 +198,7 @@ public final class MultilayerPerceptron {
     getWeights()[0].setWeights(unfoldMatrices[0]);
     getWeights()[1].setWeights(unfoldMatrices[1]);
 
+    return costFunction.evaluateCost(minimizeFunction).getFirst();
   }
 
   public WeightMatrix[] getWeights() {
