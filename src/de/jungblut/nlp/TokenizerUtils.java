@@ -80,7 +80,7 @@ public final class TokenizerUtils {
     List<String> list = new LinkedList<>();
     for (int i = 0; i < key.length() - size + 1; i++) {
       int upperBound = i + size;
-      list.add(key.substring(i, upperBound));
+      list.add(new String(key.substring(i, upperBound)));
     }
     return list.toArray(new String[list.size()]);
   }
