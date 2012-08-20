@@ -582,9 +582,10 @@ public final class ArrayUtils {
   }
 
   /**
-   * Radix sorts an integer array in O(n). It only works for positive numbers,
-   * so please don't come up with negative numbers, it will result in array out
-   * of bound exceptions, since they don't have an array index.
+   * Radix sorts an integer array in O(m*n), where m is the length of the key
+   * (here 32 bit) and n the number of elements. It only works for positive
+   * numbers, so please don't come up with negative numbers, it will result in
+   * array out of bound exceptions, since they don't have an array index.
    */
   public static void radixSort(int[] a) {
     int[] nPart = new int[2];
@@ -598,6 +599,27 @@ public final class ArrayUtils {
       }
       System.arraycopy(part[0], 0, a, 0, nPart[0]);
       System.arraycopy(part[1], 0, a, nPart[0], nPart[1]);
+    }
+  }
+
+  /**
+   * Counting sort that sorts the integer array in O(n+k) where n is the number
+   * of elements and k is the length of the integer intervals given (high -
+   * low). So you can imagine that it uses domain knowledge of the contained
+   * integers, like the lowest value and the highest. It only works for positive
+   * numbers, so please don't come up with negative numbers, it will result in
+   * array out of bound exceptions, since they don't have an array index.
+   */
+  public static void countingSort(int[] a, int low, int high) {
+    final int[] counts = new int[high - low + 1];
+    for (int x : a) {
+      counts[x - low]++;
+    }
+
+    int current = 0;
+    for (int i = 0; i < counts.length; i++) {
+      Arrays.fill(a, current, current + counts[i], i + low);
+      current += counts[i];
     }
   }
 

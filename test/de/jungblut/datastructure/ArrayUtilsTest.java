@@ -1,5 +1,7 @@
 package de.jungblut.datastructure;
 
+import java.util.Random;
+
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -95,6 +97,36 @@ public class ArrayUtilsTest extends TestCase {
       assertEquals(i, fromUpTo[index++]);
     }
 
+  }
+
+  @Test
+  public void testRadixSort() {
+    int[] randomInput = getRandomInput(100, 1000);
+    ArrayUtils.radixSort(randomInput);
+
+    for (int i = 0; i < 99; i++) {
+      assertTrue(randomInput[i] <= randomInput[i + 1]);
+    }
+
+  }
+
+  @Test
+  public void testCountingSort() {
+    int[] randomInput = getRandomInput(100, 1000);
+    ArrayUtils.countingSort(randomInput, 0, 1000);
+
+    for (int i = 0; i < 99; i++) {
+      assertTrue(randomInput[i] <= randomInput[i + 1]);
+    }
+  }
+
+  static int[] getRandomInput(int n, int k) {
+    Random r = new Random();
+    int[] arr = new int[n];
+    for (int i = 0; i < n; i++) {
+      arr[i] = r.nextInt(k);
+    }
+    return arr;
   }
 
   static void assertArrayEquals(int[] expected, int[] actual) {
