@@ -64,6 +64,19 @@ public class SimilarityAggregationBSP extends
      * over all peers and calculating the loss as well as sending the new
      * candidate terms back to each peer.
      */
+    VectorWritable rowVector = new VectorWritable();
+    while (peer.readNext(rowVector, NullWritable.get())) {
+
+    }
+
+    peer.sync();
+
+    // master task code
+    if (peer.getPeerIndex() == 0) {
+
+    }
+
+    peer.sync();
 
   }
 
