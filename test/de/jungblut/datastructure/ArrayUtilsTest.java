@@ -120,6 +120,47 @@ public class ArrayUtilsTest extends TestCase {
     }
   }
 
+  @Test
+  public void testQuickSort() {
+    int[] randomInput = getRandomInput(100, 1000);
+    ArrayUtils.quickSort(randomInput);
+
+    for (int i = 0; i < 99; i++) {
+      assertTrue(randomInput[i] <= randomInput[i + 1]);
+    }
+  }
+
+  @Test
+  public void testMultiQuickSort() {
+    int[] first = new int[] { 10, 100, 100, 0 };
+    int[] second = new int[] { 1, 3, 2, 4 };
+    int[] resFirst = new int[] { 0, 10, 100, 100 };
+    int[] resSecond = new int[] { 4, 1, 2, 3 };
+
+    ArrayUtils.multiQuickSort(first, second);
+
+    for (int i = 0; i < first.length; i++) {
+      assertEquals(resFirst[i], first[i]);
+      assertEquals(resSecond[i], second[i]);
+    }
+
+    // test the edge cases, all these should just be silently ignored and not
+    // throw exceptions
+
+    // empty
+    ArrayUtils.multiQuickSort(new int[] {});
+
+    // just single array
+    ArrayUtils.multiQuickSort(new int[] { 2, 3, 4 });
+
+    // negative sort index
+    ArrayUtils.multiQuickSort(-1, new int[][] { { 1, 2, 3 }, { 1, 2, 3 } });
+
+    // malformed length in one of the dimensions
+    ArrayUtils.multiQuickSort(new int[][] { { 1, 2, 3 }, { 1, 2 } });
+
+  }
+
   static int[] getRandomInput(int n, int k) {
     Random r = new Random();
     int[] arr = new int[n];

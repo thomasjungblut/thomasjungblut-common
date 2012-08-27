@@ -623,4 +623,250 @@ public final class ArrayUtils {
     }
   }
 
+  /**
+   * Quicksorts this array.
+   */
+  public static void quickSort(int[] a) {
+    quickSort(a, 0, a.length);
+  }
+
+  /**
+   * Quicksorts this array. With offset and length, this will be recursively
+   * called by itself.
+   */
+  public static void quickSort(int[] a, int offset, int length) {
+    if (offset < length) {
+      int pivot = partition(a, offset, length);
+      quickSort(a, offset, pivot);
+      quickSort(a, pivot + 1, length);
+    }
+  }
+
+  /**
+   * Quicksorts this array.
+   */
+  public static void quickSort(long[] a) {
+    quickSort(a, 0, a.length);
+  }
+
+  /**
+   * Quicksorts this array. With offset and length, this will be recursively
+   * called by itself.
+   */
+  public static void quickSort(long[] a, int offset, int length) {
+    if (offset < length) {
+      int pivot = partition(a, offset, length);
+      quickSort(a, offset, pivot);
+      quickSort(a, pivot + 1, length);
+    }
+  }
+
+  /**
+   * Quicksorts this array.
+   */
+  public static void quickSort(double[] a) {
+    quickSort(a, 0, a.length);
+  }
+
+  /**
+   * Quicksorts this array. With offset and length, this will be recursively
+   * called by itself.
+   */
+  public static void quickSort(double[] a, int offset, int length) {
+    if (offset < length) {
+      int pivot = partition(a, offset, length);
+      quickSort(a, offset, pivot);
+      quickSort(a, pivot + 1, length);
+    }
+  }
+
+  /**
+   * Quicksorts this array.
+   */
+  public static <T extends Comparable<T>> void quickSort(T[] a) {
+    quickSort(a, 0, a.length);
+  }
+
+  /**
+   * Quicksorts this array. With offset and length, this will be recursively
+   * called by itself.
+   */
+  public static <T extends Comparable<T>> void quickSort(T[] a, int offset,
+      int length) {
+    if (offset < length) {
+      int pivot = partition(a, offset, length);
+      quickSort(a, offset, pivot);
+      quickSort(a, pivot + 1, length);
+    }
+  }
+
+  /**
+   * Multi-sorts the given arrays with the quicksort algorithm. It assumes that
+   * all arrays have the same sizes and it sorts on the first dimension of these
+   * arrays. If the given arrays are null or empty, it will do nothing, if just
+   * a single array was passed it will sort it via {@link Arrays} sort;
+   */
+  public static void multiQuickSort(int[]... arrays) {
+    multiQuickSort(0, arrays);
+  }
+
+  /**
+   * Multi-sorts the given arrays with the quicksort algorithm. It assumes that
+   * all arrays have the same sizes and it sorts on the given dimension index
+   * (starts with 0) of these arrays. If the given arrays are null or empty, it
+   * will do nothing, if just a single array was passed it will sort it via
+   * {@link Arrays} sort;
+   */
+  public static void multiQuickSort(int sortDimension, int[]... arrays) {
+    // check if the lengths are equal, break if everything is empty
+    if (arrays == null || arrays.length == 0) {
+      return;
+    }
+    // if the array only has a single dimension, sort it and return
+    if (arrays.length == 1) {
+      Arrays.sort(arrays[0]);
+      return;
+    }
+    // also return if the sort dimension is not in our array range
+    if (sortDimension < 0 || sortDimension >= arrays.length) {
+      return;
+    }
+    // check sizes
+    int firstArrayLength = arrays[0].length;
+    for (int i = 1; i < arrays.length; i++) {
+      if (arrays[i] == null || firstArrayLength != arrays[i].length)
+        return;
+    }
+
+    multiQuickSort(arrays, 0, firstArrayLength, sortDimension);
+  }
+
+  /**
+   * Internal multi quicksort, doing the real algorithm.
+   */
+  private static void multiQuickSort(int[][] a, int offset, int length,
+      int indexToSort) {
+    if (offset < length) {
+      int pivot = multiPartition(a, offset, length, indexToSort);
+      multiQuickSort(a, offset, pivot, indexToSort);
+      multiQuickSort(a, pivot + 1, length, indexToSort);
+    }
+  }
+
+  /**
+   * Partitions the given array in-place and uses the end element as pivot,
+   * everything less than the pivot will be placed left and everything greater
+   * will be placed right of the pivot. It returns the index of the pivot
+   * element after partitioning. This is a multi way partitioning algorithm, you
+   * have to provide a partition array index to know which is the array that
+   * needs to be partitioned. The swap operations are applied on the other
+   * elements as well.
+   */
+  private static int multiPartition(int[][] array, int start, int end,
+      int partitionArrayIndex) {
+    final int ending = end - 1;
+    final int x = array[partitionArrayIndex][ending];
+    int i = start - 1;
+    for (int j = start; j < ending; j++) {
+      if (array[partitionArrayIndex][j] <= x) {
+        i++;
+        for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+          swap(array[arrayIndex], i, j);
+        }
+      }
+    }
+    i++;
+    for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+      swap(array[arrayIndex], i, ending);
+    }
+
+    return i;
+  }
+
+  /**
+   * Multi-sorts the given arrays with the quicksort algorithm. It assumes that
+   * all arrays have the same sizes and it sorts on the first dimension of these
+   * arrays. If the given arrays are null or empty, it will do nothing, if just
+   * a single array was passed it will sort it via {@link Arrays} sort;
+   */
+  @SafeVarargs
+  public static <T extends Comparable<T>> void multiQuickSort(T[]... arrays) {
+    multiQuickSort(0, arrays);
+  }
+
+  /**
+   * Multi-sorts the given arrays with the quicksort algorithm. It assumes that
+   * all arrays have the same sizes and it sorts on the given dimension index
+   * (starts with 0) of these arrays. If the given arrays are null or empty, it
+   * will do nothing, if just a single array was passed it will sort it via
+   * {@link Arrays} sort;
+   */
+  @SafeVarargs
+  public static <T extends Comparable<T>> void multiQuickSort(
+      int sortDimension, T[]... arrays) {
+    // check if the lengths are equal, break if everything is empty
+    if (arrays == null || arrays.length == 0) {
+      return;
+    }
+    // if the array only has a single dimension, sort it and return
+    if (arrays.length == 1) {
+      Arrays.sort(arrays[0]);
+      return;
+    }
+    // also return if the sort dimension is not in our array range
+    if (sortDimension < 0 || sortDimension >= arrays.length) {
+      return;
+    }
+    // check sizes
+    int firstArrayLength = arrays[0].length;
+    for (int i = 1; i < arrays.length; i++) {
+      if (arrays[i] == null || firstArrayLength != arrays[i].length)
+        return;
+    }
+
+    multiQuickSort(arrays, 0, firstArrayLength, sortDimension);
+  }
+
+  /**
+   * Internal multi quicksort, doing the real algorithm.
+   */
+  private static <T extends Comparable<T>> void multiQuickSort(T[][] a,
+      int offset, int length, int indexToSort) {
+    if (offset < length) {
+      int pivot = multiPartition(a, offset, length, indexToSort);
+      multiQuickSort(a, offset, pivot, indexToSort);
+      multiQuickSort(a, pivot + 1, length, indexToSort);
+    }
+  }
+
+  /**
+   * Partitions the given array in-place and uses the end element as pivot,
+   * everything less than the pivot will be placed left and everything greater
+   * will be placed right of the pivot. It returns the index of the pivot
+   * element after partitioning. This is a multi way partitioning algorithm, you
+   * have to provide a partition array index to know which is the array that
+   * needs to be partitioned. The swap operations are applied on the other
+   * elements as well.
+   */
+  private static <T extends Comparable<T>> int multiPartition(T[][] array,
+      int start, int end, int partitionArrayIndex) {
+    final int ending = end - 1;
+    final T x = array[partitionArrayIndex][ending];
+    int i = start - 1;
+    for (int j = start; j < ending; j++) {
+      if (array[partitionArrayIndex][j].compareTo(x) < 0) {
+        i++;
+        for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+          swap(array[arrayIndex], i, j);
+        }
+      }
+    }
+    i++;
+    for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
+      swap(array[arrayIndex], i, ending);
+    }
+
+    return i;
+  }
+
 }
