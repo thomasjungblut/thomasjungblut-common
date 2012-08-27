@@ -20,6 +20,7 @@ import de.jungblut.crawl.extraction.OutlinkExtractor;
 public final class MultithreadedCrawler<T extends FetchResult> {
 
   private static final int THREAD_POOL_SIZE = 32;
+  private static final int BATCH_SIZE = 10;
   private final ExecutorService threadPool = Executors
       .newFixedThreadPool(THREAD_POOL_SIZE);
 
@@ -56,8 +57,9 @@ public final class MultithreadedCrawler<T extends FetchResult> {
     // seed our to crawl set with the start url
     linksToCrawl.add(url);
     while (true) {
-      // batch together up to 100 items or how much in the list is
-      final int length = linksToCrawl.size() > 100 ? 100 : linksToCrawl.size();
+      // batch together up to 10 items or how much in the list is
+      final int length = linksToCrawl.size() > BATCH_SIZE ? BATCH_SIZE
+          : linksToCrawl.size();
       List<String> linkList = new ArrayList<>(length);
       for (int i = 0; i < length; i++) {
         linkList.add(linksToCrawl.poll());
