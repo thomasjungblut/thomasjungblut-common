@@ -8,29 +8,20 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.Writer;
-import org.apache.hadoop.io.Text;
 import org.htmlparser.util.ParserException;
 
 import de.jungblut.crawl.ContentFetchResult;
 import de.jungblut.crawl.FetchResult;
-import de.jungblut.crawl.ResultWriter;
-import de.jungblut.crawl.SimpleCrawler;
+import de.jungblut.crawl.STDOUTResultWriter;
+import de.jungblut.crawl.MultithreadedCrawler;
 import de.jungblut.math.tuple.Tuple;
 import de.l3s.boilerpipe.BoilerpipeExtractor;
-import de.l3s.boilerpipe.BoilerpipeProcessingException;
-import de.l3s.boilerpipe.extractors.LargestContentExtractor;
+import de.l3s.boilerpipe.extractors.ArticleExtractor;
 
-public class ContentExtractingCrawler implements
+public final class ContentExtractingCrawler implements
     ExtractionLogic<ContentFetchResult> {
 
-  // TODO is this singleton really threadsafe?
-  private final BoilerpipeExtractor extractor = LargestContentExtractor
-      .getInstance();
+  private final BoilerpipeExtractor extractor = ArticleExtractor.getInstance();
 
   private final Pattern titleExtractor = Pattern
       .compile("<title>(.*?)</title>");
@@ -38,14 +29,17 @@ public class ContentExtractingCrawler implements
   private final OutlinkExtractor embeddedExtractor = new OutlinkExtractor();
 
   @Override
-  public Set<ContentFetchResult> extract(String site) {
+  public final ContentFetchResult extract(String site) {
+
+    if (site == null || !site.startsWith("http") || site.length() > 500)
+      return null;
 
     try {
       Tuple<InputStream, String> connection = embeddedExtractor
           .getConnection(site);
       String html = embeddedExtractor.consumeStream(connection.getFirst(),
           connection.getSecond());
-      final HashSet<String> set = embeddedExtractor.extractOutlinks(html);
+      final HashSet<String> set = embeddedExtractor.extractOutlinks(html, site);
 
       Set<FetchResult> resultSet = new HashSet<>(1);
       resultSet.add(new FetchResult(site, set));
@@ -54,17 +48,21 @@ public class ContentExtractingCrawler implements
       boolean foundTitle = matcher.find();
       String title = "";
       if (foundTitle) {
-        // TODO why is the regex returning the not grouping as well?
-        title = matcher.group().replace("</title>", "").replace("<title>", "");
+        String group = matcher.group();
+        // remove the tags from the grouping
+        title = group.substring("<title>".length(),
+            group.length() - "</title>".length());
       }
       String extractedLargestText = extractor.getText(html);
 
-      HashSet<ContentFetchResult> result = new HashSet<>(1);
-      result
-          .add(new ContentFetchResult(site, set, title, extractedLargestText));
-      return result;
-    } catch (ParserException | IOException | BoilerpipeProcessingException e) {
-      e.printStackTrace();
+      return new ContentFetchResult(site, set, title, extractedLargestText);
+    } catch (ParserException pEx) {
+      // ignore parser exceptions, they contain mostly garbage
+    } catch (Exception e) {
+      String errMsg = e.getMessage().length() > 150 ? e.getMessage().substring(
+          0, 150) : e.getMessage();
+      System.err.println(errMsg.replace("\n", "") + " >>> URL was: \"" + site
+          + "\"");
     }
 
     return null;
@@ -72,37 +70,12 @@ public class ContentExtractingCrawler implements
 
   public static void main(String[] args) throws IOException,
       InterruptedException, ExecutionException {
-    String start = "http://www.cnet.de/tests/entertainment/41550001/nintendo_3ds_im_test_mobile_spielekonsole_mit_3d_display_ohne_brillenpflicht.htm";
+    String start = "http://www.spiegel.de/wirtschaft/service/kartellamt-warnt-vor-kostenexplosion-durch-oekostrom-a-852387.html";
 
-    SimpleCrawler<ContentFetchResult> crawler = new SimpleCrawler<>(start, 2,
-        new ContentExtractingCrawler(), new SystemOutputWriter());
+    MultithreadedCrawler<ContentFetchResult> crawler = new MultithreadedCrawler<>(
+        start, 1, new ContentExtractingCrawler(), new STDOUTResultWriter());
 
     crawler.process();
-
-  }
-
-  // simple class that persists results and also outputs to console
-  static class SystemOutputWriter implements ResultWriter<ContentFetchResult> {
-
-    @Override
-    public Path getOutputPath() {
-      return new Path("files/crawl/result.seq");
-    }
-
-    @Override
-    public Writer getWriterInstance() throws IOException {
-      Configuration conf = new Configuration();
-      return new SequenceFile.Writer(FileSystem.get(conf), conf,
-          getOutputPath(), Text.class, Text.class);
-    }
-
-    @Override
-    public void write(Writer writer, ContentFetchResult result)
-        throws IOException {
-      System.out.println("Title: " + result.getTitle());
-      System.out.println("Text: " + result.getText());
-      writer.append(new Text(result.getTitle()), new Text(result.getText()));
-    }
 
   }
 

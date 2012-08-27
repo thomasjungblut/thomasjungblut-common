@@ -1,7 +1,5 @@
 package de.jungblut.crawl.extraction;
 
-import java.util.Set;
-
 import de.jungblut.crawl.FetchResult;
 
 /**
@@ -11,6 +9,6 @@ import de.jungblut.crawl.FetchResult;
  */
 public interface ExtractionLogic<T extends FetchResult> {
 
-  public Set<T> extract(String site);
+  public T extract(String site);
 
 }

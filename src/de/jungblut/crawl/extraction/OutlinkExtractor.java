@@ -7,7 +7,8 @@ import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.htmlparser.NodeFilter;
 import org.htmlparser.Parser;
@@ -20,28 +21,38 @@ import org.htmlparser.util.SimpleNodeIterator;
 import de.jungblut.crawl.FetchResult;
 import de.jungblut.math.tuple.Tuple;
 
-public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
+public final class OutlinkExtractor implements ExtractionLogic<FetchResult> {
 
   private static final String USER_AGENT_KEY = "User-Agent";
   private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1";
   private static final NodeFilter filter = new NodeClassFilter(LinkTag.class);
 
+  private static final Pattern IGNORE_SUFFIX_PATTERN = Pattern
+      .compile("(jpg|gif|png|pdf|gif)$");
+  private static final Pattern BASE_URL = Pattern
+      .compile("(http[s]*://[a-z0-9.]+)");
+
   @Override
-  public Set<FetchResult> extract(String realUrl) {
+  public FetchResult extract(String realUrl) {
+    if (realUrl == null || !realUrl.startsWith("http")
+        || realUrl.length() > 500)
+      return null;
     try {
 
       Tuple<InputStream, String> connection = getConnection(realUrl);
       String html = consumeStream(connection.getFirst(), connection.getSecond());
-      final HashSet<String> set = extractOutlinks(html);
+      final HashSet<String> set = extractOutlinks(html, realUrl);
 
-      Set<FetchResult> resultSet = new HashSet<>(1);
-      resultSet.add(new FetchResult(realUrl, set));
-
-      return resultSet;
+      return new FetchResult(realUrl, set);
+    } catch (ParserException pEx) {
+      // ignore parser exceptions, they contain mostly garbage
     } catch (Exception e) {
-      System.out.println(e.getMessage());
-      return null;
+      String errMsg = e.getMessage().length() > 150 ? e.getMessage().substring(
+          0, 150) : e.getMessage();
+      System.err.println(errMsg.replace("\n", "") + " >>> URL was: \""
+          + realUrl + "\"");
     }
+    return null;
   }
 
   // opened stream + encoding
@@ -58,7 +69,7 @@ public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     // con.setConnectTimeout(50);
     con.addRequestProperty(USER_AGENT_KEY, USER_AGENT);
     String encoding = con.getContentEncoding();
-    if (encoding == null) {
+    if (encoding == null || encoding.equals("gzip")) {
       encoding = "ISO-8859-1";
     }
     return new Tuple<>(con.getInputStream(), encoding);
@@ -67,7 +78,13 @@ public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
   /**
    * Method to extract outlinks of a given HTML doc in string.
    */
-  public HashSet<String> extractOutlinks(String in) throws ParserException {
+  public final HashSet<String> extractOutlinks(String in, String url)
+      throws ParserException {
+
+    final String baseUrl = extractBaseUrl(url);
+    if (baseUrl == null)
+      return null;
+
     final HashSet<String> set = new HashSet<>();
     Parser parser = new Parser(in);
     parser.setEncoding("UTF-8");
@@ -76,10 +93,23 @@ public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     while (it.hasMoreNodes()) {
       LinkTag node = (LinkTag) it.nextNode();
       String link = node.getLink();
-      if (link != null && isValid(link))
+      if (link != null && !link.isEmpty() && isValid(link)) {
+        // expand the relative links
+        if (link.charAt(0) == '/') {
+          link = baseUrl + link;
+        }
         set.add(link);
+      }
     }
     return set;
+  }
+
+  private String extractBaseUrl(String url) {
+    Matcher matcher = BASE_URL.matcher(url);
+    if (matcher.find()) {
+      return matcher.group();
+    }
+    return null;
   }
 
   public String consumeStream(InputStream stream, String encoding) {
@@ -104,11 +134,10 @@ public class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     return sb.toString();
   }
 
-  // TODO this can be optimized with a single precompiled regex
   private static boolean isValid(final String s) {
-    return !(!s.startsWith("http") || s.matches("javascript:.*|mailto:.*"))
-        && !(s.endsWith(".pdf") || s.endsWith(".jpg") || s.endsWith(".png") || s
-            .endsWith(".gif"));
+    Matcher baseMatcher = BASE_URL.matcher(s);
+    return baseMatcher.find() && baseMatcher.start() == 0
+        && !IGNORE_SUFFIX_PATTERN.matcher(s).matches();
   }
 
 }

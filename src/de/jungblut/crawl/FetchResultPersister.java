@@ -52,7 +52,6 @@ public class FetchResultPersister<T extends FetchResult> implements Runnable {
         }
       }
     }
-    System.out.println("Persister received STOP command!");
     int toWrite = queue.size();
     try {
       while (!queue.isEmpty()) {

@@ -10,12 +10,19 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.io.Text;
 
-public class SimpleResultWriter implements ResultWriter<FetchResult> {
+/**
+ * Writes the result into a sequencefile "files/crawl/result.seq". It tab
+ * separates the outlinks in the sequencefile value, the key is the origin url.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
+public class SequenceFileResultWriter implements ResultWriter<FetchResult> {
 
   private final Configuration conf;
   private FileSystem fs;
 
-  public SimpleResultWriter() throws IOException {
+  public SequenceFileResultWriter() throws IOException {
     conf = new Configuration();
     fs = FileSystem.get(conf);
   }
@@ -43,7 +50,7 @@ public class SimpleResultWriter implements ResultWriter<FetchResult> {
     final StringBuilder sb = new StringBuilder();
     for (String s : set) {
       sb.append(s);
-      sb.append(";");
+      sb.append('\t');
     }
     text.set(sb.toString());
     return text;
