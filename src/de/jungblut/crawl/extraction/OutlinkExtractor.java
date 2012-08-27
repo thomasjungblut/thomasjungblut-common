@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +70,7 @@ public final class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     // con.setConnectTimeout(50);
     con.addRequestProperty(USER_AGENT_KEY, USER_AGENT);
     String encoding = con.getContentEncoding();
-    if (encoding == null || encoding.equals("gzip")) {
+    if (encoding == null || !Charset.isSupported(encoding)) {
       encoding = "ISO-8859-1";
     }
     return new Tuple<>(con.getInputStream(), encoding);
