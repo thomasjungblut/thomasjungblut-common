@@ -4,7 +4,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-public class TestTokenizerUtils extends TestCase {
+public class TokenizerUtilsTest extends TestCase {
 
   @Test
   public void testRemoveMatchingRegex() {
