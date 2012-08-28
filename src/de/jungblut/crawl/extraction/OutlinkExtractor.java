@@ -80,7 +80,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
     con.addRequestProperty(USER_AGENT_KEY, USER_AGENT);
     String encoding = con.getContentEncoding();
     if (encoding == null || !Charset.isSupported(encoding)) {
-      encoding = "ISO-8859-1";
+      encoding = "UTF-8";
     }
     return new Tuple<>(con.getInputStream(), encoding);
   }

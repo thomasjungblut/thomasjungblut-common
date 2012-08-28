@@ -22,7 +22,7 @@ import de.jungblut.writable.VectorWritable;
 
 /**
  * Work in progress by Aditya Sarawgi, I just made some small fixes :)
- *
+ * 
  */
 public final class Icf extends
     BSP<IntWritable, VectorWritable, IntWritable, Text, Writable> {

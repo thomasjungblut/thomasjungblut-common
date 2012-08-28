@@ -29,8 +29,8 @@ public final class GnuPlot {
     DenseDoubleVector fromUpTo = DenseDoubleVector.fromUpTo(x.min(0) - 15,
         x.max(0) + 15, 0.05);
 
-    DenseDoubleMatrix createPolynomials = MathUtils
-        .createPolynomials(new DenseDoubleMatrix(fromUpTo), polyCount);
+    DenseDoubleMatrix createPolynomials = MathUtils.createPolynomials(
+        new DenseDoubleMatrix(fromUpTo), polyCount);
 
     DenseDoubleMatrix xPolyNormalized = new DenseDoubleMatrix(
         DenseDoubleVector.ones(fromUpTo.getLength()), createPolynomials

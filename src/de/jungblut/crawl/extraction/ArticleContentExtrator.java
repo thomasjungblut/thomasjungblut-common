@@ -7,6 +7,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.htmlparser.util.ParserException;
 
 import de.jungblut.crawl.ContentFetchResult;
@@ -45,6 +46,7 @@ public final class ArticleContentExtrator implements
           .getConnection(site);
       String html = outlinkExtractor.consumeStream(connection.getFirst(),
           connection.getSecond());
+      html = StringEscapeUtils.unescapeHtml(html);
       final HashSet<String> outlinkSet = outlinkExtractor.extractOutlinks(html,
           site);
 

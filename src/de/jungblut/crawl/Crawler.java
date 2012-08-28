@@ -23,8 +23,8 @@ public interface Crawler<T extends FetchResult> {
    *          {@link FetchResult}.
    * @param writer the {@link ResultWriter} to write the result to a sink.
    */
-  public void setup(int fetches, Extractor<T> extractor,
-      ResultWriter<T> writer) throws IOException;
+  public void setup(int fetches, Extractor<T> extractor, ResultWriter<T> writer)
+      throws IOException;
 
   /**
    * Starts the crawler, starting by the seedURL. The real logic is implemented

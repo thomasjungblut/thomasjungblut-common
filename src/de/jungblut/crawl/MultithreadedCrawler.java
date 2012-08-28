@@ -80,18 +80,21 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
     linksToCrawl.add(seedUrl);
     visited.add(seedUrl);
     // while we have not fetched enough sites yet
-    while (fetches > 0) {
+    while (true) {
       // batch together up to 10 items or how much in the list is
       final int length = linksToCrawl.size() > BATCH_SIZE ? BATCH_SIZE
           : linksToCrawl.size();
-      fetches -= length;
-      List<String> linkList = new ArrayList<>(length);
-      for (int i = 0; i < length; i++) {
-        linkList.add(linksToCrawl.poll());
+      // only schedule if we have fetches leftover
+      if (fetches > 0) {
+        fetches -= length;
+        List<String> linkList = new ArrayList<>(length);
+        for (int i = 0; i < length; i++) {
+          linkList.add(linksToCrawl.poll());
+        }
+        // submit a new thread for a batch
+        completionService.submit(new FetchThread<>(linkList, extractor));
+        currentRunningThreads++;
       }
-      // submit a new thread for a batch
-      completionService.submit(new FetchThread<>(linkList, extractor));
-      currentRunningThreads++;
       // Now we can have a look if other threads have completed yet.
       Future<Set<T>> poll = null;
       if ((linksToCrawl.isEmpty() && currentRunningThreads > 0)
@@ -121,6 +124,9 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
         // sleep for a second if none completed yet
         Thread.sleep(1000l);
       }
+      if (fetches <= 0 && currentRunningThreads == 0) {
+        break;
+      }
     }
 
     persister.stop();
@@ -134,7 +140,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
       ExecutionException, IOException {
     String seedUrl = "http://news.google.de/";
     new MultithreadedCrawler<>(1000, new OutlinkExtractor(),
-        new SequenceFileResultWriter()).process(seedUrl);
+        new SequenceFileResultWriter<>()).process(seedUrl);
   }
 
 }
