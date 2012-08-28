@@ -48,7 +48,8 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
 
       Tuple<InputStream, String> connection = getConnection(realUrl);
       String html = consumeStream(connection.getFirst(), connection.getSecond());
-      final HashSet<String> set = extractOutlinks(html, realUrl);
+      final HashSet<String> set = extractOutlinks(html, realUrl,
+          connection.getSecond());
 
       return new FetchResult(realUrl, set);
     } catch (ParserException pEx) {
@@ -64,7 +65,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
 
   /**
    * @return a opened stream and its encoding, if the charset isn't accepted it
-   *         will fallback to ISO-8859-1.
+   *         will fallback to UTF-8.
    */
   public Tuple<InputStream, String> getConnection(String realUrl)
       throws IOException {
@@ -88,8 +89,8 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   /**
    * Method to extract outlinks of a given HTML doc in string.
    */
-  public final HashSet<String> extractOutlinks(String in, String url)
-      throws ParserException {
+  public final HashSet<String> extractOutlinks(String in, String url,
+      String encoding) throws ParserException {
 
     final String baseUrl = extractBaseUrl(url);
     if (baseUrl == null)
@@ -97,7 +98,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
 
     final HashSet<String> set = new HashSet<>();
     Parser parser = new Parser(in);
-    parser.setEncoding("UTF-8");
+    parser.setEncoding(encoding == null ? "UTF-8" : encoding);
     NodeList matches = parser.extractAllNodesThatMatch(filter);
     SimpleNodeIterator it = matches.elements();
     while (it.hasMoreNodes()) {

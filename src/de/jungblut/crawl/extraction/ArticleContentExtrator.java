@@ -48,7 +48,7 @@ public final class ArticleContentExtrator implements
           connection.getSecond());
       html = StringEscapeUtils.unescapeHtml(html);
       final HashSet<String> outlinkSet = outlinkExtractor.extractOutlinks(html,
-          site);
+          site, connection.getSecond());
 
       Matcher matcher = titleExtractor.matcher(html);
       boolean foundTitle = matcher.find();
