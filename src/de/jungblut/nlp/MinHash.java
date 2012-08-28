@@ -1,8 +1,10 @@
 package de.jungblut.nlp;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
@@ -24,11 +26,15 @@ public final class MinHash {
   private final int[] seed2;
 
   private MinHash(int numHashes) {
+    this(numHashes, System.currentTimeMillis());
+  }
+
+  private MinHash(int numHashes, long seed) {
     this.numHashes = numHashes;
     this.seed1 = new int[numHashes];
     this.seed2 = new int[numHashes];
 
-    Random r = new Random();
+    Random r = new Random(seed);
     for (int i = 0; i < numHashes; i++) {
       this.seed1[i] = r.nextInt();
       this.seed2[i] = r.nextInt();
@@ -87,10 +93,46 @@ public final class MinHash {
   }
 
   /**
+   * Generates cluster keys from the minhashes. Make sure that if you are going
+   * to lookup the ids in a hashtable, sort out these that don't have a specific
+   * minimum occurence. Also make sure that if you're using this in parallel,
+   * you have to make sure that the seeds of the minhash should be consistent
+   * across each task. Otherwise this key will be completely random.
+   * 
+   * @param keyGroups how many keygroups there should be, normally it's just a
+   *          single per hash.
+   * @return a set of string IDs that can refer as cluster identifiers.
+   */
+  public Set<String> createClusterKeys(int[] minHashes, int keyGroups) {
+    HashSet<String> set = new HashSet<>();
+
+    for (int i = 0; i < numHashes; i++) {
+      StringBuilder clusterIdBuilder = new StringBuilder();
+      for (int j = 0; j < keyGroups; j++) {
+        clusterIdBuilder.append(minHashes[(i + j) % minHashes.length]).append(
+            '_');
+      }
+      String clusterId = clusterIdBuilder.toString();
+      clusterId = clusterId.substring(0, clusterId.lastIndexOf('_'));
+      set.add(clusterId);
+    }
+
+    return set;
+  }
+
+  /**
    * Creates a {@link MinHash} instance with the given number of hash functions.
    */
   public static MinHash create(int numHashes) {
     return new MinHash(numHashes);
+  }
+
+  /**
+   * Creates a {@link MinHash} instance with the given number of hash functions
+   * and a seed to be used in parallel systems.
+   */
+  public static MinHash create(int numHashes, long seed) {
+    return new MinHash(numHashes, seed);
   }
 
   /**
