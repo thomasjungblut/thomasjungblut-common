@@ -117,8 +117,11 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   /**
    * Consumes a given {@link InputStream} and returns a string consisting of the
    * html code of the site.
+   * 
+   * @throws IOException
    */
-  public String consumeStream(InputStream stream, String encoding) {
+  public String consumeStream(InputStream stream, String encoding)
+      throws IOException {
     StringBuilder sb = new StringBuilder();
     try {
       BufferedReader br = new BufferedReader(new InputStreamReader(stream,
@@ -128,8 +131,6 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
         sb.append(line);
         sb.append('\n');
       }
-    } catch (IOException e) {
-      e.printStackTrace();
     } finally {
       try {
         stream.close();
