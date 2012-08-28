@@ -64,6 +64,7 @@ public final class FetchResultPersister<T extends FetchResult> implements
     while (running) {
       final T poll = queue.poll();
       if (poll != null) {
+        boolean failHappend = false;
         try {
           resWriter.write(poll);
           retrieved++;
@@ -72,11 +73,15 @@ public final class FetchResultPersister<T extends FetchResult> implements
           }
         } catch (IOException e) {
           e.printStackTrace();
+          failHappend = true;
         } finally {
-          try {
-            resWriter.close();
-          } catch (Exception e) {
-            e.printStackTrace();
+          if (failHappend) {
+            try {
+              resWriter.close();
+            } catch (Exception e) {
+              e.printStackTrace();
+            }
+            return;
           }
         }
       } else {
