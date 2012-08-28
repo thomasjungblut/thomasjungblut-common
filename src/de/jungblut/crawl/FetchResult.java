@@ -2,6 +2,14 @@ package de.jungblut.crawl;
 
 import java.util.HashSet;
 
+/**
+ * Fetch Result class, contains the origin url and its outlinks for further
+ * crawling. This is the common subclass to override if additional content must
+ * be parsed out of a site.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public class FetchResult {
 
   final String url;

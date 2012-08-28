@@ -3,7 +3,6 @@ package de.jungblut.crawl.extraction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -11,22 +10,29 @@ import java.util.regex.Pattern;
 import org.htmlparser.util.ParserException;
 
 import de.jungblut.crawl.ContentFetchResult;
-import de.jungblut.crawl.FetchResult;
+import de.jungblut.crawl.Crawler;
 import de.jungblut.crawl.STDOUTResultWriter;
-import de.jungblut.crawl.MultithreadedCrawler;
+import de.jungblut.crawl.SequentialCrawler;
 import de.jungblut.math.tuple.Tuple;
 import de.l3s.boilerpipe.BoilerpipeExtractor;
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
 
-public final class ContentExtractingCrawler implements
-    ExtractionLogic<ContentFetchResult> {
+/**
+ * Extractor for news articles. Uses Boilerpipes {@link ArticleExtractor} to
+ * extract the largest block of text and the article title.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
+public final class ArticleContentExtrator implements
+    Extractor<ContentFetchResult> {
 
   private final BoilerpipeExtractor extractor = ArticleExtractor.getInstance();
 
   private final Pattern titleExtractor = Pattern
       .compile("<title>(.*?)</title>");
 
-  private final OutlinkExtractor embeddedExtractor = new OutlinkExtractor();
+  private final OutlinkExtractor outlinkExtractor = new OutlinkExtractor();
 
   @Override
   public final ContentFetchResult extract(String site) {
@@ -35,14 +41,12 @@ public final class ContentExtractingCrawler implements
       return null;
 
     try {
-      Tuple<InputStream, String> connection = embeddedExtractor
+      Tuple<InputStream, String> connection = outlinkExtractor
           .getConnection(site);
-      String html = embeddedExtractor.consumeStream(connection.getFirst(),
+      String html = outlinkExtractor.consumeStream(connection.getFirst(),
           connection.getSecond());
-      final HashSet<String> set = embeddedExtractor.extractOutlinks(html, site);
-
-      Set<FetchResult> resultSet = new HashSet<>(1);
-      resultSet.add(new FetchResult(site, set));
+      final HashSet<String> outlinkSet = outlinkExtractor.extractOutlinks(html,
+          site);
 
       Matcher matcher = titleExtractor.matcher(html);
       boolean foundTitle = matcher.find();
@@ -54,8 +58,8 @@ public final class ContentExtractingCrawler implements
             group.length() - "</title>".length());
       }
       String extractedLargestText = extractor.getText(html);
-
-      return new ContentFetchResult(site, set, title, extractedLargestText);
+      return new ContentFetchResult(site, outlinkSet, title,
+          extractedLargestText);
     } catch (ParserException pEx) {
       // ignore parser exceptions, they contain mostly garbage
     } catch (Exception e) {
@@ -72,11 +76,10 @@ public final class ContentExtractingCrawler implements
       InterruptedException, ExecutionException {
     String start = "http://www.spiegel.de/wirtschaft/service/kartellamt-warnt-vor-kostenexplosion-durch-oekostrom-a-852387.html";
 
-    MultithreadedCrawler<ContentFetchResult> crawler = new MultithreadedCrawler<>(
-        start, 1, new ContentExtractingCrawler(), new STDOUTResultWriter());
+    Crawler<ContentFetchResult> crawler = new SequentialCrawler<>(1,
+        new ArticleContentExtrator(), new STDOUTResultWriter());
 
-    crawler.process();
+    crawler.process(start);
 
   }
-
 }

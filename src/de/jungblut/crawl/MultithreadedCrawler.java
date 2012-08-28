@@ -14,26 +14,42 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import de.jungblut.crawl.extraction.ExtractionLogic;
+import de.jungblut.crawl.extraction.Extractor;
 import de.jungblut.crawl.extraction.OutlinkExtractor;
 
-public final class MultithreadedCrawler<T extends FetchResult> {
+/**
+ * Fast multithreaded crawler, will start a fixed threadpool of 32 threads each
+ * will be fed by 10 urls at once. Majorly designed for speed and to use all the
+ * available bandwidth. Based on other internet bandwidths, you may retune the
+ * parameters of threadpool sizes and how many items should be batched. For my
+ * 6k ADSL it works fine by 32 threads batched on 10 urls. You may scale this
+ * linearly up, since this class has almost no contention and small sequential
+ * code.
+ * 
+ * @author thomas.jungblut
+ */
+public final class MultithreadedCrawler<T extends FetchResult> implements
+    Crawler<T> {
 
   private static final int THREAD_POOL_SIZE = 32;
   private static final int BATCH_SIZE = 10;
+
   private final ExecutorService threadPool = Executors
       .newFixedThreadPool(THREAD_POOL_SIZE);
 
-  private final String url;
-  private final ExtractionLogic<T> extractor;
-  private final Thread persisterThread;
-  private final FetchResultPersister<T> persister;
-
+  private Extractor<T> extractor;
+  private FetchResultPersister<T> persister;
+  private Thread persisterThread;
   private int fetches = 100000;
 
-  public MultithreadedCrawler(String url, int fetches,
-      ExtractionLogic<T> extractor, ResultWriter<T> writer) throws IOException {
-    this.url = url;
+  public MultithreadedCrawler(int fetches, Extractor<T> extractor,
+      ResultWriter<T> writer) throws IOException {
+    setup(fetches, extractor, writer);
+  }
+
+  @Override
+  public final void setup(int fetches, Extractor<T> extractor,
+      ResultWriter<T> writer) throws IOException {
     this.fetches = fetches;
     this.extractor = extractor;
 
@@ -43,7 +59,13 @@ public final class MultithreadedCrawler<T extends FetchResult> {
     persisterThread.start();
   }
 
-  public final void process() throws InterruptedException, ExecutionException {
+  /*
+   * (non-Javadoc)
+   * @see de.jungblut.crawl.Crawler#process(java.lang.String)
+   */
+  @Override
+  public final void process(String seedUrl) throws InterruptedException,
+      ExecutionException {
     final Deque<String> linksToCrawl = new ArrayDeque<>();
     final HashSet<String> visited = new HashSet<>();
     final CompletionService<Set<T>> completionService = new ExecutorCompletionService<>(
@@ -55,17 +77,22 @@ public final class MultithreadedCrawler<T extends FetchResult> {
 
     int currentRunningThreads = 0;
     // seed our to crawl set with the start url
-    linksToCrawl.add(url);
-    while (true) {
+    linksToCrawl.add(seedUrl);
+    visited.add(seedUrl);
+    // while we have not fetched enough sites yet
+    while (fetches > 0) {
       // batch together up to 10 items or how much in the list is
       final int length = linksToCrawl.size() > BATCH_SIZE ? BATCH_SIZE
           : linksToCrawl.size();
+      fetches -= length;
       List<String> linkList = new ArrayList<>(length);
       for (int i = 0; i < length; i++) {
         linkList.add(linksToCrawl.poll());
       }
+      // submit a new thread for a batch
       completionService.submit(new FetchThread<>(linkList, extractor));
       currentRunningThreads++;
+      // Now we can have a look if other threads have completed yet.
       Future<Set<T>> poll = null;
       if ((linksToCrawl.isEmpty() && currentRunningThreads > 0)
           || currentRunningThreads > THREAD_POOL_SIZE) {
@@ -77,7 +104,6 @@ public final class MultithreadedCrawler<T extends FetchResult> {
         currentRunningThreads--;
         Set<T> set = poll.get();
         if (set != null) {
-          fetches -= set.size();
           // for each of our crawling results
           for (T v : set) {
             // go through the found outlinks
@@ -92,13 +118,12 @@ public final class MultithreadedCrawler<T extends FetchResult> {
           }
         }
       } else {
+        // sleep for a second if none completed yet
         Thread.sleep(1000l);
       }
-      if (fetches <= 0)
-        break;
     }
 
-    persister.running = false;
+    persister.stop();
     persisterThread.join();
     threadPool.shutdownNow();
     System.out.println("Took overall time of "
@@ -108,13 +133,8 @@ public final class MultithreadedCrawler<T extends FetchResult> {
   public static void main(String[] args) throws InterruptedException,
       ExecutionException, IOException {
     String seedUrl = "http://news.google.de/";
-    if (args.length > 0) {
-      new MultithreadedCrawler<>(seedUrl, Integer.valueOf(args[0]),
-          new OutlinkExtractor(), new SequenceFileResultWriter()).process();
-    } else {
-      new MultithreadedCrawler<>(seedUrl, 1000, new OutlinkExtractor(),
-          new SequenceFileResultWriter()).process();
-    }
+    new MultithreadedCrawler<>(1000, new OutlinkExtractor(),
+        new SequenceFileResultWriter()).process(seedUrl);
   }
 
 }

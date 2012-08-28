@@ -22,7 +22,13 @@ import org.htmlparser.util.SimpleNodeIterator;
 import de.jungblut.crawl.FetchResult;
 import de.jungblut.math.tuple.Tuple;
 
-public final class OutlinkExtractor implements ExtractionLogic<FetchResult> {
+/**
+ * Outlink extractor, parses a page just for its outlinks.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
+public final class OutlinkExtractor implements Extractor<FetchResult> {
 
   private static final String USER_AGENT_KEY = "User-Agent";
   private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1";
@@ -56,7 +62,10 @@ public final class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     return null;
   }
 
-  // opened stream + encoding
+  /**
+   * @return a opened stream and its encoding, if the charset isn't accepted it
+   *         will fallback to ISO-8859-1.
+   */
   public Tuple<InputStream, String> getConnection(String realUrl)
       throws IOException {
     URL url = new URL(realUrl);
@@ -105,14 +114,10 @@ public final class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     return set;
   }
 
-  private String extractBaseUrl(String url) {
-    Matcher matcher = BASE_URL.matcher(url);
-    if (matcher.find()) {
-      return matcher.group();
-    }
-    return null;
-  }
-
+  /**
+   * Consumes a given {@link InputStream} and returns a string consisting of the
+   * html code of the site.
+   */
   public String consumeStream(InputStream stream, String encoding) {
     StringBuilder sb = new StringBuilder();
     try {
@@ -135,7 +140,25 @@ public final class OutlinkExtractor implements ExtractionLogic<FetchResult> {
     return sb.toString();
   }
 
-  private static boolean isValid(final String s) {
+  /**
+   * Extracts a base url from the given url (to make relative outlinks to
+   * absolute ones).
+   * 
+   * @return a base url or null if none was found.
+   */
+  public static String extractBaseUrl(String url) {
+    Matcher matcher = BASE_URL.matcher(url);
+    if (matcher.find()) {
+      return matcher.group();
+    }
+    return null;
+  }
+
+  /**
+   * Checks if the site does not end with unparsable suffixes likes PDF and if
+   * its a valid url by extracting a base url at at index 0.
+   */
+  public static boolean isValid(final String s) {
     Matcher baseMatcher = BASE_URL.matcher(s);
     return baseMatcher.find() && baseMatcher.start() == 0
         && !IGNORE_SUFFIX_PATTERN.matcher(s).matches();

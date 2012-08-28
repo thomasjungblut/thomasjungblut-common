@@ -8,7 +8,7 @@ import java.util.HashSet;
  * @author thomas.jungblut
  * 
  */
-public class ContentFetchResult extends FetchResult {
+public final class ContentFetchResult extends FetchResult {
 
   private final String title;
   private final String text;

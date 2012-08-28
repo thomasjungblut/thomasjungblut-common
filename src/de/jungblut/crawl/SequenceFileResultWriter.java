@@ -7,7 +7,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
-import org.apache.hadoop.io.SequenceFile.Writer;
 import org.apache.hadoop.io.Text;
 
 /**
@@ -17,29 +16,25 @@ import org.apache.hadoop.io.Text;
  * @author thomas.jungblut
  * 
  */
-public class SequenceFileResultWriter implements ResultWriter<FetchResult> {
+public final class SequenceFileResultWriter implements ResultWriter<FetchResult> {
 
-  private final Configuration conf;
   private FileSystem fs;
-
-  public SequenceFileResultWriter() throws IOException {
-    conf = new Configuration();
-    fs = FileSystem.get(conf);
-  }
+  private SequenceFile.Writer writer;
 
   @Override
-  public Writer getWriterInstance() throws IOException {
-    return new SequenceFile.Writer(fs, conf, getOutputPath(), Text.class,
+  public void open(Configuration conf) throws IOException {
+    fs = FileSystem.get(conf);
+    Path outputPath = getOutputPath();
+    fs.delete(outputPath, true);
+    writer = new SequenceFile.Writer(fs, conf, outputPath, Text.class,
         Text.class);
   }
 
   @Override
-  public void write(SequenceFile.Writer writer, FetchResult result)
-      throws IOException {
+  public void write(FetchResult result) throws IOException {
     writer.append(new Text(result.url), asText(result.outlinks));
   }
 
-  @Override
   public Path getOutputPath() {
     return new Path("files/crawl/result.seq");
   }
@@ -54,6 +49,11 @@ public class SequenceFileResultWriter implements ResultWriter<FetchResult> {
     }
     text.set(sb.toString());
     return text;
+  }
+
+  @Override
+  public void close() throws Exception {
+    writer.close();
   }
 
 }

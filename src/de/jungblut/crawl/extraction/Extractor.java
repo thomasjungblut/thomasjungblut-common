@@ -7,8 +7,12 @@ import de.jungblut.crawl.FetchResult;
  * 
  * @author thomas.jungblut
  */
-public interface ExtractionLogic<T extends FetchResult> {
+public interface Extractor<T extends FetchResult> {
 
+  /**
+   * Extracts from a given URL all the content needed and return it. Null if
+   * nothing should be returned or could be parsed.
+   */
   public T extract(String site);
 
 }
