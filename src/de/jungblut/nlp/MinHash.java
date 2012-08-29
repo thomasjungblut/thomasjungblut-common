@@ -55,7 +55,7 @@ public final class MinHash {
     Arrays.fill(minHashes, Integer.MAX_VALUE);
 
     for (int i = 0; i < numHashes; i++) {
-      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
+      Iterator<DoubleVectorElement> iterateNonZero = vector.iterate();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
         int value = (int) next.getValue();
