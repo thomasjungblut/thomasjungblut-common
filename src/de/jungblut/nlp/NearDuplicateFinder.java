@@ -57,7 +57,7 @@ public class NearDuplicateFinder {
               double sim2 = measurer.measureDistance(
                   wordFrequencyVectorized.get(i),
                   wordFrequencyVectorized.get(j));
-              if (sim2 < 0.1d) {
+              if (sim2 < 0.3d) {
                 adjacentDocuments.add(buildSummary(titleLookup.get(j)));
                 set.add(j);
               }
@@ -79,7 +79,7 @@ public class NearDuplicateFinder {
 
   private static String buildSummary(String[] tokens) {
     StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < (tokens.length > 5 ? 5 : 0); i++) {
+    for (int i = 0; i < (tokens.length > 20 ? 20 : 0); i++) {
       sb.append(tokens[i]);
       sb.append(' ');
     }
