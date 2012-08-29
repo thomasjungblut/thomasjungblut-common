@@ -88,19 +88,16 @@ public final class MinHash {
     if (left.length + right.length == 0)
       return 0d;
 
-    // TODO this has large overheads for small hash function numbers
-    HashSet<Integer> set1 = new HashSet<>(ArrayUtils.toObjectList(left));
-    HashSet<Integer> set2 = new HashSet<>(ArrayUtils.toObjectList(right));
+    int[] union = ArrayUtils.union(left, right);
+    // copy and sort to not mutate left and right
+    int[] lcp = Arrays.copyOf(left, left.length);
+    int[] rcp = Arrays.copyOf(right, right.length);
+    Arrays.sort(lcp);
+    Arrays.sort(rcp);
+    // to compute the intersection
+    int[] intersection = ArrayUtils.intersection(lcp, rcp);
 
-    int oldSizeSet1 = set1.size();
-    int oldSizeSet2 = set2.size();
-
-    set1.retainAll(set2);
-    int intersectionSize = set1.size();
-
-    double unionSize = oldSizeSet1 + oldSizeSet2 - intersectionSize;
-
-    return intersectionSize / unionSize;
+    return intersection.length / (double) union.length;
   }
 
   /**

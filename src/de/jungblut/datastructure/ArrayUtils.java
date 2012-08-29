@@ -1,8 +1,12 @@
 package de.jungblut.datastructure;
 
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.set.hash.TIntHashSet;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
@@ -901,4 +905,72 @@ public final class ArrayUtils {
     return i;
   }
 
+  /**
+   * Deduplicates an array in linear time, it does not change the order of the
+   * elements.
+   */
+  public static int[] deduplicate(int[] arr) {
+    if (arr.length <= 1)
+      return arr;
+    TIntArrayList list = new TIntArrayList();
+    TIntHashSet set = new TIntHashSet();
+
+    for (int a : arr) {
+      if (set.add(a)) {
+        list.add(a);
+      }
+    }
+
+    return list.toArray();
+  }
+
+  /**
+   * Deduplicates an array in linear time, it does not change the order of the
+   * elements. Note that equals and hashcode must be overridden for this to
+   * work.
+   */
+  public static <T> ArrayList<T> deduplicate(T[] arr) {
+    ArrayList<T> list = new ArrayList<T>();
+    HashSet<T> set = new HashSet<T>();
+
+    for (T a : arr) {
+      if (set.add(a)) {
+        list.add(a);
+      }
+    }
+    return list;
+  }
+
+  /**
+   * Computes the union of two arrays.
+   */
+  public static int[] union(int[] a, int[] b) {
+    TIntHashSet set = new TIntHashSet();
+    set.addAll(a);
+    set.addAll(b);
+    return set.toArray();
+  }
+
+  /**
+   * Computes the intersection of two <b>sorted</b> arrays. Will deduplicate the
+   * items, so the return is a set of integers.
+   */
+  public static int[] intersection(int[] arr, int[] arr2) {
+    TIntArrayList lst = new TIntArrayList();
+    int i = 0, j = 0;
+    while (i < arr.length && j < arr2.length) {
+      if (arr[i] == arr2[j]) {
+        // only add if the last element we've added wasn't included yet
+        if (lst.isEmpty() || lst.get(lst.size() - 1) < arr[i])
+          lst.add(arr[i]);
+        i++;
+        j++;
+      } else if (arr[i] > arr2[j])
+        j++;
+      else
+        i++;
+    }
+
+    return lst.toArray();
+  }
 }

@@ -1,5 +1,6 @@
 package de.jungblut.datastructure;
 
+import java.util.Arrays;
 import java.util.Random;
 
 import junit.framework.TestCase;
@@ -158,7 +159,35 @@ public class ArrayUtilsTest extends TestCase {
 
     // malformed length in one of the dimensions
     ArrayUtils.multiQuickSort(new int[][] { { 1, 2, 3 }, { 1, 2 } });
+  }
 
+  @Test
+  public void testDeduplicate() {
+    int[] arr = new int[] { 1, 2, 2, 3, 4, 5, 5 };
+    int[] res = new int[] { 1, 2, 3, 4, 5 };
+
+    int[] deduplicate = ArrayUtils.deduplicate(arr);
+    assertArrayEquals(res, deduplicate);
+  }
+
+  @Test
+  public void testUnion() {
+    int[] arr = new int[] { 1, 2, 3 };
+    int[] arr2 = new int[] { 2, 3 };
+
+    int[] union = ArrayUtils.union(arr, arr2);
+    // make sure its ascending, so we can compare here
+    Arrays.sort(union);
+    assertArrayEquals(arr, union);
+  }
+
+  @Test
+  public void testIntersection() {
+    int[] arr = new int[] { 1, 2, 3 };
+    int[] arr2 = new int[] { 2, 3, 3, 3 };
+
+    int[] intersect = ArrayUtils.intersection(arr, arr2);
+    assertArrayEquals(new int[] { 2, 3 }, intersect);
   }
 
   static int[] getRandomInput(int n, int k) {
