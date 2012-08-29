@@ -1,7 +1,9 @@
 package de.jungblut.datastructure;
 
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
 
@@ -234,6 +236,36 @@ public final class ArrayUtils {
       arr[i] = array[i].doubleValue();
     }
     return arr;
+  }
+
+  /**
+   * Converts the given int array to a list of object wrappers.
+   */
+  public static List<Integer> toObjectList(int[] array) {
+    ArrayList<Integer> lst = new ArrayList<>(array.length);
+    for (int x : array)
+      lst.add(x);
+    return lst;
+  }
+
+  /**
+   * Converts the given long array to a list of object wrappers.
+   */
+  public static List<Long> toObjectList(long[] array) {
+    ArrayList<Long> lst = new ArrayList<>(array.length);
+    for (long x : array)
+      lst.add(x);
+    return lst;
+  }
+
+  /**
+   * Converts the given double array to a list of object wrappers.
+   */
+  public static List<Double> toObjectList(double[] array) {
+    ArrayList<Double> lst = new ArrayList<>(array.length);
+    for (double x : array)
+      lst.add(x);
+    return lst;
   }
 
   /**

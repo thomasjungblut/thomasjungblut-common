@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.google.common.base.Preconditions;
 
+import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 
@@ -83,13 +84,23 @@ public final class MinHash {
     Preconditions.checkArgument(left.length == right.length,
         "Left length was not equal to right length! " + left.length + " != "
             + right.length);
-    double identicalMinHashes = 0.0d;
-    for (int i = 0; i < left.length; i++) {
-      if (left[i] == right[i]) {
-        identicalMinHashes++;
-      }
-    }
-    return identicalMinHashes / left.length;
+
+    if (left.length + right.length == 0)
+      return 0d;
+
+    // TODO this has large overheads for small hash function numbers
+    HashSet<Integer> set1 = new HashSet<>(ArrayUtils.toObjectList(left));
+    HashSet<Integer> set2 = new HashSet<>(ArrayUtils.toObjectList(right));
+
+    int oldSizeSet1 = set1.size();
+    int oldSizeSet2 = set2.size();
+
+    set1.retainAll(set2);
+    int intersectionSize = set1.size();
+
+    double unionSize = oldSizeSet1 + oldSizeSet2 - intersectionSize;
+
+    return intersectionSize / unionSize;
   }
 
   /**
