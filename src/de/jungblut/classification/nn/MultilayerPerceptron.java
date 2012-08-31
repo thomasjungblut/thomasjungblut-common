@@ -6,8 +6,6 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import com.google.common.base.Preconditions;
-
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -186,8 +184,10 @@ public final class MultilayerPerceptron {
 
   /**
    * Full backpropagation training method. It performs weight finding by using
-   * fmincg (conjugate gradient). <b>It currently only works for three layered
-   * neural networks (input, hidden, output).</b>
+   * fmincg (conjugate gradient). Note that it only guarantees to find a global
+   * minimum solution in case of linear or convex problems (zero / one hidden
+   * layer). If you have more than a single hidden layer, then it will usually
+   * trap into a local minimum.
    * 
    * @param x the training examples.
    * @param y the outcomes for the training examples.
@@ -199,25 +199,33 @@ public final class MultilayerPerceptron {
   public double trainFmincg(DenseDoubleMatrix x, DenseDoubleMatrix y,
       int maxIterations, double lambda, boolean verbose) {
 
-    Preconditions.checkArgument(getLayers().length == 3);
+    // get our randomized weights into a foldable format
+    DenseDoubleMatrix[] weightMatrices = new DenseDoubleMatrix[getWeights().length];
+    for (int i = 0; i < weightMatrices.length; i++)
+      weightMatrices[i] = getWeights()[i].getWeights();
 
-    DenseDoubleVector pInput = DenseMatrixFolder.foldMatrices(
-        getWeights()[0].getWeights(), getWeights()[1].getWeights());
+    DenseDoubleVector pInput = DenseMatrixFolder.foldMatrices(weightMatrices);
+
     MultilayerPerceptronCostFunction costFunction = new MultilayerPerceptronCostFunction(
         this, x, y, lambda);
-    DoubleVector minimizeFunction = Fmincg.minimizeFunction(costFunction,
-        pInput, maxIterations, verbose);
+    DoubleVector theta = Fmincg.minimizeFunction(costFunction, pInput,
+        maxIterations, verbose);
+    // compute the layer sizes to unfold the matrices correctly
+    int[] layerSizes = new int[layers.length];
+    for (int i = 0; i < layerSizes.length; i++) {
+      layerSizes[i] = layers[i].getLength();
+    }
+    int[][] unfoldParameters = MultilayerPerceptronCostFunction
+        .computeUnfoldParameters(layerSizes);
+
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
-        minimizeFunction, new int[][] {
-            { getWeights()[0].getWeights().getRowCount(),
-                getWeights()[0].getWeights().getColumnCount() },
-            { getWeights()[1].getWeights().getRowCount(),
-                getWeights()[1].getWeights().getColumnCount() } });
+        theta, unfoldParameters);
 
-    getWeights()[0].setWeights(unfoldMatrices[0]);
-    getWeights()[1].setWeights(unfoldMatrices[1]);
+    for (int i = 0; i < unfoldMatrices.length; i++) {
+      getWeights()[i].setWeights(unfoldMatrices[i]);
+    }
 
-    return costFunction.evaluateCost(minimizeFunction).getFirst();
+    return costFunction.evaluateCost(theta).getFirst();
   }
 
   public WeightMatrix[] getWeights() {

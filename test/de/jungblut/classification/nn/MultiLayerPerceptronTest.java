@@ -13,7 +13,6 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORNormalTrain() {
-
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 3, 1 });
     Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
 
@@ -25,12 +24,11 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORFminCG() {
-
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 });
     Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
 
     double error = mlp.trainFmincg(new DenseDoubleMatrix(sampleXOR.getFirst()),
-        new DenseDoubleMatrix(sampleXOR.getSecond()), 30, 0.0d, false);
+        new DenseDoubleMatrix(sampleXOR.getSecond()), 40, 0.0d, false);
     assertTrue(error < 0.001);
     testPredictions(sampleXOR, mlp);
   }
