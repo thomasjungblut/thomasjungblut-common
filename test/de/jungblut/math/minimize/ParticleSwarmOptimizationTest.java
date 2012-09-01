@@ -8,29 +8,26 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
-public class GradientDescentTest extends TestCase {
+public class ParticleSwarmOptimizationTest extends TestCase {
 
   @Test
-  public void testGradientDescent() {
+  public void testParticleSwarmOptimization() {
 
-    DoubleVector start = new DenseDoubleVector(new double[] { 2, -1 });
+    DoubleVector start = new DenseDoubleVector(new double[] { 2, 5 });
 
     // our function is f(x,y) = x^2+y^2
-    // the derivative is f'(x,y) = 2x+2y
     CostFunction inlineFunction = new CostFunction() {
       @Override
       public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
 
         double cost = Math.pow(input.get(0), 2) + Math.pow(input.get(1), 2);
-        DenseDoubleVector gradient = new DenseDoubleVector(new double[] {
-            input.get(0) * 2, input.get(1) * 2 });
 
-        return new Tuple<Double, DoubleVector>(cost, gradient);
+        return new Tuple<Double, DoubleVector>(cost, null);
       }
     };
 
-    DoubleVector minimizeFunction = GradientDescent.minimizeFunction(
-        inlineFunction, start, 0.5d, 1E-20, 1000, false);
+    DoubleVector minimizeFunction = ParticleSwarmOptimization.minimizeFunction(
+        inlineFunction, start, 1000, 0.1, 0.2, 0.4, 100, false);
     // 1E-5 is close enough to zero for the test to pass
     assertTrue(minimizeFunction.get(0) >= 0 && minimizeFunction.get(0) < 1E-5);
     assertTrue(minimizeFunction.get(1) >= 0 && minimizeFunction.get(1) < 1E-5);
