@@ -7,6 +7,8 @@ import org.junit.Test;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.minimize.Fmincg;
+import de.jungblut.math.minimize.ParticleSwarmOptimization;
 import de.jungblut.math.tuple.Tuple;
 
 public class MultiLayerPerceptronTest extends TestCase {
@@ -27,8 +29,21 @@ public class MultiLayerPerceptronTest extends TestCase {
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 });
     Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
 
-    double error = mlp.trainFmincg(new DenseDoubleMatrix(sampleXOR.getFirst()),
-        new DenseDoubleMatrix(sampleXOR.getSecond()), 40, 0.0d, false);
+    double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
+        new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 50, 0.0d,
+        false);
+    assertTrue(error < 0.001);
+    testPredictions(sampleXOR, mlp);
+  }
+
+  @Test
+  public void testXORPSO() {
+    MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 });
+    Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
+
+    double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
+        new DenseDoubleMatrix(sampleXOR.getSecond()),
+        new ParticleSwarmOptimization(1000, 2.8d, 0.2, 0.4), 400, 0.0d, false);
     assertTrue(error < 0.001);
     testPredictions(sampleXOR, mlp);
   }

@@ -58,7 +58,7 @@ public class LogisticRegressionTest extends TestCase {
   @Test
   public void testPredictions() {
     LogisticRegression reg = new LogisticRegression(x, y, 1.0d);
-    reg.trainModel(1000, false);
+    reg.trainModel(new Fmincg(), 1000, false);
     DoubleVector predict = reg.predict(x, 0.5d);
 
     double wrongPredictions = predict.subtract(y).abs().sum();

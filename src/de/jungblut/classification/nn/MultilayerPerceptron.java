@@ -10,7 +10,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
-import de.jungblut.math.minimize.Fmincg;
+import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.writable.MatrixWritable;
 import de.jungblut.writable.VectorWritable;
 
@@ -18,8 +18,9 @@ import de.jungblut.writable.VectorWritable;
  * Multilayer perceptron by my collegue Marvin Ritter using my math library. <br/>
  * I have changed it to a format that can be used for batch training for example
  * in a clustered environment.<br/>
- * Error function is the mean squared error and activation function in each
- * neuron is the sigmoid function.
+ * Also I have added several minimizers that will find minimas. Error function
+ * is the mean squared error and activation function in each neuron is the
+ * sigmoid function.
  * 
  * @author marvin.ritter
  * @author thomas.jungblut
@@ -183,21 +184,23 @@ public final class MultilayerPerceptron {
   }
 
   /**
-   * Full backpropagation training method. It performs weight finding by using
-   * fmincg (conjugate gradient). Note that it only guarantees to find a global
-   * minimum solution in case of linear or convex problems (zero / one hidden
-   * layer). If you have more than a single hidden layer, then it will usually
-   * trap into a local minimum.
+   * Full backpropagation training method. It performs weight finding by using a
+   * minimizer. Note that it only guarantees to find a global minimum solution
+   * in case of linear or convex problems (zero / one hidden layer), of course
+   * this is also dependend on the concrete minimizer implementation. If you
+   * have more than a single hidden layer, then it will usually trap into a
+   * local minimum.
    * 
    * @param x the training examples.
    * @param y the outcomes for the training examples.
+   * @param minimizer the minimizer to use to train the neural network.
    * @param maxIterations the number of maximum iterations to train.
    * @param lambda the given regularization parameter.
    * @param verbose output to console with the last given errors.
    * @return the cost of the training.
    */
-  public double trainFmincg(DenseDoubleMatrix x, DenseDoubleMatrix y,
-      int maxIterations, double lambda, boolean verbose) {
+  public final double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
+      Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
 
     // get our randomized weights into a foldable format
     DenseDoubleMatrix[] weightMatrices = new DenseDoubleMatrix[getWeights().length];
@@ -208,7 +211,7 @@ public final class MultilayerPerceptron {
 
     MultilayerPerceptronCostFunction costFunction = new MultilayerPerceptronCostFunction(
         this, x, y, lambda);
-    DoubleVector theta = Fmincg.minimizeFunction(costFunction, pInput,
+    DoubleVector theta = minimizer.minimize(costFunction, pInput,
         maxIterations, verbose);
     // compute the layer sizes to unfold the matrices correctly
     int[] layerSizes = new int[layers.length];

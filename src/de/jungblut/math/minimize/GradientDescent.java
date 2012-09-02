@@ -11,31 +11,29 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public final class GradientDescent {
+public final class GradientDescent implements Minimizer {
+
+  private final double alpha;
+  private final double limit;
 
   /**
-   * Minimize a given cost function f with the initial parameters pInput (also
-   * called theta) with a learning rate alpha and a fixed number of iterations.
-   * The loop can break earlier if costs converge below the limit. If the same
-   * cost was archieved three times in a row, it will also break the iterations.
-   * 
-   * @param f the function to minimize.
-   * @param pInput the starting parameters.
    * @param alpha the learning rate.
    * @param limit the cost to archieve to break the iterations.
-   * @param length the number of iterations.
-   * @param verbose if true prints progress to STDOUT.
-   * @return the learned minimal parameters.
    */
-  public static DoubleVector minimizeFunction(CostFunction f,
-      DoubleVector pInput, double alpha, double limit, int length,
-      final boolean verbose) {
+  public GradientDescent(double alpha, double limit) {
+    this.alpha = alpha;
+    this.limit = limit;
+  }
+
+  @Override
+  public final DoubleVector minimize(CostFunction f, DoubleVector pInput,
+      final int maxIterations, boolean verbose) {
 
     double[] lastCosts = new double[3];
     Arrays.fill(lastCosts, Double.MAX_VALUE);
     final int lastIndex = lastCosts.length - 1;
     DoubleVector theta = pInput;
-    for (int iteration = 0; iteration < length; iteration++) {
+    for (int iteration = 0; iteration < maxIterations; iteration++) {
       Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta);
       if (verbose) {
         System.out.print("Interation " + iteration + " | Cost: "
@@ -55,6 +53,27 @@ public final class GradientDescent {
 
     return theta;
 
+  }
+
+  /**
+   * Minimize a given cost function f with the initial parameters pInput (also
+   * called theta) with a learning rate alpha and a fixed number of iterations.
+   * The loop can break earlier if costs converge below the limit. If the same
+   * cost was archieved three times in a row, it will also break the iterations.
+   * 
+   * @param f the function to minimize.
+   * @param pInput the starting parameters.
+   * @param alpha the learning rate.
+   * @param limit the cost to archieve to break the iterations.
+   * @param length the number of iterations.
+   * @param verbose if true prints progress to STDOUT.
+   * @return the learned minimal parameters.
+   */
+  public static DoubleVector minimizeFunction(CostFunction f,
+      DoubleVector pInput, double alpha, double limit, int length,
+      final boolean verbose) {
+    return new GradientDescent(alpha, limit).minimize(f, pInput, length,
+        verbose);
   }
 
   private static void shiftLeft(double[] lastCosts) {

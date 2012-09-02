@@ -8,6 +8,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.MathUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.minimize.Fmincg;
 
 public class PolynomialRegressionTest extends TestCase {
 
@@ -23,7 +24,7 @@ public class PolynomialRegressionTest extends TestCase {
   @Test
   public void testLinearRegression() {
     PolynomialRegression reg = new PolynomialRegression(x, y, 1.0, false);
-    DoubleVector trainModel = reg.trainModel(200, false);
+    DoubleVector trainModel = reg.trainModel(new Fmincg(), 200, false);
 
     assertEquals(new DenseDoubleVector(new double[] { 7.571241358493101d,
         2.422334473628071d }),
@@ -38,7 +39,7 @@ public class PolynomialRegressionTest extends TestCase {
     int numPoly = 8;
     DenseDoubleMatrix xPoly = MathUtils.createPolynomials(x, numPoly);
     PolynomialRegression reg = new PolynomialRegression(xPoly, y, 3.0d, true);
-    DoubleVector trainModel = reg.trainModel(200, false);
+    DoubleVector trainModel = reg.trainModel(new Fmincg(), 200, false);
 
     assertEquals(new DenseDoubleVector(new double[] { 6.915064696781851,
         0.8395937966930411 }),

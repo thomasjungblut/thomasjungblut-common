@@ -5,7 +5,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.MathUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.minimize.Fmincg;
+import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.math.tuple.Tuple3;
 
 /**
@@ -53,17 +53,19 @@ public final class PolynomialRegression {
   }
 
   /**
-   * Trains the regression model with the {@link Fmincg} optimizer.
+   * Trains the regression model with the given optimizer.
    * 
+   * @param minimizer the minimizer to use to train this model.
    * @param numIterations the number of iterations to make.
    * @param verbose output the progress to STDOUT if true.
    * @return the learned theta parameters.
    */
-  public DoubleVector trainModel(int numIterations, boolean verbose) {
+  public DoubleVector trainModel(Minimizer minimizer, int numIterations,
+      boolean verbose) {
     RegressionCostFunction f = new RegressionCostFunction(x, y, lambda);
     DoubleVector initialTheta = new DenseDoubleVector(x.getColumnCount() + 1,
         1.0d);
-    theta = Fmincg.minimizeFunction(f, initialTheta, numIterations, verbose);
+    theta = minimizer.minimize(f, initialTheta, numIterations, verbose);
     return theta;
   }
 

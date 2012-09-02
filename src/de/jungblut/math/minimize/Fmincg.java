@@ -53,10 +53,10 @@ import de.jungblut.math.tuple.Tuple;
  * <br/>
  * [tjungblut] Changes Made: <br/>
  * 1) translated from octave to java<br/>
- * <br/>
+ * 2) added an interface to exchange minimizers more easily <br/>
  * BTW "fmincg" stands for Function minimize nonlinear conjugate gradient
  */
-public class Fmincg {
+public final class Fmincg implements Minimizer {
 
   private static final double RHO = 0.01; // a bunch of constants for line
   // searches
@@ -254,4 +254,11 @@ public class Fmincg {
 
     return input;
   }
+
+  @Override
+  public final DoubleVector minimize(CostFunction f, DoubleVector theta,
+      int maxIterations, boolean verbose) {
+    return minimizeFunction(f, theta, maxIterations, verbose);
+  }
+
 }
