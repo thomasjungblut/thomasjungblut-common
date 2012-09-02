@@ -43,8 +43,8 @@ public class MultinomialNaiveBayesTest extends TestCase {
     Tuple<HashMultiset<String>[], String[]> updatedWordFrequency = VectorizerUtils
         .updateWordFrequencyCounts(testDocuments,
             trainingSetWordCounts.getSecond());
-    List<DoubleVector> testSetInputVector = VectorizerUtils.wordFrequencyVectorize(
-        testDocuments, updatedWordFrequency);
+    List<DoubleVector> testSetInputVector = VectorizerUtils
+        .wordFrequencyVectorize(testDocuments, updatedWordFrequency);
     DenseIntVector testSetPrediction = testSet.getSecond();
     Tuple<Double, Double> evaluateModel = classifier.evaluateModel(
         testSetInputVector, testSetPrediction, trainingSet.getThird(), false);
