@@ -190,6 +190,14 @@ public class ArrayUtilsTest extends TestCase {
     assertArrayEquals(new int[] { 2, 3 }, intersect);
   }
 
+  @Test
+  public void testMissingNumber() {
+    int[] arr = new int[] { 0, 1, 2, 3, 5 };
+
+    int missingNumber = ArrayUtils.missingNumber(arr);
+    assertEquals(4, missingNumber);
+  }
+
   static int[] getRandomInput(int n, int k) {
     Random r = new Random();
     int[] arr = new int[n];

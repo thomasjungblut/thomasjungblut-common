@@ -973,4 +973,21 @@ public final class ArrayUtils {
 
     return lst.toArray();
   }
+
+  /**
+   * If array contains unique integers in a range between 0 and n-1, this
+   * function finds the only one missing in linear time and constant memory.
+   * This is more of a typical homework or interview question than of actually
+   * use. <br/>
+   * The trick is to sum the items in the array and then calculate the expected
+   * sum of the elements, then diff and return the value.
+   */
+  public static int missingNumber(int[] array) {
+    int sum = 0;
+    for (int x : array) {
+      sum += x;
+    }
+
+    return ((array.length) * (array.length + 1) / 2) - sum;
+  }
 }
