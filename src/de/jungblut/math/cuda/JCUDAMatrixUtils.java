@@ -28,6 +28,8 @@ public final class JCUDAMatrixUtils {
 
   public static boolean CUDA_AVAILABLE = false;
 
+  private static cublasHandle handle;
+
   static {
     try {
       // Disable exceptions and omit subsequent error checks
@@ -44,6 +46,19 @@ public final class JCUDAMatrixUtils {
                 + " with total RAM of " + cudaDeviceProp.totalGlobalMem
                 + " bytes!");
       }
+
+      handle = new cublasHandle();
+      JCublas2.cublasCreate(handle);
+      JCublas2.cublasSetPointerMode(handle,
+          cublasPointerMode.CUBLAS_POINTER_MODE_HOST);
+      // cleanup that handle at the end of this process
+      Runtime.getRuntime().addShutdownHook(new Thread() {
+        @Override
+        public void run() {
+          JCUDAMatrixUtils.cublasDestroy(handle);
+        }
+      });
+
     } catch (Throwable e) {
       // e.printStackTrace();
       System.out.println(e.getLocalizedMessage());
@@ -98,11 +113,6 @@ public final class JCUDAMatrixUtils {
     Pointer alpha = Pointer.to(new double[] { 1.0d });
     Pointer beta = Pointer.to(new double[] { 0.0d });
 
-    cublasHandle handle = new cublasHandle();
-    JCublas2.cublasCreate(handle);
-    JCublas2.cublasSetPointerMode(handle,
-        cublasPointerMode.CUBLAS_POINTER_MODE_HOST);
-
     int transA = transposeA ? cublasOperation.CUBLAS_OP_T
         : cublasOperation.CUBLAS_OP_N;
     int transB = transposeB ? cublasOperation.CUBLAS_OP_T
@@ -119,7 +129,8 @@ public final class JCUDAMatrixUtils {
     freePointer(matrixPointerA);
     freePointer(matrixPointerB);
     freePointer(deviceResultPointer);
-    cublasDestroy(handle);
+    freePointer(alpha);
+    freePointer(beta);
     return matrix;
   }
 
