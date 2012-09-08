@@ -12,8 +12,19 @@ import jcuda.runtime.JCuda;
 import jcuda.runtime.cudaDeviceProp;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 
-// -Djava.library.path="/lib/;${env_var:PATH}" must be added to the running VM
-public class JCUDAMatrixUtils {
+/**
+ * Matrix utilities for CUDA graphics card greater version 400, e.g. Nvidia
+ * 480gtx.
+ * 
+ * <br/>
+ * -Djava.library.path="/lib/;${env_var:PATH}" must be added to the running VM.
+ * If you have the cuda libs in the /lib folder or under windows in your path
+ * variables.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
+public final class JCUDAMatrixUtils {
 
   public static boolean CUDA_AVAILABLE = false;
 
@@ -39,15 +50,49 @@ public class JCUDAMatrixUtils {
     }
   }
 
-  // TODO transpose can be actually done on GPU as well
+  /**
+   * Multiplies matrix a with matrix b and returns a new matrix.
+   */
   public static DenseDoubleMatrix multiply(DenseDoubleMatrix a,
       DenseDoubleMatrix b) {
+    return multiply(a, b, false, false);
+  }
+
+  /**
+   * Multiplies matrix a with matrix b and returns a new matrix. You can add
+   * transpose flags for both matrices.
+   */
+  public static DenseDoubleMatrix multiply(DenseDoubleMatrix a,
+      DenseDoubleMatrix b, boolean transposeA, boolean transposeB) {
     Pointer matrixPointerA = memcpyMatrix(a);
     Pointer matrixPointerB = memcpyMatrix(b);
 
+    int m = a.getRowCount();
+    int n = b.getColumnCount();
+    int k = a.getColumnCount();
+
+    // leading dimensions
+    int ldA = a.getRowCount();
+    int ldB = b.getRowCount();
+    int ldC = a.getRowCount();
+
+    // recalculate the parameters for transposes
+    if (transposeA && transposeB) {
+      m = a.getColumnCount();
+      n = b.getRowCount();
+      k = b.getColumnCount();
+      ldC = a.getColumnCount();
+    } else if (transposeB) {
+      n = b.getRowCount();
+    } else if (transposeA) {
+      m = a.getColumnCount();
+      k = a.getRowCount();
+      ldC = a.getColumnCount();
+    }
+
     // Prepare the pointer for the result in DEVICE memory
     Pointer deviceResultPointer = new Pointer();
-    int resMatrixSize = a.getRowCount() * b.getColumnCount();
+    int resMatrixSize = m * n;
     JCuda.cudaMalloc(deviceResultPointer, Sizeof.DOUBLE * resMatrixSize);
 
     Pointer alpha = Pointer.to(new double[] { 1.0d });
@@ -57,16 +102,19 @@ public class JCUDAMatrixUtils {
     JCublas2.cublasCreate(handle);
     JCublas2.cublasSetPointerMode(handle,
         cublasPointerMode.CUBLAS_POINTER_MODE_HOST);
-    JCublas2.cublasDgemm(handle, cublasOperation.CUBLAS_OP_N,
-        cublasOperation.CUBLAS_OP_N, a.getRowCount(), b.getColumnCount(),
-        a.getColumnCount(), alpha, matrixPointerA, a.getRowCount(),
-        matrixPointerB, b.getRowCount(), beta, deviceResultPointer,
-        a.getRowCount());
+
+    int transA = transposeA ? cublasOperation.CUBLAS_OP_T
+        : cublasOperation.CUBLAS_OP_N;
+    int transB = transposeB ? cublasOperation.CUBLAS_OP_T
+        : cublasOperation.CUBLAS_OP_N;
+
+    JCublas2.cublasDgemm(handle, transA, transB, m, n, k, alpha,
+        matrixPointerA, ldA, matrixPointerB, ldB, beta, deviceResultPointer,
+        ldC);
 
     JCuda.cudaDeviceSynchronize();
 
-    DenseDoubleMatrix matrix = getMatrix(deviceResultPointer, a.getRowCount(),
-        b.getColumnCount());
+    DenseDoubleMatrix matrix = getMatrix(deviceResultPointer, m, n);
 
     freePointer(matrixPointerA);
     freePointer(matrixPointerB);
@@ -99,11 +147,9 @@ public class JCUDAMatrixUtils {
     Pointer dst = Pointer.to(raw);
     JCublas2
         .cublasGetMatrix(rows, columns, Sizeof.DOUBLE, src, rows, dst, rows);
-
     return new DenseDoubleMatrix(raw, rows, columns);
   }
 
-  // seems to have problems with latest CUDA?
   private static void cublasDestroy(cublasHandle handle) {
     JCublas2.cublasDestroy(handle);
   }
@@ -114,13 +160,22 @@ public class JCUDAMatrixUtils {
 
   public static void main(String[] args) {
 
-    for (int i = 2; i < 2000; i++) {
-      DenseDoubleMatrix a = new DenseDoubleMatrix(i, i, new Random());
-      DenseDoubleMatrix b = new DenseDoubleMatrix(i, i, new Random());
-      // DenseDoubleMatrix multiplyCPU = a.multiply(b);
-      DenseDoubleMatrix multiplyGPU = multiply(a, b);
-      System.out.println(i + " " + multiplyGPU.sum());
-    }
+    int n = 40000;
+    int k = 784;
+    int m = 300;
+
+    DenseDoubleMatrix a = new DenseDoubleMatrix(n, k, new Random());
+    DenseDoubleMatrix b = new DenseDoubleMatrix(k, m, new Random());
+    long start = System.currentTimeMillis();
+    DenseDoubleMatrix multiplyCPU = (DenseDoubleMatrix) a.multiply(b);
+    System.out.println("CPU took: " + (System.currentTimeMillis() - start)
+        / 1000f + "s!");
+    start = System.currentTimeMillis();
+    DenseDoubleMatrix multiplyGPU = multiply(a, b);
+    System.out.println("GPU took: " + (System.currentTimeMillis() - start)
+        / 1000f + "s!");
+    System.out.println("Matrix difference: "
+        + multiplyCPU.subtract(multiplyGPU).sum());
   }
 
 }
