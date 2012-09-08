@@ -9,6 +9,7 @@ import java.io.IOException;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.writable.MatrixWritable;
@@ -94,7 +95,7 @@ public final class MultilayerPerceptron {
    * At the beginning of each batch forward propagation we should reset the
    * gradients.
    */
-  public void resetGradients() {
+  private void resetGradients() {
     // reset all gradients / derivatives
     for (WeightMatrix weight : weights) {
       weight.resetDerivatives();
@@ -105,7 +106,7 @@ public final class MultilayerPerceptron {
    * Do a forward step and calculate the difference between the outcome and the
    * prediction.
    */
-  public DoubleVector forwardStep(DoubleVector x, DoubleVector outcome) {
+  private DoubleVector forwardStep(DoubleVector x, DoubleVector outcome) {
     DenseDoubleVector prediction = predict(x);
     return prediction.subtract(outcome);
   }
@@ -113,7 +114,7 @@ public final class MultilayerPerceptron {
   /**
    * Do a backward step by the given error in the last layer.
    */
-  public void backwardStep(DoubleVector errorLastLayer) {
+  private void backwardStep(DoubleVector errorLastLayer) {
     // set error of last layer and then use backward propagation the calculate
     // the errors of the other layers
     // the first layer can be left out, cause the input error is not wrong ;)
@@ -135,7 +136,7 @@ public final class MultilayerPerceptron {
    * normalizing the via the learningrate and lambda. Here we also need the
    * number of training examples seen.<br/>
    */
-  public void adjustWeights(int numTrainingExamples, double learningRate,
+  private void adjustWeights(int numTrainingExamples, double learningRate,
       double lambda) {
     // adjust weights using the given learning rate
     for (WeightMatrix weight : weights) {
@@ -201,16 +202,53 @@ public final class MultilayerPerceptron {
    */
   public final double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
       Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
+    CostFunction costFunction = new MultilayerPerceptronCostFunction(this, x,
+        y, lambda);
+    return trainInternal(minimizer, maxIterations, verbose, costFunction);
+  }
 
+  /**
+   * Full backpropagation training method on the GPU. It performs weight finding
+   * by using a minimizer. Note that it only guarantees to find a global minimum
+   * solution in case of linear or convex problems (zero / one hidden layer), of
+   * course this is also dependend on the concrete minimizer implementation. If
+   * you have more than a single hidden layer, then it will usually trap into a
+   * local minimum.
+   * 
+   * @param x the training examples.
+   * @param y the outcomes for the training examples.
+   * @param minimizer the minimizer to use to train the neural network.
+   * @param maxIterations the number of maximum iterations to train.
+   * @param lambda the given regularization parameter.
+   * @param verbose output to console with the last given errors.
+   * @return the cost of the training.
+   */
+  public final double trainGPU(DenseDoubleMatrix x, DenseDoubleMatrix y,
+      Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
+    CostFunction costFunction = new GPUMultilayerPerceptronCostFunction(this,
+        x, y, lambda);
+    return trainInternal(minimizer, maxIterations, verbose, costFunction);
+  }
+
+  /**
+   * Internal training method.
+   * 
+   * @param minimizer the minimizer to use.
+   * @param maxIterations the maximum number of iterations to take.
+   * @param verbose output to console with the last given errors.
+   * @param costFunction the costfunction to use, normally GPU training uses the
+   *          {@link GPUMultilayerPerceptronCostFunction} and the normal
+   *          training uses {@link MultilayerPerceptronCostFunction}.
+   * @return the cost of the training.
+   */
+  private double trainInternal(Minimizer minimizer, int maxIterations,
+      boolean verbose, CostFunction costFunction) {
     // get our randomized weights into a foldable format
     DenseDoubleMatrix[] weightMatrices = new DenseDoubleMatrix[getWeights().length];
     for (int i = 0; i < weightMatrices.length; i++)
       weightMatrices[i] = getWeights()[i].getWeights();
 
     DenseDoubleVector pInput = DenseMatrixFolder.foldMatrices(weightMatrices);
-
-    MultilayerPerceptronCostFunction costFunction = new MultilayerPerceptronCostFunction(
-        this, x, y, lambda);
     DoubleVector theta = minimizer.minimize(costFunction, pInput,
         maxIterations, verbose);
     // compute the layer sizes to unfold the matrices correctly
@@ -239,6 +277,10 @@ public final class MultilayerPerceptron {
     return layers;
   }
 
+  /**
+   * Deserializes a new neural network from the given input stream. Note that in
+   * will not be closed by this method.
+   */
   public static MultilayerPerceptron deserialize(DataInput in)
       throws IOException {
     int numLayers = in.readInt();
@@ -264,6 +306,10 @@ public final class MultilayerPerceptron {
     return new MultilayerPerceptron(layers, weights);
   }
 
+  /**
+   * Serializes this network at its current state to a binary file. Note that
+   * out will not be closed in this method.
+   */
   public static void serialize(MultilayerPerceptron model, DataOutput out)
       throws IOException {
     out.writeInt(model.layers.length);

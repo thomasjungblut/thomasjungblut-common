@@ -1,7 +1,11 @@
 package de.jungblut.classification.nn;
 
+import static de.jungblut.classification.nn.MultilayerPerceptronCostFunction.logMatrix;
+import static de.jungblut.classification.nn.MultilayerPerceptronCostFunction.sigmoidGradientMatrix;
+import static de.jungblut.classification.nn.MultilayerPerceptronCostFunction.sigmoidMatrix;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -9,10 +13,12 @@ import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.tuple.Tuple;
 
 /**
- * Neural network costfunction for a multilayer perceptron.
+ * Neural network costfunction for a multilayer perceptron. Same as
+ * {@link MultilayerPerceptronCostFunction}, but executes critical parts, e.G.
+ * the matrix multiplications on the GPU to get a huge speedup.
  * 
  */
-public final class MultilayerPerceptronCostFunction implements CostFunction {
+public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
 
   private final DenseDoubleMatrix x;
   private final DenseDoubleMatrix y;
@@ -22,7 +28,7 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
   private final int[] layerSizes;
   private final int[][] unfoldParameters;
 
-  public MultilayerPerceptronCostFunction(MultilayerPerceptron network,
+  public GPUMultilayerPerceptronCostFunction(MultilayerPerceptron network,
       DenseDoubleMatrix x, DenseDoubleMatrix y, double lambda) {
     this.m = x.getRowCount();
     this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(m), x);
@@ -32,7 +38,8 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
     for (int i = 0; i < layerSizes.length; i++) {
       layerSizes[i] = network.getLayers()[i].getLength();
     }
-    this.unfoldParameters = computeUnfoldParameters(layerSizes);
+    this.unfoldParameters = MultilayerPerceptronCostFunction
+        .computeUnfoldParameters(layerSizes);
   }
 
   /**
@@ -57,7 +64,10 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
     // for the first weights, we don't need to compute Z
     ax[0] = x;
     for (int i = 1; i < layerSizes.length; i++) {
-      zx[i] = ax[i - 1].multiply(thetas[i - 1].transpose());
+      // profiling revealed, that most of the time was spent here
+      // zx[i] = ax[i - 1].multiply(thetas[i - 1].transpose());
+      // use the GPU to speed this up
+      zx[i] = JCUDAMatrixUtils.multiply(ax[i - 1], thetas[i - 1], false, true);
 
       if (i < (layerSizes.length - 1)) {
         ax[i] = new DenseDoubleMatrix(DenseDoubleVector.ones(m),
@@ -94,9 +104,15 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
 
     // calculate our gradients
     for (int i = 0; i < thetaGradients.length; i++) {
-      thetaGradients[i] = (DenseDoubleMatrix) (deltaX[i + 1].transpose()
-          .multiply(ax[i]).multiply(1.0d / m)).add((thetas[i].multiply(lambda
-          / m)));
+      // profiling revealed, that most of the time was spent here
+      // DoubleMatrix gradDXA = deltaX[i + 1].transpose().multiply(ax[i]);
+      // use the GPU to speed this up
+      DoubleMatrix gradDXA = JCUDAMatrixUtils.multiply(
+          (DenseDoubleMatrix) deltaX[i + 1], ax[i], true, false);
+
+      thetaGradients[i] = (DenseDoubleMatrix) gradDXA.multiply(1.0d / m).add(
+          (thetas[i].multiply(lambda / m)));
+
       // subtract the regularized bias
       thetaGradients[i].setColumnVector(0,
           thetas[i].slice(0, thetas[i].getRowCount(), 0, 1)
@@ -112,69 +128,6 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
 
     return new Tuple<Double, DoubleVector>(j,
         DenseMatrixFolder.foldMatrices(thetaGradients));
-  }
-
-  /*
-   * some static helpers for sigmoid and log calculation
-   */
-
-  static double sigmoid(double input) {
-    return 1.0 / (1.0 + Math.exp(-input));
-  }
-
-  static double sigmoidGradient(double input) {
-    return sigmoid(input) * (1 - sigmoid(input));
-  }
-
-  static DenseDoubleMatrix sigmoidMatrix(DenseDoubleMatrix input) {
-    DenseDoubleMatrix sigmoid = DenseDoubleMatrix.copy(input);
-    for (int row = 0; row < sigmoid.getRowCount(); row++) {
-      for (int col = 0; col < sigmoid.getColumnCount(); col++) {
-        sigmoid.set(row, col, sigmoid(sigmoid.get(row, col)));
-      }
-    }
-    return sigmoid;
-  }
-
-  static DenseDoubleMatrix sigmoidGradientMatrix(DenseDoubleMatrix input) {
-    DenseDoubleMatrix sigmoid = DenseDoubleMatrix.copy(input);
-    for (int row = 0; row < sigmoid.getRowCount(); row++) {
-      for (int col = 0; col < sigmoid.getColumnCount(); col++) {
-        sigmoid.set(row, col, sigmoidGradient(sigmoid.get(row, col)));
-      }
-    }
-    return sigmoid;
-  }
-
-  static DenseDoubleMatrix logMatrix(DenseDoubleMatrix input) {
-    DenseDoubleMatrix log = DenseDoubleMatrix.copy(input);
-    for (int row = 0; row < log.getRowCount(); row++) {
-      for (int col = 0; col < log.getColumnCount(); col++) {
-        log.set(row, col, Math.log(log.get(row, col)));
-      }
-    }
-    return log;
-  }
-
-  /**
-   * Calculates the unfold parameters to unroll a learned theta vector in their
-   * matrix.
-   * 
-   * @param layerSizes the layer size that the {@link MultilayerPerceptron} got
-   *          instantiated with.
-   * @return the unfold parameters to feed {@link DenseMatrixFolder} with.
-   */
-  public static int[][] computeUnfoldParameters(int[] layerSizes) {
-    // the weights that need to be learned are always one less than the number
-    // of layers
-    int[][] unfoldParameters = new int[layerSizes.length - 1][];
-    for (int i = 0; i < unfoldParameters.length; i++) {
-      // note that this will never lead to array index out of bound execeptions
-      // because the layer size is always one more than the unfold size.
-      // also don't forget to add the bias unit on the cols of the matrices.
-      unfoldParameters[i] = new int[] { layerSizes[i + 1], layerSizes[i] + 1 };
-    }
-    return unfoldParameters;
   }
 
 }
