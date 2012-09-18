@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
@@ -68,17 +67,18 @@ public final class TokenizerUtils {
   }
 
   /**
-   * N-Gramm tokenizer. That are nGramms based on characters. If you want to use
-   * normal word tokenizers, then use {@link #wordTokenize(String)} for
+   * N-shingles tokenizer. That are nGramms based on characters. If you want to
+   * use normal word tokenizers, then use {@link #wordTokenize(String)} for
    * unigrams. To generate bigrams out of it you need to call
    * {@link #buildNGramms(String[], int)}.
    */
-  public static String[] nGrammTokenize(String key, int size) {
+  public static String[] nShinglesTokenize(String key, int size) {
     if (key.length() < size) {
       return new String[] { key };
     }
-    List<String> list = new LinkedList<>();
-    for (int i = 0; i < key.length() - size + 1; i++) {
+    final int listSize = key.length() - size + 1;
+    List<String> list = new ArrayList<>(listSize);
+    for (int i = 0; i < listSize; i++) {
       int upperBound = i + size;
       list.add(new String(key.substring(i, upperBound)));
     }

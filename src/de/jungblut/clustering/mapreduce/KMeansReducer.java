@@ -1,7 +1,7 @@
 package de.jungblut.clustering.mapreduce;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -24,13 +24,13 @@ public class KMeansReducer extends
     CONVERGED
   }
 
-  private final List<ClusterCenter> centers = new LinkedList<>();
+  private final List<ClusterCenter> centers = new ArrayList<>();
 
   @Override
   protected void reduce(ClusterCenter key, Iterable<VectorWritable> values,
       Context context) throws IOException, InterruptedException {
 
-    List<VectorWritable> vectorList = new LinkedList<>();
+    List<VectorWritable> vectorList = new ArrayList<>();
     DoubleVector newCenter = null;
     for (VectorWritable value : values) {
       vectorList.add(new VectorWritable(value));

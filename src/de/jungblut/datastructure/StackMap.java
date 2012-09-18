@@ -1,13 +1,13 @@
 package de.jungblut.datastructure;
 
+import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.Map.Entry;
 
 /**
  * A stack that also provides random access lookup of values. It is backed by a
- * Deque(linkedlist) and a HashMap.
+ * Deque(array deque) and a HashMap.
  * 
  * @author thomas.jungblut
  * 
@@ -17,7 +17,7 @@ import java.util.Map.Entry;
 public final class StackMap<K, V> {
 
   private final HashMap<K, V> map = new HashMap<>();
-  private final Deque<K> stack = new LinkedList<>();
+  private final Deque<K> stack = new ArrayDeque<>();
 
   /**
    * Immutable class for a Key/Value tuple.

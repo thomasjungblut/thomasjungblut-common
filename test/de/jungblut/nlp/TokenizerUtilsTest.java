@@ -33,7 +33,7 @@ public class TokenizerUtilsTest extends TestCase {
         "st ", "t f", " fo", "for", "or ", "r t", " th", "the", "he ", "e t",
         " to", "tok", "oke", "ken", "eni", "niz", "ize", "zer", "er ", "r f",
         " fu", "fun", "unc", "nct", "cti", "tio", "ion", "on!" };
-    String[] result = TokenizerUtils.nGrammTokenize(s, 3);
+    String[] result = TokenizerUtils.nShinglesTokenize(s, 3);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }

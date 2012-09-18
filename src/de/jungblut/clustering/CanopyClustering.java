@@ -5,7 +5,6 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 
 import de.jungblut.distance.DistanceMeasurer;
@@ -34,7 +33,7 @@ public final class CanopyClustering {
         DoubleVectorElement next = iterateNonZero.next();
         List<DoubleVector> list = index.get(next.getIndex());
         if (list == null) {
-          list = new LinkedList<>();
+          list = new ArrayList<>();
           index.put(next.getIndex(), list);
         }
         list.add(v);
@@ -47,7 +46,7 @@ public final class CanopyClustering {
       DoubleVector p1 = pointSet.iterator().next();
       pointSet.remove(p1);
       removeFromIndex(p1, index);
-      List<DoubleVector> allList = new LinkedList<>();
+      List<DoubleVector> allList = new ArrayList<>();
       Iterator<DoubleVectorElement> iterateNonZero = p1.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();

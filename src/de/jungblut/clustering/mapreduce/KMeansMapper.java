@@ -1,7 +1,7 @@
 package de.jungblut.clustering.mapreduce;
 
 import java.io.IOException;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
@@ -21,7 +21,7 @@ import de.jungblut.distance.ManhattanDistance;
 class KMeansMapper extends
     Mapper<ClusterCenter, VectorWritable, ClusterCenter, VectorWritable> {
 
-  private final List<ClusterCenter> centers = new LinkedList<>();
+  private final List<ClusterCenter> centers = new ArrayList<>();
   private DistanceMeasurer distanceMeasurer;
 
   @Override
