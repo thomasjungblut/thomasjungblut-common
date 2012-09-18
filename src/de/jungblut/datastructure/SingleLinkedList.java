@@ -28,13 +28,24 @@ public final class SingleLinkedList<T> extends AbstractList<T> {
   }
 
   @Override
-  public void add(int index, T element) {
+  public final boolean add(T element) {
+    final Entry l = tail;
+    final Entry newNode = new Entry(element);
+    tail = newNode;
+    if (l == null)
+      head = newNode;
+    else
+      l.next = newNode;
+    size++;
+    return true;
+  }
+
+  @Override
+  public final void add(int index, T element) {
     if (index != 0) {
       // append
       if (index == size) {
-        Entry tmp = tail;
-        tail = new Entry(element);
-        tmp.next = tail;
+        add(element);
       } else {
         // random access
         Entry seek = seek(index - 1);
@@ -57,7 +68,7 @@ public final class SingleLinkedList<T> extends AbstractList<T> {
   }
 
   @Override
-  public T set(int index, T element) {
+  public final T set(int index, T element) {
     Entry seek = seek(index);
     T tmp = seek.value;
     seek.value = element;
@@ -65,7 +76,7 @@ public final class SingleLinkedList<T> extends AbstractList<T> {
   }
 
   @Override
-  public T remove(int index) {
+  public final T remove(int index) {
     // special case, removing head
     if (index == 0) {
       T val = head.value;
@@ -89,16 +100,16 @@ public final class SingleLinkedList<T> extends AbstractList<T> {
   }
 
   @Override
-  public Iterator<T> iterator() {
+  public final Iterator<T> iterator() {
     return new DefaultIterator();
   }
 
   @Override
-  public T get(int index) {
+  public final T get(int index) {
     return seek(index).value;
   }
 
-  public Entry seek(int index) {
+  public final Entry seek(int index) {
     if (index == 0)
       return head;
     Entry ptr = head;
@@ -109,7 +120,7 @@ public final class SingleLinkedList<T> extends AbstractList<T> {
   }
 
   @Override
-  public int size() {
+  public final int size() {
     return size;
   }
 
@@ -118,7 +129,7 @@ public final class SingleLinkedList<T> extends AbstractList<T> {
     Entry current;
 
     @Override
-    protected T computeNext() {
+    protected final T computeNext() {
       if (current == null) {
         current = head;
       } else {
