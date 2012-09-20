@@ -8,6 +8,7 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -69,7 +70,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
    * @return a opened stream and its encoding, if the charset isn't accepted it
    *         will fallback to ISO-8859-1.
    */
-  public Tuple<InputStream, String> getConnection(String realUrl)
+  public static Tuple<InputStream, String> getConnection(String realUrl)
       throws IOException {
     URL url = new URL(realUrl);
     // maybe we need to write our http connection. DNS cache and
@@ -89,9 +90,25 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   }
 
   /**
+   * Filters outlinks from a parsed page that NOT matches the given matcher.
+   */
+  public static final HashSet<String> filter(HashSet<String> set,
+      Pattern matcher) {
+    if (matcher != null) {
+      Iterator<String> iterator = set.iterator();
+      while (iterator.hasNext()) {
+        if (!matcher.matcher(iterator.next()).matches()) {
+          iterator.remove();
+        }
+      }
+    }
+    return set;
+  }
+
+  /**
    * Method to extract outlinks of a given HTML doc in string.
    */
-  public final HashSet<String> extractOutlinks(String in, String url,
+  public static HashSet<String> extractOutlinks(String in, String url,
       String encoding) throws ParserException {
 
     final String baseUrl = extractBaseUrl(url);
@@ -123,7 +140,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
    * 
    * @throws IOException
    */
-  public String consumeStream(InputStream stream, String encoding)
+  public static String consumeStream(InputStream stream, String encoding)
       throws IOException {
     StringBuilder sb = new StringBuilder();
     try {
@@ -162,7 +179,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
    * Checks if the site does not end with unparsable suffixes likes PDF and if
    * its a valid url by extracting a base url at at index 0.
    */
-  public boolean isValid(final String s) {
+  public static boolean isValid(final String s) {
     Matcher baseMatcher = BASE_URL.matcher(s);
     return baseMatcher.find() && baseMatcher.start() == 0
         && !IGNORE_SUFFIX_PATTERN.matcher(s).matches();

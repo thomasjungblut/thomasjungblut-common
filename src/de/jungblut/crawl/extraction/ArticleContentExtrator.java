@@ -1,9 +1,13 @@
 package de.jungblut.crawl.extraction;
 
+import static de.jungblut.crawl.extraction.OutlinkExtractor.consumeStream;
+import static de.jungblut.crawl.extraction.OutlinkExtractor.extractOutlinks;
+import static de.jungblut.crawl.extraction.OutlinkExtractor.filter;
+import static de.jungblut.crawl.extraction.OutlinkExtractor.getConnection;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -12,9 +16,10 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.htmlparser.util.ParserException;
 
 import de.jungblut.crawl.ConsoleResultWriter;
-import de.jungblut.crawl.ContentFetchResult;
 import de.jungblut.crawl.Crawler;
+import de.jungblut.crawl.FetchResult;
 import de.jungblut.crawl.SequentialCrawler;
+import de.jungblut.crawl.extraction.ArticleContentExtrator.ContentFetchResult;
 import de.jungblut.math.tuple.Tuple;
 import de.l3s.boilerpipe.BoilerpipeExtractor;
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
@@ -38,8 +43,6 @@ public final class ArticleContentExtrator implements
   private final Pattern filterPattern = Pattern
       .compile("https?://www.spiegel.de/*");
 
-  private final OutlinkExtractor outlinkExtractor = new OutlinkExtractor();
-
   @Override
   public final ContentFetchResult extract(String site) {
 
@@ -47,14 +50,11 @@ public final class ArticleContentExtrator implements
       return null;
 
     try {
-      Tuple<InputStream, String> connection = outlinkExtractor
-          .getConnection(site);
-      String html = outlinkExtractor.consumeStream(connection.getFirst(),
-          connection.getSecond());
+      Tuple<InputStream, String> connection = getConnection(site);
+      String html = consumeStream(connection.getFirst(), connection.getSecond());
       html = StringEscapeUtils.unescapeHtml(html);
       final HashSet<String> outlinkSet = filter(
-          outlinkExtractor.extractOutlinks(html, site, connection.getSecond()),
-          filterPattern);
+          extractOutlinks(html, site, connection.getSecond()), filterPattern);
 
       Matcher matcher = titleExtractor.matcher(html);
       boolean foundTitle = matcher.find();
@@ -81,24 +81,48 @@ public final class ArticleContentExtrator implements
   }
 
   /**
-   * Filters outlinks from a parsed page that matches the given matcher.
+   * Article content fetch result.
    */
-  public final HashSet<String> filter(HashSet<String> set, Pattern matcher) {
-    Iterator<String> iterator = set.iterator();
-    while (iterator.hasNext()) {
-      if (matcher.matcher(iterator.next()).matches()) {
-        iterator.remove();
-      }
+  public static class ContentFetchResult extends FetchResult {
+
+    private final String title;
+    private final String text;
+
+    public ContentFetchResult(String url, HashSet<String> outlinks) {
+      super(url, outlinks);
+      title = null;
+      text = null;
     }
-    return set;
+
+    public ContentFetchResult(String url, HashSet<String> outlinks,
+        String title, String text) {
+      super(url, outlinks);
+      this.title = title;
+      this.text = text;
+    }
+
+    public String getTitle() {
+      return title;
+    }
+
+    public String getText() {
+      return text;
+    }
+
+    @Override
+    public String toString() {
+      return title + "\n\n" + text;
+    }
+
   }
 
   public static void main(String[] args) throws IOException,
       InterruptedException, ExecutionException {
     String start = "http://www.spiegel.de/wissenschaft/natur/erbgut-entziffert-austern-haben-viele-anti-stress-gene-a-856902.html";
 
-    Crawler<ContentFetchResult> crawler = new SequentialCrawler<>(1,
-        new ArticleContentExtrator(), new ConsoleResultWriter());
+    Crawler<ContentFetchResult> crawler = new SequentialCrawler<ContentFetchResult>(
+        1, new ArticleContentExtrator(),
+        new ConsoleResultWriter<ContentFetchResult>());
 
     crawler.process(start);
 

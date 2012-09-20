@@ -16,11 +16,11 @@ import org.apache.hadoop.io.Text;
  * @author thomas.jungblut
  * 
  */
-public final class SequenceFileResultWriter<T extends FetchResult> implements
+public class SequenceFileResultWriter<T extends FetchResult> implements
     ResultWriter<T> {
 
   private FileSystem fs;
-  private SequenceFile.Writer writer;
+  protected SequenceFile.Writer writer;
 
   @Override
   public void open(Configuration conf) throws IOException {

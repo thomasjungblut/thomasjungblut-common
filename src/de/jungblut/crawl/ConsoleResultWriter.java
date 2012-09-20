@@ -8,12 +8,11 @@ import java.io.IOException;
  * @author thomas.jungblut
  * 
  */
-public class ConsoleResultWriter extends ResultWriterAdapter<ContentFetchResult> {
+public class ConsoleResultWriter<T extends FetchResult> extends
+    ResultWriterAdapter<T> {
 
   @Override
-  public void write(ContentFetchResult result) throws IOException {
-    System.out.println("Title: " + result.getTitle());
-    System.out.println("Text: " + result.getText());
+  public void write(T result) throws IOException {
+    System.out.println(result);
   }
-
 }

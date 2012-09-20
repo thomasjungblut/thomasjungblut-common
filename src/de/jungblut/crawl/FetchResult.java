@@ -54,4 +54,9 @@ public class FetchResult {
     return outlinks;
   }
 
+  @Override
+  public String toString() {
+    return url;
+  }
+
 }
