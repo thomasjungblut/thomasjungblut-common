@@ -8,7 +8,7 @@ import java.io.IOException;
  * @author thomas.jungblut
  * 
  */
-public class STDOUTResultWriter extends ResultWriterAdapter<ContentFetchResult> {
+public class ConsoleResultWriter extends ResultWriterAdapter<ContentFetchResult> {
 
   @Override
   public void write(ContentFetchResult result) throws IOException {

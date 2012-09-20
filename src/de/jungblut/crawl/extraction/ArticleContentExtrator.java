@@ -3,6 +3,7 @@ package de.jungblut.crawl.extraction;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.concurrent.ExecutionException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -10,9 +11,9 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.htmlparser.util.ParserException;
 
+import de.jungblut.crawl.ConsoleResultWriter;
 import de.jungblut.crawl.ContentFetchResult;
 import de.jungblut.crawl.Crawler;
-import de.jungblut.crawl.STDOUTResultWriter;
 import de.jungblut.crawl.SequentialCrawler;
 import de.jungblut.math.tuple.Tuple;
 import de.l3s.boilerpipe.BoilerpipeExtractor;
@@ -33,6 +34,10 @@ public final class ArticleContentExtrator implements
   private final Pattern titleExtractor = Pattern
       .compile("<title>(.*?)</title>");
 
+  // just parse spiegel.de
+  private final Pattern filterPattern = Pattern
+      .compile("https?://www.spiegel.de/*");
+
   private final OutlinkExtractor outlinkExtractor = new OutlinkExtractor();
 
   @Override
@@ -47,8 +52,9 @@ public final class ArticleContentExtrator implements
       String html = outlinkExtractor.consumeStream(connection.getFirst(),
           connection.getSecond());
       html = StringEscapeUtils.unescapeHtml(html);
-      final HashSet<String> outlinkSet = outlinkExtractor.extractOutlinks(html,
-          site, connection.getSecond());
+      final HashSet<String> outlinkSet = filter(
+          outlinkExtractor.extractOutlinks(html, site, connection.getSecond()),
+          filterPattern);
 
       Matcher matcher = titleExtractor.matcher(html);
       boolean foundTitle = matcher.find();
@@ -74,12 +80,25 @@ public final class ArticleContentExtrator implements
     return null;
   }
 
+  /**
+   * Filters outlinks from a parsed page that matches the given matcher.
+   */
+  public final HashSet<String> filter(HashSet<String> set, Pattern matcher) {
+    Iterator<String> iterator = set.iterator();
+    while (iterator.hasNext()) {
+      if (matcher.matcher(iterator.next()).matches()) {
+        iterator.remove();
+      }
+    }
+    return set;
+  }
+
   public static void main(String[] args) throws IOException,
       InterruptedException, ExecutionException {
-    String start = "http://www.spiegel.de/wirtschaft/service/kartellamt-warnt-vor-kostenexplosion-durch-oekostrom-a-852387.html";
+    String start = "http://www.spiegel.de/wissenschaft/natur/erbgut-entziffert-austern-haben-viele-anti-stress-gene-a-856902.html";
 
     Crawler<ContentFetchResult> crawler = new SequentialCrawler<>(1,
-        new ArticleContentExtrator(), new STDOUTResultWriter());
+        new ArticleContentExtrator(), new ConsoleResultWriter());
 
     crawler.process(start);
 

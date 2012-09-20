@@ -30,12 +30,14 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class OutlinkExtractor implements Extractor<FetchResult> {
 
+  private static final String DEFAULT_ENCODING = "ISO-8859-1";
   private static final String USER_AGENT_KEY = "User-Agent";
   private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1";
   private static final NodeFilter filter = new NodeClassFilter(LinkTag.class);
 
   private static final Pattern IGNORE_SUFFIX_PATTERN = Pattern
-      .compile("(jpg|gif|png|pdf|gif)$");
+      .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|rm|smil|wmv|swf|wma|zip|rar|gz))$");
+
   private static final Pattern BASE_URL = Pattern
       .compile("(http[s]*://[a-z0-9.]+)");
 
@@ -65,7 +67,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
 
   /**
    * @return a opened stream and its encoding, if the charset isn't accepted it
-   *         will fallback to UTF-8.
+   *         will fallback to ISO-8859-1.
    */
   public Tuple<InputStream, String> getConnection(String realUrl)
       throws IOException {
@@ -81,7 +83,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
     con.addRequestProperty(USER_AGENT_KEY, USER_AGENT);
     String encoding = con.getContentEncoding();
     if (encoding == null || !Charset.isSupported(encoding)) {
-      encoding = "UTF-8";
+      encoding = DEFAULT_ENCODING;
     }
     return new Tuple<>(con.getInputStream(), encoding);
   }
@@ -98,7 +100,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
 
     final HashSet<String> set = new HashSet<>();
     Parser parser = new Parser(in);
-    parser.setEncoding(encoding == null ? "UTF-8" : encoding);
+    parser.setEncoding(encoding == null ? DEFAULT_ENCODING : encoding);
     NodeList matches = parser.extractAllNodesThatMatch(filter);
     SimpleNodeIterator it = matches.elements();
     while (it.hasMoreNodes()) {
@@ -160,7 +162,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
    * Checks if the site does not end with unparsable suffixes likes PDF and if
    * its a valid url by extracting a base url at at index 0.
    */
-  public static boolean isValid(final String s) {
+  public boolean isValid(final String s) {
     Matcher baseMatcher = BASE_URL.matcher(s);
     return baseMatcher.find() && baseMatcher.start() == 0
         && !IGNORE_SUFFIX_PATTERN.matcher(s).matches();
