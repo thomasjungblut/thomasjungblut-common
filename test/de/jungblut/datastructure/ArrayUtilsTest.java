@@ -83,6 +83,14 @@ public class ArrayUtilsTest extends TestCase {
     int[] array = ArrayUtils.fromUpTo(0, 100, 1);
     int medianOfMedians = ArrayUtils.medianOfMedians(array);
     assertEquals(54, medianOfMedians);
+
+    array = ArrayUtils.fromUpTo(0, 10, 1);
+    medianOfMedians = ArrayUtils.medianOfMedians(array);
+    assertEquals(5, medianOfMedians);
+
+    array = ArrayUtils.fromUpTo(0, 14, 1);
+    medianOfMedians = ArrayUtils.medianOfMedians(array);
+    assertEquals(7, medianOfMedians);
   }
 
   @Test

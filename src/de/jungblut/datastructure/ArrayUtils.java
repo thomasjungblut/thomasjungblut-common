@@ -157,6 +157,24 @@ public final class ArrayUtils {
   /**
    * Copies the given array into a new one.
    */
+  public static double[] copy(double[] array) {
+    double[] newInt = new double[array.length];
+    System.arraycopy(array, 0, newInt, 0, array.length);
+    return newInt;
+  }
+
+  /**
+   * Copies the given array into a new one.
+   */
+  public static long[] copy(long[] array) {
+    long[] newInt = new long[array.length];
+    System.arraycopy(array, 0, newInt, 0, array.length);
+    return newInt;
+  }
+
+  /**
+   * Copies the given array into a new one.
+   */
   public static <T> T[] copy(T[] array) {
     return Arrays.copyOf(array, array.length);
   }
@@ -552,6 +570,11 @@ public final class ArrayUtils {
    */
   public static int medianOfMedians(int[] array) {
     final int splitSize = array.length / 5;
+
+    if (splitSize <= 2) {
+      radixSort(array);
+      return array[array.length / 2];
+    }
 
     int[] pivots = new int[splitSize];
     for (int i = 0; i < splitSize; i++) {
