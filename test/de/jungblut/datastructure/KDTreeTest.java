@@ -7,6 +7,7 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -49,11 +50,11 @@ public class KDTreeTest extends TestCase {
     for (DenseDoubleVector v : array)
       tree.add(v);
 
-    List<DoubleVector> nearestNeighbours = tree.getNearestNeighbours(
+    List<VectorDistanceTuple> nearestNeighbours = tree.getNearestNeighbours(
         new DenseDoubleVector(new double[] { 0, 0 }), 1,
         new EuclidianDistance());
     assertEquals(1, nearestNeighbours.size());
-    assertTrue(array[0] == nearestNeighbours.get(0));
+    assertTrue(array[0] == nearestNeighbours.get(0).getVector());
   }
 
   @Test

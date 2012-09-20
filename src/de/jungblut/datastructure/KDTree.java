@@ -36,18 +36,27 @@ public final class KDTree implements Iterable<DoubleVector> {
 
   // descending sorted by distance, so the head of the prio queue is always
   // largest
-  static final class KDDistanceValue implements Comparable<KDDistanceValue> {
+  public static final class VectorDistanceTuple implements
+      Comparable<VectorDistanceTuple> {
 
     final DoubleVector value;
     final double dist;
 
-    public KDDistanceValue(DoubleVector value, double dist) {
+    public VectorDistanceTuple(DoubleVector value, double dist) {
       this.value = value;
       this.dist = dist;
     }
 
+    public double getDistance() {
+      return dist;
+    }
+
+    public DoubleVector getVector() {
+      return value;
+    }
+
     @Override
-    public int compareTo(KDDistanceValue o) {
+    public int compareTo(VectorDistanceTuple o) {
       return Double.compare(o.dist, dist);
     }
   }
@@ -88,23 +97,19 @@ public final class KDTree implements Iterable<DoubleVector> {
   /**
    * @return the k nearest neighbours to the given vector.
    */
-  public List<DoubleVector> getNearestNeighbours(DoubleVector v, int k,
+  public List<VectorDistanceTuple> getNearestNeighbours(DoubleVector v, int k,
       DistanceMeasurer measurer) {
-    PriorityQueue<KDDistanceValue> queue = new PriorityQueue<>(k);
+    PriorityQueue<VectorDistanceTuple> queue = new PriorityQueue<>(k);
     searchInternal(v, root, queue, k, measurer);
-    List<DoubleVector> list = new ArrayList<>(queue.size());
-    for (KDDistanceValue vx : queue) {
-      list.add(vx.value);
-    }
-    return list;
+    return new ArrayList<>(queue);
   }
 
   // TODO make more sophisticated by hyperplane intersection
   private void searchInternal(DoubleVector v, KDTreeNode current,
-      PriorityQueue<KDDistanceValue> queue, int k, DistanceMeasurer measurer) {
+      PriorityQueue<VectorDistanceTuple> queue, int k, DistanceMeasurer measurer) {
     if (current != null) {
-      queue.add(new KDDistanceValue(current.value, measurer.measureDistance(
-          current.value, v)));
+      queue.add(new VectorDistanceTuple(current.value, measurer
+          .measureDistance(current.value, v)));
       if (queue.size() > k) {
         queue.remove();
       }
