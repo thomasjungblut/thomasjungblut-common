@@ -23,14 +23,16 @@ public final class KDTree implements Iterable<DoubleVector> {
 
   static final class KDTreeNode {
     final int splitDimension;
+    KDTreeNode parent;
     KDTreeNode left;
     KDTreeNode right;
 
     DoubleVector value;
 
-    public KDTreeNode(int splitDimension, DoubleVector value) {
+    public KDTreeNode(int splitDimension, DoubleVector value, KDTreeNode parent) {
       this.splitDimension = splitDimension;
       this.value = value;
+      this.parent = parent;
     }
   }
 
@@ -84,40 +86,95 @@ public final class KDTree implements Iterable<DoubleVector> {
       // do the real insert
       // note that current in this case is the parent
       if (right) {
-        current.right = new KDTreeNode(median(vec), vec);
+        current.right = new KDTreeNode(median(vec), vec, current);
       } else {
-        current.left = new KDTreeNode(median(vec), vec);
+        current.left = new KDTreeNode(median(vec), vec, current);
       }
 
     } else {
-      root = new KDTreeNode(median(vec), vec);
+      root = new KDTreeNode(median(vec), vec, null);
     }
+  }
+
+  /**
+   * Removes this vector from the KD tree. It uses equals to determine if it is
+   * the same vector like the passed one.
+   * 
+   * @return true if removed, false if not (found).
+   */
+  public boolean remove(DoubleVector vec) {
+    KDTreeNode current = root;
+    // traverse the tree to the free spot in dimension
+    while (true) {
+
+      if (vec.equals(current.value)) {
+        // TODO remove the root
+        // TODO the easiest way is to reinsert the nodes in the subtrees again,
+        // however this is way to timeconsuming.
+        if (current == root) {
+          if (current.right != null) {
+
+          } else if (current.left != null) {
+
+          } else {
+            // the root is alone, just clear up this reference
+            root = null;
+          }
+        } else {
+          // TODO removal somewhere
+          if (current.left != null) {
+
+          } else if (current.right != null) {
+
+          } else {
+            // leaf case
+            if (current.parent.left == current) {
+              current.parent.left = null;
+            } else {
+              current.parent.right = null;
+            }
+          }
+        }
+        return true;
+      }
+      boolean right = current.value.get(current.splitDimension) > vec
+          .get(current.splitDimension);
+      KDTreeNode next = right ? current.right : current.left;
+      if (next == null) {
+        break;
+      } else {
+        current = next;
+      }
+    }
+    return false;
   }
 
   /**
    * @return the k nearest neighbours to the given vector.
    */
-  public List<VectorDistanceTuple> getNearestNeighbours(DoubleVector v, int k,
-      DistanceMeasurer measurer) {
+  public List<VectorDistanceTuple> getNearestNeighbours(DoubleVector vec,
+      int k, DistanceMeasurer measurer) {
     PriorityQueue<VectorDistanceTuple> queue = new PriorityQueue<>(k);
-    searchInternal(v, root, queue, k, measurer);
-    return new ArrayList<>(queue);
-  }
+    KDTreeNode current = root;
 
-  // TODO make more sophisticated by hyperplane intersection
-  private void searchInternal(DoubleVector v, KDTreeNode current,
-      PriorityQueue<VectorDistanceTuple> queue, int k, DistanceMeasurer measurer) {
-    if (current != null) {
-      queue.add(new VectorDistanceTuple(current.value, measurer
-          .measureDistance(current.value, v)));
-      if (queue.size() > k) {
+    queue.add(new VectorDistanceTuple(current.value, measurer.measureDistance(
+        current.value, vec)));
+    while (true) {
+      if (queue.size() > k)
         queue.remove();
-      }
-      boolean right = current.value.get(current.splitDimension) > v
+      boolean right = current.value.get(current.splitDimension) > vec
           .get(current.splitDimension);
       KDTreeNode next = right ? current.right : current.left;
-      searchInternal(v, next, queue, k, measurer);
+      if (next == null) {
+        break;
+      } else {
+        current = next;
+        queue.add(new VectorDistanceTuple(current.value, measurer
+            .measureDistance(current.value, vec)));
+      }
     }
+
+    return new ArrayList<>(queue);
   }
 
   // basic in order traversal
