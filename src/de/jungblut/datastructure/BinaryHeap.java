@@ -1,14 +1,52 @@
 package de.jungblut.datastructure;
 
-import java.util.Arrays;
+/**
+ * Simple binary heap for integers.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
+public final class BinaryHeap {
 
-public class BinaryHeap {
+  static enum HeapType {
+    MIN, MAX
+  }
+
+  private final boolean minHeap;
 
   private int[] heap;
   private int size = 0;
 
+  /**
+   * Constructs a max heap with 10 elements.
+   */
   public BinaryHeap() {
     heap = new int[10];
+    minHeap = false;
+  }
+
+  /**
+   * Constructs a heap with 10 elements.
+   */
+  public BinaryHeap(HeapType heapType) {
+    heap = new int[10];
+    this.minHeap = HeapType.MIN == heapType ? true : false;
+  }
+
+  /**
+   * Constructs a heap with the given number of elements.
+   */
+  public BinaryHeap(int initialSize, HeapType heapType) {
+    heap = new int[initialSize];
+    this.minHeap = HeapType.MIN == heapType ? true : false;
+  }
+
+  /**
+   * Constructs a max heap with the given number of elements.
+   */
+  public BinaryHeap(int initialSize) {
+    heap = new int[initialSize];
+    minHeap = false;
   }
 
   public void add(int a) {
@@ -27,8 +65,10 @@ public class BinaryHeap {
     int index = pIndex;
     boolean finished = false;
     while (!finished) {
-      int parentIndex = getIndexOfParent(index);
-      if (heap[index] > heap[parentIndex]) {
+      final int parentIndex = getIndexOfParent(index);
+      final boolean greater = minHeap ? heap[index] < heap[parentIndex]
+          : heap[index] > heap[parentIndex];
+      if (greater) {
         swap(index, parentIndex);
         index = parentIndex;
       } else {
@@ -38,6 +78,14 @@ public class BinaryHeap {
         finished = true;
       }
     }
+  }
+
+  public int size() {
+    return size;
+  }
+
+  public int get(int index) {
+    return heap[index];
   }
 
   private void swap(int index1, int index2) {
@@ -124,11 +172,6 @@ public class BinaryHeap {
       }
     }
 
-  }
-
-  public static void main(String[] args) {
-    int[] arr = { 100, 12, 136, 15, 26, 723, 62, 6184, 8, 1, 3, 2, 72 };
-    System.out.println(Arrays.toString(HeapSort.sort(arr)));
   }
 
 }

@@ -7,12 +7,18 @@ import java.util.PriorityQueue;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.AbstractIterator;
+import com.google.common.collect.Lists;
 
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
 
 /**
- * Implementation of a kd-tree.
+ * Implementation of a kd-tree that handles dense vectors as well as sparse
+ * vectors. It offers O(log n) best case lookup time, but can degrade to O(n) if
+ * the tree isn't balanced well. It is mostly optimized for special cases like
+ * two or three dimensional data, but it does not offer removal of tree nodes
+ * (yet).
  * 
  * @author thomas.jungblut
  * 
@@ -23,16 +29,15 @@ public final class KDTree implements Iterable<DoubleVector> {
 
   static final class KDTreeNode {
     final int splitDimension;
-    KDTreeNode parent;
+
     KDTreeNode left;
     KDTreeNode right;
 
     DoubleVector value;
 
-    public KDTreeNode(int splitDimension, DoubleVector value, KDTreeNode parent) {
+    public KDTreeNode(int splitDimension, DoubleVector value) {
       this.splitDimension = splitDimension;
       this.value = value;
-      this.parent = parent;
     }
   }
 
@@ -65,8 +70,6 @@ public final class KDTree implements Iterable<DoubleVector> {
 
   /**
    * Adds the given vector to this KD tree.
-   * 
-   * @param vec
    */
   public void add(DoubleVector vec) {
     if (root != null) {
@@ -86,71 +89,33 @@ public final class KDTree implements Iterable<DoubleVector> {
       // do the real insert
       // note that current in this case is the parent
       if (right) {
-        current.right = new KDTreeNode(median(vec), vec, current);
+        current.right = new KDTreeNode(median(vec), vec);
       } else {
-        current.left = new KDTreeNode(median(vec), vec, current);
+        current.left = new KDTreeNode(median(vec), vec);
       }
 
     } else {
-      root = new KDTreeNode(median(vec), vec, null);
+      root = new KDTreeNode(median(vec), vec);
     }
   }
 
   /**
-   * Removes this vector from the KD tree. It uses equals to determine if it is
-   * the same vector like the passed one.
+   * Range queries the kd-tree.
    * 
-   * @return true if removed, false if not (found).
+   * @param lower a lower range bound.
+   * @param upper a upper range bound.
+   * @return the vectors between the two vectors.
    */
-  public boolean remove(DoubleVector vec) {
-    KDTreeNode current = root;
-    // traverse the tree to the free spot in dimension
-    while (true) {
+  public List<DoubleVector> rangeQuery(DoubleVector lower, DoubleVector upper) {
+    List<DoubleVector> list = Lists.newArrayList();
 
-      if (vec.equals(current.value)) {
-        // TODO remove the root
-        // TODO the easiest way is to reinsert the nodes in the subtrees again,
-        // however this is way to timeconsuming.
-        if (current == root) {
-          if (current.right != null) {
+    // TODO
 
-          } else if (current.left != null) {
-
-          } else {
-            // the root is alone, just clear up this reference
-            root = null;
-          }
-        } else {
-          // TODO removal somewhere
-          if (current.left != null) {
-
-          } else if (current.right != null) {
-
-          } else {
-            // leaf case
-            if (current.parent.left == current) {
-              current.parent.left = null;
-            } else {
-              current.parent.right = null;
-            }
-          }
-        }
-        return true;
-      }
-      boolean right = current.value.get(current.splitDimension) > vec
-          .get(current.splitDimension);
-      KDTreeNode next = right ? current.right : current.left;
-      if (next == null) {
-        break;
-      } else {
-        current = next;
-      }
-    }
-    return false;
+    return null;
   }
 
   /**
-   * @return the k nearest neighbours to the given vector.
+   * @return the k nearest neighbors to the given vector.
    */
   public List<VectorDistanceTuple> getNearestNeighbours(DoubleVector vec,
       int k, DistanceMeasurer measurer) {
@@ -177,7 +142,9 @@ public final class KDTree implements Iterable<DoubleVector> {
     return new ArrayList<>(queue);
   }
 
-  // basic in order traversal
+  /**
+   * Basic in order traversal.
+   */
   @Override
   public Iterator<DoubleVector> iterator() {
     return new AbstractIterator<DoubleVector>() {
@@ -227,28 +194,58 @@ public final class KDTree implements Iterable<DoubleVector> {
    * @return the index of the median of the vector.
    */
   static int median(DoubleVector v) {
-    // speedup for two and three dimensional spaces
-    if (v.getDimension() == 2) {
-      return v.get(0) > v.get(1) ? 0 : 1;
-    } else if (v.getDimension() == 3) {
-      boolean greater = v.get(0) > v.get(1);
-      int largeIndex = greater ? 0 : 1;
-      int smallIndex = !greater ? 0 : 1;
-
-      if (v.get(2) > v.get(largeIndex)) {
-        return largeIndex;
+    if (!v.isSparse()) {
+      // speedup for two and three dimensional spaces
+      if (v.getDimension() == 2) {
+        return medianTwoDimensions(v, 0, 1);
+      } else if (v.getDimension() == 3) {
+        return medianThreeDimensions(v, 0, 1, 2);
       } else {
-        if (v.get(smallIndex) > v.get(2)) {
-          return smallIndex;
-        } else {
-          return 2;
-        }
+        // TODO this is pretty much wrong because the array is internally
+        // mutated and the returned index is based on that.
+        // however the result is astonishing good.
+        return ArrayUtils.quickSelect(ArrayUtils.copy(v.toArray()),
+            v.getDimension() / 2);
       }
     } else {
-      // TODO this is pretty much wrong because the array is interally mutated
-      // and the returned index is based on that.
-      return ArrayUtils.quickSelect(ArrayUtils.copy(v.toArray()),
-          v.getDimension() / 2);
+      // sparse implementation, basically it finds median on the not zero
+      // entries and returns the index.
+      final int vectorLength = v.getLength();
+      final Iterator<DoubleVectorElement> iterateNonZero = v.iterateNonZero();
+      if (vectorLength == 2) {
+        return medianTwoDimensions(v, iterateNonZero.next().getIndex(),
+            iterateNonZero.next().getIndex());
+      } else if (vectorLength == 3) {
+        return medianThreeDimensions(v, iterateNonZero.next().getIndex(),
+            iterateNonZero.next().getIndex(), iterateNonZero.next().getIndex());
+      } else {
+        // use the first non-zero index to split on, not a good split, but
+        // better than nothing.
+        // TODO construct a double heap like BinaryHeap and use it with a median
+        // on stream algorithm.
+        return iterateNonZero.next().getIndex();
+
+      }
     }
+  }
+
+  private static int medianThreeDimensions(DoubleVector v, int i, int j, int k) {
+    boolean greater = v.get(i) > v.get(j);
+    int largeIndex = greater ? i : j;
+    int smallIndex = !greater ? i : j;
+
+    if (v.get(k) > v.get(largeIndex)) {
+      return largeIndex;
+    } else {
+      if (v.get(smallIndex) > v.get(k)) {
+        return smallIndex;
+      } else {
+        return k;
+      }
+    }
+  }
+
+  private static int medianTwoDimensions(DoubleVector v, int i, int j) {
+    return v.get(i) > v.get(j) ? i : j;
   }
 }
