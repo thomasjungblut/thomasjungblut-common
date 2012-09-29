@@ -75,6 +75,40 @@ public class KDTreeTest extends TestCase {
             3, 4 })));
   }
 
+  @Test
+  public void testRangeQuery() throws Exception {
+    DenseDoubleVector[] array = new DenseDoubleVector[] {
+        new DenseDoubleVector(new double[] { 2 }),
+        new DenseDoubleVector(new double[] { 3 }),
+        new DenseDoubleVector(new double[] { 4 }),
+        new DenseDoubleVector(new double[] { 5 }),
+        new DenseDoubleVector(new double[] { 6 }),
+        new DenseDoubleVector(new double[] { 8 }), };
+
+    KDTree tree = new KDTree();
+    for (DenseDoubleVector v : array)
+      tree.add(v);
+
+    List<DoubleVector> rangeQuery = tree.rangeQuery(new DenseDoubleVector(
+        new double[] { 4 }), new DenseDoubleVector(new double[] { 8 }));
+    assertEquals(4, rangeQuery.size());
+    for (int i = 2; i < array.length; i++)
+      assertEquals(array[i], rangeQuery.get(i - 2));
+  }
+
+  @Test
+  public void testStrictHigherLower() throws Exception {
+    DenseDoubleVector lower = new DenseDoubleVector(new double[] { 2 });
+    DenseDoubleVector current = new DenseDoubleVector(new double[] { 5 });
+    DenseDoubleVector upper = new DenseDoubleVector(new double[] { 10 });
+
+    assertTrue(KDTree.strictHigher(lower, current));
+    assertTrue(KDTree.strictHigher(current, upper));
+    assertTrue(KDTree.strictLower(upper, current));
+    assertTrue(KDTree.strictLower(current, lower));
+
+  }
+
   /*
    * sparse test vectors
    */

@@ -1,6 +1,8 @@
 package de.jungblut.datastructure;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -38,6 +40,12 @@ public final class KDTree implements Iterable<DoubleVector> {
     public KDTreeNode(int splitDimension, DoubleVector value) {
       this.splitDimension = splitDimension;
       this.value = value;
+    }
+
+    @Override
+    public String toString() {
+      return "KDTreeNode [splitDimension=" + splitDimension + ", value="
+          + value + "]";
     }
   }
 
@@ -109,9 +117,23 @@ public final class KDTree implements Iterable<DoubleVector> {
   public List<DoubleVector> rangeQuery(DoubleVector lower, DoubleVector upper) {
     List<DoubleVector> list = Lists.newArrayList();
 
-    // TODO
+    Deque<KDTreeNode> toVisit = new ArrayDeque<>();
+    toVisit.add(root);
+    while (!toVisit.isEmpty()) {
+      KDTreeNode next = toVisit.pop();
+      if (strictLower(upper, next.value) && strictHigher(lower, next.value))
+        list.add(next.value);
 
-    return null;
+      // TODO check more detailed if we need to recurse into the subtree
+      if (next.left != null) {
+        toVisit.add(next.left);
+      }
+      if (next.right != null) {
+        toVisit.add(next.right);
+      }
+    }
+
+    return list;
   }
 
   /**
@@ -194,6 +216,9 @@ public final class KDTree implements Iterable<DoubleVector> {
    * @return the index of the median of the vector.
    */
   static int median(DoubleVector v) {
+    if (v.getDimension() == 1) {
+      return 0;
+    }
     if (!v.isSparse()) {
       // speedup for two and three dimensional spaces
       if (v.getDimension() == 2) {
@@ -227,6 +252,26 @@ public final class KDTree implements Iterable<DoubleVector> {
 
       }
     }
+  }
+
+  static boolean strictHigher(DoubleVector lower, DoubleVector current) {
+    Iterator<DoubleVectorElement> iterateNonZero = lower.iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
+      if (current.get(next.getIndex()) < next.getValue())
+        return false;
+    }
+    return true;
+  }
+
+  static boolean strictLower(DoubleVector upper, DoubleVector current) {
+    Iterator<DoubleVectorElement> iterateNonZero = upper.iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
+      if (current.get(next.getIndex()) > next.getValue())
+        return false;
+    }
+    return true;
   }
 
   private static int medianThreeDimensions(DoubleVector v, int i, int j, int k) {
