@@ -206,6 +206,15 @@ public class ArrayUtilsTest extends TestCase {
     assertEquals(4, missingNumber);
   }
 
+  @Test
+  public void testMax() {
+    int[] arr = new int[] { 0, 1, 2, 3, 5 };
+    int max = ArrayUtils.max(arr);
+    assertEquals(5, max);
+    max = ArrayUtils.maxIndex(arr);
+    assertEquals(4, max);
+  }
+
   static int[] getRandomInput(int n, int k) {
     Random r = new Random();
     int[] arr = new int[n];

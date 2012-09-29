@@ -25,39 +25,44 @@ import de.jungblut.math.DoubleVector.DoubleVectorElement;
  * @author thomas.jungblut
  * 
  */
-public final class KDTree implements Iterable<DoubleVector> {
+public final class KDTree<VALUE> implements Iterable<DoubleVector> {
 
   private KDTreeNode root;
 
-  static final class KDTreeNode {
+  final class KDTreeNode {
     final int splitDimension;
+    // TODO if range queries are not a problem, we can replace the whole
+    // keyvector by the value in the split dimension
+    final DoubleVector keyVector;
+    final VALUE value;
 
     KDTreeNode left;
     KDTreeNode right;
 
-    DoubleVector value;
-
-    public KDTreeNode(int splitDimension, DoubleVector value) {
+    public KDTreeNode(int splitDimension, DoubleVector keyVector, VALUE val) {
       this.splitDimension = splitDimension;
-      this.value = value;
+      this.keyVector = keyVector;
+      this.value = val;
     }
 
     @Override
     public String toString() {
       return "KDTreeNode [splitDimension=" + splitDimension + ", value="
-          + value + "]";
+          + keyVector + "]";
     }
   }
 
   // descending sorted by distance, so the head of the prio queue is always
   // largest
-  public static final class VectorDistanceTuple implements
-      Comparable<VectorDistanceTuple> {
+  public static final class VectorDistanceTuple<VALUE> implements
+      Comparable<VectorDistanceTuple<VALUE>> {
 
-    final DoubleVector value;
+    final DoubleVector keyVector;
+    final VALUE value;
     final double dist;
 
-    public VectorDistanceTuple(DoubleVector value, double dist) {
+    public VectorDistanceTuple(DoubleVector keyVector, VALUE value, double dist) {
+      this.keyVector = keyVector;
       this.value = value;
       this.dist = dist;
     }
@@ -67,25 +72,29 @@ public final class KDTree implements Iterable<DoubleVector> {
     }
 
     public DoubleVector getVector() {
+      return keyVector;
+    }
+
+    public VALUE getValue() {
       return value;
     }
 
     @Override
-    public int compareTo(VectorDistanceTuple o) {
+    public int compareTo(VectorDistanceTuple<VALUE> o) {
       return Double.compare(o.dist, dist);
     }
   }
 
   /**
-   * Adds the given vector to this KD tree.
+   * Adds the given vector with a value to this KD tree.
    */
-  public void add(DoubleVector vec) {
+  public void add(DoubleVector vec, VALUE value) {
     if (root != null) {
       KDTreeNode current = root;
       boolean right = false;
       // traverse the tree to the free spot in dimension
       while (true) {
-        right = current.value.get(current.splitDimension) > vec
+        right = current.keyVector.get(current.splitDimension) > vec
             .get(current.splitDimension);
         KDTreeNode next = right ? current.right : current.left;
         if (next == null) {
@@ -97,13 +106,13 @@ public final class KDTree implements Iterable<DoubleVector> {
       // do the real insert
       // note that current in this case is the parent
       if (right) {
-        current.right = new KDTreeNode(median(vec), vec);
+        current.right = new KDTreeNode(median(vec), vec, value);
       } else {
-        current.left = new KDTreeNode(median(vec), vec);
+        current.left = new KDTreeNode(median(vec), vec, value);
       }
 
     } else {
-      root = new KDTreeNode(median(vec), vec);
+      root = new KDTreeNode(median(vec), vec, value);
     }
   }
 
@@ -121,8 +130,9 @@ public final class KDTree implements Iterable<DoubleVector> {
     toVisit.add(root);
     while (!toVisit.isEmpty()) {
       KDTreeNode next = toVisit.pop();
-      if (strictLower(upper, next.value) && strictHigher(lower, next.value))
-        list.add(next.value);
+      if (strictLower(upper, next.keyVector)
+          && strictHigher(lower, next.keyVector))
+        list.add(next.keyVector);
 
       // TODO check more detailed if we need to recurse into the subtree
       if (next.left != null) {
@@ -139,25 +149,25 @@ public final class KDTree implements Iterable<DoubleVector> {
   /**
    * @return the k nearest neighbors to the given vector.
    */
-  public List<VectorDistanceTuple> getNearestNeighbours(DoubleVector vec,
-      int k, DistanceMeasurer measurer) {
-    PriorityQueue<VectorDistanceTuple> queue = new PriorityQueue<>(k);
+  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
+      DoubleVector vec, int k, DistanceMeasurer measurer) {
+    PriorityQueue<VectorDistanceTuple<VALUE>> queue = new PriorityQueue<>(k);
     KDTreeNode current = root;
 
-    queue.add(new VectorDistanceTuple(current.value, measurer.measureDistance(
-        current.value, vec)));
+    queue.add(new VectorDistanceTuple<VALUE>(current.keyVector, current.value,
+        measurer.measureDistance(current.keyVector, vec)));
     while (true) {
       if (queue.size() > k)
         queue.remove();
-      boolean right = current.value.get(current.splitDimension) > vec
+      boolean right = current.keyVector.get(current.splitDimension) > vec
           .get(current.splitDimension);
       KDTreeNode next = right ? current.right : current.left;
       if (next == null) {
         break;
       } else {
         current = next;
-        queue.add(new VectorDistanceTuple(current.value, measurer
-            .measureDistance(current.value, vec)));
+        queue.add(new VectorDistanceTuple<VALUE>(current.keyVector,
+            current.value, measurer.measureDistance(current.keyVector, vec)));
       }
     }
 
@@ -188,7 +198,7 @@ public final class KDTree implements Iterable<DoubleVector> {
           }
         }
 
-        return current.value;
+        return current.keyVector;
       }
 
     };
@@ -205,7 +215,7 @@ public final class KDTree implements Iterable<DoubleVector> {
       int depth) {
     if (node != null) {
       sb.append("\n" + Strings.repeat("\t", depth));
-      sb.append(node.value);
+      sb.append(node.keyVector);
       prettyPrintIternal(node.left, sb, depth + 1);
       prettyPrintIternal(node.right, sb, depth + 1);
     }

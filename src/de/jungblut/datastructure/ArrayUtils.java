@@ -1013,4 +1013,82 @@ public final class ArrayUtils {
 
     return ((array.length) * (array.length + 1) / 2) - sum;
   }
+
+  /**
+   * @return the maximum value in this array,
+   */
+  public static int max(int[] array) {
+    int maxValue = array[0];
+    for (int aVector : array) {
+      if (maxValue < aVector) {
+        maxValue = aVector;
+      }
+    }
+    return maxValue;
+  }
+
+  /**
+   * @return the maximum index in this array,
+   */
+  public static int maxIndex(int[] array) {
+    int maxIndex = 0;
+    for (int i = 0; i < array.length; i++) {
+      if (array[maxIndex] < array[i]) {
+        maxIndex = i;
+      }
+    }
+    return maxIndex;
+  }
+
+  /**
+   * @return the maximum value in this array,
+   */
+  public static long max(long[] array) {
+    long maxValue = array[0];
+    for (long aVector : array) {
+      if (maxValue < aVector) {
+        maxValue = aVector;
+      }
+    }
+    return maxValue;
+  }
+
+  /**
+   * @return the maximum index in this array,
+   */
+  public static int maxIndex(long[] array) {
+    int maxIndex = 0;
+    for (int i = 0; i < array.length; i++) {
+      if (array[maxIndex] < array[i]) {
+        maxIndex = i;
+      }
+    }
+    return maxIndex;
+  }
+
+  /**
+   * @return the maximum value in this array,
+   */
+  public static double max(double[] array) {
+    double maxValue = array[0];
+    for (double aVector : array) {
+      if (maxValue < aVector) {
+        maxValue = aVector;
+      }
+    }
+    return maxValue;
+  }
+
+  /**
+   * @return the maximum index in this array,
+   */
+  public static int maxIndex(double[] array) {
+    int maxIndex = 0;
+    for (int i = 0; i < array.length; i++) {
+      if (array[maxIndex] < array[i]) {
+        maxIndex = i;
+      }
+    }
+    return maxIndex;
+  }
 }
