@@ -66,7 +66,7 @@ public final class MatrixMultiplicationBSP
         }
         double dot = value.getVector().dot(columnVector.getVector());
         // we use row based partitioning once again to distribute the outcome
-        peer.send(peer.getPeerName(rowKey.get() % (peer.getNumPeers() - 1)),
+        peer.send(peer.getPeerName(rowKey.get() % peer.getNumPeers()),
             new ResultMessage(rowKey.get(), bMatrixKey.get(), dot));
       }
       reopenOtherMatrix(peer.getConfiguration());
@@ -207,7 +207,7 @@ public final class MatrixMultiplicationBSP
     @Override
     public final int getPartition(IntWritable key, VectorWritable value,
         int numTasks) {
-      return key.get() % (numTasks - 1);
+      return key.get() % numTasks;
     }
   }
 
