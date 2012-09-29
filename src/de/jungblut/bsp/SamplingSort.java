@@ -185,13 +185,14 @@ public final class SamplingSort extends
     for (FileStatus f : listStatus) {
       if (!f.getPath().toString().endsWith(".crc")) {
         System.out.println("from " + f.getPath().toString());
-        SequenceFile.Reader reader = new SequenceFile.Reader(fs, f.getPath(),
-            conf);
-        IntWritable key = new IntWritable();
-        while (reader.next(key)) {
-          System.out.print(key.get() + " ");
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(fs,
+            f.getPath(), conf)) {
+          IntWritable key = new IntWritable();
+          while (reader.next(key)) {
+            System.out.print(key.get() + " ");
+          }
+          System.out.println();
         }
-        System.out.println();
       }
     }
 
