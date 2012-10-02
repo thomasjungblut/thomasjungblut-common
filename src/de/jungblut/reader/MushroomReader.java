@@ -24,6 +24,10 @@ public final class MushroomReader {
 
   private static final String MUSHROOM_DATASET_PATH = "files/mushroom/mushroom_dataset.csv";
 
+  /**
+   * @return a tuple, on first dimension are the features, on the second are the
+   *         outcomes (0 or 1 in the first element of a vector)
+   */
   public static Tuple<DoubleVector[], DoubleVector[]> readMushroomDataset() {
     List<DoubleVector> list = new ArrayList<>();
     List<String[]> buffer = new ArrayList<>();

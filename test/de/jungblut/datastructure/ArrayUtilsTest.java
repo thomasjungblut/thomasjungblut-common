@@ -215,6 +215,19 @@ public class ArrayUtilsTest extends TestCase {
     assertEquals(4, max);
   }
 
+  @Test
+  public void testSubArray() {
+    String[] arr = new String[] { "1, 2, 3", "4, 5, 6", "7, 8, 9", "10, 11, 12" };
+
+    String[] subArray = ArrayUtils.subArray(arr, 0, 2);
+    assertEquals(subArray.length, 3);
+
+    for (int i = 0; i < 3; i++) {
+      assertTrue(arr[i] == subArray[i]);
+    }
+
+  }
+
   static int[] getRandomInput(int n, int k) {
     Random r = new Random();
     int[] arr = new int[n];

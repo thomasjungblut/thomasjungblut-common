@@ -126,23 +126,28 @@ public final class ArrayUtils {
   /**
    * Concats the given arrays.
    * 
-   * @param clazz the class type of the array elements.
    * @param arrays the arrays to pass.
    * @return a single array where the given arrays content is concatenated.
    */
   @SuppressWarnings("unchecked")
-  public static <T> T[] concat(Class<T> clazz, T[]... arrays) {
-    int length = 0;
-    for (int i = 0; i < arrays.length; i++)
-      length += arrays[i].length;
-    T[] merged = (T[]) Array.newInstance(clazz, length);
-    int index = 0;
-    for (int i = 0; i < arrays.length; i++) {
-      System.arraycopy(arrays[i], 0, merged, index, arrays[i].length);
-      index += arrays[i].length;
-    }
+  public static <T> T[] concat(T[]... arrays) {
+    if (arrays.length > 0) {
+      int length = 0;
+      for (int i = 0; i < arrays.length; i++)
+        length += arrays[i].length;
 
-    return merged;
+      T[] merged = (T[]) Array.newInstance(arrays[0].getClass()
+          .getComponentType(), length);
+      int index = 0;
+      for (int i = 0; i < arrays.length; i++) {
+        System.arraycopy(arrays[i], 0, merged, index, arrays[i].length);
+        index += arrays[i].length;
+      }
+
+      return merged;
+    } else {
+      return null;
+    }
   }
 
   /**
@@ -1090,5 +1095,32 @@ public final class ArrayUtils {
       }
     }
     return maxIndex;
+  }
+
+  /**
+   * Splits the given array from 0 to the given splitindex (included).
+   * 
+   * @return a new array with the same objects in array[0..splitIndex]
+   */
+  public static <T> T[] subArray(T[] array, int splitIndex) {
+    return subArray(array, 0, splitIndex);
+  }
+
+  /**
+   * Splits the given array from the given startIndex to the given splitIndex
+   * (included).
+   * 
+   * @return a new array with the same objects in array[startIndex..splitIndex]
+   */
+  public static <T> T[] subArray(T[] array, int startIndex, int splitIndex) {
+    @SuppressWarnings("unchecked")
+    T[] subArray = (T[]) Array.newInstance(array.getClass().getComponentType(),
+        splitIndex - startIndex + 1);
+
+    for (int i = 0; i < subArray.length; i++) {
+      subArray[i] = array[startIndex + i];
+    }
+
+    return subArray;
   }
 }
