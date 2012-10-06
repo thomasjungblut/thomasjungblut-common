@@ -111,13 +111,13 @@ public final class ArrayUtils {
    */
   public static int[] concat(int[]... arrays) {
     int length = 0;
-    for (int i = 0; i < arrays.length; i++)
-      length += arrays[i].length;
+    for (int[] array1 : arrays)
+      length += array1.length;
     int[] merged = new int[length];
     int index = 0;
-    for (int i = 0; i < arrays.length; i++) {
-      System.arraycopy(arrays[i], 0, merged, index, arrays[i].length);
-      index += arrays[i].length;
+    for (int[] array : arrays) {
+      System.arraycopy(array, 0, merged, index, array.length);
+      index += array.length;
     }
 
     return merged;
@@ -133,15 +133,15 @@ public final class ArrayUtils {
   public static <T> T[] concat(T[]... arrays) {
     if (arrays.length > 0) {
       int length = 0;
-      for (int i = 0; i < arrays.length; i++)
-        length += arrays[i].length;
+      for (T[] array1 : arrays)
+        length += array1.length;
 
       T[] merged = (T[]) Array.newInstance(arrays[0].getClass()
           .getComponentType(), length);
       int index = 0;
-      for (int i = 0; i < arrays.length; i++) {
-        System.arraycopy(arrays[i], 0, merged, index, arrays[i].length);
-        index += arrays[i].length;
+      for (T[] array : arrays) {
+        System.arraycopy(array, 0, merged, index, array.length);
+        index += array.length;
       }
 
       return merged;
@@ -236,7 +236,7 @@ public final class ArrayUtils {
     int[] arr = new int[array.length];
     for (int i = 0; i < array.length; i++) {
       Preconditions.checkNotNull(array[i]);
-      arr[i] = array[i].intValue();
+      arr[i] = array[i];
     }
     return arr;
   }
@@ -248,7 +248,7 @@ public final class ArrayUtils {
     long[] arr = new long[array.length];
     for (int i = 0; i < array.length; i++) {
       Preconditions.checkNotNull(array[i]);
-      arr[i] = array[i].longValue();
+      arr[i] = array[i];
     }
     return arr;
   }
@@ -260,7 +260,7 @@ public final class ArrayUtils {
     double[] arr = new double[array.length];
     for (int i = 0; i < array.length; i++) {
       Preconditions.checkNotNull(array[i]);
-      arr[i] = array[i].doubleValue();
+      arr[i] = array[i];
     }
     return arr;
   }
@@ -657,9 +657,9 @@ public final class ArrayUtils {
     for (int i = 0; i < 32; i++) {
       nPart[0] = 0;
       nPart[1] = 0;
-      for (int j = 0; j < a.length; j++) {
-        int n = (a[j] >> i) & 1;
-        part[n][nPart[n]++] = a[j];
+      for (int anA : a) {
+        int n = (anA >> i) & 1;
+        part[n][nPart[n]++] = anA;
       }
       System.arraycopy(part[0], 0, a, 0, nPart[0]);
       System.arraycopy(part[1], 0, a, nPart[0], nPart[1]);
@@ -834,14 +834,14 @@ public final class ArrayUtils {
     for (int j = start; j < ending; j++) {
       if (array[partitionArrayIndex][j] <= x) {
         i++;
-        for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
-          swap(array[arrayIndex], i, j);
+        for (int[] anArray : array) {
+          swap(anArray, i, j);
         }
       }
     }
     i++;
-    for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
-      swap(array[arrayIndex], i, ending);
+    for (int[] anArray : array) {
+      swap(anArray, i, ending);
     }
 
     return i;
@@ -920,14 +920,14 @@ public final class ArrayUtils {
     for (int j = start; j < ending; j++) {
       if (array[partitionArrayIndex][j].compareTo(x) < 0) {
         i++;
-        for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
-          swap(array[arrayIndex], i, j);
+        for (T[] anArray : array) {
+          swap(anArray, i, j);
         }
       }
     }
     i++;
-    for (int arrayIndex = 0; arrayIndex < array.length; arrayIndex++) {
-      swap(array[arrayIndex], i, ending);
+    for (T[] anArray : array) {
+      swap(anArray, i, ending);
     }
 
     return i;
@@ -958,8 +958,8 @@ public final class ArrayUtils {
    * work.
    */
   public static <T> ArrayList<T> deduplicate(T[] arr) {
-    ArrayList<T> list = new ArrayList<T>();
-    HashSet<T> set = new HashSet<T>();
+    ArrayList<T> list = new ArrayList<>();
+    HashSet<T> set = new HashSet<>();
 
     for (T a : arr) {
       if (set.add(a)) {
@@ -1117,9 +1117,7 @@ public final class ArrayUtils {
     T[] subArray = (T[]) Array.newInstance(array.getClass().getComponentType(),
         splitIndex - startIndex + 1);
 
-    for (int i = 0; i < subArray.length; i++) {
-      subArray[i] = array[startIndex + i];
-    }
+    System.arraycopy(array, startIndex + 0, subArray, 0, subArray.length);
 
     return subArray;
   }

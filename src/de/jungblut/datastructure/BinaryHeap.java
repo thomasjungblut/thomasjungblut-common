@@ -32,7 +32,7 @@ public final class BinaryHeap {
    */
   public BinaryHeap(HeapType heapType) {
     heap = new int[INITIAL_ITEMS];
-    this.minHeap = HeapType.MIN == heapType ? true : false;
+    this.minHeap = HeapType.MIN == heapType;
   }
 
   /**
@@ -40,7 +40,7 @@ public final class BinaryHeap {
    */
   public BinaryHeap(int initialSize, HeapType heapType) {
     heap = new int[initialSize];
-    this.minHeap = HeapType.MIN == heapType ? true : false;
+    this.minHeap = HeapType.MIN == heapType;
   }
 
   /**

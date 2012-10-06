@@ -92,8 +92,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   /**
    * Filters outlinks from a parsed page that NOT matches the given matcher.
    */
-  public static final HashSet<String> filter(HashSet<String> set,
-      Pattern matcher) {
+  public static HashSet<String> filter(HashSet<String> set, Pattern matcher) {
     if (matcher != null) {
       Iterator<String> iterator = set.iterator();
       while (iterator.hasNext()) {

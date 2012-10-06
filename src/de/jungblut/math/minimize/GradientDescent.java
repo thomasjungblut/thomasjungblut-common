@@ -94,11 +94,7 @@ public final class GradientDescent implements Minimizer {
     double last = lastCosts[0];
     boolean ascending = false;
     for (int i = 1; i < lastCosts.length; i++) {
-      if (last < lastCosts[i]) {
-        ascending = true;
-      } else {
-        ascending = false;
-      }
+      ascending = last < lastCosts[i];
       last = lastCosts[i];
     }
     return ascending;

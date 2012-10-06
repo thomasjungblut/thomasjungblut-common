@@ -19,12 +19,11 @@ import org.apache.hadoop.io.Text;
 public class SequenceFileResultWriter<T extends FetchResult> implements
     ResultWriter<T> {
 
-  private FileSystem fs;
   protected SequenceFile.Writer writer;
 
   @Override
   public void open(Configuration conf) throws IOException {
-    fs = FileSystem.get(conf);
+    FileSystem fs = FileSystem.get(conf);
     Path outputPath = getOutputPath();
     fs.delete(outputPath, true);
     writer = new SequenceFile.Writer(fs, conf, outputPath, Text.class,

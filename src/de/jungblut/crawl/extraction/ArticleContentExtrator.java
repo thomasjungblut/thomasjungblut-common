@@ -120,8 +120,8 @@ public final class ArticleContentExtrator implements
       InterruptedException, ExecutionException {
     String start = "http://www.spiegel.de/wissenschaft/natur/erbgut-entziffert-austern-haben-viele-anti-stress-gene-a-856902.html";
 
-    Crawler<ContentFetchResult> crawler = new SequentialCrawler<ContentFetchResult>(
-        1, new ArticleContentExtrator(),
+    Crawler<ContentFetchResult> crawler = new SequentialCrawler<>(1,
+        new ArticleContentExtrator(),
         new ConsoleResultWriter<ContentFetchResult>());
 
     crawler.process(start);

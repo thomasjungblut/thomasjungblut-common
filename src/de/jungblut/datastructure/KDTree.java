@@ -167,7 +167,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     PriorityQueue<VectorDistanceTuple<VALUE>> queue = new PriorityQueue<>(k);
     KDTreeNode current = root;
 
-    queue.add(new VectorDistanceTuple<VALUE>(current.keyVector, current.value,
+    queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
         measurer.measureDistance(current.keyVector, vec)));
     while (true) {
       if (queue.size() > k)
@@ -179,8 +179,8 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         break;
       } else {
         current = next;
-        queue.add(new VectorDistanceTuple<VALUE>(current.keyVector,
-            current.value, measurer.measureDistance(current.keyVector, vec)));
+        queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
+            measurer.measureDistance(current.keyVector, vec)));
       }
     }
 
@@ -227,7 +227,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
   private StringBuilder prettyPrintIternal(KDTreeNode node, StringBuilder sb,
       int depth) {
     if (node != null) {
-      sb.append("\n" + Strings.repeat("\t", depth));
+      sb.append("\n").append(Strings.repeat("\t", depth));
       sb.append(node.keyVector);
       prettyPrintIternal(node.left, sb, depth + 1);
       prettyPrintIternal(node.right, sb, depth + 1);

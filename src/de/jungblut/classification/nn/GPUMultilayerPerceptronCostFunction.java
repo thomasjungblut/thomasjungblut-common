@@ -81,9 +81,9 @@ public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
     // only calculate the regularization term if lambda is not 0
     double regularization = 0.0d;
     if (lambda != 0.0d) {
-      for (int i = 0; i < thetas.length; i++) {
-        regularization += (thetas[i].slice(0, thetas[i].getRowCount(), 1,
-            thetas[i].getColumnCount())).pow(2).sum();
+      for (DenseDoubleMatrix theta : thetas) {
+        regularization += (theta.slice(0, theta.getRowCount(), 1,
+            theta.getColumnCount())).pow(2).sum();
       }
       regularization = (lambda / (2.0d * m)) * regularization;
     }

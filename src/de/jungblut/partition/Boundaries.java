@@ -96,9 +96,7 @@ public class Boundaries {
       if (getClass() != obj.getClass())
         return false;
       Range other = (Range) obj;
-      if (end != other.end)
-        return false;
-      return start == other.start;
+      return end == other.end && start == other.start;
     }
 
     @Override

@@ -36,8 +36,6 @@ public final class Icf extends
   private boolean[] pivotSelected;
   private double[] diag1;
   private double[] diag2;
-  private int columns;
-  private int rows;
   private int p;
 
   private double[][] test_input = { { 9, 2, 6, 1 }, { 4, 8, 2, 4 },
@@ -60,8 +58,8 @@ public final class Icf extends
     procId = Arrays.binarySearch(bspPeer.getAllPeerNames(),
         bspPeer.getPeerName());
 
-    this.rows = 4;
-    this.columns = 4;
+    int rows = 4;
+    int columns = 4;
     this.p = 3;
     localRows = computeNumLocal(rows);
     input_matrix = new double[localRows][columns];
@@ -104,7 +102,7 @@ public final class Icf extends
       for (int i = 0; i < localRows; i++) {
         double tmp = diag1[i] - diag2[i];
         // System.out.println(tmp);
-        if (pivotSelected[i] == false && tmp > pivot_value) {
+        if (!pivotSelected[i] && tmp > pivot_value) {
           pivot_index = computeLocalToGlobal(i);
           pivot_value = tmp;
 
@@ -212,8 +210,8 @@ public final class Icf extends
         while ((vecMessage = (VectorWritable) bspPeer.getCurrentMessage()) != null) {
           header_row = vecMessage.getVector().toArray();
           System.out.println("Message received " + Arrays.toString(header_row));
-          for (int i = 0; i < header_row.length; i++) {
-            System.out.println("Header Row " + header_row[i]);
+          for (double aHeader_row : header_row) {
+            System.out.println("Header Row " + aHeader_row);
           }
         }
       }

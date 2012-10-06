@@ -70,22 +70,18 @@ public final class GnuPlot {
       exec += ", '" + TMP_PATH + "gnuplot_" + i + ".in' with points";
     }
 
-    Scanner scan = null;
-    try {
+    try (Scanner scan = new Scanner(System.in)) {
       Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
           exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
           StandardOpenOption.TRUNCATE_EXISTING);
       Process exec2 = Runtime.getRuntime().exec(
           new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
-      scan = new Scanner(System.in);
       scan.nextLine();
       exec2.destroy();
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      if (scan != null)
-        scan.close();
     }
+
   }
 
   public static void drawPoints(List<DenseDoubleVector> points) {
@@ -101,22 +97,18 @@ public final class GnuPlot {
     String exec = "set xzeroaxis; set yzeroaxis ; plot '" + TMP_PATH
         + "gnuplot.in' with points";
 
-    Scanner scan = null;
-    try {
+    try (Scanner scan = new Scanner(System.in)) {
       Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
           exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
           StandardOpenOption.TRUNCATE_EXISTING);
       Process exec2 = Runtime.getRuntime().exec(
           new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
-      scan = new Scanner(System.in);
       scan.nextLine();
       exec2.destroy();
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      if (scan != null)
-        scan.close();
     }
+
   }
 
   public static void drawPoints(DenseDoubleMatrix x, DoubleVector y,
@@ -142,22 +134,18 @@ public final class GnuPlot {
     if (functionFile != null) {
       exec += ",'" + functionFile + "' with lines;";
     }
-    Scanner scan = null;
-    try {
+    try (Scanner scan = new Scanner(System.in)) {
       Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
           exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
           StandardOpenOption.TRUNCATE_EXISTING);
       Process exec2 = Runtime.getRuntime().exec(
           new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
-      scan = new Scanner(System.in);
       scan.nextLine();
       exec2.destroy();
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      if (scan != null)
-        scan.close();
     }
+
   }
 
   public static void drawPointsPerIndex(DenseDoubleMatrix x, DoubleVector y,
@@ -186,22 +174,18 @@ public final class GnuPlot {
     if (functionFile != null) {
       exec += ",'" + functionFile + "' with lines;";
     }
-    Scanner scan = null;
-    try {
+    try (Scanner scan = new Scanner(System.in)) {
       Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
           exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
           StandardOpenOption.TRUNCATE_EXISTING);
       Process exec2 = Runtime.getRuntime().exec(
           new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
-      scan = new Scanner(System.in);
       scan.nextLine();
       exec2.destroy();
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      if (scan != null)
-        scan.close();
     }
+
   }
 
   public static void drawPointsPerIndexWithErrors(DenseDoubleMatrix x,
@@ -243,22 +227,18 @@ public final class GnuPlot {
     if (functionFile != null) {
       exec += ",'" + functionFile + "' with lines;";
     }
-    Scanner scan = null;
-    try {
+    try (Scanner scan = new Scanner(System.in)) {
       Files.write(FileSystems.getDefault().getPath(TMP_PATH + "exec.gp"),
           exec.getBytes(), StandardOpenOption.CREATE, StandardOpenOption.WRITE,
           StandardOpenOption.TRUNCATE_EXISTING);
       Process exec2 = Runtime.getRuntime().exec(
           new String[] { GNUPLOT_PATH, "-p", TMP_PATH + "exec.gp" });
-      scan = new Scanner(System.in);
       scan.nextLine();
       exec2.destroy();
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      if (scan != null)
-        scan.close();
     }
+
   }
 
   public static String modelToGNUPlot(DoubleVector p) {

@@ -85,9 +85,8 @@ public final class HtmlExtrator implements Extractor<HtmlFetchResult> {
       InterruptedException, ExecutionException {
     String start = "https://news.google.de/";
 
-    Crawler<HtmlFetchResult> crawler = new MultithreadedCrawler<HtmlFetchResult>(
-        10000, new HtmlExtrator(),
-        new SequenceFileResultWriter<HtmlFetchResult>() {
+    Crawler<HtmlFetchResult> crawler = new MultithreadedCrawler<>(10000,
+        new HtmlExtrator(), new SequenceFileResultWriter<HtmlFetchResult>() {
           @Override
           public void write(HtmlFetchResult result) throws IOException {
             writer.append(new Text(result.getUrl()), new Text(result.html));

@@ -75,8 +75,7 @@ public final class IterativeSimilarityAggregation {
     TIntArrayList list = new TIntArrayList();
 
     // the seed tokens must be defined in the term nodes to make this work
-    for (int i = 0; i < seedTokens.length; i++) {
-      String token = seedTokens[i];
+    for (String token : seedTokens) {
       int find = ArrayUtils.find(termNodes, token);
       if (find >= 0) {
         list.add(find);
@@ -176,10 +175,10 @@ public final class IterativeSimilarityAggregation {
 
     // filter these tokens
     TIntArrayList list = new TIntArrayList();
-    for (int i = 0; i < sortedIndices.length; i++) {
-      final double val = pRankedTokens.get(sortedIndices[i]);
+    for (int sortedIndice : sortedIndices) {
+      final double val = pRankedTokens.get(sortedIndice);
       if (val > similarityThreshold) {
-        list.add(sortedIndices[i]);
+        list.add(sortedIndice);
       } else {
         break;
       }
@@ -194,8 +193,6 @@ public final class IterativeSimilarityAggregation {
    * 
    * @param seedSet S a subset of U, this are the indices where to find the
    *          items in the similarity matrix.
-   * @param weightmatrix of the given bipartite graph
-   * @param termsLength the number of terms on the left side of the graph.
    * @return a vector of length of the universe of entities. Which index
    *         encapsulates the relevance described in the paper as
    *         S_rel(TERM_AT_INDEX_i,S)
