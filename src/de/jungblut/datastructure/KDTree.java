@@ -31,7 +31,6 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
 
   final class KDTreeNode {
     final int splitDimension;
-    // TODO if range queries are not a problem, we can replace the whole
     // keyvector by the value in the split dimension
     final DoubleVector keyVector;
     final VALUE value;
@@ -134,16 +133,30 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
           && strictHigher(lower, next.keyVector))
         list.add(next.keyVector);
 
-      // TODO check more detailed if we need to recurse into the subtree
-      if (next.left != null) {
+      if (checkSubtree(lower, upper, next.left)) {
         toVisit.add(next.left);
       }
-      if (next.right != null) {
+      if (next.right != null && checkSubtree(lower, upper, next.right)) {
         toVisit.add(next.right);
       }
     }
 
     return list;
+  }
+
+  /**
+   * checks if the given node is inside the range based on the split.
+   */
+  private boolean checkSubtree(DoubleVector lower, DoubleVector upper,
+      KDTreeNode next) {
+    if (next != null) {
+      boolean greater = lower.get(next.splitDimension) >= next.keyVector
+          .get(next.splitDimension);
+      boolean lower2 = upper.get(next.splitDimension) >= next.keyVector
+          .get(next.splitDimension);
+      return greater || lower2;
+    }
+    return false;
   }
 
   /**

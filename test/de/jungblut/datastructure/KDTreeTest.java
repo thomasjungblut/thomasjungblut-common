@@ -94,6 +94,22 @@ public class KDTreeTest extends TestCase {
     assertEquals(4, rangeQuery.size());
     for (int i = 2; i < array.length; i++)
       assertEquals(array[i], rangeQuery.get(i - 2));
+
+    array = new DenseDoubleVector[] {
+        new DenseDoubleVector(new double[] { 2 }),
+        new DenseDoubleVector(new double[] { 8 }),
+        new DenseDoubleVector(new double[] { 4 }),
+        new DenseDoubleVector(new double[] { 3 }),
+        new DenseDoubleVector(new double[] { 6 }),
+        new DenseDoubleVector(new double[] { 5 }) };
+
+    tree = new KDTree<>();
+    for (DenseDoubleVector v : array)
+      tree.add(v, null);
+
+    rangeQuery = tree.rangeQuery(new DenseDoubleVector(new double[] { 4 }),
+        new DenseDoubleVector(new double[] { 8 }));
+    assertEquals(4, rangeQuery.size());
   }
 
   @Test
