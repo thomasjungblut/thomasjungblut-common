@@ -8,6 +8,8 @@ package de.jungblut.datastructure;
  */
 public final class BinaryHeap {
 
+  private static final int INITIAL_ITEMS = 10;
+
   static enum HeapType {
     MIN, MAX
   }
@@ -21,7 +23,7 @@ public final class BinaryHeap {
    * Constructs a max heap with 10 elements.
    */
   public BinaryHeap() {
-    heap = new int[10];
+    heap = new int[INITIAL_ITEMS];
     minHeap = false;
   }
 
@@ -29,7 +31,7 @@ public final class BinaryHeap {
    * Constructs a heap with 10 elements.
    */
   public BinaryHeap(HeapType heapType) {
-    heap = new int[10];
+    heap = new int[INITIAL_ITEMS];
     this.minHeap = HeapType.MIN == heapType ? true : false;
   }
 
@@ -49,19 +51,53 @@ public final class BinaryHeap {
     minHeap = false;
   }
 
+  /**
+   * Adds an integer to the heap.
+   */
   public void add(int a) {
-    if (size == 0) {
-      heap[0] = a;
-    } else {
-      ensureSize(size + 1);
-      heap[size] = a;
-      upHeap(size);
-    }
-
+    ensureSize(size + 1);
+    heap[size] = a;
+    upHeap(size);
     size++;
   }
 
-  public void upHeap(int pIndex) {
+  /**
+   * Get's the head of the heap and removes it. If empty it will return
+   * {@link Integer#MAX_VALUE} in case of a min heap or
+   * {@link Integer#MIN_VALUE} in a max heap. So check the size before removing.
+   */
+  public int pop() {
+    int head = heap[0];
+    remove(0);
+
+    return head;
+  }
+
+  /**
+   * @return the current size of the heap
+   */
+  public int size() {
+    return size;
+  }
+
+  // remove the index by setting it to max/min of the integer and down the heap.
+  private void remove(int index) {
+    heap[index] = minHeap ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+    downHeap();
+    size--;
+  }
+
+  // check if we exceeded our size yet
+  private void ensureSize(int size) {
+    if (size > heap.length) {
+      grow();
+    }
+  }
+
+  /**
+   * Ups the heap index after an inserts.
+   */
+  private void upHeap(int pIndex) {
     int index = pIndex;
     boolean finished = false;
     while (!finished) {
@@ -69,7 +105,7 @@ public final class BinaryHeap {
       final boolean greater = minHeap ? heap[index] < heap[parentIndex]
           : heap[index] > heap[parentIndex];
       if (greater) {
-        swap(index, parentIndex);
+        ArrayUtils.swap(heap, index, parentIndex);
         index = parentIndex;
       } else {
         finished = true;
@@ -80,35 +116,12 @@ public final class BinaryHeap {
     }
   }
 
-  public int size() {
-    return size;
-  }
-
-  public int get(int index) {
-    return heap[index];
-  }
-
-  private void swap(int index1, int index2) {
-    int temp = heap[index1];
-    heap[index1] = heap[index2];
-    heap[index2] = temp;
-  }
-
-  private void ensureSize(int size) {
-    if (size > heap.length) {
-      grow();
-    }
-  }
-
-  public void remove(int index) {
-    heap[index] = 0;
-    size--;
-  }
-
   private int swapLowestWithRootAndRemove() {
     int root = heap[0];
-    swap(0, size - 1);
-    remove(size - 1);
+    ArrayUtils.swap(heap, 0, size - 1);
+    heap[size - 1] = minHeap ? Integer.MAX_VALUE : Integer.MIN_VALUE;
+    size--;
+    downHeap();
     return root;
   }
 
@@ -117,6 +130,32 @@ public final class BinaryHeap {
     int[] temp = new int[heap.length * 2];
     System.arraycopy(heap, 0, temp, 0, heap.length);
     heap = temp;
+  }
+
+  private void downHeap() {
+    int index = 0;
+    boolean finished = false;
+    while (!finished) {
+      int children = getIndexOfLeftChild(index);
+      if (children > heap.length)
+        break;
+
+      if (minHeap ? heap[children] > heap[children + 1]
+          : heap[children] < heap[children + 1]) {
+        children++;
+      }
+
+      if (minHeap ? heap[index] > heap[children] : heap[index] < heap[children]) {
+        ArrayUtils.swap(heap, index, children);
+        index = children;
+      } else {
+        finished = true;
+      }
+
+      if (children == size) {
+        finished = true;
+      }
+    }
   }
 
   private static int getIndexOfParent(int i) {
@@ -143,33 +182,9 @@ public final class BinaryHeap {
 
       for (int i = 0; i < arr.length; i++) {
         temp[arr.length - i - 1] = heap.swapLowestWithRootAndRemove();
-        downHeap(heap);
       }
 
       return temp;
-    }
-
-    private static void downHeap(BinaryHeap heapClass) {
-      int index = 0;
-      boolean finished = false;
-      while (!finished) {
-        int children = BinaryHeap.getIndexOfLeftChild(index);
-
-        if (heapClass.heap[children] < heapClass.heap[children + 1]) {
-          children++;
-        }
-
-        if (heapClass.heap[index] < heapClass.heap[children]) {
-          heapClass.swap(index, children);
-          index = children;
-        } else {
-          finished = true;
-        }
-
-        if (children == heapClass.size) {
-          finished = true;
-        }
-      }
     }
 
   }

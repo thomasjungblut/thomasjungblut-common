@@ -15,15 +15,19 @@ public class BinaryHeapTest extends TestCase {
     BinaryHeap heap = new BinaryHeap();
     fillHeap(heap);
 
-    assertEquals(6184, heap.get(0));
-    assertEquals(13, heap.size());
+    assertEquals(6184, heap.pop());
+    assertEquals(12, heap.size());
+    assertEquals(723, heap.pop());
+    assertEquals(11, heap.size());
 
     // min heap
     heap = new BinaryHeap(HeapType.MIN);
     fillHeap(heap);
 
-    assertEquals(1, heap.get(0));
-    assertEquals(13, heap.size());
+    assertEquals(1, heap.pop());
+    assertEquals(12, heap.size());
+    assertEquals(2, heap.pop());
+    assertEquals(11, heap.size());
 
   }
 
