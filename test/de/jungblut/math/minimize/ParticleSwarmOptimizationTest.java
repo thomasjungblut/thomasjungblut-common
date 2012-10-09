@@ -33,4 +33,30 @@ public class ParticleSwarmOptimizationTest extends TestCase {
     assertTrue(minimizeFunction.get(1) >= 0 && minimizeFunction.get(1) < 1E-5);
   }
 
+  @Test
+  public void testParticleSwarmOptimizationNonConvex() {
+
+    DoubleVector start = new DenseDoubleVector(new double[] { 1, 3 });
+
+    CostFunction inlineFunction = new CostFunction() {
+      @Override
+      public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+        double x = input.get(0);
+        double y = input.get(1);
+        // that's the rosenbrock function
+        double cost = Math.pow((1 - x), 2) + 100 * Math.pow((y - x * x), 2);
+
+        return new Tuple<Double, DoubleVector>(cost, null);
+      }
+    };
+
+    DoubleVector minimizeFunction = ParticleSwarmOptimization.minimizeFunction(
+        inlineFunction, start, 1000, 2.8, 0.4, 0.8, 65, false);
+
+    assertTrue(minimizeFunction.get(0) >= 0.95
+        && minimizeFunction.get(0) < 1.05);
+    assertTrue(minimizeFunction.get(1) >= 0.95
+        && minimizeFunction.get(1) < 1.05);
+  }
+
 }
