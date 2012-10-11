@@ -124,28 +124,20 @@ public final class MultinomialNaiveBayesClassifier {
    * This method prints a confusion matrix along with several metrics like
    * accuracy. It prints to STDOUT if verbose.
    * 
-   * @return returns accuracy and quadratic mean kappa in this order in the
-   *         tuple.
+   * @return returns accuracy.
    */
-  public Tuple<Double, Double> evaluateModel(
-      List<DoubleVector> testSetInputVector, DenseIntVector testSetPrediction,
-      String[] classNames, boolean verbose) {
+  public double evaluateModel(List<DoubleVector> testSetInputVector,
+      DenseIntVector testSetPrediction, String[] classNames, boolean verbose) {
 
     // we add two columns to the confusion matrix to add false sums and overall
     // sums to the rows
     final int columnLength = classProbability.getLength() + 2;
     int[][] confusionMatrix = new int[classProbability.getLength()][columnLength];
-    // here we have two raters, the algorithm vs the real outcome
-    int[][] raterHistogram = new int[2][classProbability.getLength()];
     int truePositives = 0;
     int index = 0;
     for (DoubleVector v : testSetInputVector) {
       int classifiedClass = this.classify(v);
       int realClass = testSetPrediction.get(index);
-
-      raterHistogram[0][realClass]++;
-      raterHistogram[1][classifiedClass]++;
-
       if (classifiedClass == realClass) {
         truePositives++;
       } else {
@@ -165,25 +157,7 @@ public final class MultinomialNaiveBayesClassifier {
           + (accuracy * 100) + "%");
     }
 
-    // calculate the quadratic weighted kappa
-    final int numRatings = classProbability.getLength();
-    final int length = testSetInputVector.size();
-
-    double numerator = 0.0d;
-    double denominator = 0.0d;
-    for (int i = 0; i < numRatings; i++) {
-      for (int j = 0; j < numRatings; j++) {
-        double expected = raterHistogram[0][i] * raterHistogram[1][j]
-            / (double) length;
-        double d = Math.pow(i - j, 2.0) / Math.pow(length - 1, 2.0);
-        numerator += d * confusionMatrix[i][j] / length;
-        denominator += d * expected / length;
-
-      }
-    }
-    double kappa = 1.0d - numerator / denominator;
     if (verbose) {
-      System.out.println("Quadratic weighted Kappa: " + kappa);
       System.out.println("\nConfusion matrix:\n");
 
       for (int i = 0; i < classProbability.getLength(); i++) {
@@ -200,6 +174,6 @@ public final class MultinomialNaiveBayesClassifier {
         System.out.println(" <- " + i + " classfied as " + clz);
       }
     }
-    return new Tuple<>(accuracy, kappa);
+    return accuracy;
   }
 }
