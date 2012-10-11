@@ -90,6 +90,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
   public void add(DoubleVector vec, VALUE value) {
     if (root != null) {
       KDTreeNode current = root;
+      int level = 0;
       boolean right = false;
       // traverse the tree to the free spot in dimension
       while (true) {
@@ -101,17 +102,17 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         } else {
           current = next;
         }
+        level++;
       }
       // do the real insert
       // note that current in this case is the parent
       if (right) {
-        current.right = new KDTreeNode(median(vec), vec, value);
+        current.right = new KDTreeNode(median(vec, level), vec, value);
       } else {
-        current.left = new KDTreeNode(median(vec), vec, value);
+        current.left = new KDTreeNode(median(vec, level), vec, value);
       }
-
     } else {
-      root = new KDTreeNode(median(vec), vec, value);
+      root = new KDTreeNode(median(vec, 0), vec, value);
     }
   }
 
@@ -238,7 +239,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
   /**
    * @return the index of the median of the vector.
    */
-  static int median(DoubleVector v) {
+  static int median(DoubleVector v, int insertLevel) {
     if (v.getDimension() == 1) {
       return 0;
     }
@@ -249,11 +250,8 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       } else if (v.getDimension() == 3) {
         return medianThreeDimensions(v, 0, 1, 2);
       } else {
-        // TODO this is pretty much wrong because the array is internally
-        // mutated and the returned index is based on that.
-        // however the result is astonishing good.
-        return ArrayUtils.quickSelect(ArrayUtils.copy(v.toArray()),
-            v.getDimension() / 2);
+        // fall back to modulo on larger vectors
+        return (insertLevel + 1) % v.getDimension();
       }
     } else {
       // sparse implementation, basically it finds median on the not zero

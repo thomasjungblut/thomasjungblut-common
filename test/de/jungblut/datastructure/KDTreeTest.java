@@ -60,19 +60,21 @@ public class KDTreeTest extends TestCase {
 
   @Test
   public void testMedian() throws Exception {
-    assertEquals(1, KDTree.median(new DenseDoubleVector(new double[] { 2, 3 })));
-    assertEquals(0, KDTree.median(new DenseDoubleVector(new double[] { 9, 6 })));
-    assertEquals(2,
-        KDTree.median(new DenseDoubleVector(new double[] { 9, 6, 8 })));
     assertEquals(1,
-        KDTree.median(new DenseDoubleVector(new double[] { 9, 8, 7 })));
+        KDTree.median(new DenseDoubleVector(new double[] { 2, 3 }), 0));
     assertEquals(0,
-        KDTree.median(new DenseDoubleVector(new double[] { 8, 9, 6 })));
+        KDTree.median(new DenseDoubleVector(new double[] { 9, 6 }), 0));
+    assertEquals(2,
+        KDTree.median(new DenseDoubleVector(new double[] { 9, 6, 8 }), 0));
+    assertEquals(1,
+        KDTree.median(new DenseDoubleVector(new double[] { 9, 8, 7 }), 0));
+    assertEquals(0,
+        KDTree.median(new DenseDoubleVector(new double[] { 8, 9, 6 }), 0));
 
     assertEquals(
-        3,
+        1,
         KDTree.median(new DenseDoubleVector(new double[] { 8, 9, 6, 19, 25, 2,
-            3, 4 })));
+            3, 4 }), 8));
   }
 
   @Test
@@ -175,20 +177,20 @@ public class KDTreeTest extends TestCase {
   @Test
   public void testMedianSparse() throws Exception {
     assertEquals(1,
-        KDTree.median(new SparseDoubleVector(new double[] { 2, 3 })));
+        KDTree.median(new SparseDoubleVector(new double[] { 2, 3 }), 0));
     assertEquals(0,
-        KDTree.median(new SparseDoubleVector(new double[] { 9, 6 })));
+        KDTree.median(new SparseDoubleVector(new double[] { 9, 6 }), 0));
     assertEquals(2,
-        KDTree.median(new SparseDoubleVector(new double[] { 9, 6, 8 })));
+        KDTree.median(new SparseDoubleVector(new double[] { 9, 6, 8 }), 0));
     assertEquals(1,
-        KDTree.median(new SparseDoubleVector(new double[] { 9, 8, 7 })));
+        KDTree.median(new SparseDoubleVector(new double[] { 9, 8, 7 }), 0));
     assertEquals(0,
-        KDTree.median(new SparseDoubleVector(new double[] { 8, 9, 6 })));
+        KDTree.median(new SparseDoubleVector(new double[] { 8, 9, 6 }), 0));
 
     assertEquals(
         7,
         KDTree.median(new SparseDoubleVector(new double[] { 8, 9, 6, 19, 25, 2,
-            3, 4 })));
+            3, 4 }), 0));
   }
 
 }
