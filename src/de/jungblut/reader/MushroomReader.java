@@ -28,7 +28,7 @@ public final class MushroomReader {
    * @return a tuple, on first dimension are the features, on the second are the
    *         outcomes (0 or 1 in the first element of a vector)
    */
-  public static Tuple<DoubleVector[], DoubleVector[]> readMushroomDataset() {
+  public static Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset() {
     List<DoubleVector> list = new ArrayList<>();
     List<String[]> buffer = new ArrayList<>();
     HashMultimap<Integer, String> multiMap = HashMultimap.create();
@@ -81,12 +81,12 @@ public final class MushroomReader {
     }
 
     DoubleVector[] features = new DoubleVector[list.size()];
-    DoubleVector[] outcome = new DoubleVector[list.size()];
+    DenseDoubleVector[] outcome = new DenseDoubleVector[list.size()];
     for (int i = 0; i < list.size(); i++) {
       DoubleVector doubleVector = list.get(i);
       features[i] = doubleVector.slice(doubleVector.getLength() - 1);
-      outcome[i] = doubleVector.slice(doubleVector.getLength() - 1,
-          doubleVector.getLength());
+      outcome[i] = (DenseDoubleVector) doubleVector.slice(
+          doubleVector.getLength() - 1, doubleVector.getLength());
     }
 
     return new Tuple<>(features, outcome);

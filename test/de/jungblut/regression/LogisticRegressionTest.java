@@ -10,6 +10,8 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import de.jungblut.classification.regression.LogisticRegression;
+import de.jungblut.classification.regression.LogisticRegressionCostFunction;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -57,8 +59,9 @@ public class LogisticRegressionTest extends TestCase {
 
   @Test
   public void testPredictions() {
-    LogisticRegression reg = new LogisticRegression(x, y, 1.0d);
-    reg.trainModel(new Fmincg(), 1000, false);
+    LogisticRegression reg = new LogisticRegression(1.0d, new Fmincg(), 1000,
+        false);
+    reg.train(x, y);
     DoubleVector predict = reg.predict(x, 0.5d);
 
     double wrongPredictions = predict.subtract(y).abs().sum();

@@ -7,6 +7,7 @@ import org.junit.Test;
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.distance.ManhattanDistance;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.reader.MushroomReader;
 
@@ -14,10 +15,10 @@ public class KNearestNeighboursTest extends TestCase {
 
   @Test
   public void testKNN() throws Exception {
-    Tuple<DoubleVector[], DoubleVector[]> mushroom = MushroomReader
+    Tuple<DoubleVector[], DenseDoubleVector[]> mushroom = MushroomReader
         .readMushroomDataset();
     DoubleVector[] fullFeatures = mushroom.getFirst();
-    DoubleVector[] fullOutcome = mushroom.getSecond();
+    DenseDoubleVector[] fullOutcome = mushroom.getSecond();
 
     DoubleVector[] testFeatures = ArrayUtils.subArray(fullFeatures,
         fullFeatures.length - 100, fullFeatures.length - 1);
@@ -28,15 +29,16 @@ public class KNearestNeighboursTest extends TestCase {
     DoubleVector[] trainFeatures = ArrayUtils.subArray(fullFeatures,
         fullFeatures.length - 100);
 
-    DoubleVector[] trainOutcome = ArrayUtils.subArray(fullOutcome,
+    DenseDoubleVector[] trainOutcome = ArrayUtils.subArray(fullOutcome,
         fullOutcome.length - 100);
 
-    KNearestNeighbours knn = new KNearestNeighbours(trainFeatures,
-        trainOutcome, new ManhattanDistance(), 2);
+    KNearestNeighbours knn = new KNearestNeighbours(new ManhattanDistance(), 2,
+        4);
+    knn.train(trainFeatures, trainOutcome);
 
     int correct = 0;
     for (int i = 0; i < testFeatures.length; i++) {
-      int predict = knn.predict(testFeatures[i], 4);
+      int predict = knn.getPredictedClass(testFeatures[i]);
       if (predict == ((int) testOutcome[i].get(0))) {
         correct++;
       }

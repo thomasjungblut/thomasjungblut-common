@@ -6,6 +6,10 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import com.google.common.base.Preconditions;
+
+import de.jungblut.classification.AbstractClassifier;
+import de.jungblut.classification.Classifier;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -27,10 +31,51 @@ import de.jungblut.writable.VectorWritable;
  * @author thomas.jungblut
  * 
  */
-public final class MultilayerPerceptron {
+public final class MultilayerPerceptron extends AbstractClassifier {
+
+  /**
+   * Train normally on the CPU or on the GPU via CUDA?
+   */
+  public static enum TrainingType {
+    CPU, GPU
+  }
+
+  /**
+   * Configuration for training a neural net through the {@link Classifier}
+   * interfaces.
+   * 
+   */
+  public static final class TrainingConfiguration {
+    TrainingType type;
+    Minimizer minimizer;
+    int maxIterations;
+    double lambda;
+    boolean verbose;
+
+    public TrainingConfiguration(Minimizer minimizer, int maxIterations,
+        double lambda, boolean verbose) {
+      this.type = TrainingType.CPU;
+      this.minimizer = minimizer;
+      this.maxIterations = maxIterations;
+      this.lambda = lambda;
+      this.verbose = verbose;
+    }
+
+    public TrainingConfiguration(TrainingType type, Minimizer minimizer,
+        int maxIterations, double lambda, boolean verbose) {
+      this.type = type;
+      this.minimizer = minimizer;
+      this.maxIterations = maxIterations;
+      this.lambda = lambda;
+      this.verbose = verbose;
+    }
+
+  }
 
   private final WeightMatrix[] weights;
   private final Layer[] layers;
+
+  private TrainingConfiguration conf;
 
   /**
    * Multilayer perceptron initializer by using an int[] to describe the number
@@ -52,6 +97,21 @@ public final class MultilayerPerceptron {
   }
 
   /**
+   * Multilayer perceptron initializer by using an int[] to describe the number
+   * of units per layer.<br/>
+   * For example if you want to solve the XOR problem by 2 input neurons, a
+   * hidden layer with 3 neurons and an output layer with one neuron, you can
+   * feed this contructor with int[]{2,3,1}.
+   * 
+   * @param conf the configuration to train with through the {@link Classifier}
+   *          interface.
+   */
+  public MultilayerPerceptron(int[] layer, TrainingConfiguration conf) {
+    this(layer);
+    this.conf = conf;
+  }
+
+  /**
    * Custom serialization constructor for already trained networks.
    */
   public MultilayerPerceptron(Layer[] layers, WeightMatrix[] weights) {
@@ -62,6 +122,7 @@ public final class MultilayerPerceptron {
   /**
    * Predicts the outcome of the given input by doing a forward pass.
    */
+  @Override
   public DenseDoubleVector predict(DoubleVector xi) {
     layers[0].setActivations(xi);
 
@@ -70,6 +131,22 @@ public final class MultilayerPerceptron {
     }
 
     return layers[layers.length - 1].getActivations();
+  }
+
+  @Override
+  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+    Preconditions
+        .checkNotNull(
+            conf,
+            "Configuration shouldn't be null here, have you used the correct constructor to provide this configuration?");
+
+    if (conf.type == TrainingType.CPU) {
+      train(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
+          conf.minimizer, conf.maxIterations, conf.lambda, conf.verbose);
+    } else {
+      trainGPU(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
+          conf.minimizer, conf.maxIterations, conf.lambda, conf.verbose);
+    }
   }
 
   /**
@@ -89,59 +166,6 @@ public final class MultilayerPerceptron {
     }
 
     return activations;
-  }
-
-  /**
-   * At the beginning of each batch forward propagation we should reset the
-   * gradients.
-   */
-  private void resetGradients() {
-    // reset all gradients / derivatives
-    for (WeightMatrix weight : weights) {
-      weight.resetDerivatives();
-    }
-  }
-
-  /**
-   * Do a forward step and calculate the difference between the outcome and the
-   * prediction.
-   */
-  private DoubleVector forwardStep(DoubleVector x, DoubleVector outcome) {
-    DenseDoubleVector prediction = predict(x);
-    return prediction.subtract(outcome);
-  }
-
-  /**
-   * Do a backward step by the given error in the last layer.
-   */
-  private void backwardStep(DoubleVector errorLastLayer) {
-    // set error of last layer and then use backward propagation the calculate
-    // the errors of the other layers
-    // the first layer can be left out, cause the input error is not wrong ;)
-    layers[layers.length - 1].setErrors(errorLastLayer);
-    for (int k = weights.length - 1; k > 0; k--) {
-      weights[k].backwardError();
-    }
-
-    // based on the errors we can now calculate the partial derivatives for all
-    // layers and add them to the
-    // internal matrix
-    for (WeightMatrix weight : weights) {
-      weight.addDerivativesFromError();
-    }
-  }
-
-  /**
-   * After a full forward and backward step we can adjust the weights by
-   * normalizing the via the learningrate and lambda. Here we also need the
-   * number of training examples seen.<br/>
-   */
-  private void adjustWeights(int numTrainingExamples, double learningRate,
-      double lambda) {
-    // adjust weights using the given learning rate
-    for (WeightMatrix weight : weights) {
-      weight.updateWeights(numTrainingExamples, learningRate, lambda);
-    }
   }
 
   /**
@@ -275,6 +299,59 @@ public final class MultilayerPerceptron {
 
   public Layer[] getLayers() {
     return layers;
+  }
+
+  /**
+   * At the beginning of each batch forward propagation we should reset the
+   * gradients.
+   */
+  private void resetGradients() {
+    // reset all gradients / derivatives
+    for (WeightMatrix weight : weights) {
+      weight.resetDerivatives();
+    }
+  }
+
+  /**
+   * Do a forward step and calculate the difference between the outcome and the
+   * prediction.
+   */
+  private DoubleVector forwardStep(DoubleVector x, DoubleVector outcome) {
+    DenseDoubleVector prediction = predict(x);
+    return prediction.subtract(outcome);
+  }
+
+  /**
+   * Do a backward step by the given error in the last layer.
+   */
+  private void backwardStep(DoubleVector errorLastLayer) {
+    // set error of last layer and then use backward propagation the calculate
+    // the errors of the other layers
+    // the first layer can be left out, cause the input error is not wrong ;)
+    layers[layers.length - 1].setErrors(errorLastLayer);
+    for (int k = weights.length - 1; k > 0; k--) {
+      weights[k].backwardError();
+    }
+
+    // based on the errors we can now calculate the partial derivatives for all
+    // layers and add them to the
+    // internal matrix
+    for (WeightMatrix weight : weights) {
+      weight.addDerivativesFromError();
+    }
+  }
+
+  /**
+   * After a full forward and backward step we can adjust the weights by
+   * normalizing the via the learningrate and lambda. Here we also need the
+   * number of training examples seen.<br/>
+   */
+  private void adjustWeights(int numTrainingExamples, double learningRate,
+      double lambda) {
+    // adjust weights using the given learning rate
+    for (WeightMatrix weight : weights) {
+      weight.updateWeights(numTrainingExamples, learningRate, lambda);
+    }
   }
 
   /**

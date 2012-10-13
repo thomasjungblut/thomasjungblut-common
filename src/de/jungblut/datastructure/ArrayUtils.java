@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Random;
 
 import com.google.common.base.Preconditions;
 
@@ -1121,4 +1122,52 @@ public final class ArrayUtils {
 
     return subArray;
   }
+
+  /**
+   * Shuffles the given array.
+   * 
+   * @return mutated parameter array that was shuffled beforehand.
+   */
+  public static <T> T[] shuffle(T[] array) {
+    return shuffle(array, new Random());
+  }
+
+  /**
+   * Shuffles the given array with the given random function.
+   * 
+   * @return mutated parameter array that was shuffled beforehand.
+   */
+  public static <T> T[] shuffle(T[] array, Random rnd) {
+    for (int i = array.length; i > 1; i--)
+      swap(array, i - 1, rnd.nextInt(i));
+    return array;
+  }
+
+  /**
+   * Shuffles the given array.
+   * 
+   * @return mutated parameter array that was shuffled beforehand.
+   */
+  @SafeVarargs
+  public static <T> T[] multiShuffle(T[] array, T[]... additions) {
+    return multiShuffle(array, new Random(), additions);
+  }
+
+  /**
+   * Shuffles the given array with the given random function.
+   * 
+   * @return mutated parameter array that was shuffled beforehand.
+   */
+  @SafeVarargs
+  public static <T> T[] multiShuffle(T[] array, Random rnd, T[]... additions) {
+    for (int i = array.length; i > 1; i--) {
+      final int swapIndex = rnd.nextInt(i);
+      swap(array, i - 1, swapIndex);
+      for (T[] arr : additions) {
+        swap(arr, i - 1, swapIndex);
+      }
+    }
+    return array;
+  }
+
 }

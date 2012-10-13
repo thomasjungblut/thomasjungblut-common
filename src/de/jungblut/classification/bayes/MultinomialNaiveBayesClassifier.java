@@ -1,8 +1,10 @@
 package de.jungblut.classification.bayes;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
@@ -17,10 +19,20 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public final class MultinomialNaiveBayesClassifier {
+public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
 
   private DenseDoubleMatrix probabilityMatrix;
   private DenseDoubleVector classProbability;
+
+  @Override
+  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+    int[] classes = new int[outcome.length];
+    for (int i = 0; i < outcome.length; i++) {
+      classes[i] = outcome[i].maxIndex();
+    }
+    train(new SparseDoubleColumnMatrix(Arrays.asList(features)),
+        new DenseIntVector(classes));
+  }
 
   public final Tuple<DenseDoubleMatrix, DenseDoubleVector> train(
       SparseDoubleColumnMatrix documentWordCounts, DenseIntVector prediction) {
@@ -77,6 +89,11 @@ public final class MultinomialNaiveBayesClassifier {
    */
   public final int classify(DoubleVector document) {
     return getProbabilityDistribution(document).maxIndex();
+  }
+
+  @Override
+  public DoubleVector predict(DoubleVector features) {
+    return getProbabilityDistribution(features);
   }
 
   private double getProbabilityForClass(DoubleVector document, int classIndex) {
@@ -168,7 +185,7 @@ public final class MultinomialNaiveBayesClassifier {
 
       for (int i = 0; i < classProbability.getLength(); i++) {
         for (int j = 0; j < columnLength; j++) {
-          System.out.format("%5d ", confusionMatrix[i][j]);
+          System.out.format("%5d", confusionMatrix[i][j]);
         }
         String clz = classNames != null ? classNames[i] : i + "";
         System.out.println(" <- " + i + " classfied as " + clz);
@@ -176,4 +193,5 @@ public final class MultinomialNaiveBayesClassifier {
     }
     return accuracy;
   }
+
 }

@@ -220,10 +220,25 @@ public class ArrayUtilsTest extends TestCase {
     String[] arr = new String[] { "1, 2, 3", "4, 5, 6", "7, 8, 9", "10, 11, 12" };
 
     String[] subArray = ArrayUtils.subArray(arr, 0, 2);
-    assertEquals(subArray.length, 3);
+    assertEquals(3, subArray.length);
 
     for (int i = 0; i < 3; i++) {
       assertTrue(arr[i] == subArray[i]);
+    }
+
+  }
+
+  @Test
+  public void testShuffle() {
+    String[] arr = new String[] { "1, 2, 3", "4, 5, 6", "7, 8, 9", "10, 11, 12" };
+    String[] outcome = new String[] { "10, 11, 12", "1, 2, 3", "4, 5, 6",
+        "7, 8, 9" };
+
+    String[] shuffled = ArrayUtils.shuffle(arr, new Random(0));
+    assertEquals(arr.length, shuffled.length);
+
+    for (int i = 0; i < arr.length; i++) {
+      assertTrue(outcome[i] == shuffled[i]);
     }
 
   }

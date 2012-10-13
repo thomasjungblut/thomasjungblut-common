@@ -4,11 +4,12 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
-import de.jungblut.datastructure.ArrayUtils;
+import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleVector;
 
 /**
  * K nearest neighbour classification algorithm that is seeded with a "database"
@@ -16,51 +17,57 @@ import de.jungblut.math.DoubleVector;
  * vote for a class. A KD tree is used internally to speedup the searches.
  * 
  */
-public final class KNearestNeighbours {
+public final class KNearestNeighbours extends AbstractClassifier {
 
-  private final KDTree<DoubleVector> tree;
+  private final KDTree<DenseDoubleVector> tree;
   private final DistanceMeasurer measurer;
-  private int numOutcomes;
+  private final int numOutcomes;
+  private final int k;
 
   /**
-   * Constructs a knn classifier with an array of feature vectors and outcomes.
-   * Of course you need to pass a distance measurement to find the nearest
-   * neighbours.<br/>
-   * The outcome vectors need to be a one dimensional outcome and contain
-   * classes as nominal values, e.g. 0 for false and 1 for true in a binary
-   * case.
+   * Constructs a new knn classifier. Of course you need to pass a distance
+   * measurement to find the nearest neighbours.
    * 
    * @param numOutcomes the number of different outcomes that can be predicted.
+   * @param k the number of neighbours to analyse to get a prediction (it does
+   *          so by majority voting).
    */
-  public KNearestNeighbours(DoubleVector[] features, DoubleVector[] outcome,
-      DistanceMeasurer measurer, int numOutcomes) {
+  public KNearestNeighbours(DistanceMeasurer measurer, int numOutcomes, int k) {
     this.measurer = measurer;
     this.numOutcomes = numOutcomes;
+    this.k = k;
+    this.tree = new KDTree<>();
+  }
+
+  @Override
+  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
     Preconditions.checkArgument(features.length == outcome.length,
         "Features and outcome length didn't match: " + features.length + "!="
             + outcome.length);
     Preconditions.checkArgument(features.length > 0,
         "You need at least a single item in your classifier!");
-    tree = new KDTree<>();
+
     for (int i = 0; i < features.length; i++) {
       tree.add(features[i], outcome[i]);
     }
   }
 
-  /**
-   * Predicts the outcome of the given feature vector by majority voting of
-   * nearest k neighbours.
-   * 
-   * @return the majority voted class.
-   */
-  public int predict(DoubleVector vector, int k) {
-    List<VectorDistanceTuple<DoubleVector>> nearestNeighbours = tree
-        .getNearestNeighbours(vector, k, measurer);
+  @Override
+  public DoubleVector predict(DoubleVector features) {
+    List<VectorDistanceTuple<DenseDoubleVector>> nearestNeighbours = tree
+        .getNearestNeighbours(features, k, measurer);
 
-    int[] outcomeHistogram = new int[numOutcomes];
-    for (VectorDistanceTuple<DoubleVector> tuple : nearestNeighbours) {
-      outcomeHistogram[(int) tuple.getValue().get(0)]++;
+    DoubleVector outcomeHistogram = new DenseDoubleVector(numOutcomes);
+    for (VectorDistanceTuple<DenseDoubleVector> tuple : nearestNeighbours) {
+      int classIndex = 0;
+      if (numOutcomes == 2) {
+        classIndex = (int) tuple.getValue().get(0);
+      } else {
+        classIndex = tuple.getValue().maxIndex();
+      }
+
+      outcomeHistogram.set(classIndex, outcomeHistogram.get(classIndex) + 1);
     }
-    return ArrayUtils.maxIndex(outcomeHistogram);
+    return outcomeHistogram;
   }
 }
