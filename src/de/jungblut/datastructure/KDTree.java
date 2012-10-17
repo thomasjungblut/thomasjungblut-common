@@ -134,7 +134,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
           && strictHigher(lower, next.keyVector))
         list.add(next.keyVector);
 
-      if (checkSubtree(lower, upper, next.left)) {
+      if (next.left != null && checkSubtree(lower, upper, next.left)) {
         toVisit.add(next.left);
       }
       if (next.right != null && checkSubtree(lower, upper, next.right)) {
