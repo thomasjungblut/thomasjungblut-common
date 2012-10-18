@@ -8,8 +8,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Iterator;
 
 import org.apache.hadoop.io.Writable;
+
+import com.google.common.base.Preconditions;
+import com.google.common.collect.AbstractIterator;
 
 /**
  * A file backed disk for adding elements and reading from them in a sequential
@@ -17,7 +21,7 @@ import org.apache.hadoop.io.Writable;
  * 
  * @author thomas.jungblut
  */
-public final class DiskList<E extends Writable> {
+public final class DiskList<E extends Writable> implements Iterable<E> {
 
   // the queue can either be in write state (default when opening) or in read
   // state.
@@ -35,6 +39,8 @@ public final class DiskList<E extends Writable> {
   private long size;
   private long toRead;
 
+  private E reusableElement;
+
   /**
    * Opens a new disk list at the given path. Buffered through a 8k
    * {@link BufferedOutputStream}.
@@ -43,6 +49,17 @@ public final class DiskList<E extends Writable> {
     this.path = path;
     this.outStream = new DataOutputStream(new BufferedOutputStream(
         new FileOutputStream(path)));
+  }
+
+  /**
+   * Opens a new disk list at the given path. Buffered through a 8k
+   * {@link BufferedOutputStream}. <br/>
+   * You can add a reusable element, that will be filled. This is certainly
+   * required when using an iterator.
+   */
+  public DiskList(String path, E reusableElement) throws IOException {
+    this(path);
+    this.reusableElement = reusableElement;
   }
 
   /**
@@ -124,4 +141,27 @@ public final class DiskList<E extends Writable> {
     return size;
   }
 
+  @Override
+  public Iterator<E> iterator() {
+    Preconditions
+        .checkNotNull(
+            reusableElement,
+            "You have to provide a reusable element in your constructor to make use of the iterator!");
+
+    return new AbstractIterator<E>() {
+      @Override
+      protected E computeNext() {
+        try {
+          E el = poll(reusableElement);
+          if (el != null) {
+            return el;
+          } else {
+            return endOfData();
+          }
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
+  }
 }

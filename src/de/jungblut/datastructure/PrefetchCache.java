@@ -2,8 +2,11 @@ package de.jungblut.datastructure;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.util.Iterator;
 
 import org.apache.hadoop.io.Writable;
+
+import com.google.common.collect.AbstractIterator;
 
 /**
  * Ring buffer prefetch cache for the {@link DiskList}. You can feed it with a
@@ -11,7 +14,7 @@ import org.apache.hadoop.io.Writable;
  * 
  * @author thomas.jungblut
  */
-public final class PrefetchCache<E extends Writable> {
+public final class PrefetchCache<E extends Writable> implements Iterable<E> {
 
   private final DiskList<E> listToCache;
   private final E[] array;
@@ -58,6 +61,26 @@ public final class PrefetchCache<E extends Writable> {
     } else {
       return null;
     }
+  }
+
+  @Override
+  public Iterator<E> iterator() {
+    return new AbstractIterator<E>() {
+
+      @Override
+      protected E computeNext() {
+        try {
+          E poll = poll();
+          if (poll != null) {
+            return poll;
+          } else {
+            return endOfData();
+          }
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+    };
   }
 
   /**
