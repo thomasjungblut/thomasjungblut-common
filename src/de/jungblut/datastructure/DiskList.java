@@ -52,7 +52,8 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
   }
 
   /**
-   * Opens a new disk list at the given path with the given buffersize.
+   * Opens a new disk list at the given path with the given buffersize. 64k
+   * seems quite optimal for most normal hard disks.
    */
   public DiskList(String path, int bufferSize) throws IOException {
     this.path = path;
