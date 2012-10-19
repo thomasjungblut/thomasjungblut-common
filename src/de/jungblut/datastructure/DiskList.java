@@ -53,7 +53,8 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
 
   /**
    * Opens a new disk list at the given path with the given buffersize. 64k
-   * seems quite optimal for most normal hard disks.
+   * seems quite optimal for most normal hard disks. With 7.2k rpm disk and
+   * enough cache 512k might also be optimal.
    */
   public DiskList(String path, int bufferSize) throws IOException {
     this.path = path;

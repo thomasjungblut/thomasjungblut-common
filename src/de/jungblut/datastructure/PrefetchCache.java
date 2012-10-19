@@ -10,7 +10,8 @@ import com.google.common.collect.AbstractIterator;
 
 /**
  * Ring buffer prefetch cache for the {@link DiskList}. You can feed it with a
- * maximum size and the class which to cache.
+ * maximum size and the class which to cache. TODO This is really slower than
+ * reading directly, so the fetching must be parallel to the retrieval..
  * 
  * @author thomas.jungblut
  */
