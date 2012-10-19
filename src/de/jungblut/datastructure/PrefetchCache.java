@@ -1,5 +1,6 @@
 package de.jungblut.datastructure;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Array;
 import java.util.Iterator;
@@ -16,7 +17,7 @@ import com.google.common.collect.AbstractIterator;
  * @author thomas.jungblut
  */
 public final class PrefetchCache<E extends Writable> implements Iterable<E>,
-    AutoCloseable, Cloneable {
+    AutoCloseable, Closeable {
 
   private final DiskList<E> listToCache;
   private final E[] array;
@@ -122,7 +123,7 @@ public final class PrefetchCache<E extends Writable> implements Iterable<E>,
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() throws IOException {
     getListToCache().close();
   }
 

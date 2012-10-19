@@ -2,6 +2,7 @@ package de.jungblut.datastructure;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.Closeable;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -23,7 +24,7 @@ import com.google.common.collect.AbstractIterator;
  * @author thomas.jungblut
  */
 public final class DiskList<E extends Writable> extends AbstractList<E>
-    implements Iterable<E>, AutoCloseable, Cloneable {
+    implements Iterable<E>, AutoCloseable, Closeable {
 
   enum State {
     READ, WRITE, ITERATING
