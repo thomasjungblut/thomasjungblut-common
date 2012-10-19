@@ -59,16 +59,11 @@ public class PrefetchCacheTest extends TestCase {
       list.add(instance);
     }
     assertEquals(DiskList.State.WRITE, list.getCurrentState());
-    list.closeWrite();
     list.openRead();
     assertEquals(DiskList.State.READ, list.getCurrentState());
     assertEquals(size, list.size());
     PrefetchCache<IntWritable> cache = null;
-    try {
-      cache = new PrefetchCache<>(list, IntWritable.class, 1000);
-    } catch (InstantiationException | IllegalAccessException e) {
-      e.printStackTrace();
-    }
+    cache = new PrefetchCache<>(list, IntWritable.class, 1000);
 
     assertNotNull(cache);
     return cache;

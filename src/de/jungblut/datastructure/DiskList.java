@@ -8,6 +8,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.AbstractList;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.Writable;
@@ -21,12 +22,11 @@ import com.google.common.collect.AbstractIterator;
  * 
  * @author thomas.jungblut
  */
-public final class DiskList<E extends Writable> implements Iterable<E> {
+public final class DiskList<E extends Writable> extends AbstractList<E>
+    implements Iterable<E>, AutoCloseable, Cloneable {
 
-  // the queue can either be in write state (default when opening) or in read
-  // state.
   enum State {
-    READ, WRITE
+    READ, WRITE, ITERATING
   }
 
   private final String path;
@@ -52,6 +52,15 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
   }
 
   /**
+   * Opens a new disk list at the given path with the given buffersize.
+   */
+  public DiskList(String path, int bufferSize) throws IOException {
+    this.path = path;
+    this.outStream = new DataOutputStream(new BufferedOutputStream(
+        new FileOutputStream(path), bufferSize));
+  }
+
+  /**
    * Opens a new disk list at the given path. Buffered through a 8k
    * {@link BufferedOutputStream}. <br/>
    * You can add a reusable element, that will be filled. This is certainly
@@ -63,11 +72,18 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
   }
 
   /**
-   * Writes the given element to the disk.
+   * Writes the given element to the disk. Throws a {@link IORuntimeException}
+   * in case of IO failure.
    */
-  public void add(E element) throws IOException {
-    element.write(outStream);
+  @Override
+  public boolean add(E element) {
+    try {
+      element.write(outStream);
+    } catch (IOException e) {
+      throw new IORuntimeException(e);
+    }
     size++;
+    return true;
   }
 
   /**
@@ -101,7 +117,7 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
   /**
    * Closes the write.
    */
-  public void closeWrite() throws IOException {
+  private void closeWrite() throws IOException {
     if (outStream != null) {
       outStream.close();
       outStream = null;
@@ -111,7 +127,7 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
   /**
    * Closes the read.
    */
-  public void closeRead() throws IOException {
+  private void closeRead() throws IOException {
     if (inStream != null) {
       inStream.close();
       inStream = null;
@@ -121,6 +137,7 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
   /**
    * Closes read and write, also deletes the file.
    */
+  @Override
   public void close() throws IOException {
     closeRead();
     closeWrite();
@@ -137,8 +154,9 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
   /**
    * @return how many items were inserted.
    */
-  public long size() {
-    return size;
+  @Override
+  public int size() {
+    return (int) size;
   }
 
   @Override
@@ -147,7 +165,19 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
         .checkNotNull(
             reusableElement,
             "You have to provide a reusable element in your constructor to make use of the iterator!");
-
+    if (getCurrentState() == State.READ) {
+      currentState = State.ITERATING;
+    } else if (getCurrentState() == State.WRITE) {
+      try {
+        openRead();
+      } catch (IOException e) {
+        throw new IORuntimeException(e);
+      }
+      currentState = State.ITERATING;
+    } else {
+      throw new IllegalArgumentException("Can not iterate while in state: "
+          + getCurrentState());
+    }
     return new AbstractIterator<E>() {
       @Override
       protected E computeNext() {
@@ -159,9 +189,29 @@ public final class DiskList<E extends Writable> implements Iterable<E> {
             return endOfData();
           }
         } catch (IOException e) {
-          throw new RuntimeException(e);
+          throw new IORuntimeException(e);
         }
       }
     };
   }
+
+  @Override
+  public E get(int index) {
+    throw new UnsupportedOperationException("Random access is not implemented!");
+  }
+
+  public static class IORuntimeException extends RuntimeException {
+
+    private static final long serialVersionUID = 5448706404076488584L;
+
+    public IORuntimeException() {
+      super();
+    }
+
+    public IORuntimeException(Throwable e) {
+      super(e);
+    }
+
+  }
+
 }

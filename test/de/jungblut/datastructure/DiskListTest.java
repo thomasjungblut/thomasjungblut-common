@@ -62,7 +62,6 @@ public class DiskListTest extends TestCase {
       list.add(instance);
     }
     assertEquals(DiskList.State.WRITE, list.getCurrentState());
-    list.closeWrite();
     list.openRead();
     assertEquals(DiskList.State.READ, list.getCurrentState());
     assertEquals(size, list.size());

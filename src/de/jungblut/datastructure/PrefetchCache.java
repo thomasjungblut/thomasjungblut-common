@@ -14,7 +14,8 @@ import com.google.common.collect.AbstractIterator;
  * 
  * @author thomas.jungblut
  */
-public final class PrefetchCache<E extends Writable> implements Iterable<E> {
+public final class PrefetchCache<E extends Writable> implements Iterable<E>,
+    AutoCloseable, Cloneable {
 
   private final DiskList<E> listToCache;
   private final E[] array;
@@ -30,11 +31,15 @@ public final class PrefetchCache<E extends Writable> implements Iterable<E> {
    */
   @SuppressWarnings("unchecked")
   public PrefetchCache(DiskList<E> listToCache, Class<E> clazz, int size)
-      throws IOException, InstantiationException, IllegalAccessException {
+      throws IOException {
     this.listToCache = listToCache;
     this.array = (E[]) Array.newInstance(clazz, size);
     for (int i = 0; i < size; i++) {
-      array[i] = clazz.newInstance();
+      try {
+        array[i] = clazz.newInstance();
+      } catch (InstantiationException | IllegalAccessException e) {
+        throw new IOException(e);
+      }
     }
     this.head = 0;
     this.tail = 0;
@@ -105,6 +110,19 @@ public final class PrefetchCache<E extends Writable> implements Iterable<E> {
    */
   private boolean isFull() {
     return ((head == 0 && tail == (array.length - 1)) || tail + 1 == head || array[tail] == null);
+  }
+
+  public DiskList<E> getListToCache() {
+    return listToCache;
+  }
+
+  public int size() {
+    return getListToCache().size();
+  }
+
+  @Override
+  public void close() throws Exception {
+    getListToCache().close();
   }
 
 }
