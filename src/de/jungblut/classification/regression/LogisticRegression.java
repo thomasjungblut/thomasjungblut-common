@@ -46,8 +46,8 @@ public final class LogisticRegression extends AbstractClassifier {
   /**
    * Creates a new logistic regression.
    */
-  public LogisticRegression(DoubleVector theta) {
-    this(0d, null, 1, 0d, false);
+  public LogisticRegression(DoubleVector theta, double threshold) {
+    this(0d, null, 1, threshold, false);
     this.theta = theta;
   }
 
