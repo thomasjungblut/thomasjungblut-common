@@ -1118,7 +1118,7 @@ public final class ArrayUtils {
     T[] subArray = (T[]) Array.newInstance(array.getClass().getComponentType(),
         splitIndex - startIndex + 1);
 
-    System.arraycopy(array, startIndex + 0, subArray, 0, subArray.length);
+    System.arraycopy(array, startIndex, subArray, 0, subArray.length);
 
     return subArray;
   }

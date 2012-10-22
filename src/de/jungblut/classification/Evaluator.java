@@ -1,12 +1,16 @@
 package de.jungblut.classification;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.google.common.base.Preconditions;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.partition.BlockPartitioner;
+import de.jungblut.partition.Boundaries.Range;
 
 /**
  * Multi-class evaluator utility that takes care of test/train splitting and its
@@ -65,6 +69,29 @@ public final class Evaluator {
 
     public boolean isBinary() {
       return numLabels == 2;
+    }
+
+    public void add(EvaluationResult res) {
+      numLabels += res.numLabels;
+      correct += res.correct;
+      trainSize += res.trainSize;
+      testSize += res.testSize;
+      truePositive += res.truePositive;
+      falsePositive += res.falsePositive;
+      trueNegative += res.trueNegative;
+      falseNegative += res.falseNegative;
+    }
+
+    public void average(int pn) {
+      double n = pn;
+      numLabels /= n;
+      correct /= n;
+      trainSize /= n;
+      testSize /= n;
+      truePositive /= n;
+      falsePositive /= n;
+      trueNegative /= n;
+      falseNegative /= n;
     }
 
     public void print() {
@@ -209,34 +236,81 @@ public final class Evaluator {
     return result;
   }
 
-  // TODO
+  /**
+   * Does a k-fold crossvalidation on the given classifiers with features and
+   * outcomes.
+   * 
+   * @param classifierFactory the classifiers to train and test.
+   * @param features the features to train/test with.
+   * @param outcome the outcomes to train/test with.
+   * @param numLabels the total number of labels that are possible. e.G. 2 in
+   *          the binary case.
+   * @param folds the number of folds to fold, usually 10.
+   * @param threshold the threshold for predicting a specific class by
+   *          probability (if not provided = null).
+   * @param verbose true if partial fold results should be printed.
+   * @return a averaged evaluation result over all k folds.
+   */
   public static EvaluationResult crossValidateClassifier(
       ClassifierFactory classifierFactory, DoubleVector[] features,
       DenseDoubleVector[] outcome, int numLabels, int folds, Double threshold,
       boolean verbose) {
     // train on k-1 folds, test on 1 fold, results are averaged
-
-    // multi shuffle the arrays first
+    final int numFolds = folds + 1;
+    // multi shuffle the arrays first, note that this is not stratified.
     ArrayUtils.multiShuffle(features, outcome);
 
     EvaluationResult averagedModel = new EvaluationResult();
     int m = features.length;
-    int foldSize = (int) (m / (double) folds);
-
-    // TODO compute the split index
-    int[] splitIndices = new int[folds];
-    for (int fold = 1; fold <= folds; fold++) {
-      splitIndices[fold] = m - (fold * foldSize);
+    // compute the split ranges by blocks, so we have range from 0 to the next
+    // partition index end that will be our testset, and so on.
+    List<Range> partition = new ArrayList<>(new BlockPartitioner().partition(
+        numFolds, m).getBoundaries());
+    int[] splitRanges = new int[numFolds];
+    for (int i = 1; i < numFolds; i++) {
+      splitRanges[i] = partition.get(i).getEnd();
     }
+
+    // because we are dealing with indices, we have to subtract 1 from the end
+    splitRanges[numFolds - 1] = splitRanges[numFolds - 1] - 1;
+
     if (verbose) {
-      System.out.println("Computed split indices: "
-          + Arrays.toString(splitIndices));
+      System.out.println("Computed split ranges: "
+          + Arrays.toString(splitRanges) + "\n");
     }
 
-    // TODO build the model
+    // build the models fold for fold
+    for (int fold = 0; fold < folds; fold++) {
+      DoubleVector[] featureTest = ArrayUtils.subArray(features,
+          splitRanges[fold], splitRanges[fold + 1]);
+      DenseDoubleVector[] outcomeTest = ArrayUtils.subArray(outcome,
+          splitRanges[fold], splitRanges[fold + 1]);
+      DoubleVector[] featureTrain = new DoubleVector[m - featureTest.length];
+      DenseDoubleVector[] outcomeTrain = new DenseDoubleVector[m
+          - featureTest.length];
+      int index = 0;
+      for (int i = 0; i < m; i++) {
+        if (i < splitRanges[fold] || i > splitRanges[fold + 1]) {
+          featureTrain[index] = features[i];
+          outcomeTrain[index] = outcome[i];
+          index++;
+        }
+      }
 
-    // TODO average the sums in the model
+      EvaluationResult foldSplit = evaluateSplit(
+          classifierFactory.newInstance(), numLabels, threshold, featureTrain,
+          outcomeTrain, featureTest, outcomeTest);
 
+      if (verbose) {
+        System.out.println("Fold: " + (fold + 1));
+        foldSplit.print();
+        System.out.println();
+      }
+      averagedModel.add(foldSplit);
+    }
+
+    // average the sums in the model
+    averagedModel.average(folds);
     return averagedModel;
   }
 

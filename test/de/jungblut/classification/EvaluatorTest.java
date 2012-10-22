@@ -38,4 +38,23 @@ public class EvaluatorTest extends TestCase {
     assertEquals(1.0d, evaluation.getPrecision());
   }
 
+  @Test
+  public void testCrossValidation() throws Exception {
+    Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset = MushroomReader
+        .readMushroomDataset();
+
+    EvaluationResult evaluation = Evaluator.tenFoldCrossValidation(
+        new ClassifierFactory() {
+          @Override
+          public Classifier newInstance() {
+            return new KNearestNeighbours(new ManhattanDistance(), 2, 4);
+          }
+        }, readMushroomDataset.getFirst(), readMushroomDataset.getSecond(), 2,
+        null, false);
+
+    assertEquals(2, evaluation.getNumLabels());
+    assertEquals(true, evaluation.isBinary());
+    // TODO make more asserts
+  }
+
 }
