@@ -51,9 +51,9 @@ public class LogisticRegressionTest extends TestCase {
   @Test
   public void testPredictions() {
     LogisticRegression reg = new LogisticRegression(1.0d, new Fmincg(), 1000,
-        0.5d, false);
+        false);
     reg.train(x, y);
-    DoubleVector predict = reg.predict(x);
+    DoubleVector predict = reg.predict(x, 0.5d);
 
     double wrongPredictions = predict.subtract(y).abs().sum();
     assertEquals(11.0d, wrongPredictions);
@@ -64,23 +64,21 @@ public class LogisticRegressionTest extends TestCase {
 
   @Test
   public void testRegressionInterface() {
-    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 100, 0.5d,
-        false);
+    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 100, false);
     clf.train(features, outcome);
     double trainingError = 0d;
     for (int i = 0; i < features.length; i++) {
-      DoubleVector predict = clf.predict(features[i]);
-      trainingError += predict.subtract(outcome[i]).abs().sum();
+      int predict = clf.getPredictedClass(features[i], 0.5d);
+      trainingError += Math.abs(outcome[i].get(0) - predict);
     }
     assertEquals(11.0d, trainingError);
   }
 
   @Test
   public void testRegressionEvaluation() {
-    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 100, 0.5d,
-        false);
+    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 100, false);
     EvaluationResult eval = Evaluator.evaluateClassifier(clf, features,
-        outcome, 2, 0.9f, false);
+        outcome, 2, 0.9f, false, 0.5d);
     assertEquals(1d, eval.getPrecision());
     assertEquals(9, eval.getTestSize());
     assertEquals(91, eval.getTrainSize());

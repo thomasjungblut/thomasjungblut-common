@@ -31,6 +31,16 @@ public interface Classifier {
   /**
    * Classifies the given features.
    * 
+   * @param threshold the threshold for the prediction "probability". In the
+   *          sigmoid and binary case, you want to set everything greater (>)
+   *          0.5 to 1d and everything below (<=) to 0d.
+   * @return the predicted class as an integer for the output of a classifier.
+   */
+  public int getPredictedClass(DoubleVector features, double threshold);
+
+  /**
+   * Classifies the given features.
+   * 
    * @return the predicted class as an integer for the output of a classifier.
    */
   public int getPredictedClass(DoubleVector features);

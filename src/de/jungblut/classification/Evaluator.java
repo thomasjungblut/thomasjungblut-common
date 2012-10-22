@@ -100,6 +100,30 @@ public final class Evaluator {
   public static EvaluationResult evaluateClassifier(Classifier classifier,
       DoubleVector[] features, DenseDoubleVector[] outcome, int numLabels,
       float splitPercentage, boolean random) {
+    return evaluateClassifier(classifier, features, outcome, numLabels,
+        splitPercentage, random, null);
+  }
+
+  /**
+   * Trains and evaluates the given classifier with a test split.
+   * 
+   * @param classifier the classifier to train and evaluate.
+   * @param features the features to split.
+   * @param outcome the outcome to split.
+   * @param numLabels the number of labels that are used. (e.G. 2 in binary
+   *          classification).
+   * @param splitPercentage a value between 0f and 1f that sets the size of the
+   *          trainingset. With 1k items, a splitPercentage of 0.9f will result
+   *          in 900 items to train and 100 to evaluate.
+   * @param random true if you want to perform shuffling on the data beforehand.
+   * @param threshold in case of binary predictions, threshold is used to call
+   *          in {@link Classifier#getPredictedClass(DoubleVector, double)}. Can
+   *          be null, then no thresholding will be used.
+   * @return a new {@link EvaluationResult}.
+   */
+  public static EvaluationResult evaluateClassifier(Classifier classifier,
+      DoubleVector[] features, DenseDoubleVector[] outcome, int numLabels,
+      float splitPercentage, boolean random, Double threshold) {
 
     Preconditions.checkArgument(numLabels > 1,
         "The number of labels should be greater than 1!");
@@ -130,7 +154,12 @@ public final class Evaluator {
     if (numLabels == 2) {
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = ((int) testOutcome[i].get(0));
-        int prediction = (int) classifier.predict(testFeatures[i]).get(0);
+        int prediction = 0;
+        if (threshold == null) {
+          prediction = classifier.getPredictedClass(testFeatures[i]);
+        } else {
+          prediction = classifier.getPredictedClass(testFeatures[i], threshold);
+        }
         if (outcomeClass == 1) {
           if (outcomeClass == prediction) {
             result.truePositive++;
@@ -158,7 +187,6 @@ public final class Evaluator {
 
     return result;
   }
-
   // TODO cross validation with a new instance of the classifier everytime
   // (factory interface)?
 

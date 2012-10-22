@@ -21,6 +21,7 @@ public class MultinomialNaiveBayesTest extends TestCase {
 
   @Test
   public void testNaiveBayes() {
+    // TODO this is actually overkill and not a good testcase at all..
     Tuple3<List<String[]>, DenseIntVector, String[]> trainingSet = TwentyNewsgroupReader
         .readTwentyNewsgroups(new File(
             "files/20news-bydate/20news-bydate-train/"));

@@ -18,7 +18,6 @@ public final class LogisticRegression extends AbstractClassifier {
   private final Minimizer minimizer;
   private final int numIterations;
   private final boolean verbose;
-  private final double threshold;
 
   // learned weights
   private DoubleVector theta;
@@ -29,25 +28,22 @@ public final class LogisticRegression extends AbstractClassifier {
    * @param lambda the regularization parameter.
    * @param minimizer the minimizer to use to train this model.
    * @param numIterations the number of iterations to make.
-   * @param threshold the prediction threshold, e.G. 0.5 everything below 0.5
-   *          will be predicted as zero, anything above(>) as 1.
    * @param verbose output the progress to STDOUT if true.
    */
   public LogisticRegression(double lambda, Minimizer minimizer,
-      int numIterations, double threshold, boolean verbose) {
+      int numIterations, boolean verbose) {
     super();
     this.lambda = lambda;
     this.minimizer = minimizer;
     this.numIterations = numIterations;
-    this.threshold = threshold;
     this.verbose = verbose;
   }
 
   /**
    * Creates a new logistic regression.
    */
-  public LogisticRegression(DoubleVector theta, double threshold) {
-    this(0d, null, 1, threshold, false);
+  public LogisticRegression(DoubleVector theta) {
+    this(0d, null, 1, false);
     this.theta = theta;
   }
 
@@ -70,12 +66,7 @@ public final class LogisticRegression extends AbstractClassifier {
     }
     return new DenseDoubleVector(
         new double[] { LogisticRegressionCostFunction.sigmoid(biasedFeatures
-            .dot(theta)) > threshold ? 1.0d : 0.0d });
-  }
-
-  @Override
-  public int getPredictedClass(DoubleVector features) {
-    return (int) predict(features).get(0);
+            .dot(theta)) });
   }
 
   public void train(DenseDoubleMatrix x, DenseDoubleVector y) {
@@ -93,7 +84,7 @@ public final class LogisticRegression extends AbstractClassifier {
    * 
    * @return the predicted vector consisting out of zeroes and ones.
    */
-  public DoubleVector predict(DenseDoubleMatrix input) {
+  public DoubleVector predict(DenseDoubleMatrix input, double threshold) {
     DoubleVector vec = new DenseDoubleMatrix(DenseDoubleVector.ones(input
         .getRowCount()), input).multiplyVector(theta);
     for (int i = 0; i < vec.getLength(); i++) {
