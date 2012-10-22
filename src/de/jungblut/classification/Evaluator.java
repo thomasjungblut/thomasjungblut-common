@@ -1,5 +1,7 @@
 package de.jungblut.classification;
 
+import java.util.Arrays;
+
 import com.google.common.base.Preconditions;
 
 import de.jungblut.datastructure.ArrayUtils;
@@ -130,9 +132,6 @@ public final class Evaluator {
     Preconditions.checkArgument(features.length == outcome.length,
         "Feature vector and outcome vector must match in length!");
 
-    EvaluationResult result = new EvaluationResult();
-    result.numLabels = numLabels;
-
     if (random) {
       ArrayUtils.multiShuffle(features, outcome);
     }
@@ -145,6 +144,29 @@ public final class Evaluator {
     DenseDoubleVector[] testOutcome = ArrayUtils.subArray(outcome,
         splitIndex + 1, outcome.length - 1);
 
+    return evaluateSplit(classifier, numLabels, threshold, trainFeatures,
+        trainOutcome, testFeatures, testOutcome);
+  }
+
+  /**
+   * Evaluates a given train/test split with the given classifier.
+   * 
+   * @param classifier the classifier to train on the train split.
+   * @param numLabels the number of labels that can be classified.
+   * @param threshold the threshold for predicting a specific class by
+   *          probability (if not provided = null).
+   * @param trainFeatures the features to train with.
+   * @param trainOutcome the outcomes to train with.
+   * @param testFeatures the features to test with.
+   * @param testOutcome the outcome to test with.
+   * @return a fresh evalation result filled with the evaluated metrics.
+   */
+  public static EvaluationResult evaluateSplit(Classifier classifier,
+      int numLabels, Double threshold, DoubleVector[] trainFeatures,
+      DenseDoubleVector[] trainOutcome, DoubleVector[] testFeatures,
+      DenseDoubleVector[] testOutcome) {
+    EvaluationResult result = new EvaluationResult();
+    result.numLabels = numLabels;
     result.testSize = testOutcome.length;
     result.trainSize = trainOutcome.length;
 
@@ -184,10 +206,59 @@ public final class Evaluator {
       }
       // TODO confusion matrix
     }
-
     return result;
   }
-  // TODO cross validation with a new instance of the classifier everytime
-  // (factory interface)?
+
+  // TODO
+  public static EvaluationResult crossValidateClassifier(
+      ClassifierFactory classifierFactory, DoubleVector[] features,
+      DenseDoubleVector[] outcome, int numLabels, int folds, Double threshold,
+      boolean verbose) {
+    // train on k-1 folds, test on 1 fold, results are averaged
+
+    // multi shuffle the arrays first
+    ArrayUtils.multiShuffle(features, outcome);
+
+    EvaluationResult averagedModel = new EvaluationResult();
+    int m = features.length;
+    int foldSize = (int) (m / (double) folds);
+
+    // TODO compute the split index
+    int[] splitIndices = new int[folds];
+    for (int fold = 1; fold <= folds; fold++) {
+      splitIndices[fold] = m - (fold * foldSize);
+    }
+    if (verbose) {
+      System.out.println("Computed split indices: "
+          + Arrays.toString(splitIndices));
+    }
+
+    // TODO build the model
+
+    // TODO average the sums in the model
+
+    return averagedModel;
+  }
+
+  /**
+   * Does a 10 fold crossvalidation.
+   * 
+   * @param classifierFactory the classifiers to train and test.
+   * @param features the features to train/test with.
+   * @param outcome the outcomes to train/test with.
+   * @param numLabels the total number of labels that are possible. e.G. 2 in
+   *          the binary case.
+   * @param threshold the threshold for predicting a specific class by
+   *          probability (if not provided = null).
+   * @param verbose true if partial fold results should be printed.
+   * @return a averaged evaluation result over all 10 folds.
+   */
+  public static EvaluationResult tenFoldCrossValidation(
+      ClassifierFactory classifierFactory, DoubleVector[] features,
+      DenseDoubleVector[] outcome, int numLabels, Double threshold,
+      boolean verbose) {
+    return crossValidateClassifier(classifierFactory, features, outcome,
+        numLabels, 10, threshold, verbose);
+  }
 
 }
