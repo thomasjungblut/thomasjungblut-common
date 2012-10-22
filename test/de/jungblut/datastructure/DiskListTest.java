@@ -20,8 +20,12 @@ public class DiskListTest extends TestCase {
       assertEquals(i, list.poll(instance).get());
     }
 
-    IntWritable poll = list.poll(null);
-    assertNull(poll);
+    try {
+      list.poll(null);
+      fail("Here should be a new NPE thrown.");
+    } catch (NullPointerException e) {
+      assertNotNull(e);
+    }
 
     list.close();
 
@@ -48,9 +52,12 @@ public class DiskListTest extends TestCase {
     }
 
     assertEquals(incr, size);
-    IntWritable poll = list.poll(null);
-    assertNull(poll);
-
+    try {
+      list.poll(null);
+      fail("Here should be a new NPE thrown.");
+    } catch (NullPointerException e) {
+      assertNotNull(e);
+    }
     list.close();
   }
 

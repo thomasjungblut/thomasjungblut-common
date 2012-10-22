@@ -38,7 +38,6 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
   private DataInputStream inStream;
 
   private long size;
-  private long toRead;
 
   private E reusableElement;
 
@@ -97,7 +96,6 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
     currentState = State.READ;
     this.inStream = new DataInputStream(new BufferedInputStream(
         new FileInputStream(this.path)));
-    this.toRead = size;
   }
 
   /**
@@ -108,13 +106,8 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
    *         information. Null if there is nothing more to read.
    */
   public E poll(E element) throws IOException {
-    if (toRead > 0) {
-      element.readFields(inStream);
-      toRead--;
-      return element;
-    } else {
-      return null;
-    }
+    element.readFields(inStream);
+    return element;
   }
 
   /**
@@ -181,13 +174,16 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
       throw new IllegalArgumentException("Can not iterate while in state: "
           + getCurrentState());
     }
+
     return new AbstractIterator<E>() {
+      long toRead = size;
+
       @Override
       protected E computeNext() {
         try {
-          E el = poll(reusableElement);
-          if (el != null) {
-            return el;
+          if (toRead > 0) {
+            toRead--;
+            return poll(reusableElement);
           } else {
             return endOfData();
           }
