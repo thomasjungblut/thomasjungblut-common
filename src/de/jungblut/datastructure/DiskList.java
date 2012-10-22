@@ -74,6 +74,18 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
   }
 
   /**
+   * Opens a new disk list at the given path with the given buffersize. 64k
+   * seems quite optimal for most normal hard disks. With 7.2k rpm disk and
+   * enough cache 512k might also be optimal. You can add a reusable element,
+   * that will be filled. This is certainly required when using an iterator.
+   */
+  public DiskList(String path, int bufferSize, E reusableElement)
+      throws IOException {
+    this(path, bufferSize);
+    this.reusableElement = reusableElement;
+  }
+
+  /**
    * Writes the given element to the disk. Throws a {@link IORuntimeException}
    * in case of IO failure.
    */
