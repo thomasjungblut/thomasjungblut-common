@@ -38,8 +38,8 @@ public class KNearestNeighboursTest extends TestCase {
 
     int correct = 0;
     for (int i = 0; i < testFeatures.length; i++) {
-      int predict = knn.getPredictedClass(testFeatures[i]);
-      if (predict == ((int) testOutcome[i].get(0))) {
+      DoubleVector predict = knn.predict(testFeatures[i]);
+      if (predict.get(0) == ((int) testOutcome[i].get(0))) {
         correct++;
       }
     }

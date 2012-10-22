@@ -12,7 +12,7 @@ import de.jungblut.math.DoubleVector;
 public abstract class AbstractClassifier implements Classifier {
 
   @Override
-  public final int getPredictedClass(DoubleVector features) {
+  public int getPredictedClass(DoubleVector features) {
     DoubleVector predict = predict(features);
     return ArrayUtils.maxIndex(predict.toArray());
   }

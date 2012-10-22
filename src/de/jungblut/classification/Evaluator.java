@@ -130,7 +130,7 @@ public final class Evaluator {
     if (numLabels == 2) {
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = ((int) testOutcome[i].get(0));
-        int prediction = classifier.getPredictedClass(testFeatures[i]);
+        int prediction = (int) classifier.predict(testFeatures[i]).get(0);
         if (outcomeClass == 1) {
           if (outcomeClass == prediction) {
             result.truePositive++;

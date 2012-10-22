@@ -57,7 +57,7 @@ public final class KNearestNeighbours extends AbstractClassifier {
     List<VectorDistanceTuple<DenseDoubleVector>> nearestNeighbours = tree
         .getNearestNeighbours(features, k, measurer);
 
-    DoubleVector outcomeHistogram = new DenseDoubleVector(numOutcomes);
+    DenseDoubleVector outcomeHistogram = new DenseDoubleVector(numOutcomes);
     for (VectorDistanceTuple<DenseDoubleVector> tuple : nearestNeighbours) {
       int classIndex = 0;
       if (numOutcomes == 2) {
@@ -68,6 +68,10 @@ public final class KNearestNeighbours extends AbstractClassifier {
 
       outcomeHistogram.set(classIndex, outcomeHistogram.get(classIndex) + 1);
     }
-    return outcomeHistogram;
+    if (numOutcomes == 2) {
+      return new DenseDoubleVector(new double[] { outcomeHistogram.maxIndex() });
+    } else {
+      return outcomeHistogram;
+    }
   }
 }
