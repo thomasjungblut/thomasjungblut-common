@@ -46,11 +46,11 @@ public final class KMeansBSP
     extends
     BSP<VectorWritable, NullWritable, IntWritable, VectorWritable, CenterMessage> {
 
-  private static final String CENTER_OUT_PATH = "center.out.path";
-  private static final String MAX_ITERATIONS_KEY = "k.means.max.iterations";
-  private static final String CACHING_ENABLED_KEY = "k.means.caching.enabled";
-  private static final String DISTANCE_MEASURE_CLASS = "distance.measure.class";
-  private static final String CENTER_IN_PATH = "center.in.path";
+  public static final String CENTER_OUT_PATH = "center.out.path";
+  public static final String MAX_ITERATIONS_KEY = "k.means.max.iterations";
+  public static final String CACHING_ENABLED_KEY = "k.means.caching.enabled";
+  public static final String DISTANCE_MEASURE_CLASS = "distance.measure.class";
+  public static final String CENTER_IN_PATH = "center.in.path";
 
   private static final Log LOG = LogFactory.getLog(KMeansBSP.class);
   // a task local copy of our cluster centers
