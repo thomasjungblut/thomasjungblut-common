@@ -37,8 +37,7 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
   public final Tuple<DenseDoubleMatrix, DenseDoubleVector> train(
       SparseDoubleColumnMatrix documentWordCounts, DenseIntVector prediction) {
 
-    final int numDistinctElements = prediction
-        .getNumberOfDistinctElementsFast();
+    final int numDistinctElements = prediction.getNumberOfDistinctElements();
     probabilityMatrix = new DenseDoubleMatrix(numDistinctElements,
         documentWordCounts.getRowCount(), 1.0d);
 
