@@ -4,6 +4,7 @@ import java.util.Random;
 
 import jcuda.Pointer;
 import jcuda.Sizeof;
+import jcuda.jcublas.JCublas;
 import jcuda.jcublas.JCublas2;
 import jcuda.jcublas.cublasHandle;
 import jcuda.jcublas.cublasOperation;
@@ -26,31 +27,40 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
  */
 public final class JCUDAMatrixUtils {
 
-  public static boolean CUDA_AVAILABLE = false;
+  public static boolean EXCEPTIONS_ENABLED = false;
+  public static boolean CUBLAS2_AVAILABLE = false;
 
   private static cublasHandle handle;
 
   static {
     try {
-      // Disable exceptions and omit subsequent error checks
-      JCublas2.setExceptionsEnabled(true);
-      JCuda.setExceptionsEnabled(true);
+      JCuda.setExceptionsEnabled(EXCEPTIONS_ENABLED);
       cudaDeviceProp cudaDeviceProp = new cudaDeviceProp();
       JCuda.cudaGetDeviceProperties(cudaDeviceProp, 0);
+      // verify that compute capability of 1.3 is available, because only
+      // here is the double precision operation allowed.
+      if (cudaDeviceProp.major <= 1 && cudaDeviceProp.minor < 3) {
+        throw new IllegalArgumentException(
+            "WARN Double precision computing only allowed since capability 1.3! You have "
+                + cudaDeviceProp.major
+                + "."
+                + cudaDeviceProp.minor
+                + "! If you have exceptions turned off, then this may result in strange behaviour.");
+      }
       // actually here is only cublas2 available.
       if (Integer.parseInt(cudaDeviceProp.getName().replaceAll("[^\\d]", "")) > 400) {
+        JCublas2.setExceptionsEnabled(EXCEPTIONS_ENABLED);
         JCublas2.initialize();
-        CUDA_AVAILABLE = true;
-        System.out
-            .println("Using device " + cudaDeviceProp.getName()
-                + " with total RAM of " + cudaDeviceProp.totalGlobalMem
-                + " bytes!");
+        CUBLAS2_AVAILABLE = true;
+        handle = new cublasHandle();
+        JCublas2.cublasCreate(handle);
+        JCublas2.cublasSetPointerMode(handle,
+            cublasPointerMode.CUBLAS_POINTER_MODE_HOST);
+      } else {
+        JCublas.setExceptionsEnabled(EXCEPTIONS_ENABLED);
+        JCublas.cublasInit();
       }
 
-      handle = new cublasHandle();
-      JCublas2.cublasCreate(handle);
-      JCublas2.cublasSetPointerMode(handle,
-          cublasPointerMode.CUBLAS_POINTER_MODE_HOST);
       // cleanup that handle at the end of this process
       Runtime.getRuntime().addShutdownHook(new Thread() {
         @Override
@@ -59,6 +69,12 @@ public final class JCUDAMatrixUtils {
         }
       });
 
+      System.out.println("Using device " + cudaDeviceProp.getName()
+          + " with total RAM of "
+          + humanReadableByteCount(cudaDeviceProp.totalGlobalMem, false)
+          + ". Compute capability: " + cudaDeviceProp.major + "."
+          + cudaDeviceProp.minor);
+
     } catch (Throwable e) {
       // e.printStackTrace();
       System.out.println(e.getLocalizedMessage());
@@ -66,11 +82,52 @@ public final class JCUDAMatrixUtils {
   }
 
   /**
-   * Multiplies matrix a with matrix b and returns a new matrix.
+   * Multiplies matrix A with matrix B and returns a new matrix.
    */
   public static DenseDoubleMatrix multiply(DenseDoubleMatrix a,
       DenseDoubleMatrix b) {
     return multiply(a, b, false, false);
+  }
+
+  /**
+   * Multiplies matrix A with matrix B (these are pointers, thus the dimension
+   * must be passed and returns a new matrix.
+   */
+  public static DenseDoubleMatrix multiply(Pointer a, Pointer b,
+      MatrixDimension dim) {
+
+    // Prepare the pointer for the result in DEVICE memory
+    Pointer deviceResultPointer = new Pointer();
+    int resMatrixSize = dim.getM() * dim.getN();
+    int transA = dim.isTransposeA() ? cublasOperation.CUBLAS_OP_T
+        : cublasOperation.CUBLAS_OP_N;
+    int transB = dim.isTransposeB() ? cublasOperation.CUBLAS_OP_T
+        : cublasOperation.CUBLAS_OP_N;
+
+    if (CUBLAS2_AVAILABLE) {
+      JCuda.cudaMalloc(deviceResultPointer, Sizeof.DOUBLE * resMatrixSize);
+      Pointer alpha = Pointer.to(new double[] { 1.0d });
+      Pointer beta = Pointer.to(new double[] { 0.0d });
+      JCublas2.cublasDgemm(handle, transA, transB, dim.getM(), dim.getN(),
+          dim.getK(), alpha, a, dim.getLdA(), b, dim.getLdB(), beta,
+          deviceResultPointer, dim.getLdC());
+      freePointer(alpha);
+      freePointer(beta);
+    } else {
+      JCublas.cublasAlloc(resMatrixSize, Sizeof.DOUBLE, deviceResultPointer);
+      JCublas.cublasDgemm(transA == 0 ? 'n' : 'y', transB == 0 ? 'n' : 'y',
+          dim.getM(), dim.getN(), dim.getK(), 1d, a, dim.getLdA(), b,
+          dim.getLdB(), 0d, deviceResultPointer, dim.getLdC());
+    }
+
+    JCuda.cudaDeviceSynchronize();
+
+    DenseDoubleMatrix matrix = getMatrix(deviceResultPointer, dim.getM(),
+        dim.getN());
+
+    freePointer(deviceResultPointer);
+
+    return matrix;
   }
 
   /**
@@ -81,60 +138,19 @@ public final class JCUDAMatrixUtils {
       DenseDoubleMatrix b, boolean transposeA, boolean transposeB) {
     Pointer matrixPointerA = memcpyMatrix(a);
     Pointer matrixPointerB = memcpyMatrix(b);
-
-    int m = a.getRowCount();
-    int n = b.getColumnCount();
-    int k = a.getColumnCount();
-
-    // leading dimensions
-    int ldA = a.getRowCount();
-    int ldB = b.getRowCount();
-    int ldC = a.getRowCount();
-
-    // recalculate the parameters for transposes
-    if (transposeA && transposeB) {
-      m = a.getColumnCount();
-      n = b.getRowCount();
-      k = b.getColumnCount();
-      ldC = a.getColumnCount();
-    } else if (transposeB) {
-      n = b.getRowCount();
-    } else if (transposeA) {
-      m = a.getColumnCount();
-      k = a.getRowCount();
-      ldC = a.getColumnCount();
-    }
-
-    // Prepare the pointer for the result in DEVICE memory
-    Pointer deviceResultPointer = new Pointer();
-    int resMatrixSize = m * n;
-    JCuda.cudaMalloc(deviceResultPointer, Sizeof.DOUBLE * resMatrixSize);
-
-    Pointer alpha = Pointer.to(new double[] { 1.0d });
-    Pointer beta = Pointer.to(new double[] { 0.0d });
-
-    int transA = transposeA ? cublasOperation.CUBLAS_OP_T
-        : cublasOperation.CUBLAS_OP_N;
-    int transB = transposeB ? cublasOperation.CUBLAS_OP_T
-        : cublasOperation.CUBLAS_OP_N;
-
-    JCublas2.cublasDgemm(handle, transA, transB, m, n, k, alpha,
-        matrixPointerA, ldA, matrixPointerB, ldB, beta, deviceResultPointer,
-        ldC);
-
-    JCuda.cudaDeviceSynchronize();
-
-    DenseDoubleMatrix matrix = getMatrix(deviceResultPointer, m, n);
-
+    DenseDoubleMatrix matrix = multiply(matrixPointerA, matrixPointerB,
+        new MatrixDimension(a, b, transposeA, transposeB));
     freePointer(matrixPointerA);
     freePointer(matrixPointerB);
-    freePointer(deviceResultPointer);
-    freePointer(alpha);
-    freePointer(beta);
     return matrix;
   }
 
-  private static Pointer memcpyMatrix(DenseDoubleMatrix a) {
+  /**
+   * Copies the given matrix to the device memory in column major format.
+   * 
+   * @return a pointer to this matrix.
+   */
+  public static Pointer memcpyMatrix(DenseDoubleMatrix a) {
     int matrixSizeA = a.getColumnCount() * a.getRowCount();
 
     double[] matrix = new double[matrixSizeA];
@@ -146,27 +162,65 @@ public final class JCUDAMatrixUtils {
 
     Pointer deviceMatrixA = new Pointer();
     JCuda.cudaMalloc(deviceMatrixA, matrixSizeA * Sizeof.DOUBLE);
-    JCublas2.cublasSetMatrix(a.getRowCount(), a.getColumnCount(),
-        Sizeof.DOUBLE, Pointer.to(matrix), a.getRowCount(), deviceMatrixA,
-        a.getRowCount());
+    if (CUBLAS2_AVAILABLE) {
+      JCublas2.cublasSetMatrix(a.getRowCount(), a.getColumnCount(),
+          Sizeof.DOUBLE, Pointer.to(matrix), a.getRowCount(), deviceMatrixA,
+          a.getRowCount());
+    } else {
+      JCublas.cublasSetMatrix(a.getRowCount(), a.getColumnCount(),
+          Sizeof.DOUBLE, Pointer.to(matrix), a.getRowCount(), deviceMatrixA,
+          a.getRowCount());
+    }
 
     return deviceMatrixA;
   }
 
-  private static DenseDoubleMatrix getMatrix(Pointer src, int rows, int columns) {
+  /**
+   * Read a matrix from device memory.
+   * 
+   * @param src the head pointer to the matrix.
+   * @param rows the number of rows.
+   * @param columns the number of columns
+   * @return a new matrix with the results from device.
+   */
+  public static DenseDoubleMatrix getMatrix(Pointer src, int rows, int columns) {
     double[] raw = new double[rows * columns];
     Pointer dst = Pointer.to(raw);
-    JCublas2
-        .cublasGetMatrix(rows, columns, Sizeof.DOUBLE, src, rows, dst, rows);
+    if (CUBLAS2_AVAILABLE) {
+      JCublas2.cublasGetMatrix(rows, columns, Sizeof.DOUBLE, src, rows, dst,
+          rows);
+    } else {
+      JCublas.cublasGetMatrix(rows, columns, Sizeof.DOUBLE, src, rows, dst,
+          rows);
+    }
     return new DenseDoubleMatrix(raw, rows, columns);
   }
 
-  private static void cublasDestroy(cublasHandle handle) {
-    JCublas2.cublasDestroy(handle);
+  /**
+   * Frees the given pointer.
+   * 
+   * @param p the pointer to free
+   */
+  public static void freePointer(Pointer p) {
+    JCuda.cudaFree(p);
   }
 
-  private static void freePointer(Pointer p) {
-    JCuda.cudaFree(p);
+  private static void cublasDestroy(cublasHandle handle) {
+    if (CUBLAS2_AVAILABLE) {
+      JCublas2.cublasDestroy(handle);
+    } else {
+      JCublas.cublasShutdown();
+    }
+  }
+
+  // thanks aioobe :)
+  private static String humanReadableByteCount(long bytes, boolean si) {
+    int unit = si ? 1000 : 1024;
+    if (bytes < unit)
+      return bytes + " B";
+    int exp = (int) (Math.log(bytes) / Math.log(unit));
+    String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
+    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
   public static void main(String[] args) {
@@ -178,12 +232,12 @@ public final class JCUDAMatrixUtils {
     DenseDoubleMatrix a = new DenseDoubleMatrix(n, k, new Random());
     DenseDoubleMatrix b = new DenseDoubleMatrix(k, m, new Random());
     long start = System.currentTimeMillis();
-    DenseDoubleMatrix multiplyCPU = (DenseDoubleMatrix) a.multiply(b);
-    System.out.println("CPU took: " + (System.currentTimeMillis() - start)
-        / 1000f + "s!");
-    start = System.currentTimeMillis();
     DenseDoubleMatrix multiplyGPU = multiply(a, b);
     System.out.println("GPU took: " + (System.currentTimeMillis() - start)
+        / 1000f + "s!");
+    start = System.currentTimeMillis();
+    DenseDoubleMatrix multiplyCPU = (DenseDoubleMatrix) a.multiply(b);
+    System.out.println("CPU took: " + (System.currentTimeMillis() - start)
         / 1000f + "s!");
     System.out.println("Matrix difference: "
         + multiplyCPU.subtract(multiplyGPU).sum());

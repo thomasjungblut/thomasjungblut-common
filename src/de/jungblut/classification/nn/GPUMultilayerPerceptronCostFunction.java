@@ -17,6 +17,13 @@ import de.jungblut.math.tuple.Tuple;
  * {@link MultilayerPerceptronCostFunction}, but executes critical parts, e.G.
  * the matrix multiplications on the GPU to get a huge speedup.
  * 
+ * <br/>
+ * <br/>
+ * A big TODO would be to actually just let this be pointers and do the whole
+ * computation on the device (including sigmoids do the whole back and forward
+ * propagation). Copying the weights might be a bigger bottleneck than the
+ * computation itself though.
+ * 
  */
 public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
 
