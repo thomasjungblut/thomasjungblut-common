@@ -102,8 +102,33 @@ public final class Voting extends AbstractClassifier {
 
   @Override
   public DoubleVector predict(DoubleVector features) {
-    // TODO predict based on the rules:)
-    return null;
+    // predict
+    DoubleVector[] result = new DoubleVector[classifier.length];
+    for (int i = 0; i < classifier.length; i++) {
+      result[i] = classifier[i].predict(features);
+    }
+    int possibleOutcomes = result[0].getDimension() == 1 ? 2 : result[0]
+        .getDimension();
+    DenseDoubleVector toReturn = new DenseDoubleVector(
+        possibleOutcomes == 2 ? 1 : possibleOutcomes);
+    // now combine the results based on the rule
+    switch (type) {
+      case MAJORITY:
+        double[] histogram = new double[possibleOutcomes];
+        for (int i = 0; i < classifier.length; i++) {
+          histogram[classifier[i].getPredictedClass(features)]++;
+        }
+        if (possibleOutcomes == 2) {
+          toReturn.set(0, ArrayUtils.maxIndex(histogram));
+        } else {
+          toReturn.set(ArrayUtils.maxIndex(histogram), 1d);
+        }
+        break;
+      default:
+        throw new UnsupportedOperationException("Type " + type
+            + " isn't supported yet!");
+    }
+    return toReturn;
   }
 
   final class TrainingWorker implements Callable<Boolean> {

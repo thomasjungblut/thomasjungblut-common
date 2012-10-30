@@ -16,19 +16,42 @@ import de.jungblut.reader.MushroomReader;
 
 public class VotingTest extends TestCase {
 
+  private Tuple<DoubleVector[], DenseDoubleVector[]> data;
+  private ClassifierFactory factory = new ClassifierFactory() {
+    @Override
+    public Classifier newInstance() {
+      return new LogisticRegression(0.0d, new Fmincg(), 1000, false);
+    }
+  };
+  private double logisticTrainingError;
+
+  @Override
+  protected void setUp() throws Exception {
+    data = MushroomReader.readMushroomDataset();
+    logisticTrainingError = trainInternal(factory.newInstance());
+  }
+
   @Test
   public void testVoting() {
+    Voting voter = new Voting(CombiningType.MAJORITY, factory, 20, false);
+    double trainingError = trainInternal(voter);
+    assertTrue("Error of single logistic regression: " + logisticTrainingError
+        + " and voted regression: " + trainingError,
+        logisticTrainingError > trainingError);
+  }
 
-    Voting voter = new Voting(CombiningType.MAX, new ClassifierFactory() {
-      @Override
-      public Classifier newInstance() {
-        return new LogisticRegression(1.0d, new Fmincg(), 100, false);
-      }
-    }, 8, true);
+  // returns the trainingset error
+  public double trainInternal(Classifier classifier) {
 
-    Tuple<DoubleVector[], DenseDoubleVector[]> data = MushroomReader
-        .readMushroomDataset();
-    voter.train(data.getFirst(), data.getSecond());
+    classifier.train(data.getFirst(), data.getSecond());
 
+    double err = 0d;
+    for (int i = 0; i < data.getFirst().length; i++) {
+      DoubleVector features = data.getFirst()[i];
+      DenseDoubleVector outcome = data.getSecond()[i];
+      DoubleVector predict = classifier.predict(features);
+      err += outcome.subtract(predict).abs().sum();
+    }
+    return err / data.getFirst().length;
   }
 }

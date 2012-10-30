@@ -45,4 +45,18 @@ public interface Classifier {
    */
   public int getPredictedClass(DoubleVector features);
 
+  /**
+   * Given an already done prediction, choose the class.
+   * 
+   * @return the class index as integer.
+   */
+  public int predictClassInternal(DoubleVector predict);
+
+  /**
+   * Given an already done prediction, choose the class with a threshold.
+   * 
+   * @return the class index as integer.
+   */
+  public int predictClassInternal(DoubleVector predict, double threshold);
+
 }
