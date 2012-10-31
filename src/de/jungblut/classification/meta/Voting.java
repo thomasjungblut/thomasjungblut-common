@@ -78,22 +78,21 @@ public final class Voting extends AbstractClassifier {
           .subArray(outcome, splitRanges[i], splitRanges[i + 1])));
     }
 
-    // let the training happen meanwhile wait for the result
-    for (int i = 0; i < classifier.length; i++) {
-      try {
+    try {
+      // let the training happen meanwhile wait for the result
+      for (int i = 0; i < classifier.length; i++) {
         completionService.take();
         if (verbose) {
           System.out.println("Finished with training classifier " + (i + 1)
               + " of " + classifier.length);
         }
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-        return;
+
       }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
+    } finally {
+      pool.shutdownNow();
     }
-
-    pool.shutdownNow();
-
     if (verbose) {
       System.out.println("Successfully finished training!");
     }
