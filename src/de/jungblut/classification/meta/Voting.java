@@ -115,7 +115,7 @@ public final class Voting extends AbstractClassifier {
       case MAJORITY:
         double[] histogram = new double[possibleOutcomes];
         for (int i = 0; i < classifier.length; i++) {
-          histogram[classifier[i].getPredictedClass(features)]++;
+          histogram[classifier[i].predictClassInternal(result[i])]++;
         }
         if (possibleOutcomes == 2) {
           toReturn.set(0, ArrayUtils.maxIndex(histogram));

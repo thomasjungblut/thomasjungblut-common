@@ -36,7 +36,7 @@ public class VotingTest extends TestCase {
     Voting voter = new Voting(CombiningType.MAJORITY, factory, 20, false);
     double trainingError = trainInternal(voter);
     assertTrue("Error of single logistic regression: " + logisticTrainingError
-        + " and voted regression: " + trainingError,
+        + " and voted regression was higher: " + trainingError,
         logisticTrainingError > trainingError);
   }
 
@@ -45,7 +45,7 @@ public class VotingTest extends TestCase {
     Voting voter = new Voting(CombiningType.AVERAGE, factory, 20, false);
     double trainingError = trainInternal(voter);
     assertTrue("Error of single logistic regression: " + logisticTrainingError
-        + " and voted regression: " + trainingError,
+        + " and voted regression was higher: " + trainingError,
         logisticTrainingError > trainingError);
   }
 
