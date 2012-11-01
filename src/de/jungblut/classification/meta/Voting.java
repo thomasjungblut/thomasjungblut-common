@@ -26,7 +26,7 @@ import de.jungblut.partition.Boundaries.Range;
 public final class Voting extends AbstractClassifier {
 
   public static enum CombiningType {
-    MAJORITY, AVERAGE, MAX, MIN, MEDIAN
+    MAJORITY, AVERAGE
   }
 
   private final CombiningType type;
@@ -108,8 +108,8 @@ public final class Voting extends AbstractClassifier {
     }
     int possibleOutcomes = result[0].getDimension() == 1 ? 2 : result[0]
         .getDimension();
-    DenseDoubleVector toReturn = new DenseDoubleVector(
-        possibleOutcomes == 2 ? 1 : possibleOutcomes);
+    DoubleVector toReturn = new DenseDoubleVector(possibleOutcomes == 2 ? 1
+        : possibleOutcomes);
     // now combine the results based on the rule
     switch (type) {
       case MAJORITY:
@@ -122,6 +122,12 @@ public final class Voting extends AbstractClassifier {
         } else {
           toReturn.set(ArrayUtils.maxIndex(histogram), 1d);
         }
+        break;
+      case AVERAGE:
+        for (int i = 0; i < result.length; i++) {
+          toReturn = toReturn.add(result[i]);
+        }
+        toReturn = toReturn.divide(classifier.length);
         break;
       default:
         throw new UnsupportedOperationException("Type " + type

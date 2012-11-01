@@ -40,6 +40,15 @@ public class VotingTest extends TestCase {
         logisticTrainingError > trainingError);
   }
 
+  @Test
+  public void testAverageVoting() {
+    Voting voter = new Voting(CombiningType.AVERAGE, factory, 20, false);
+    double trainingError = trainInternal(voter);
+    assertTrue("Error of single logistic regression: " + logisticTrainingError
+        + " and voted regression: " + trainingError,
+        logisticTrainingError > trainingError);
+  }
+
   // returns the trainingset error
   public double trainInternal(Classifier classifier) {
 
