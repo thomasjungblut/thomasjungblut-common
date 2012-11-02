@@ -46,9 +46,7 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
    * {@link BufferedOutputStream}.
    */
   public DiskList(String path) throws IOException {
-    this.path = path;
-    this.outStream = new DataOutputStream(new BufferedOutputStream(
-        new FileOutputStream(path)));
+    this(path, 8 * 1024);
   }
 
   /**
@@ -58,7 +56,7 @@ public final class DiskList<E extends Writable> extends AbstractList<E>
    */
   public DiskList(String path, int bufferSize) throws IOException {
     this.path = path;
-    this.outStream = new DataOutputStream(new BufferedOutputStream(
+    this.outStream = new DataOutputStream(new AsyncBufferedOutputStream(
         new FileOutputStream(path), bufferSize));
   }
 
