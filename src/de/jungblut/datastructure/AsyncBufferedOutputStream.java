@@ -9,7 +9,9 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * BufferedOutputStream that asynchronously flushes to disk, so callers don't
  * have to wait until the flush happens. Buffers are put into a queue that is
- * written asynchronously to disk once it is really available.
+ * written asynchronously to disk once it is really available. TODO To make it
+ * use less memory if the producer is too fast, this should limit the number of
+ * buffers. Also it should not create new byte arrays everytime then.
  * 
  * @author thomas.jungblut
  * 
