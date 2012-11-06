@@ -28,7 +28,8 @@ public class NearDuplicateFinder {
             "files/20news-bydate/20news-bydate-train/"));
 
     List<DoubleVector> wordFrequencyVectorized = VectorizerUtils
-        .tfIdfVectorize(twentyNewsgroups.getFirst());
+        .tfIdfVectorize(VectorizerUtils.wordFrequencyVectorize(twentyNewsgroups
+            .getFirst()));
 
     List<int[]> minHashes = new ArrayList<>();
     MinHash minHash = MinHash.create(10);

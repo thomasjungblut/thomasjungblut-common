@@ -1,5 +1,7 @@
 package de.jungblut.nlp;
 
+import gnu.trove.map.hash.TIntIntHashMap;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -118,7 +120,7 @@ public final class VectorizerUtils {
   }
 
   public static List<DoubleVector> tfIdfVectorize(String[]... vars) {
-    return tfIdfVectorize(Arrays.asList(vars));
+    return tfIdfVectorize(wordFrequencyVectorize(vars));
   }
 
   /**
@@ -131,6 +133,16 @@ public final class VectorizerUtils {
       List<DoubleVector> wordFrequencyVectors) {
     // we need to build an counting inverted index:
     // "how many docs are there for a token"
+    TIntIntHashMap tokenDocCounts = new TIntIntHashMap();
+
+    for (DoubleVector vector : wordFrequencyVectors) {
+      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
+        tokenDocCounts.put(next.getIndex(),
+            tokenDocCounts.get(next.getIndex()) + 1);
+      }
+    }
 
     for (DoubleVector vector : wordFrequencyVectors) {
       Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
@@ -139,7 +151,7 @@ public final class VectorizerUtils {
         int wordCount = (int) next.getValue();
         double tfIdf = (1d + Math.log(wordCount))
             * Math.log(vector.getLength()
-                / (double) docTokenCount[next.getIndex()]);
+                / (double) tokenDocCounts.get(next.getIndex()));
         vector.set(next.getIndex(), tfIdf);
       }
     }
@@ -180,14 +192,6 @@ public final class VectorizerUtils {
     });
 
     return list;
-  }
-
-  /**
-   * Calculates the tf-idf of the given documents.
-   */
-  public static List<DoubleVector> tfIdfVectorize(List<String[]> setList) {
-    Tuple<HashMultiset<String>[], String[]> prepareWordCountToken = prepareWordCountToken(setList);
-    return tfIdfVectorize(setList, prepareWordCountToken);
   }
 
 }

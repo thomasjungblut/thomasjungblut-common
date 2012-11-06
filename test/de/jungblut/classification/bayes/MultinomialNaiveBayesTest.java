@@ -31,6 +31,8 @@ public class MultinomialNaiveBayesTest extends TestCase {
         .prepareWordCountToken(trainingDocuments);
     List<DoubleVector> trainingSetInputVector = VectorizerUtils
         .wordFrequencyVectorize(trainingDocuments, trainingSetWordCounts);
+    trainingSetInputVector = VectorizerUtils
+        .tfIdfVectorize(trainingSetInputVector);
 
     MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
     classifier.train(new SparseDoubleColumnMatrix(trainingSetInputVector),
@@ -46,10 +48,12 @@ public class MultinomialNaiveBayesTest extends TestCase {
             trainingSetWordCounts.getSecond());
     List<DoubleVector> testSetInputVector = VectorizerUtils
         .wordFrequencyVectorize(testDocuments, updatedWordFrequency);
+    testSetInputVector = VectorizerUtils.tfIdfVectorize(testSetInputVector);
     DenseIntVector testSetPrediction = testSet.getSecond();
     double evaluateModel = classifier.evaluateModel(testSetInputVector,
         testSetPrediction, trainingSet.getThird(), false);
 
+    System.out.println(evaluateModel);
     assertTrue(evaluateModel > 0.6d);
 
   }
