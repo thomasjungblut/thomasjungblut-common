@@ -1,4 +1,4 @@
-package de.jungblut.nlp;
+package de.jungblut.nlp.mr;
 
 import java.util.Arrays;
 
@@ -15,8 +15,9 @@ import org.junit.Test;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset.Entry;
 
-import de.jungblut.nlp.WordFrequencyJob.WordFrequencyMapper;
-import de.jungblut.nlp.WordFrequencyJob.WordFrequencyReducer;
+import de.jungblut.nlp.StandardTokenizer;
+import de.jungblut.nlp.mr.WordFrequencyJob.WordFrequencyMapper;
+import de.jungblut.nlp.mr.WordFrequencyJob.WordFrequencyReducer;
 
 public class WordFrequencyJobTest extends TestCase {
 

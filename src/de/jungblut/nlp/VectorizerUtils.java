@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 
 import com.google.common.base.Predicate;
@@ -15,12 +16,15 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
 /**
  * Vectorizing utility for basic tf-idf and wordcount vectorizing of
  * tokens/strings.
+ * 
+ * TODO this completely needs a rework...
  * 
  * @author thomas.jungblut
  * 
@@ -118,43 +122,29 @@ public final class VectorizerUtils {
   }
 
   /**
-   * Calculates the tf-idf of given documents with the given prepared
-   * wordcounts.
+   * Calculates the TF-IDF for the given vectors.
+   * 
+   * @param wordFrequencyVectors already word frequency vectorized vectors.
+   * @return the same vectors, just with tfidf applied.
    */
-  public static List<DoubleVector> tfIdfVectorize(List<String[]> setList,
-      Tuple<HashMultiset<String>[], String[]> prepareWordCountToken) {
-    HashMultiset<String>[] multiSets = prepareWordCountToken.getFirst();
-    String[] tokenBagArray = prepareWordCountToken.getSecond();
-    int[] docTokenCount = new int[tokenBagArray.length];
-    // we are going to calculate how many documents contain that token
-    for (int i = 0; i < tokenBagArray.length; i++) {
-      for (int j = 0; j < multiSets.length; j++) {
-        HashMultiset<String> documentWordCounts = multiSets[j];
-        if (documentWordCounts.count(tokenBagArray[i]) > 0) {
-          docTokenCount[i]++;
-        }
+  public static List<DoubleVector> tfIdfVectorize(
+      List<DoubleVector> wordFrequencyVectors) {
+    // we need to build an counting inverted index:
+    // "how many docs are there for a token"
+
+    for (DoubleVector vector : wordFrequencyVectors) {
+      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
+        int wordCount = (int) next.getValue();
+        double tfIdf = (1d + Math.log(wordCount))
+            * Math.log(vector.getLength()
+                / (double) docTokenCount[next.getIndex()]);
+        vector.set(next.getIndex(), tfIdf);
       }
     }
 
-    List<DoubleVector> vectorList = new ArrayList<>(setList.size());
-    int i = 0;
-    for (String[] arr : setList) {
-      DoubleVector vector = new SparseDoubleVector(tokenBagArray.length);
-      HashMultiset<String> documentWordCounts = multiSets[i];
-      for (String s : arr) {
-        int foundIndex = Arrays.binarySearch(tokenBagArray, s);
-        if (foundIndex >= 0) {
-          int wordCount = documentWordCounts.count(s);
-          double tfIdf = (1d + Math.log(wordCount))
-              * Math.log(setList.size() / (double) docTokenCount[foundIndex]);
-          vector.set(foundIndex, tfIdf);
-        }
-      }
-      vectorList.add(vector);
-      i++;
-    }
-
-    return vectorList;
+    return wordFrequencyVectors;
   }
 
   /**

@@ -1,4 +1,4 @@
-package de.jungblut.nlp;
+package de.jungblut.nlp.mr;
 
 import java.io.IOException;
 
@@ -16,6 +16,9 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset.Entry;
+
+import de.jungblut.nlp.StandardTokenizer;
+import de.jungblut.nlp.Tokenizer;
 
 /**
  * MapReduce job that calculates the token frequency by an improved word count.
