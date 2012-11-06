@@ -125,17 +125,28 @@ public final class VectorizerUtils {
       Tuple<HashMultiset<String>[], String[]> prepareWordCountToken) {
     HashMultiset<String>[] multiSets = prepareWordCountToken.getFirst();
     String[] tokenBagArray = prepareWordCountToken.getSecond();
+    int[] docTokenCount = new int[tokenBagArray.length];
+    // we are going to calculate how many documents contain that token
+    for (int i = 0; i < tokenBagArray.length; i++) {
+      for (int j = 0; j < multiSets.length; j++) {
+        HashMultiset<String> documentWordCounts = multiSets[j];
+        if (documentWordCounts.count(tokenBagArray[i]) > 0) {
+          docTokenCount[i]++;
+        }
+      }
+    }
 
     List<DoubleVector> vectorList = new ArrayList<>(setList.size());
     int i = 0;
     for (String[] arr : setList) {
       DoubleVector vector = new SparseDoubleVector(tokenBagArray.length);
-      HashMultiset<String> hashMultiset = multiSets[i];
+      HashMultiset<String> documentWordCounts = multiSets[i];
       for (String s : arr) {
         int foundIndex = Arrays.binarySearch(tokenBagArray, s);
         if (foundIndex >= 0) {
-          int wordCount = hashMultiset.count(s);
-          double tfIdf = Math.log((double) arr.length / wordCount + 1.0d);
+          int wordCount = documentWordCounts.count(s);
+          double tfIdf = (1d + Math.log(wordCount))
+              * Math.log(setList.size() / (double) docTokenCount[foundIndex]);
           vector.set(foundIndex, tfIdf);
         }
       }

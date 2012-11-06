@@ -50,7 +50,7 @@ public class MultinomialNaiveBayesTest extends TestCase {
     double evaluateModel = classifier.evaluateModel(testSetInputVector,
         testSetPrediction, trainingSet.getThird(), false);
 
-    assertTrue(evaluateModel > 0.75d);
+    assertTrue(evaluateModel > 0.6d);
 
   }
 

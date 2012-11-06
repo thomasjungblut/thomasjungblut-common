@@ -1,14 +1,10 @@
 package de.jungblut.nlp;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.StringTokenizer;
-
-import org.apache.lucene.analysis.TokenStream;
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 
 /**
  * Nifty text utility for majorly tokenizing tasks.
@@ -19,36 +15,6 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 public final class TokenizerUtils {
 
   public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|";
-
-  /**
-   * Fully consumes a lucene tokenstream and returns a string array.
-   */
-  public static String[] consumeTokenStream(TokenStream stream) {
-    ArrayList<String> list = new ArrayList<>();
-    try {
-      stream.reset();
-
-      CharTermAttribute termAttribute = stream
-          .getAttribute(CharTermAttribute.class);
-      while (stream.incrementToken()) {
-        list.add(termAttribute.toString());
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-    } finally {
-      try {
-        stream.end();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-      try {
-        stream.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
-    }
-    return list.toArray(new String[list.size()]);
-  }
 
   /**
    * Applies given regex on tokens and may optionally delete when a token gets
