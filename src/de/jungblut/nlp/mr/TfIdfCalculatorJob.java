@@ -59,7 +59,7 @@ public class TfIdfCalculatorJob {
 
       SparseDoubleVector vector = new SparseDoubleVector(numTokens);
       for (TextIntIntIntWritable pair : values) {
-        if (documentThreshold < pair.getSecond().get()) {
+        if (documentThreshold > pair.getSecond().get()) {
           double tfIdf = pair.getThird().get()
               * Math.log(numDocs / (double) pair.getSecond().get());
           vector.set(pair.getFourth().get(), tfIdf);
