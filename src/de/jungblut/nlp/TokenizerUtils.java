@@ -1,6 +1,7 @@
 package de.jungblut.nlp;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,6 +16,32 @@ import java.util.StringTokenizer;
 public final class TokenizerUtils {
 
   public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|";
+
+  private static final char[] CHARACTER_REPLACE_MAPPING = new char[256];
+  static {
+    int lowerDifference = 'a' - 'A';
+
+    for (char i = 'A'; i <= 'Z'; i++) {
+      CHARACTER_REPLACE_MAPPING[i] = (char) (i + lowerDifference);
+    }
+
+    CHARACTER_REPLACE_MAPPING[' '] = ' ';
+    CHARACTER_REPLACE_MAPPING['ä'] = 'ä';
+    CHARACTER_REPLACE_MAPPING['ö'] = 'ö';
+    CHARACTER_REPLACE_MAPPING['ü'] = 'ü';
+    CHARACTER_REPLACE_MAPPING['Ä'] = 'ä';
+    CHARACTER_REPLACE_MAPPING['Ö'] = 'ö';
+    CHARACTER_REPLACE_MAPPING['Ü'] = 'ü';
+    CHARACTER_REPLACE_MAPPING['ß'] = 'ß';
+
+    for (char i = '0'; i <= '9'; i++) {
+      CHARACTER_REPLACE_MAPPING[i] = i;
+    }
+
+    for (char i = 'a'; i <= 'z'; i++) {
+      CHARACTER_REPLACE_MAPPING[i] = i;
+    }
+  }
 
   /**
    * Applies given regex on tokens and may optionally delete when a token gets
@@ -86,6 +113,46 @@ public final class TokenizerUtils {
       list.add((String) tokenizer.nextElement());
     }
     return list.toArray(new String[list.size()]);
+  }
+
+  /**
+   * Normalizes the tokens:<br/>
+   * - lower cases <br/>
+   * - removes not alphanumeric characters (since I'm german I have included
+   * äüöß as well).
+   */
+  public static String[] normalizeTokens(String[] tokens, boolean removeEmpty) {
+    for (int i = 0; i < tokens.length; i++) {
+      tokens[i] = normalizeString(tokens[i]);
+    }
+
+    if (removeEmpty) {
+      tokens = removeEmpty(tokens);
+    }
+    return tokens;
+  }
+
+  /**
+   * Normalizes the token:<br/>
+   * - lower cases <br/>
+   * - removes not alphanumeric characters (since I'm german I have included
+   * äüöß as well).
+   */
+  public static String normalizeString(String token) {
+    char[] charArray = token.toCharArray();
+    char[] toReturn = new char[charArray.length];
+    int index = 0;
+
+    for (int i = 0; i < charArray.length; i++) {
+      char x = charArray[i];
+      if (x < CHARACTER_REPLACE_MAPPING.length) {
+        if (CHARACTER_REPLACE_MAPPING[x] > 0) {
+          toReturn[index++] = CHARACTER_REPLACE_MAPPING[x];
+        }
+      }
+    }
+
+    return String.valueOf(Arrays.copyOf(toReturn, index));
   }
 
   /**
