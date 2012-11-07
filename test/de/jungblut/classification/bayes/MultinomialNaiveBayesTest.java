@@ -7,12 +7,9 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.google.common.collect.HashMultiset;
-
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
-import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
 import de.jungblut.nlp.VectorizerUtils;
 import de.jungblut.reader.TwentyNewsgroupReader;
@@ -27,12 +24,10 @@ public class MultinomialNaiveBayesTest extends TestCase {
             "files/20news-bydate/20news-bydate-train/"));
 
     List<String[]> trainingDocuments = trainingSet.getFirst();
-    Tuple<HashMultiset<String>[], String[]> trainingSetWordCounts = VectorizerUtils
-        .prepareWordCountToken(trainingDocuments);
-    List<DoubleVector> trainingSetInputVector = VectorizerUtils
-        .wordFrequencyVectorize(trainingDocuments, trainingSetWordCounts);
-    trainingSetInputVector = VectorizerUtils
-        .tfIdfVectorize(trainingSetInputVector);
+    String[] dict = VectorizerUtils.buildDictionary(trainingDocuments);
+    List<DoubleVector> trainingSetInputVector = VectorizerUtils.tfIdfVectorize(
+        trainingDocuments, dict, VectorizerUtils
+            .buildInvertedIndexDocumentCount(trainingDocuments, dict));
 
     MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
     classifier.train(new SparseDoubleColumnMatrix(trainingSetInputVector),
@@ -43,18 +38,15 @@ public class MultinomialNaiveBayesTest extends TestCase {
             "files/20news-bydate/20news-bydate-test/"));
 
     List<String[]> testDocuments = testSet.getFirst();
-    Tuple<HashMultiset<String>[], String[]> updatedWordFrequency = VectorizerUtils
-        .updateWordFrequencyCounts(testDocuments,
-            trainingSetWordCounts.getSecond());
-    List<DoubleVector> testSetInputVector = VectorizerUtils
-        .wordFrequencyVectorize(testDocuments, updatedWordFrequency);
-    testSetInputVector = VectorizerUtils.tfIdfVectorize(testSetInputVector);
+    List<DoubleVector> testSetInputVector = VectorizerUtils.tfIdfVectorize(
+        testDocuments, dict,
+        VectorizerUtils.buildInvertedIndexDocumentCount(testDocuments, dict));
     DenseIntVector testSetPrediction = testSet.getSecond();
     double evaluateModel = classifier.evaluateModel(testSetInputVector,
         testSetPrediction, trainingSet.getThird(), false);
 
     System.out.println(evaluateModel);
-    assertTrue(evaluateModel > 0.6d);
+    assertTrue(evaluateModel > 0.7d);
 
   }
 

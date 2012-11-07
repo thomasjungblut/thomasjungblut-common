@@ -1,32 +1,28 @@
 package de.jungblut.nlp;
 
-import gnu.trove.map.hash.TIntIntHashMap;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
 
+import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.sparse.SparseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Vectorizing utility for basic tf-idf and wordcount vectorizing of
- * tokens/strings.
- * 
- * TODO this completely needs a rework...
+ * tokens/strings. It can also build inverted indices and dictionaries.
  * 
  * @author thomas.jungblut
  * 
@@ -34,129 +30,240 @@ import de.jungblut.math.tuple.Tuple;
 public final class VectorizerUtils {
 
   /**
-   * Prepares a wordcount per document and a token bag of all documents.
+   * Builds a sorted dictionary of tokens from a list of (tokenized) documents.
+   * It treats tokens that are contained in at least 90% of all documents as
+   * spam, they won't be included in the final dictionary.
+   * 
+   * @param tokenizedDocuments the documents that are already tokenized.
+   * @return a sorted String array with tokens in it.
    */
-  public static Tuple<HashMultiset<String>[], String[]> prepareWordCountToken(
-      List<String[]> setList) {
-    HashSet<String> tokenBagSet = new HashSet<>();
-    @SuppressWarnings("unchecked")
-    HashMultiset<String>[] multiSets = new HashMultiset[setList.size()];
-    int i = 0;
-    for (String[] arr : setList) {
-      Collections.addAll(tokenBagSet, arr);
-      multiSets[i] = HashMultiset.create();
-      multiSets[i].addAll(Arrays.asList(arr));
-      i++;
+  public static String[] buildDictionary(List<String[]> tokenizedDocuments) {
+    return buildDictionary(tokenizedDocuments, 0.9f);
+  }
+
+  /**
+   * Builds a sorted dictionary of tokens from a list of (tokenized) documents.
+   * It treats tokens that are contained in at least "stopWordPercentage"% of
+   * all documents as spam, they won't be included in the final dictionary.
+   * 
+   * @param tokenizedDocuments the documents that are the base for the
+   *          dictionary.
+   * @param stopWordPercentage the percentage of how many documents must contain
+   *          a token until it can be classified as spam. Ranges between 0f and
+   *          1f, where 0f will actually return an empty dictionary.
+   * @return a sorted String array with tokens in it.
+   */
+  public static String[] buildDictionary(List<String[]> tokenizedDocuments,
+      float stopWordPercentage) {
+    Preconditions.checkArgument(stopWordPercentage >= 0f
+        && stopWordPercentage <= 1f,
+        "The provided stop word percentage is not between 0 and 1: "
+            + stopWordPercentage);
+    HashMultiset<String> set = HashMultiset.create();
+
+    for (String[] doc : tokenizedDocuments) {
+      // deduplication, because we want to measure how often a token is in a
+      // doc, so we have to get distinct tokens in a document.
+      final ArrayList<String> deduplicate = ArrayUtils.deduplicate(doc);
+      for (String token : deduplicate) {
+        set.add(token);
+      }
+    }
+    final int threshold = (int) (stopWordPercentage * tokenizedDocuments.size());
+    List<String> toRemove = new ArrayList<>();
+    // now remove the spam
+    for (Entry<String> entry : set.entrySet()) {
+      if (entry.getCount() > threshold) {
+        toRemove.add(entry.getElement());
+      }
     }
 
-    String[] tokenBagArray = tokenBagSet
-        .toArray(new String[tokenBagSet.size()]);
-    Arrays.sort(tokenBagArray);
-    return new Tuple<>(multiSets, tokenBagArray);
+    set.removeAll(toRemove);
+
+    Set<String> elementSet = set.elementSet();
+    String[] array = elementSet.toArray(new String[elementSet.size()]);
+    elementSet = null;
+    set = null;
+    Arrays.sort(array);
+    return array;
   }
 
   /**
-   * In-Memory word count vectorizer
+   * Builds an inverted index as multi map.
+   * 
+   * @param tokenizedDocuments the documents to index, already tokenized.
+   * @param dictionary the dictionary of words that should be used to build this
+   *          index.
+   * @return a {@link HashMultimap} that contains a set of integers (index of
+   *         the documents in the given input list) mapped by a token that was
+   *         contained in the documents.
    */
-  public static List<DoubleVector> wordFrequencyVectorize(List<String[]> setList) {
-    return wordFrequencyVectorize(setList, prepareWordCountToken(setList));
+  public static HashMultimap<String, Integer> buildInvertedIndexMap(
+      List<String[]> tokenizedDocuments, String[] dictionary) {
+    HashMultimap<String, Integer> indexMap = HashMultimap.create();
+    for (int i = 0; i < tokenizedDocuments.size(); i++) {
+      String[] tokens = tokenizedDocuments.get(i);
+      for (String token : tokens) {
+        // check if we have the word in our dictionary
+        if (Arrays.binarySearch(dictionary, token) >= 0) {
+          indexMap.put(token, i);
+        }
+      }
+    }
+    return indexMap;
   }
 
   /**
-   * Vectorizes a list of documents with the given wordcounts and tokens.
+   * Builds an inverted index based on the given dictionary, adds just the
+   * document index mappings to it.
+   * 
+   * @param tokenizedDocuments the documents to index, already tokenized.
+   * @param dictionary the dictionary of words that should be used to build this
+   *          index.
+   * @return a two dimensional integer array, that contains the document ids
+   *         (index in the given document list) on the same index that the
+   *         dictionary maps the token.
+   */
+  public static int[][] buildInvertedIndexArray(
+      List<String[]> tokenizedDocuments, String[] dictionary) {
+    HashMultimap<String, Integer> invertedIndex = buildInvertedIndexMap(
+        tokenizedDocuments, dictionary);
+    int[][] docs = new int[dictionary.length][];
+
+    for (int i = 0; i < dictionary.length; i++) {
+      Set<Integer> set = invertedIndex.get(dictionary[i]);
+      docs[i] = ArrayUtils
+          .toPrimitiveArray(set.toArray(new Integer[set.size()]));
+    }
+
+    return docs;
+  }
+
+  /**
+   * Builds an inverted index document count based on the given dictionary, so
+   * at each dimension of the returned array, there is a count of how many
+   * documents contained that document.
+   * 
+   * @param tokenizedDocuments the documents to index, already tokenized.
+   * @param dictionary the dictionary of words that should be used to build this
+   *          index.
+   * @return a one dimensional integer array, that contains the number of
+   *         documents on the same index that the dictionary maps the token.
+   */
+  public static int[] buildInvertedIndexDocumentCount(
+      List<String[]> tokenizedDocuments, String[] dictionary) {
+    HashMultimap<String, Integer> invertedIndex = buildInvertedIndexMap(
+        tokenizedDocuments, dictionary);
+    int[] docs = new int[dictionary.length];
+
+    for (int i = 0; i < dictionary.length; i++) {
+      Set<Integer> set = invertedIndex.get(dictionary[i]);
+      docs[i] = set.size();
+    }
+
+    return docs;
+  }
+
+  /**
+   * Vectorizes a given list of documents. Each vector will have the dimension
+   * of how many words are in the build dictionary, each word will have its own
+   * mapping in the vector. The value at a certain index (determined by the
+   * position in the dictionary) will be the frequncy of the word in the
+   * document.
+   * 
+   * @param tokenizedDocuments the array of documents.
+   * @return a list of sparse vectors, representing the documents as vectors
+   *         based on word frequency.
+   */
+  public static List<DoubleVector> wordFrequencyVectorize(String[]... vars) {
+    return wordFrequencyVectorize(Arrays.asList(vars));
+  }
+
+  /**
+   * Vectorizes a given list of documents. Each vector will have the dimension
+   * of how many words are in the build dictionary, each word will have its own
+   * mapping in the vector. The value at a certain index (determined by the
+   * position in the dictionary) will be the frequncy of the word in the
+   * document.
+   * 
+   * @param tokenizedDocuments the list of documents.
+   * @return a list of sparse vectors, representing the documents as vectors
+   *         based on word frequency.
    */
   public static List<DoubleVector> wordFrequencyVectorize(
-      List<String[]> setList, Tuple<HashMultiset<String>[], String[]> wordCounts) {
+      List<String[]> tokenizedDocuments) {
+    return wordFrequencyVectorize(tokenizedDocuments,
+        buildDictionary(tokenizedDocuments));
+  }
 
-    HashMultiset<String>[] multiSets = wordCounts.getFirst();
-    String[] tokenBagArray = wordCounts.getSecond();
+  /**
+   * Vectorizes a given list of documents and a dictionary. Each vector will
+   * have the dimension of how many words are in the dictionary, each word will
+   * have its own mapping in the vector. The value at a certain index
+   * (determined by the position in the dictionary) will be the frequncy of the
+   * word in the document.
+   * 
+   * @param tokenizedDocuments the list of documents.
+   * @param dictionary the dictionary, must be sorted.
+   * @return a list of sparse vectors, representing the documents as vectors
+   *         based on word frequency.
+   */
+  public static List<DoubleVector> wordFrequencyVectorize(
+      List<String[]> tokenizedDocuments, String[] dictionary) {
 
-    List<DoubleVector> vectorList = new ArrayList<>(setList.size());
-    int i = 0;
-    for (String[] arr : setList) {
-      DoubleVector vector = new SparseDoubleVector(tokenBagArray.length);
-      HashMultiset<String> hashMultiset = multiSets[i];
+    List<DoubleVector> vectorList = new ArrayList<>(tokenizedDocuments.size());
+    for (String[] arr : tokenizedDocuments) {
+      DoubleVector vector = new SparseDoubleVector(dictionary.length);
+      HashMultiset<String> set = HashMultiset.create(Arrays.asList(arr));
       for (String s : arr) {
-        int foundIndex = Arrays.binarySearch(tokenBagArray, s);
-        // simply ignore tokens we don't know
+        int foundIndex = Arrays.binarySearch(dictionary, s);
+        // simply ignore tokens we don't know or that are spam
         if (foundIndex >= 0) {
-          int count = hashMultiset.count(s);
-          vector.set(foundIndex, count);
+          // the index is equal to its mapped dimension
+          vector.set(foundIndex, set.count(s));
         }
       }
       vectorList.add(vector);
-      i++;
     }
 
     return vectorList;
   }
 
   /**
-   * This method is updating the wordcounts with the token bags for the given
-   * documents.
-   */
-  public static Tuple<HashMultiset<String>[], String[]> updateWordFrequencyCounts(
-      List<String[]> setList, String[] tokenBag) {
-
-    HashSet<String> tokenBagSet = new HashSet<>(Arrays.asList(tokenBag));
-    @SuppressWarnings("unchecked")
-    HashMultiset<String>[] multiSets = new HashMultiset[setList.size()];
-    int i = 0;
-    for (String[] arr : setList) {
-      multiSets[i] = HashMultiset.create();
-      for (String anArr : arr) {
-        if (tokenBagSet.contains(anArr)) {
-          multiSets[i].add(anArr);
-        }
-      }
-      i++;
-    }
-
-    return new Tuple<>(multiSets, tokenBag);
-  }
-
-  public static List<DoubleVector> wordFrequencyVectorize(String[]... vars) {
-    return wordFrequencyVectorize(Arrays.asList(vars));
-  }
-
-  public static List<DoubleVector> tfIdfVectorize(String[]... vars) {
-    return tfIdfVectorize(wordFrequencyVectorize(vars));
-  }
-
-  /**
-   * Calculates the TF-IDF for the given vectors.
+   * Vectorizes the given documents by the TF-IDF weighting.
    * 
-   * @param wordFrequencyVectors already word frequency vectorized vectors.
-   * @return the same vectors, just with tfidf applied.
+   * @param tokenizedDocuments the documents to vectorize.
+   * @param dictionary the dictionary extracted.
+   * @param termDocumentCount the document count per token.
+   * @return a list of sparse tf-idf weighted vectors.
    */
   public static List<DoubleVector> tfIdfVectorize(
-      List<DoubleVector> wordFrequencyVectors) {
-    // we need to build an counting inverted index:
-    // "how many docs are there for a token"
-    TIntIntHashMap tokenDocCounts = new TIntIntHashMap();
+      List<String[]> tokenizedDocuments, String[] dictionary,
+      int[] termDocumentCount) {
 
-    for (DoubleVector vector : wordFrequencyVectors) {
-      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
-      while (iterateNonZero.hasNext()) {
-        DoubleVectorElement next = iterateNonZero.next();
-        tokenDocCounts.put(next.getIndex(),
-            tokenDocCounts.get(next.getIndex()) + 1);
+    final int numDocuments = tokenizedDocuments.size();
+    final int numTokens = dictionary.length;
+    List<DoubleVector> list = new ArrayList<>(numDocuments);
+
+    for (String[] document : tokenizedDocuments) {
+      DoubleVector vector = new SparseDoubleVector(numTokens);
+      HashMultiset<String> termFrequencySet = HashMultiset.create(Arrays
+          .asList(document));
+
+      for (String token : document) {
+        int index = Arrays.binarySearch(dictionary, token);
+        if (index >= 0) {
+          // TODO scale logarithmic?
+          double tfIdf = termFrequencySet.count(token)
+              * Math.log(numDocuments / (double) termDocumentCount[index]);
+          vector.set(index, tfIdf);
+        }
       }
+
+      list.add(vector);
     }
 
-    for (DoubleVector vector : wordFrequencyVectors) {
-      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
-      while (iterateNonZero.hasNext()) {
-        DoubleVectorElement next = iterateNonZero.next();
-        int wordCount = (int) next.getValue();
-        double tfIdf = (1d + Math.log(wordCount))
-            * Math.log(vector.getLength()
-                / (double) tokenDocCounts.get(next.getIndex()));
-        vector.set(next.getIndex(), tfIdf);
-      }
-    }
-
-    return wordFrequencyVectors;
+    return list;
   }
 
   /**
