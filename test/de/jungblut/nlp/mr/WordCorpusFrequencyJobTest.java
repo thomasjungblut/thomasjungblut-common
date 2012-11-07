@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import junit.framework.TestCase;
 
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
@@ -16,14 +17,14 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset.Entry;
 
 import de.jungblut.nlp.StandardTokenizer;
-import de.jungblut.nlp.mr.WordCountJob.WordFrequencyMapper;
-import de.jungblut.nlp.mr.WordCountJob.WordFrequencyReducer;
+import de.jungblut.nlp.mr.WordCorpusFrequencyJob.DocumentSumReducer;
+import de.jungblut.nlp.mr.WordCorpusFrequencyJob.TokenMapper;
 
-public class WordFrequencyJobTest extends TestCase {
+public class WordCorpusFrequencyJobTest extends TestCase {
 
-  MapDriver<LongWritable, Text, Text, LongWritable> mapDriver;
-  ReduceDriver<Text, LongWritable, Text, LongWritable> reduceDriver;
-  MapReduceDriver<LongWritable, Text, Text, LongWritable, Text, LongWritable> mapReduceDriver;
+  MapDriver<LongWritable, Text, Text, TextIntPairWritable> mapDriver;
+  ReduceDriver<Text, TextIntPairWritable, Text, TextIntIntIntWritable> reduceDriver;
+  MapReduceDriver<LongWritable, Text, Text, TextIntPairWritable, Text, TextIntIntIntWritable> mapReduceDriver;
 
   String toDedup = "this this is a text about how i used lower case and and duplicate words words";
   HashMultiset<String> tokenFrequency = HashMultiset.create(Arrays
@@ -32,8 +33,9 @@ public class WordFrequencyJobTest extends TestCase {
   @Override
   @Before
   public void setUp() {
-    WordFrequencyMapper mapper = new WordFrequencyMapper();
-    WordFrequencyReducer reducer = new WordFrequencyReducer();
+    toDedup = "ID123\t" + toDedup;
+    TokenMapper mapper = new TokenMapper();
+    DocumentSumReducer reducer = new DocumentSumReducer();
     mapDriver = MapDriver.newMapDriver(mapper);
     reduceDriver = ReduceDriver.newReduceDriver(reducer);
     mapReduceDriver = MapReduceDriver.newMapReduceDriver(mapper, reducer);
@@ -44,8 +46,10 @@ public class WordFrequencyJobTest extends TestCase {
     mapDriver.withInput(new LongWritable(), new Text(toDedup));
 
     for (Entry<String> entry : tokenFrequency.entrySet()) {
-      mapDriver.addOutput(new Text(entry.getElement()),
-          new LongWritable(entry.getCount()));
+      mapDriver.addOutput(
+          new Text(entry.getElement()),
+          new TextIntPairWritable(new Text("ID123"), new IntWritable(entry
+              .getCount())));
     }
 
     mapDriver.runTest();
@@ -55,10 +59,13 @@ public class WordFrequencyJobTest extends TestCase {
   public void testReducer() {
 
     reduceDriver.setInputKey(new Text("this"));
-    reduceDriver.setInputValues(Arrays.asList(new LongWritable(2l),
-        new LongWritable(4l), new LongWritable(1l), new LongWritable(25l)));
 
-    reduceDriver.addOutput(new Text("this"), new LongWritable(32l));
+    reduceDriver.setInputValues(Arrays.asList(new TextIntPairWritable(new Text(
+        "ID123"), new IntWritable(4))));
+
+    reduceDriver.addOutput(new Text("ID123"), new TextIntIntIntWritable(
+        new Text("this"), new IntWritable(1), new IntWritable(4),
+        new IntWritable(0)));
 
     reduceDriver.runTest();
   }

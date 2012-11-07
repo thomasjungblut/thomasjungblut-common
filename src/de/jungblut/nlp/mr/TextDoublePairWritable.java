@@ -4,22 +4,22 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.DoubleWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.WritableComparable;
 
 import com.google.common.collect.ComparisonChain;
 
-public final class TextIntPairWritable implements
-    WritableComparable<TextIntPairWritable> {
+public final class TextDoublePairWritable implements
+    WritableComparable<TextDoublePairWritable> {
 
   private Text first;
-  private IntWritable second;
+  private DoubleWritable second;
 
-  public TextIntPairWritable() {
+  public TextDoublePairWritable() {
   }
 
-  public TextIntPairWritable(Text first, IntWritable second) {
+  public TextDoublePairWritable(Text first, DoubleWritable second) {
     this.first = first;
     this.second = second;
   }
@@ -28,7 +28,7 @@ public final class TextIntPairWritable implements
   public void readFields(DataInput in) throws IOException {
     first = new Text();
     first.readFields(in);
-    second = new IntWritable();
+    second = new DoubleWritable();
     second.readFields(in);
   }
 
@@ -39,7 +39,7 @@ public final class TextIntPairWritable implements
   }
 
   @Override
-  public int compareTo(TextIntPairWritable o) {
+  public int compareTo(TextDoublePairWritable o) {
     return ComparisonChain.start().compare(first, o.first)
         .compare(second, o.second).result();
   }
@@ -48,7 +48,7 @@ public final class TextIntPairWritable implements
     return first;
   }
 
-  public IntWritable getSecond() {
+  public DoubleWritable getSecond() {
     return second;
   }
 
@@ -78,7 +78,7 @@ public final class TextIntPairWritable implements
     if (getClass() != obj.getClass()) {
       return false;
     }
-    TextIntPairWritable other = (TextIntPairWritable) obj;
+    TextDoublePairWritable other = (TextDoublePairWritable) obj;
     if (first == null) {
       if (other.first != null) {
         return false;

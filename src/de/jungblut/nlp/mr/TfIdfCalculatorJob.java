@@ -1,11 +1,10 @@
 package de.jungblut.nlp.mr;
 
 import java.io.IOException;
-import java.util.HashMap;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
@@ -15,8 +14,7 @@ import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
-import com.google.common.collect.HashMultiset;
-
+import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.writable.VectorWritable;
 
 /**
@@ -26,38 +24,78 @@ import de.jungblut.writable.VectorWritable;
  * @author thomas.jungblut
  * 
  */
-public final class TfIdfCalculatorJob {
+public class TfIdfCalculatorJob {
 
   public static final String NUMBER_OF_DOCUMENTS_KEY = "documents.num";
+  public static final String NUMBER_OF_TOKENS_KEY = "tokens.num";
 
   /**
    * Calculate the sparse vector with TF-IDF.
    */
-  public static class DocumentReducer extends
-      Reducer<Text, TextIntPairWritable, Text, VectorWritable> {
-    
-    @Override
-    protected void setup(Context context)
-        throws IOException, InterruptedException {
-      
-    }
+  public static class DocumentVectorizerReducer extends
+      Reducer<Text, TextIntIntIntWritable, Text, VectorWritable> {
+
+    private long numDocs;
+    private int numTokens;
 
     @Override
-    protected void reduce(Text key, Iterable<TextIntPairWritable> values,
+    protected void setup(Context context) throws IOException,
+        InterruptedException {
+      numDocs = context.getConfiguration().getLong(NUMBER_OF_DOCUMENTS_KEY, 1);
+      numTokens = context.getConfiguration().getInt(NUMBER_OF_TOKENS_KEY, 1);
+    }
+
+    /**
+     * Input is the document ID with several (token, document frequency, term
+     * frequency, token index) pairs.
+     */
+    @Override
+    protected void reduce(Text key, Iterable<TextIntIntIntWritable> values,
         Context context) throws IOException, InterruptedException {
-      
-      HashMultiset<String> tokenCountSet = HashMultiset.create();
-      HashMap<String,Integer> tokenDocumentCount = new HashMap<>();
-      
-      for(TextIntPairWritable pair : values){
-        String token = pair.getFirst().toString();
-        tokenCountSet.add(token);
-//        tokenDocumentCount.put(token, );
+
+      SparseDoubleVector vector = new SparseDoubleVector(numTokens);
+      for (TextIntIntIntWritable pair : values) {
+        double tfIdf = pair.getThird().get()
+            * Math.log(numDocs / (double) pair.getSecond().get());
+        vector.set(pair.getFourth().get(), tfIdf);
       }
-      
+
+      context.write(key, new VectorWritable(vector));
 
     }
 
+  }
+
+  /**
+   * Calculates TF-IDF vectors from text input in the following format:<br/>
+   * 
+   * <pre>
+   * documentid \t corpus
+   * </pre>
+   * 
+   * <br/>
+   * <br/>
+   * 
+   * It will run two jobs, a first job determines the document frequency of a
+   * token, as well as its index in the resulting vector. The output is a
+   * {@link SequenceFile} with {@link Text} as key and {@link VectorWritable} as
+   * value.
+   * 
+   */
+  public static void main(String[] args) throws Exception {
+    if (args.length != 3) {
+      System.out
+          .println("Usage: <Comma separated input paths> <immediate output path> <Output path>");
+      System.exit(1);
+    }
+    Configuration conf = new Configuration();
+    Job job = WordCorpusFrequencyJob.createJob(args[0], args[1], conf);
+    job.waitForCompletion(true);
+    long numDocs = WordCorpusFrequencyJob.getNumberOfDocuments(job);
+    long numTokens = WordCorpusFrequencyJob.getNumberOfTokens(job);
+    conf = new Configuration();
+    Job createJob = createJob(args[1], args[2], conf, numDocs, numTokens);
+    createJob.waitForCompletion(true);
   }
 
   /**
@@ -68,13 +106,16 @@ public final class TfIdfCalculatorJob {
    * @param conf the configuration.
    * @param numberOfDocuments the number of documents in the corpus per token.
    *          (map input counter value of {@link WordCorpusFrequencyJob}.)
+   * @param numberOfTokens the number of tokens in the corpus. (reduce input
+   *          group counter value of {@link WordCorpusFrequencyJob}.)
    * @return a job with the configured propertys like name, key/value classes
    *         and input format as text.
    */
   public static Job createJob(String in, String out, Configuration conf,
-      int numberOfDocuments) throws IOException {
+      long numberOfDocuments, long numberOfTokens) throws IOException {
 
-    conf.setInt(NUMBER_OF_DOCUMENTS_KEY, numberOfDocuments);
+    conf.setLong(NUMBER_OF_DOCUMENTS_KEY, numberOfDocuments);
+    conf.setLong(NUMBER_OF_TOKENS_KEY, numberOfTokens);
 
     Job job = new Job(conf, "TF-IDF Calculator");
 
@@ -85,10 +126,10 @@ public final class TfIdfCalculatorJob {
     FileOutputFormat.setOutputPath(job, new Path(out));
 
     job.setMapperClass(Mapper.class);
-    job.setReducerClass(DocumentReducer.class);
+    job.setReducerClass(DocumentVectorizerReducer.class);
 
-    job.setOutputKeyClass(TextTextPairWritable.class);
-    job.setOutputValueClass(IntWritable.class);
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(VectorWritable.class);
 
     job.setNumReduceTasks(1);
     return job;

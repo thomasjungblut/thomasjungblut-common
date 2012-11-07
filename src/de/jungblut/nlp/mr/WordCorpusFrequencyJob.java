@@ -1,9 +1,10 @@
 package de.jungblut.nlp.mr;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -19,7 +20,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 import com.google.common.collect.HashMultiset;
-import com.google.common.collect.Multiset.Entry;
 
 import de.jungblut.nlp.StandardTokenizer;
 import de.jungblut.nlp.Tokenizer;
@@ -42,7 +42,7 @@ public class WordCorpusFrequencyJob {
    * Write a token with its document id.
    */
   public static class TokenMapper extends
-      Mapper<LongWritable, Text, Text, Text> {
+      Mapper<LongWritable, Text, Text, TextIntPairWritable> {
 
     private Tokenizer tokenizer;
 
@@ -59,10 +59,12 @@ public class WordCorpusFrequencyJob {
       String[] split = value.toString().split("\t");
       Text documentId = new Text(split[0]);
       String[] tokens = tokenizer.tokenize(split[1]);
+      // this set stores the term frequency
       HashMultiset<String> set = HashMultiset.create(Arrays.asList(tokens));
 
-      for (Entry<String> entry : set.entrySet()) {
-        context.write(new Text(entry.getElement()), documentId);
+      for (String entry : set.elementSet()) {
+        context.write(new Text(entry), new TextIntPairWritable(documentId,
+            new IntWritable(set.count(entry))));
       }
 
     }
@@ -70,23 +72,31 @@ public class WordCorpusFrequencyJob {
 
   /**
    * Sums up all the documents per token index by docID. <br/>
-   * Output is docID as key, value is the token and its document frequency.
+   * Output is docID as key, value is the token and its document frequency and
+   * its term frequency in the doc as well as its index in the dictionary (this
+   * must run as single reducer).
    */
   public static class DocumentSumReducer extends
-      Reducer<Text, Text, Text, TextIntPairWritable> {
+      Reducer<Text, TextIntPairWritable, Text, TextIntIntIntWritable> {
+
+    // ID assigned to the token
+    int currentIndex = 0;
 
     @Override
-    protected void reduce(Text key, Iterable<Text> values, Context context)
-        throws IOException, InterruptedException {
+    protected void reduce(Text key, Iterable<TextIntPairWritable> values,
+        Context context) throws IOException, InterruptedException {
 
-      List<Text> documents = new ArrayList<>();
-      for (Text docId : values) {
-        documents.add(new Text(docId));
+      Map<Text, IntWritable> documents = new HashMap<>();
+      for (TextIntPairWritable docId : values) {
+        documents.put(new Text(docId.getFirst()), new IntWritable(docId
+            .getSecond().get()));
       }
-      for (Text docId : documents) {
-        context.write(docId, new TextIntPairWritable(key, new IntWritable(
-            documents.size())));
+      for (Entry<Text, IntWritable> entry : documents.entrySet()) {
+        context.write(entry.getKey(), new TextIntIntIntWritable(key,
+            new IntWritable(documents.size()), entry.getValue(),
+            new IntWritable(currentIndex)));
       }
+      currentIndex++;
     }
 
   }
@@ -131,6 +141,20 @@ public class WordCorpusFrequencyJob {
   }
 
   /**
+   * Gets the counter of the reduce input groups, in this case it should be the
+   * number of tokens.
+   * 
+   * @param finishedJob the job that has successfully finished.
+   * @return the number of map input records / number of documents.
+   */
+  public static long getNumberOfTokens(Job finishedJob) throws IOException {
+    return finishedJob
+        .getCounters()
+        .findCounter("org.apache.hadoop.mapred.Task$Counter",
+            "REDUCE_INPUT_GROUPS").getValue();
+  }
+
+  /**
    * Creates a token frequency job.
    * 
    * @param in the input path, may comma separate multiple paths.
@@ -153,8 +177,8 @@ public class WordCorpusFrequencyJob {
     job.setReducerClass(DocumentSumReducer.class);
     job.setCombinerClass(DocumentSumReducer.class);
 
-    job.setOutputKeyClass(TextIntPairWritable.class);
-    job.setOutputValueClass(IntWritable.class);
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(TextIntIntIntWritable.class);
 
     job.setNumReduceTasks(1);
     return job;
