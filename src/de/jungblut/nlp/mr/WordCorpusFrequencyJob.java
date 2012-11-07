@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -38,6 +40,9 @@ public class WordCorpusFrequencyJob {
 
   public static final String TOKENIZER_CLASS_KEY = "tokenizer.class";
 
+  private static final Log LOG = LogFactory
+      .getLog(WordCorpusFrequencyJob.class);
+
   /**
    * Write a token with its document id.
    */
@@ -57,16 +62,19 @@ public class WordCorpusFrequencyJob {
         throws IOException, InterruptedException {
       // assuming that the document ID is tab separated with the document
       String[] split = value.toString().split("\t");
-      Text documentId = new Text(split[0]);
-      String[] tokens = tokenizer.tokenize(split[1]);
-      // this set stores the term frequency
-      HashMultiset<String> set = HashMultiset.create(Arrays.asList(tokens));
+      if (split.length == 2) {
+        Text documentId = new Text(split[0]);
+        String[] tokens = tokenizer.tokenize(split[1]);
+        // this set stores the term frequency
+        HashMultiset<String> set = HashMultiset.create(Arrays.asList(tokens));
 
-      for (String entry : set.elementSet()) {
-        context.write(new Text(entry), new TextIntPairWritable(documentId,
-            new IntWritable(set.count(entry))));
+        for (String entry : set.elementSet()) {
+          context.write(new Text(entry), new TextIntPairWritable(documentId,
+              new IntWritable(set.count(entry))));
+        }
+      } else {
+        LOG.warn("Ignore line (couldn't be split correctly): " + value);
       }
-
     }
   }
 
@@ -78,7 +86,9 @@ public class WordCorpusFrequencyJob {
    */
   public static class DocumentSumReducer extends
       Reducer<Text, TextIntPairWritable, Text, TextIntIntIntWritable> {
-
+    
+    // TODO write the dictionary out as well
+    
     // ID assigned to the token
     int currentIndex = 0;
 
@@ -175,7 +185,9 @@ public class WordCorpusFrequencyJob {
 
     job.setMapperClass(TokenMapper.class);
     job.setReducerClass(DocumentSumReducer.class);
-    job.setCombinerClass(DocumentSumReducer.class);
+
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(TextIntPairWritable.class);
 
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(TextIntIntIntWritable.class);
