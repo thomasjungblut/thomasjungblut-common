@@ -16,8 +16,8 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset.Entry;
 
 import de.jungblut.nlp.StandardTokenizer;
-import de.jungblut.nlp.mr.WordFrequencyJob.WordFrequencyMapper;
-import de.jungblut.nlp.mr.WordFrequencyJob.WordFrequencyReducer;
+import de.jungblut.nlp.mr.WordCountJob.WordFrequencyMapper;
+import de.jungblut.nlp.mr.WordCountJob.WordFrequencyReducer;
 
 public class WordFrequencyJobTest extends TestCase {
 

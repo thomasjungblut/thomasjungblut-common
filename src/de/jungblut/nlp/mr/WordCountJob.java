@@ -17,7 +17,6 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset.Entry;
 
-import de.jungblut.nlp.StandardTokenizer;
 import de.jungblut.nlp.Tokenizer;
 
 /**
@@ -26,9 +25,7 @@ import de.jungblut.nlp.Tokenizer;
  * @author thomas.jungblut
  * 
  */
-public class WordFrequencyJob {
-
-  public static final String TOKENIZER_CLASS_KEY = "tokenizer.class";
+public class WordCountJob {
 
   /**
    * Group the tokens in memory for each chunk, write it in the cleanup step.
@@ -48,13 +45,7 @@ public class WordFrequencyJob {
         InterruptedException {
 
       final Configuration conf = context.getConfiguration();
-      try {
-        tokenizer = conf.getClass(TOKENIZER_CLASS_KEY, StandardTokenizer.class,
-            Tokenizer.class).newInstance();
-      } catch (InstantiationException | IllegalAccessException e) {
-        e.printStackTrace();
-        throw new RuntimeException(e);
-      }
+      tokenizer = WordCorpusFrequencyJob.getTokenizer(conf);
 
     }
 
