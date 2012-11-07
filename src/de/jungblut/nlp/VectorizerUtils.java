@@ -38,7 +38,7 @@ public final class VectorizerUtils {
    * @return a sorted String array with tokens in it.
    */
   public static String[] buildDictionary(List<String[]> tokenizedDocuments) {
-    return buildDictionary(tokenizedDocuments, 0.9f);
+    return buildDictionary(tokenizedDocuments, 0.9f, 0);
   }
 
   /**
@@ -51,10 +51,12 @@ public final class VectorizerUtils {
    * @param stopWordPercentage the percentage of how many documents must contain
    *          a token until it can be classified as spam. Ranges between 0f and
    *          1f, where 0f will actually return an empty dictionary.
+   * @param minFrequency the minimum frequency a token must occur globally.
+   *          (strict greater than supplied value)
    * @return a sorted String array with tokens in it.
    */
   public static String[] buildDictionary(List<String[]> tokenizedDocuments,
-      float stopWordPercentage) {
+      float stopWordPercentage, int minFrequency) {
     Preconditions.checkArgument(stopWordPercentage >= 0f
         && stopWordPercentage <= 1f,
         "The provided stop word percentage is not between 0 and 1: "
@@ -73,7 +75,7 @@ public final class VectorizerUtils {
     List<String> toRemove = new ArrayList<>();
     // now remove the spam
     for (Entry<String> entry : set.entrySet()) {
-      if (entry.getCount() > threshold) {
+      if (entry.getCount() > threshold && entry.getCount() < minFrequency) {
         toRemove.add(entry.getElement());
       }
     }

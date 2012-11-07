@@ -39,7 +39,7 @@ public class VectorizerUtilsTest extends TestCase {
     // test with spam detector and 50% threshold
     expectedResults = new String[] { "1", "2", "a", "document", "dont", "i",
         "that", "think", "this", "totally", "unrelated" };
-    dict = VectorizerUtils.buildDictionary(tokenizedDocuments, 0.5f);
+    dict = VectorizerUtils.buildDictionary(tokenizedDocuments, 0.5f, 0);
     assertArrayEquals(expectedResults, dict);
   }
 
