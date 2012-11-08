@@ -134,6 +134,8 @@ public class TfIdfCalculatorJob {
     job.setMapperClass(Mapper.class);
     job.setReducerClass(DocumentVectorizerReducer.class);
 
+    job.setMapOutputKeyClass(Text.class);
+    job.setMapOutputValueClass(TextIntIntIntWritable.class);
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(VectorWritable.class);
 
