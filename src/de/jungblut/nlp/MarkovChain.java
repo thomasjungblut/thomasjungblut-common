@@ -1,7 +1,12 @@
 package de.jungblut.nlp;
 
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
+import de.jungblut.math.DoubleVector;
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 
 /**
@@ -13,8 +18,11 @@ import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
  */
 public final class MarkovChain {
 
-  // log normalized, so we can sum the probabilities instead of multiplying and
-  // running into numerical problems.
+  /*
+   * log normalized, so we can sum the probabilities instead of multiplying and
+   * running into numerical problems. the probability from state i to j can be
+   * retrieved by matrix.get(j,i) because it is transposed.
+   */
   private final SparseDoubleColumnMatrix transitionProbabilities;
   private final int numStates;
 
@@ -31,10 +39,41 @@ public final class MarkovChain {
    * Trains the transition probabilities of the markov chain. <br/>
    * Each list element contains a set of states. The values of the
    * element-states are nominal and should be lower than the number of provided
-   * states.
+   * states (each nominal will be a index, so it's from 0 to numStates-1). So
+   * each element can be arbitrary sized, because in markov chains we are
+   * considering the transition between two states, thus it will measure the
+   * occurrence of each following two state pairs. e.G. [ 1, 2, 3, 4 ] will
+   * measure the probabilities of [1,2],[2,3],[3,4].
    */
   public void train(List<int[]> states) {
-    // TODO
+    // loop over all state sets and set the count of the co-occurrence in the
+    // transition probability matrix
+    for (int[] array : states) {
+      for (int i = 0; i < array.length - 1; i++) {
+        // the matrix is transposed, so state n will be in the column, the
+        // transition will be in the n+1th row of state n.
+        // that's majorly because the sum over columns is much faster than rows
+        int count = (int) transitionProbabilities.get(array[i + 1], array[i]);
+        transitionProbabilities.set(array[i + 1], array[i], ++count);
+      }
+    }
+
+    final int[] columnIndices = transitionProbabilities.columnIndices();
+
+    for (int columnIndex : columnIndices) {
+      DoubleVector columnVector = transitionProbabilities
+          .getColumnVector(columnIndex);
+      double sum = columnVector.sum();
+      Iterator<DoubleVectorElement> iterateNonZero = columnVector
+          .iterateNonZero();
+      // loop over all counts and take the log of the probability
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
+        int row = next.getIndex();
+        double probability = Math.log(next.getValue() / sum);
+        transitionProbabilities.set(row, columnIndex, probability);
+      }
+    }
 
   }
 
@@ -45,17 +84,58 @@ public final class MarkovChain {
    *         is happening.
    */
   public double getProbabilityForSequence(int[] stateSequence) {
-    // TODO
-    return 0d;
+    DenseDoubleVector distribution = new DenseDoubleVector(
+        stateSequence.length - 1);
+    for (int i = 0; i < distribution.getDimension(); i++) {
+      distribution.set(i,
+          transitionProbabilities.get(stateSequence[i + 1], stateSequence[i]));
+    }
+
+    // normalize it by the maximum of the log probabilities
+    double max = distribution.max();
+    double probabilitySum = 0.0d;
+    for (int i = 0; i < distribution.getDimension(); i++) {
+      double probability = distribution.get(i);
+      double normalizedProbability = Math.exp(probability - max);
+      distribution.set(i, normalizedProbability);
+      probabilitySum += normalizedProbability;
+    }
+
+    // since the sum is sometimes not 1, we need to divide by the sum
+    distribution = (DenseDoubleVector) distribution.divide(probabilitySum);
+    // now we need to multiple each of them together, because we deal with real
+    // probabilities not with log ones now
+    double result = 1d;
+    for (int i = 0; i < distribution.getDimension(); i++) {
+      result *= distribution.get(i);
+    }
+    return result;
   }
 
   /**
    * Completes the given state sequence by picking the highest transition
-   * probability between the states of the incomplete states.
+   * probability between the states of the incomplete states. Basically predicts
+   * the missing state by the previous.
    */
   public int[] completeStateSequence(int[] stateSequence,
       int... unsuppliedStateIndices) {
-    // TODO
+    // sort them first, then work through the array
+    Arrays.sort(unsuppliedStateIndices);
+    for (int index : unsuppliedStateIndices) {
+      if (index == 0) {
+        // special case because there is no previous state, pick the next
+        if (index + 1 < stateSequence.length) {
+          stateSequence[index] = transitionProbabilities.getRowVector(
+              stateSequence[index + 1]).maxIndex();
+        } else {
+          throw new IllegalArgumentException("Can't guess state " + index
+              + " in " + Arrays.toString(stateSequence));
+        }
+      } else {
+        stateSequence[index] = transitionProbabilities.getColumnVector(
+            stateSequence[index - 1]).maxIndex();
+      }
+    }
     return stateSequence;
   }
 
