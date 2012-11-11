@@ -3,6 +3,9 @@ package de.jungblut.nlp;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
+
+import com.google.common.base.Optional;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
@@ -113,30 +116,63 @@ public final class MarkovChain {
   }
 
   /**
-   * Completes the given state sequence by picking the highest transition
-   * probability between the states of the incomplete states. Basically predicts
-   * the missing state by the previous.
+   * Completes the given state sequence by picking the best next state on the
+   * transition probabilities (so a transition with a high probability is picked
+   * more often). If the optional random is not provided, it picks the next
+   * state by the highest transition probability between the states (it predicts
+   * the next state based on the previous).
    */
-  public int[] completeStateSequence(int[] stateSequence,
-      int... unsuppliedStateIndices) {
+  public int[] completeStateSequence(Optional<Random> optionalRandom,
+      int[] stateSequence, int... unsuppliedStateIndices) {
     // sort them first, then work through the array
     Arrays.sort(unsuppliedStateIndices);
     for (int index : unsuppliedStateIndices) {
       if (index == 0) {
         // special case because there is no previous state, pick the next
         if (index + 1 < stateSequence.length) {
-          stateSequence[index] = transitionProbabilities.getRowVector(
-              stateSequence[index + 1]).maxIndex();
+          if (optionalRandom.isPresent()) {
+            stateSequence[index] = chooseState(optionalRandom.get(),
+                transitionProbabilities.getRowVector(stateSequence[index + 1]));
+          } else {
+            stateSequence[index] = transitionProbabilities.getRowVector(
+                stateSequence[index + 1]).maxIndex();
+          }
         } else {
           throw new IllegalArgumentException("Can't guess state " + index
               + " in " + Arrays.toString(stateSequence));
         }
       } else {
-        stateSequence[index] = transitionProbabilities.getColumnVector(
-            stateSequence[index - 1]).maxIndex();
+        if (optionalRandom.isPresent()) {
+          stateSequence[index] = chooseState(optionalRandom.get(),
+              transitionProbabilities.getColumnVector(stateSequence[index - 1]));
+        } else {
+          stateSequence[index] = transitionProbabilities.getColumnVector(
+              stateSequence[index - 1]).maxIndex();
+        }
       }
     }
     return stateSequence;
+  }
+
+  /**
+   * Chooses the state by a uniformly distributed random number, so higher
+   * probable states are more likely to happen.
+   * 
+   * @return the index of the next state.
+   */
+  private static int chooseState(Random random, DoubleVector probabilities) {
+    final double r = random.nextDouble();
+    Iterator<DoubleVectorElement> iterateNonZero = probabilities
+        .iterateNonZero();
+    DoubleVectorElement next = null;
+    while (iterateNonZero.hasNext()) {
+      next = iterateNonZero.next();
+      if (r <= Math.exp(next.getValue())) {
+        return next.getIndex();
+      }
+    }
+    // return the last if we haven't escaped yet
+    return next.getIndex();
   }
 
   /**

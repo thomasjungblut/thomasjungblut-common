@@ -2,10 +2,13 @@ package de.jungblut.nlp;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import junit.framework.TestCase;
 
 import org.junit.Test;
+
+import com.google.common.base.Optional;
 
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 
@@ -60,26 +63,28 @@ public class MarkovChainTest extends TestCase {
 
     MarkovChain chain = MarkovChain.create(5);
     chain.train(trainingSet);
-
-    int[] completeStateSequence = chain.completeStateSequence(
+    Optional<Random> absent = Optional.absent();
+    int[] completeStateSequence = chain.completeStateSequence(absent,
         new int[] { -1, 2 }, 0);
     // the most probable should obviously 1 at index zero
     assertEquals(1, completeStateSequence[0]);
 
     try {
-      completeStateSequence = chain.completeStateSequence(new int[] { -1, }, 0);
+      completeStateSequence = chain.completeStateSequence(absent,
+          new int[] { -1, }, 0);
       fail("This should fail with IllegalArgumentException");
     } catch (IllegalArgumentException e) {
       // good guy
     }
 
-    completeStateSequence = chain.completeStateSequence(new int[] { 1, -1 }, 1);
+    completeStateSequence = chain.completeStateSequence(absent, new int[] { 1,
+        -1 }, 1);
     // the most probable should obviously 2 at index one
     assertEquals(2, completeStateSequence[1]);
 
     // test multiple missings
-    completeStateSequence = chain.completeStateSequence(new int[] { 1, -1, 2,
-        -1, 4 }, 1, 3);
+    completeStateSequence = chain.completeStateSequence(absent, new int[] { 1,
+        -1, 2, -1, 4 }, 1, 3);
     // the most probable should obviously 2 at index one
     assertEquals(2, completeStateSequence[1]);
     // based on the 2 at index 2 it should predict 4 for index 3
