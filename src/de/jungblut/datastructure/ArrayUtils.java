@@ -994,10 +994,11 @@ public final class ArrayUtils {
           lst.add(arr[i]);
         i++;
         j++;
-      } else if (arr[i] > arr2[j])
+      } else if (arr[i] > arr2[j]) {
         j++;
-      else
+      } else {
         i++;
+      }
     }
 
     return lst.toArray();
