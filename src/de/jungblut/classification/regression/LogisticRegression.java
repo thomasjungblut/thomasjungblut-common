@@ -7,7 +7,9 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Minimizer;
 
 /**
- * Logistic regression.
+ * Logistic regression for multiple output variables (maxent) with softmax
+ * output. <br/> TODO
+ * http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
  * 
  * @author thomas.jungblut
  * 
