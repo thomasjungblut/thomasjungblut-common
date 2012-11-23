@@ -56,4 +56,42 @@ public class DenseMatrixFolder {
     return arr;
   }
 
+  /**
+   * Unfolds a single vector into a single matrix by rows.
+   * 
+   * @param vector the vector to split.
+   * @param rows the number of rows the target matrix needs to have.
+   * @param cols the number of columns the target matrix needs to have.
+   * @return a matrix with the contents of the vector, row split.
+   */
+  public static DenseDoubleMatrix unfoldMatrix(DoubleVector vector, int rows,
+      int cols) {
+    DenseDoubleMatrix mat = new DenseDoubleMatrix(rows, cols);
+
+    int index = 0;
+    for (int i = 0; i < rows; i++) {
+      for (int j = 0; j < cols; j++) {
+        mat.set(i, j, vector.get(index++));
+      }
+    }
+
+    return mat;
+  }
+
+  /**
+   * Folds a single matrix into a single vector by rows.
+   */
+  public static DenseDoubleVector foldMatrix(DenseDoubleMatrix mat) {
+    DenseDoubleVector vec = new DenseDoubleVector(mat.getRowCount()
+        * mat.getColumnCount());
+    int index = 0;
+    for (int i = 0; i < mat.getRowCount(); i++) {
+      for (int j = 0; j < mat.getColumnCount(); j++) {
+        vec.set(index++, mat.get(i, j));
+      }
+    }
+
+    return vec;
+  }
+
 }
