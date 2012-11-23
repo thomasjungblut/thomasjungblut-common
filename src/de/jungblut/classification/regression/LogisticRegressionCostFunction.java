@@ -11,7 +11,8 @@ import de.jungblut.math.tuple.Tuple;
 
 /**
  * Logistic regression cost function to optimize with an arbitrary
- * {@link Minimizer}. http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
+ * {@link Minimizer}.
+ * http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
  * 
  * @author thomas.jungblut
  * 
@@ -48,9 +49,9 @@ public final class LogisticRegressionCostFunction implements CostFunction {
     double reg = input.slice(1, input.getLength()).pow(2).sum() * lambda
         / (2.0d * m);
     DoubleVector prob = negatedY.multiply(logVector(sigmoidVector));
-    prob = prob.subtract(substractedY 
-        .multiply(logVector(sigmoidVector.subtractFrom(1.0d))));
-    // -1/m * y * log(sigmoid(x'*theta))-(1-y * log(sigmoid(x'*theta))) + reg
+    prob = prob.subtract(substractedY.multiply(logVector(sigmoidVector
+        .subtractFrom(1.0d))));
+    // -1/m * y * log(sigmoid(x'*theta))-(1-y * log(1-sigmoid(x'*theta))) + reg
     double j = (1.0d / m) * prob.sum() + reg;
 
     DenseDoubleMatrix eye = DenseDoubleMatrix.eye(input.getLength());
