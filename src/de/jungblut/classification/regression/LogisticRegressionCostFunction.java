@@ -6,11 +6,12 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.Minimizer;
+import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 import de.jungblut.math.tuple.Tuple;
 
 /**
  * Logistic regression cost function to optimize with an arbitrary
- * {@link Minimizer}. TODO softmax functions
+ * {@link Minimizer}. http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
  * 
  * @author thomas.jungblut
  * 
@@ -21,36 +22,44 @@ public final class LogisticRegressionCostFunction implements CostFunction {
   private final DoubleVector y;
   private final double lambda;
   private final int m;
+  private final DoubleVector negatedY;
+  private final DoubleVector substractedY;
 
   public LogisticRegressionCostFunction(DoubleMatrix x, DoubleVector y,
       double lambda) {
-    // add a column of ones to handle the intercept term
-    this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(y.getLength()), x);
+    if (!x.isSparse()) {
+      // add a column of ones to handle the intercept term
+      this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(y.getLength()), x);
+    } else {
+      this.x = new SparseDoubleColumnMatrix(DenseDoubleVector.ones(y
+          .getLength()), x);
+    }
     this.y = y;
     this.lambda = lambda;
     this.m = y.getLength();
+    this.negatedY = y.multiply(-1.d);
+    this.substractedY = y.subtractFrom(1.0d);
   }
 
   @Override
   public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
 
     DoubleVector sigmoidVector = sigmoidVector(x.multiplyVector(input));
-
-    double j = (1.0d / m)
-        * y.multiply(-1.d)
-            .multiply(logVector(sigmoidVector))
-            .subtract(
-                (y.subtractFrom(1.0d)).multiply(logVector(sigmoidVector
-                    .subtractFrom(1.0d)))).sum()
-        + input.slice(1, input.getLength()).pow(2).sum() * lambda / (2.0d * m);
+    double reg = input.slice(1, input.getLength()).pow(2).sum() * lambda
+        / (2.0d * m);
+    DoubleVector prob = negatedY.multiply(logVector(sigmoidVector));
+    prob = prob.subtract(substractedY 
+        .multiply(logVector(sigmoidVector.subtractFrom(1.0d))));
+    // -1/m * y * log(sigmoid(x'*theta))-(1-y * log(sigmoid(x'*theta))) + reg
+    double j = (1.0d / m) * prob.sum() + reg;
 
     DenseDoubleMatrix eye = DenseDoubleMatrix.eye(input.getLength());
     eye.set(0, 0, 0.0d);
 
-    DoubleVector vec = eye.multiply(lambda).multiplyVector(input);
+    DoubleVector regGradient = eye.multiply(lambda).multiplyVector(input);
 
     DoubleVector gradient = (x.transpose().multiplyVector(
-        sigmoidVector.subtract(y)).add(vec)).divide(m);
+        sigmoidVector.subtract(y)).add(regGradient)).divide(m);
 
     return new Tuple<>(j, gradient);
   }
