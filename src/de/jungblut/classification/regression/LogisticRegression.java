@@ -1,15 +1,15 @@
 package de.jungblut.classification.regression;
 
 import de.jungblut.classification.AbstractClassifier;
+import de.jungblut.classification.nn.MultilayerPerceptron;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Minimizer;
 
 /**
- * Logistic regression for multiple output variables (maxent) with softmax
- * output. <br/> TODO
- * http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
+ * Logistic regression (binary classification). For multiple classes, better use
+ * the {@link MultilayerPerceptron} with no hidden layer.
  * 
  * @author thomas.jungblut
  * 

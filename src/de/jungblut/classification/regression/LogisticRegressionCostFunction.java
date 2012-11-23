@@ -12,7 +12,6 @@ import de.jungblut.math.tuple.Tuple;
 /**
  * Logistic regression cost function to optimize with an arbitrary
  * {@link Minimizer}.
- * http://ufldl.stanford.edu/wiki/index.php/Softmax_Regression
  * 
  * @author thomas.jungblut
  * 
