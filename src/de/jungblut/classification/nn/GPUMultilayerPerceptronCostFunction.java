@@ -1,10 +1,8 @@
 package de.jungblut.classification.nn;
 
-import static de.jungblut.classification.nn.MultilayerPerceptronCostFunction.logMatrix;
-import static de.jungblut.classification.nn.MultilayerPerceptronCostFunction.sigmoidGradientMatrix;
-import static de.jungblut.classification.nn.MultilayerPerceptronCostFunction.sigmoidMatrix;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -35,6 +33,9 @@ public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
   private final int[] layerSizes;
   private final int[][] unfoldParameters;
 
+  private final ActivationFunction[] activations;
+  private final ErrorFunction error;
+
   public GPUMultilayerPerceptronCostFunction(MultilayerPerceptron network,
       DenseDoubleMatrix x, DenseDoubleMatrix y, double lambda) {
     this.m = x.getRowCount();
@@ -47,6 +48,8 @@ public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
     }
     this.unfoldParameters = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(layerSizes);
+    this.activations = network.getActivations();
+    this.error = network.getError();
   }
 
   /**
@@ -78,10 +81,10 @@ public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
 
       if (i < (layerSizes.length - 1)) {
         ax[i] = new DenseDoubleMatrix(DenseDoubleVector.ones(m),
-            sigmoidMatrix((DenseDoubleMatrix) zx[i]));
+            activations[i].apply(zx[i]));
       } else {
         // the output doesn't need a bias
-        ax[i] = sigmoidMatrix((DenseDoubleMatrix) zx[i]);
+        ax[i] = (DenseDoubleMatrix) activations[i].apply(zx[i]);
       }
     }
 
@@ -106,7 +109,7 @@ public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
       deltaX[i] = deltaX[i + 1].multiply(
           thetas[i].slice(0, thetas[i].getRowCount(), 1,
               thetas[i].getColumnCount())).multiplyElementWise(
-          sigmoidGradientMatrix((DenseDoubleMatrix) zx[i]));
+          activations[i].gradient(zx[i]));
     }
 
     // calculate our gradients
@@ -127,11 +130,9 @@ public final class GPUMultilayerPerceptronCostFunction implements CostFunction {
     }
 
     // calculate our cost function (error in the last layer)
-    double j = (1.0d / m)
-        * (y.multiply(-1).multiplyElementWise(
-            logMatrix(ax[layerSizes.length - 1])).subtract((y.subtractBy(1.0d))
-            .multiplyElementWise(logMatrix(ax[layerSizes.length - 1]
-                .subtractBy(1.0d))))).sum() + regularization;
+    // calculate our cost function (error in the last layer)
+    double j = (1.0d / m) * error.getError(y, ax[layerSizes.length - 1])
+        + regularization;
 
     return new Tuple<Double, DoubleVector>(j,
         DenseMatrixFolder.foldMatrices(thetaGradients));

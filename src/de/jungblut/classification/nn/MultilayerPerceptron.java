@@ -11,6 +11,10 @@ import com.google.common.base.Preconditions;
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.classification.Classifier;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.activation.ActivationFunction;
+import de.jungblut.math.activation.LinearActivationFunction;
+import de.jungblut.math.activation.SigmoidActivationFunction;
+import de.jungblut.math.activation.SoftMaxActivationFunction;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -23,9 +27,7 @@ import de.jungblut.writable.VectorWritable;
  * Multilayer perceptron by my collegue Marvin Ritter using my math library. <br/>
  * I have changed it to a format that can be used for batch training for example
  * in a clustered environment.<br/>
- * Also I have added several minimizers that will find minimas. Error function
- * is the mean squared error and activation function in each neuron is the
- * sigmoid function.
+ * Also I have added several minimizers that will find minimas.
  * 
  * @author marvin.ritter
  * @author thomas.jungblut
@@ -51,9 +53,12 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     int maxIterations;
     double lambda;
     boolean verbose;
+    ActivationFunction[] activations;
 
-    public TrainingConfiguration(Minimizer minimizer, int maxIterations,
-        double lambda, boolean verbose) {
+    public TrainingConfiguration(Minimizer minimizer,
+        ActivationFunction[] activations, int maxIterations, double lambda,
+        boolean verbose) {
+      this.activations = activations;
       this.type = TrainingType.CPU;
       this.minimizer = minimizer;
       this.maxIterations = maxIterations;
@@ -61,9 +66,11 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       this.verbose = verbose;
     }
 
-    public TrainingConfiguration(TrainingType type, Minimizer minimizer,
+    public TrainingConfiguration(TrainingType type,
+        ActivationFunction[] activations, Minimizer minimizer,
         int maxIterations, double lambda, boolean verbose) {
       this.type = type;
+      this.activations = activations;
       this.minimizer = minimizer;
       this.maxIterations = maxIterations;
       this.lambda = lambda;
@@ -74,7 +81,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   private final WeightMatrix[] weights;
   private final Layer[] layers;
-
+  private final ActivationFunction[] activations;
+  private ErrorFunction error = ErrorFunction.SIGMOID_ERROR;
   private TrainingConfiguration conf;
 
   /**
@@ -84,7 +92,18 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * hidden layer with 3 neurons and an output layer with one neuron, you can
    * feed this contructor with int[]{2,3,1}.
    */
-  public MultilayerPerceptron(int[] layer) {
+  public MultilayerPerceptron(int[] layer, ActivationFunction[] activations) {
+    // if the activations are not supplied, we are using standard linear-sigmoid
+    // functions
+    if (activations == null) {
+      this.activations = new ActivationFunction[layer.length];
+      this.activations[0] = new LinearActivationFunction();
+      for (int i = 1; i < layer.length; i++) {
+        this.activations[i] = new SigmoidActivationFunction();
+      }
+    } else {
+      this.activations = activations;
+    }
     this.layers = new Layer[layer.length];
     for (int i = 0; i < layer.length; i++) {
       layers[i] = new Layer(layer[i]);
@@ -93,6 +112,19 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     weights = new WeightMatrix[layers.length - 1];
     for (int i = 0; i < weights.length; i++) {
       weights[i] = new WeightMatrix(layers[i], layers[i + 1]);
+    }
+
+    // choose the error function based on the output layer
+
+    ActivationFunction function = activations[layers.length - 1];
+    if (function instanceof SigmoidActivationFunction) {
+      error = ErrorFunction.SIGMOID_ERROR;
+    } else if (function instanceof LinearActivationFunction) {
+      error = ErrorFunction.SQUARED_MEAN_ERROR;
+    } else if (function instanceof SoftMaxActivationFunction) {
+      error = ErrorFunction.SOFTMAX_ERROR;
+    } else {
+      error = ErrorFunction.SIGMOID_ERROR;
     }
   }
 
@@ -107,16 +139,18 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    *          interface.
    */
   public MultilayerPerceptron(int[] layer, TrainingConfiguration conf) {
-    this(layer);
+    this(layer, conf.activations);
     this.conf = conf;
   }
 
   /**
    * Custom serialization constructor for already trained networks.
    */
-  public MultilayerPerceptron(Layer[] layers, WeightMatrix[] weights) {
+  public MultilayerPerceptron(Layer[] layers, WeightMatrix[] weights,
+      ActivationFunction[] activations) {
     this.layers = layers;
     this.weights = weights;
+    this.activations = activations;
   }
 
   /**
@@ -301,6 +335,14 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return layers;
   }
 
+  public ActivationFunction[] getActivations() {
+    return activations;
+  }
+
+  public ErrorFunction getError() {
+    return this.error;
+  }
+
   /**
    * At the beginning of each batch forward propagation we should reset the
    * gradients.
@@ -380,7 +422,18 @@ public final class MultilayerPerceptron extends AbstractClassifier {
           derivatives);
     }
 
-    return new MultilayerPerceptron(layers, weights);
+    ActivationFunction[] funcs = new ActivationFunction[numLayers];
+    for (int i = 0; i < numLayers; i++) {
+      try {
+        funcs[i] = (ActivationFunction) Class.forName(in.readUTF())
+            .newInstance();
+      } catch (InstantiationException | IllegalAccessException
+          | ClassNotFoundException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    return new MultilayerPerceptron(layers, weights, funcs);
   }
 
   /**
@@ -402,6 +455,10 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       MatrixWritable.write(derivatives, out);
       DenseDoubleMatrix weights = mat.getWeights();
       MatrixWritable.write(weights, out);
+    }
+    // then write the activation classes
+    for (ActivationFunction func : model.activations) {
+      out.writeUTF(func.getClass().getName());
     }
   }
 

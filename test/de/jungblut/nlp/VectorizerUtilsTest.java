@@ -2,7 +2,9 @@ package de.jungblut.nlp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import junit.framework.TestCase;
@@ -109,22 +111,27 @@ public class VectorizerUtilsTest extends TestCase {
 
   @Test
   public void testGetMostFrequentItems() {
-    String[] expectedResults = new String[] { "is", "doc", "that", "this",
+    Map<String, Integer> expectedResults = new HashMap<>();
+    String[] expectedResultsArray = new String[] { "is", "doc", "that", "this",
         "think", "unrelated", "a", "i", "2", "1", "document", "dont", "totally" };
     int[] expectedResultCounts = new int[] { 3, 3, 2, 2, 1, 1, 1, 1, 1, 1, 1,
         1, 1 };
+    for (int i = 0; i < expectedResultCounts.length; i++) {
+      expectedResults.put(expectedResultsArray[i], expectedResultCounts[i]);
+    }
+
     HashMultiset<String> set = HashMultiset.create();
     for (String[] s : tokenizedDocuments)
       set.addAll(Arrays.asList(s));
     ArrayList<Entry<String>> mostFrequentItems = VectorizerUtils
         .getMostFrequentItems(set);
 
-    int index = 0;
     for (Entry<String> entry : mostFrequentItems) {
-      assertEquals(expectedResults[index], entry.getElement());
-      assertEquals(expectedResultCounts[index], entry.getCount());
-      index++;
+      assertEquals(expectedResults.get(entry.getElement()).intValue(),
+          entry.getCount());
+      expectedResults.remove(entry.getElement());
     }
+    assertEquals(0, expectedResults.size());
   }
 
   static void assertArrayEquals(int[] expected, int[] actual) {

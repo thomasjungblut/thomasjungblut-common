@@ -86,9 +86,9 @@ public class WordCorpusFrequencyJob {
    */
   public static class DocumentSumReducer extends
       Reducer<Text, TextIntPairWritable, Text, TextIntIntIntWritable> {
-    
+
     // TODO write the dictionary out as well
-    
+
     // ID assigned to the token
     int currentIndex = 0;
 

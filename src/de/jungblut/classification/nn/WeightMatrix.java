@@ -1,6 +1,6 @@
 package de.jungblut.classification.nn;
 
-import java.util.Random;
+import org.apache.commons.math3.random.RandomDataImpl;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -20,7 +20,15 @@ public final class WeightMatrix {
     this.rightLayer = rightLayer;
     // extra row of weights for the bias unit, also random initialize them
     this.weights = new DenseDoubleMatrix(rightLayer.getLength(),
-        leftLayer.getLength() + 1, new Random());
+        leftLayer.getLength() + 1);
+    double eInit = Math.sqrt(6)
+        / Math.sqrt(leftLayer.getLength() + rightLayer.getLength());
+    RandomDataImpl rnd = new RandomDataImpl();
+    for (int i = 0; i < weights.getColumnCount(); i++) {
+      for (int j = 0; j < weights.getRowCount(); j++) {
+        weights.set(j, i, rnd.nextUniform(-eInit, eInit));
+      }
+    }
     this.derivatives = new DenseDoubleMatrix(weights.getRowCount(),
         weights.getColumnCount());
   }

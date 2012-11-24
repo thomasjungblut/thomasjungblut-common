@@ -75,7 +75,7 @@ public final class VectorizerUtils {
     List<String> toRemove = new ArrayList<>();
     // now remove the spam
     for (Entry<String> entry : set.entrySet()) {
-      if (entry.getCount() > threshold && entry.getCount() < minFrequency) {
+      if (entry.getCount() > threshold || entry.getCount() < minFrequency) {
         toRemove.add(entry.getElement());
       }
     }
