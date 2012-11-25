@@ -1,5 +1,8 @@
 package de.jungblut.math;
 
+import java.util.Iterator;
+
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 
@@ -59,19 +62,18 @@ public final class ViterbiUtils {
       }
     }
 
-    int bestLabel = 0;
-    double bestScore = scores[m - 1][bestLabel];
-    for (int label = 1; label < scores[m - 1].length; label++) {
-      if (scores[m - 1][label] > bestScore) {
-        bestLabel = label;
-        bestScore = scores[m - 1][label];
-      }
-    }
     DoubleMatrix outcome = new DenseDoubleMatrix(features.getRowCount(),
         classes == 2 ? 1 : classes);
     // set the probabilities into the matrix
-    // go back through the pointers
-    for (position = m - 1; position >= 0; position--) {
+    for (int i = 0; i < m; i++) {
+      int bestLabel = 0;
+      double bestScore = scores[i][bestLabel];
+      for (int label = 1; label < scores[i].length; label++) {
+        if (scores[i][label] > bestScore) {
+          bestLabel = label;
+          bestScore = scores[m - 1][label];
+        }
+      }
       DenseDoubleVector vec = null;
       if (classes != 2) {
         vec = new DenseDoubleVector(classes);
@@ -80,8 +82,7 @@ public final class ViterbiUtils {
         vec = new DenseDoubleVector(1);
         vec.set(0, bestLabel);
       }
-      outcome.setRowVector(position, vec);
-      bestLabel = backpointers[position][bestLabel];
+      outcome.setRowVector(i, vec);
     }
 
     return outcome;
@@ -94,9 +95,11 @@ public final class ViterbiUtils {
 
     double[] scores = new double[classes];
 
-    for (int featureIndex = 0; featureIndex < features.getLength(); featureIndex++) {
+    Iterator<DoubleVectorElement> iterateNonZero = features.iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
       for (int i = 0; i < scores.length; i++) {
-        scores[i] += weights.get(i, featureIndex);
+        scores[i] += weights.get(i, next.getIndex());
       }
     }
 

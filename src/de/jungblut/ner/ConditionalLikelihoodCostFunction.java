@@ -1,7 +1,10 @@
 package de.jungblut.ner;
 
+import java.util.Iterator;
+
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -48,18 +51,24 @@ public final class ConditionalLikelihoodCostFunction implements CostFunction {
       DoubleVector rowVector = features.getRowVector(row);
       double[] logProbabilities = new double[classes];
       // sum the probabilities for each class over all features
-      for (int featureIndex = 0; featureIndex < rowVector.getLength(); featureIndex++) {
+      Iterator<DoubleVectorElement> iterateNonZero = rowVector.iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
         for (int i = 0; i < classes; i++) {
-          logProbabilities[i] += theta.get(i, featureIndex);
+          logProbabilities[i] += theta.get(i, next.getIndex());
         }
       }
       double z = logSum(logProbabilities);
       for (int i = 0; i < classes; i++) {
         double prob = Math.exp(logProbabilities[i] - z);
-        for (int featureIndex = 0; featureIndex < rowVector.getLength(); featureIndex++) {
-          gradient.set(i, featureIndex, gradient.get(i, featureIndex) + prob);
+        iterateNonZero = rowVector.iterateNonZero();
+        while (iterateNonZero.hasNext()) {
+          DoubleVectorElement next = iterateNonZero.next();
+          gradient.set(i, next.getIndex(), gradient.get(i, next.getIndex())
+              + prob);
           if (correctPrediction(i, outcome.getRowVector(row))) {
-            gradient.set(i, featureIndex, gradient.get(i, featureIndex) - 1d);
+            gradient.set(i, next.getIndex(),
+                gradient.get(i, next.getIndex()) - 1d);
           }
         }
         if (correctPrediction(i, outcome.getRowVector(row))) {
