@@ -79,7 +79,8 @@ public final class ConditionalLikelihoodCostFunction implements CostFunction {
   // checks if the prediction is correct, by comparing the index of the
   // predicted class to the maximum index of the outcome
   static boolean correctPrediction(int classIndex, DoubleVector outcome) {
-    return outcome.maxIndex() == classIndex;
+    return outcome.getLength() == 1 ? ((int) outcome.get(0)) == classIndex
+        : outcome.maxIndex() == classIndex;
   }
 
   // compute the log prior fast by using one loop for both gradient and theta

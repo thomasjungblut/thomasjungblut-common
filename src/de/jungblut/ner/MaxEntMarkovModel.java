@@ -52,9 +52,12 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
     }
     ConditionalLikelihoodCostFunction func = new ConditionalLikelihoodCostFunction(
         mat, new DenseDoubleMatrix(outcome));
-    DoubleVector input = minimizer.minimize(func,
-        new DenseDoubleVector(mat.getColumnCount() * classes), numIterations,
-        verbose);
+    DenseDoubleVector vx = new DenseDoubleVector(mat.getColumnCount() * classes);
+    // Random r = new Random();
+    // for (int i = 0; i < vx.getLength(); i++) {
+    // vx.set(i, r.nextDouble());
+    // }
+    DoubleVector input = minimizer.minimize(func, vx, numIterations, verbose);
     theta = DenseMatrixFolder.unfoldMatrix(input, classes,
         (int) (input.getLength() / (double) classes));
   }
