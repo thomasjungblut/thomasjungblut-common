@@ -68,7 +68,7 @@ public final class ViterbiUtils {
       }
     }
     DoubleMatrix outcome = new DenseDoubleMatrix(features.getRowCount(),
-        classes);
+        classes == 2 ? 1 : classes);
     // set the probabilities into the matrix
     // go back through the pointers
     for (position = m - 1; position >= 0; position--) {
