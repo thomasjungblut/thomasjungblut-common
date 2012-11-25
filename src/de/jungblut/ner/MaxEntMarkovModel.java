@@ -61,9 +61,10 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
 
   @Override
   public DoubleVector predict(DoubleVector features) {
-    return ViterbiUtils.decode(theta,
-        new DenseDoubleMatrix(Collections.singletonList(features)), classes)
-        .getRowVector(0);
+    return ViterbiUtils
+        .decode(theta,
+            new SparseDoubleRowMatrix(Collections.singletonList(features)),
+            classes).getRowVector(0);
   }
 
   // matrix prediction
