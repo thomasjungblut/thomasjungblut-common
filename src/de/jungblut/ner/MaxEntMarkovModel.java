@@ -2,7 +2,6 @@ package de.jungblut.ner;
 
 import com.google.common.base.Preconditions;
 
-import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.ViterbiUtils;
@@ -19,7 +18,7 @@ import de.jungblut.math.sparse.SparseDoubleRowMatrix;
  * @author thomas.jungblut
  * 
  */
-public final class MaxEntMarkovModel extends AbstractClassifier {
+public final class MaxEntMarkovModel {
 
   private final Minimizer minimizer;
   private final boolean verbose;
@@ -34,7 +33,6 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
     this.verbose = verbose;
   }
 
-  @Override
   public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
     Preconditions
         .checkArgument(
@@ -54,17 +52,6 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
     DoubleVector input = minimizer.minimize(func, vx, numIterations, verbose);
     theta = DenseMatrixFolder.unfoldMatrix(input, classes,
         (int) (input.getLength() / (double) classes));
-  }
-
-  /**
-   * Customized prediction method, WARNING the feature vector needs a special
-   * data layout to work correctly:<br/>
-   * TODO
-   * 
-   */
-  @Override
-  public DoubleVector predict(DoubleVector features) {
-    return null;
   }
 
   // matrix prediction
