@@ -4,6 +4,7 @@ import java.util.Collections;
 
 import com.google.common.base.Preconditions;
 
+import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.ViterbiUtils;
@@ -20,7 +21,7 @@ import de.jungblut.math.sparse.SparseDoubleRowMatrix;
  * @author thomas.jungblut
  * 
  */
-public final class MaxEntMarkovModel {
+public final class MaxEntMarkovModel extends AbstractClassifier {
 
   private final Minimizer minimizer;
   private final boolean verbose;
@@ -35,6 +36,7 @@ public final class MaxEntMarkovModel {
     this.verbose = verbose;
   }
 
+  @Override
   public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
     Preconditions
         .checkArgument(
@@ -54,6 +56,15 @@ public final class MaxEntMarkovModel {
     DoubleVector input = minimizer.minimize(func, vx, numIterations, verbose);
     theta = DenseMatrixFolder.unfoldMatrix(input, classes,
         (int) (input.getLength() / (double) classes));
+  }
+
+  @Override
+  public DoubleVector predict(DoubleVector features) {
+    Preconditions.checkArgument(
+        features.getClass().equals(UnrollableDoubleVector.class),
+        "Features must be an instance of the class UnrollableDoubleVector.");
+    UnrollableDoubleVector unrollable = (UnrollableDoubleVector) features;
+    return predict(unrollable.getMainVector(), unrollable.getSideVectors());
   }
 
   public DoubleVector predict(DoubleVector feature,
