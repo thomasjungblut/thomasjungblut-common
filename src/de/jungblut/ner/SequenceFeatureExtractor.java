@@ -16,11 +16,11 @@ public interface SequenceFeatureExtractor {
    * Compute a feature for the given
    * 
    * @param words all words in that sequence.
-   * @param labels all labels in that sequence, parallel to the words.
+   * @param prevLabel the previous label.
    * @param position the current position.
    * @return a set of features for this position.
    */
-  public List<String> computeFeatures(List<String> words, List<Integer> labels,
+  public List<String> computeFeatures(List<String> words, int prevLabel,
       int position);
 
 }

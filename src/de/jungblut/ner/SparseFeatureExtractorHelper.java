@@ -22,6 +22,8 @@ public final class SparseFeatureExtractorHelper {
   private final List<String> words;
   private final List<Integer> labels;
   private final SequenceFeatureExtractor extractor;
+  private final HashSet<Integer> classSet;
+
   private int classes;
   private String[] dicts;
 
@@ -39,7 +41,8 @@ public final class SparseFeatureExtractorHelper {
     this.extractor = extractor;
     // calculate how many different classes are there (assuming they are
     // starting with 0)
-    this.classes = new HashSet<Integer>(labels).size();
+    this.classSet = new HashSet<Integer>(labels);
+    this.classes = classSet.size();
   }
 
   /**
@@ -67,13 +70,45 @@ public final class SparseFeatureExtractorHelper {
   }
 
   /**
+   * Vectorizes the given data for each label. Internally uses a dictionary that
+   * was created by {@link #vectorize()} or creates one on this data.
+   */
+  public DoubleVector[] vectorizeEachLabel(List<String> words) {
+    List<List<String>> stringFeatures = new ArrayList<>();
+    for (int i = 0; i < words.size(); i++) {
+      if (i == 0) {
+        stringFeatures.add(extractor.computeFeatures(words, 0, i));
+      } else {
+        for (int prevLabel : classSet) {
+          stringFeatures.add(extractor.computeFeatures(words, prevLabel, i));
+        }
+      }
+    }
+
+    DoubleVector[] features = new DoubleVector[stringFeatures.size()];
+    final int dimension = dicts.length;
+    // translate the feature vector
+    for (int i = 0; i < features.length; i++) {
+      features[i] = new SparseDoubleVector(dimension);
+      for (String feat : stringFeatures.get(i)) {
+        int index = Arrays.binarySearch(dicts, feat);
+        if (index >= 0) {
+          features[i].set(index, 1d);
+        }
+      }
+    }
+    return features;
+  }
+
+  /**
    * Generates the feature vectors and the dictionary.
    */
   private Tuple<DoubleVector[], DenseDoubleVector[]> extractInternal(
       List<String> words, List<Integer> labels) {
     List<List<String>> stringFeatures = new ArrayList<>();
     for (int i = 0; i < words.size(); i++) {
-      stringFeatures.add(extractor.computeFeatures(words, labels, i));
+      stringFeatures.add(extractor.computeFeatures(words,
+          i == 0 ? 0 : labels.get(i - 1), i));
     }
 
     DoubleVector[] features = new DoubleVector[stringFeatures.size()];

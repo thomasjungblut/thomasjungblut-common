@@ -4,17 +4,19 @@ import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 
 import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import de.jungblut.classification.Evaluator;
-import de.jungblut.classification.Evaluator.EvaluationResult;
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.tuple.Tuple;
 
 public class NamedEntityRecognitionTest extends TestCase {
@@ -33,8 +35,8 @@ public class NamedEntityRecognitionTest extends TestCase {
     List<String> words = new ArrayList<>(lines.size());
     List<Integer> labels = new ArrayList<>(lines.size());
 
-    List<String> testwords = new ArrayList<>(lines.size());
-    List<Integer> testlabels = new ArrayList<>(lines.size());
+    List<String> testWords = new ArrayList<>(lines.size());
+    List<Integer> testLabels = new ArrayList<>(lines.size());
 
     for (String line : lines) {
       String[] split = line.trim().split("\\s+");
@@ -47,8 +49,8 @@ public class NamedEntityRecognitionTest extends TestCase {
     for (String line : testLines) {
       String[] split = line.trim().split("\\s+");
       if (!line.isEmpty() && split.length == 2) {
-        testwords.add(split[0]);
-        testlabels.add(split[1].equals("O") ? 0 : 1);
+        testWords.add(split[0]);
+        testLabels.add(split[1].equals("O") ? 0 : 1);
       }
     }
 
@@ -59,16 +61,27 @@ public class NamedEntityRecognitionTest extends TestCase {
     DenseDoubleVector[] outcome = vectorize.getSecond();
 
     Tuple<DoubleVector[], DenseDoubleVector[]> vectorizeAdditionals = fact
-        .vectorizeAdditionals(testwords, testlabels);
+        .vectorizeAdditionals(testWords, testLabels);
     DoubleVector[] testFeatures = vectorizeAdditionals.getFirst();
-    DenseDoubleVector[] testOutcome = vectorizeAdditionals.getSecond();
 
-    MaxEntMarkovModel model = new MaxEntMarkovModel(new Fmincg(), 250, false);
-    EvaluationResult res = Evaluator.evaluateSplit(model, 2, 0.5d, features,
-        outcome, testFeatures, testOutcome);
-    assertTrue(res.getPrecision() > 0.9);
-    assertTrue(res.getAccuracy() > 0.9);
-    assertTrue(res.getCorrect() > 50500);
+    MaxEntMarkovModel model = new MaxEntMarkovModel(new Fmincg(), 100, false);
+    model.train(features, outcome);
+    DoubleVector[] vectorizeEachLabel = fact.vectorizeEachLabel(testWords);
+    DoubleMatrix predict = model.predict(
+        new SparseDoubleRowMatrix(testFeatures), new SparseDoubleRowMatrix(
+            vectorizeEachLabel));
+    // check if specific names are included
+    HashSet<String> names = new HashSet<>(Arrays.asList("Clinton", "Carl",
+        "Vinson", "Marc", "Dutroux", "Jens", "Howard"));
+
+    for (int i = 0; i < predict.getRowCount(); i++) {
+      int predictedClass = (int) predict.get(i, 0);
+      if (predictedClass == 1) {
+        names.remove((testWords.get(i)));
+      }
+    }
+
+    assertEquals(0, names.size());
+
   }
-
 }

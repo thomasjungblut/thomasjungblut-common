@@ -22,13 +22,19 @@ public final class ViterbiUtils {
    * 
    * @param weights the HMM weights.
    * @param features the features to predict on.
+   * @param featuresPerState the matrix containing the feature vectors,
+   *          precomputed for each possible state in classes. The layout is that
+   *          the same feature was computed n-times, so class 0 first, class 1
+   *          next and so on and this is layed out in rows (Feature 1 | class 0,
+   *          Feature 1 | class 1 ...). Feature 0 is only contained once,
+   *          because it only had class zero as previous class.
    * @param classes how many classes? 2 if binary.
    * @return a n x m matrix where n is the number of featurevectors and m is the
    *         number of classes (in binary prediction this is just 1, 0 and 1 are
    *         the predicted labels at index 0 then).
    */
   public static DoubleMatrix decode(DoubleMatrix weights,
-      DoubleMatrix features, int classes) {
+      DoubleMatrix features, DoubleMatrix featuresPerState, int classes) {
     final int m = features.getRowCount();
     int[][] backpointers = new int[m][classes];
     double[][] scores = new double[m][classes];
@@ -46,11 +52,12 @@ public final class ViterbiUtils {
 
     // for each position in data
     for (position = 1; position < m; position++) {
-      int prevPosition = position - 1;
-      // for each previous label
+      int i = position * classes - 1;
+      // for each possible previous label
       for (int j = 0; j < classes; j++) {
+        prevLabel = j;
         localScores = computeScores(classes,
-            features.getRowVector(prevPosition), weights);
+            featuresPerState.getRowVector(i + j), weights);
         for (int currLabel = 0; currLabel < localScores.length; currLabel++) {
           double score = localScores[currLabel]
               + scores[position - 1][prevLabel];
@@ -62,18 +69,19 @@ public final class ViterbiUtils {
       }
     }
 
+    int bestLabel = 0;
+    double bestScore = scores[m - 1][bestLabel];
+    for (int label = 1; label < scores[m - 1].length; label++) {
+      if (scores[m - 1][label] > bestScore) {
+        bestLabel = label;
+        bestScore = scores[m - 1][label];
+      }
+    }
+
     DoubleMatrix outcome = new DenseDoubleMatrix(features.getRowCount(),
         classes == 2 ? 1 : classes);
-    // set the probabilities into the matrix
-    for (int i = 0; i < m; i++) {
-      int bestLabel = 0;
-      double bestScore = scores[i][bestLabel];
-      for (int label = 1; label < scores[i].length; label++) {
-        if (scores[i][label] > bestScore) {
-          bestLabel = label;
-          bestScore = scores[m - 1][label];
-        }
-      }
+    // follow the backpointers
+    for (position = m - 1; position >= 0; position--) {
       DenseDoubleVector vec = null;
       if (classes != 2) {
         vec = new DenseDoubleVector(classes);
@@ -82,7 +90,8 @@ public final class ViterbiUtils {
         vec = new DenseDoubleVector(1);
         vec.set(0, bestLabel);
       }
-      outcome.setRowVector(i, vec);
+      outcome.setRowVector(position, vec);
+      bestLabel = backpointers[position][bestLabel];
     }
 
     return outcome;

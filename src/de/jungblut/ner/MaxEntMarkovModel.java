@@ -1,7 +1,5 @@
 package de.jungblut.ner;
 
-import java.util.Collections;
-
 import com.google.common.base.Preconditions;
 
 import de.jungblut.classification.AbstractClassifier;
@@ -58,16 +56,21 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
         (int) (input.getLength() / (double) classes));
   }
 
+  /**
+   * Customized prediction method, WARNING the feature vector needs a special
+   * data layout to work correctly:<br/>
+   * TODO
+   * 
+   */
   @Override
   public DoubleVector predict(DoubleVector features) {
-    return ViterbiUtils
-        .decode(theta,
-            new SparseDoubleRowMatrix(Collections.singletonList(features)),
-            classes).getRowVector(0);
+    return null;
   }
 
   // matrix prediction
-  public DoubleMatrix predict(DoubleMatrix features) {
-    return ViterbiUtils.decode(theta, features, classes);
+  public DoubleMatrix predict(DoubleMatrix features,
+      DoubleMatrix featuresPerState) {
+    return ViterbiUtils.decode(theta, features, featuresPerState, classes);
   }
+
 }
