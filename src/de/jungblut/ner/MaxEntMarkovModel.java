@@ -1,5 +1,7 @@
 package de.jungblut.ner;
 
+import java.util.Collections;
+
 import com.google.common.base.Preconditions;
 
 import de.jungblut.math.DoubleMatrix;
@@ -52,6 +54,13 @@ public final class MaxEntMarkovModel {
     DoubleVector input = minimizer.minimize(func, vx, numIterations, verbose);
     theta = DenseMatrixFolder.unfoldMatrix(input, classes,
         (int) (input.getLength() / (double) classes));
+  }
+
+  public DoubleVector predict(DoubleVector feature,
+      DoubleVector[] featuresPerState) {
+    return ViterbiUtils.decode(theta,
+        new SparseDoubleRowMatrix(Collections.singletonList(feature)),
+        new SparseDoubleRowMatrix(featuresPerState), classes).getRowVector(0);
   }
 
   // matrix prediction
