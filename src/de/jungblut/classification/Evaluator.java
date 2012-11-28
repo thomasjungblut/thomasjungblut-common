@@ -94,6 +94,22 @@ public final class Evaluator {
       falseNegative /= n;
     }
 
+    public int getTruePositive() {
+      return this.truePositive;
+    }
+
+    public int getFalsePositive() {
+      return this.falsePositive;
+    }
+
+    public int getTrueNegative() {
+      return this.trueNegative;
+    }
+
+    public int getFalseNegative() {
+      return this.falseNegative;
+    }
+
     public void print() {
       System.out.println("Number of labels: " + getNumLabels());
       System.out.println("Trainingset size: " + getTrainSize());
