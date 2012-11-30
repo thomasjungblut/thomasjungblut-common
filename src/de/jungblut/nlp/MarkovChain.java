@@ -87,13 +87,7 @@ public final class MarkovChain {
    *         is happening.
    */
   public double getProbabilityForSequence(int[] stateSequence) {
-    DenseDoubleVector distribution = new DenseDoubleVector(
-        stateSequence.length - 1);
-    for (int i = 0; i < distribution.getDimension(); i++) {
-      distribution.set(i,
-          transitionProbabilities.get(stateSequence[i + 1], stateSequence[i]));
-    }
-
+    DoubleVector distribution = getTransitionProbabilities(stateSequence);
     // normalize it by the maximum of the log probabilities
     double max = distribution.max();
     double probabilitySum = 0.0d;
@@ -105,6 +99,19 @@ public final class MarkovChain {
     }
     // no we can exp them to get the real probability
     return Math.exp(probabilitySum);
+  }
+
+  /**
+   * @return the transition probabilities for the states.
+   */
+  public DoubleVector getTransitionProbabilities(int[] stateSequence) {
+    DenseDoubleVector distribution = new DenseDoubleVector(
+        stateSequence.length - 1);
+    for (int i = 0; i < distribution.getDimension(); i++) {
+      distribution.set(i,
+          transitionProbabilities.get(stateSequence[i + 1], stateSequence[i]));
+    }
+    return distribution;
   }
 
   /**
