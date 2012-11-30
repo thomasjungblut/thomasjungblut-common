@@ -31,18 +31,6 @@ public class MultiLayerPerceptronTest extends TestCase {
   }
 
   @Test
-  public void testXORNormalTrain() {
-    MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 3, 1 },
-        new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SIGMOID.get() });
-    Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
-
-    mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
-        new DenseDoubleMatrix(sampleXOR.getSecond()), 10000, 1.E-5, 0.1, 0.0d,
-        false);
-    testPredictions(sampleXOR, mlp);
-  }
-
-  @Test
   public void testXORFminCG() {
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 },
         new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SIGMOID.get() });

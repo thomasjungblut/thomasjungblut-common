@@ -158,13 +158,40 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    */
   @Override
   public DenseDoubleVector predict(DoubleVector xi) {
-    layers[0].setActivations(xi);
+    DoubleVector activationVector = addBias(xi);
+    final int len = layers.length - 1;
+    for (int i = 1; i <= len; i++) {
+      activationVector = activations[i].apply(weights[i - 1].getWeights()
+          .multiplyVector(activationVector));
+      // only add the bias if we are not in the last layer
+      if (i != len) {
+        activationVector = addBias(activationVector);
+      }
+    }
+    return (DenseDoubleVector) activationVector;
+  }
 
-    for (WeightMatrix weight : weights) {
-      weight.forward();
+  /**
+   * Predicts the outcome of the given input by doing a forward pass. Used for
+   * binary classification by a threshold. Everything above threshold will be
+   * considered as 1, the other case as 0.
+   */
+  public DenseDoubleVector predict(DoubleVector xi, double threshold) {
+    DenseDoubleVector activations = predict(xi);
+    for (int i = 0; i < activations.getLength(); i++) {
+      activations.set(i, activations.get(i) > threshold ? 1.0d : 0.0d);
     }
 
-    return layers[layers.length - 1].getActivations();
+    return activations;
+  }
+
+  private DoubleVector addBias(DoubleVector activations) {
+    DenseDoubleVector v = new DenseDoubleVector(activations.getLength() + 1);
+    v.set(0, 1.0d); // bias unit is always at index zero
+    for (int i = 0; i < activations.getLength(); i++) {
+      v.set(i + 1, activations.get(i));
+    }
+    return v;
   }
 
   @Override
@@ -184,28 +211,11 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   }
 
   /**
-   * Predicts the outcome of the given input by doing a forward pass. Used for
-   * binary classification by a threshold. Everything above threshold will be
-   * considered as 1, the other case as 0.
-   */
-  public DenseDoubleVector predict(DoubleVector xi, double threshold) {
-    layers[0].setActivations(xi);
-
-    for (WeightMatrix weight : weights) {
-      weight.forward();
-    }
-    DenseDoubleVector activations = layers[layers.length - 1].getActivations();
-    for (int i = 0; i < activations.getLength(); i++) {
-      activations.set(i, activations.get(i) > threshold ? 1.0d : 0.0d);
-    }
-
-    return activations;
-  }
-
-  /**
    * Full backpropagation training method. It checks whether the maximum
    * iterations have been exceeded or a given error has been archived.
    * 
+   * @deprecated this is deprecated, because this is a bit buggy. Please use the
+   *             other methods that use a optimizer.
    * @param x the training examples.
    * @param y the outcomes for the training examples.
    * @param maxIterations the number of maximum iterations to train.
@@ -215,6 +225,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * @param verbose output to console with the last given errors.
    * @return the last squared mean error.
    */
+  @Deprecated
   public double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
       int maxIterations, double maximumError, double learningRate,
       double lambda, boolean verbose) {
