@@ -99,20 +99,12 @@ public final class MarkovChain {
     double probabilitySum = 0.0d;
     for (int i = 0; i < distribution.getDimension(); i++) {
       double probability = distribution.get(i);
-      double normalizedProbability = Math.exp(probability - max);
-      distribution.set(i, normalizedProbability);
+      double normalizedProbability = probability - max;
+      // add up the log probabilities
       probabilitySum += normalizedProbability;
     }
-
-    // since the sum is sometimes not 1, we need to divide by the sum
-    distribution = (DenseDoubleVector) distribution.divide(probabilitySum);
-    // now we need to multiple each of them together, because we deal with real
-    // probabilities not with log ones now
-    double result = 1d;
-    for (int i = 0; i < distribution.getDimension(); i++) {
-      result *= distribution.get(i);
-    }
-    return result;
+    // no we can exp them to get the real probability
+    return Math.exp(probabilitySum);
   }
 
   /**
