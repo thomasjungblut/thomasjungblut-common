@@ -87,32 +87,31 @@ public final class MarkovChain {
    *         is happening.
    */
   public double getProbabilityForSequence(int[] stateSequence) {
+    DoubleVector distribution = getTransitionProbabilities(stateSequence);
+    // normalize it by the maximum of the log probabilities
+    double max = distribution.max();
+    double probabilitySum = 0.0d;
+    for (int i = 0; i < distribution.getDimension(); i++) {
+      double probability = distribution.get(i);
+      double normalizedProbability = probability - max;
+      // add up the log probabilities
+      probabilitySum += normalizedProbability;
+    }
+    // no we can exp them to get the real probability
+    return Math.exp(probabilitySum);
+  }
+
+  /**
+   * @return the transition probabilities for the states.
+   */
+  public DoubleVector getTransitionProbabilities(int[] stateSequence) {
     DenseDoubleVector distribution = new DenseDoubleVector(
         stateSequence.length - 1);
     for (int i = 0; i < distribution.getDimension(); i++) {
       distribution.set(i,
           transitionProbabilities.get(stateSequence[i + 1], stateSequence[i]));
     }
-
-    // normalize it by the maximum of the log probabilities
-    double max = distribution.max();
-    double probabilitySum = 0.0d;
-    for (int i = 0; i < distribution.getDimension(); i++) {
-      double probability = distribution.get(i);
-      double normalizedProbability = Math.exp(probability - max);
-      distribution.set(i, normalizedProbability);
-      probabilitySum += normalizedProbability;
-    }
-
-    // since the sum is sometimes not 1, we need to divide by the sum
-    distribution = (DenseDoubleVector) distribution.divide(probabilitySum);
-    // now we need to multiple each of them together, because we deal with real
-    // probabilities not with log ones now
-    double result = 1d;
-    for (int i = 0; i < distribution.getDimension(); i++) {
-      result *= distribution.get(i);
-    }
-    return result;
+    return distribution;
   }
 
   /**
