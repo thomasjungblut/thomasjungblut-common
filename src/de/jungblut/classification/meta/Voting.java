@@ -51,6 +51,13 @@ public final class Voting extends AbstractClassifier {
         verbose);
   }
 
+  public Voting(CombiningType type, Classifier[] classifier) {
+    this.type = type;
+    this.classifier = classifier;
+    this.threads = Runtime.getRuntime().availableProcessors();
+    this.verbose = false;
+  }
+
   @Override
   public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
     ExecutorService pool = Executors.newFixedThreadPool(threads);
@@ -97,6 +104,10 @@ public final class Voting extends AbstractClassifier {
       System.out.println("Successfully finished training!");
     }
 
+  }
+
+  public Classifier[] getClassifier() {
+    return classifier;
   }
 
   @Override
