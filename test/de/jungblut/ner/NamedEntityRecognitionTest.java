@@ -26,8 +26,8 @@ public class NamedEntityRecognitionTest extends TestCase {
   @Test
   public void testEndToEnd() throws Exception {
 
-    String train = "E:/datasets/pa4-ner/data/train";
-    String test = "E:/datasets/pa4-ner/data/dev";
+    String train = "files/ner/train";
+    String test = "files/ner/dev";
 
     List<String> lines = Files.readAllLines(
         FileSystems.getDefault().getPath(train), Charset.defaultCharset());

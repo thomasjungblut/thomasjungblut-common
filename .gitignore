@@ -5,3 +5,5 @@
 /thomasjungblut-common.iml
 /.project
 /.classpath
+/target
+/lib

@@ -4,19 +4,13 @@ import static de.jungblut.crawl.extraction.OutlinkExtractor.consumeStream;
 import static de.jungblut.crawl.extraction.OutlinkExtractor.extractOutlinks;
 import static de.jungblut.crawl.extraction.OutlinkExtractor.getConnection;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.hadoop.io.Text;
 import org.htmlparser.util.ParserException;
 
-import de.jungblut.crawl.Crawler;
 import de.jungblut.crawl.FetchResult;
-import de.jungblut.crawl.MultithreadedCrawler;
-import de.jungblut.crawl.SequenceFileResultWriter;
 import de.jungblut.crawl.extraction.HtmlExtrator.HtmlFetchResult;
 import de.jungblut.math.tuple.Tuple;
 
@@ -81,19 +75,4 @@ public final class HtmlExtrator implements Extractor<HtmlFetchResult> {
 
   }
 
-  public static void main(String[] args) throws IOException,
-      InterruptedException, ExecutionException {
-    String start = "https://news.google.de/";
-
-    Crawler<HtmlFetchResult> crawler = new MultithreadedCrawler<>(10000,
-        new HtmlExtrator(), new SequenceFileResultWriter<HtmlFetchResult>() {
-          @Override
-          public void write(HtmlFetchResult result) throws IOException {
-            writer.append(new Text(result.getUrl()), new Text(result.html));
-          }
-        });
-
-    crawler.process(start);
-
-  }
 }

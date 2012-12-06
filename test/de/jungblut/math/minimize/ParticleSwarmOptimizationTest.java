@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import com.google.common.math.DoubleMath;
+
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
@@ -53,10 +55,8 @@ public class ParticleSwarmOptimizationTest extends TestCase {
     DoubleVector minimizeFunction = ParticleSwarmOptimization.minimizeFunction(
         inlineFunction, start, 1000, 2.8, 0.4, 0.8, 65, false);
 
-    assertTrue(minimizeFunction.get(0) >= 0.95
-        && minimizeFunction.get(0) < 1.05);
-    assertTrue(minimizeFunction.get(1) >= 0.95
-        && minimizeFunction.get(1) < 1.05);
+    assertTrue(DoubleMath.fuzzyEquals(minimizeFunction.get(0), 1d, 0.2));
+    assertTrue(DoubleMath.fuzzyEquals(minimizeFunction.get(1), 1d, 0.2));
   }
 
 }

@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import com.google.common.math.DoubleMath;
+
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.Evaluator;
 import de.jungblut.classification.Evaluator.EvaluationResult;
@@ -71,7 +73,9 @@ public class LogisticRegressionTest extends TestCase {
       int predict = clf.getPredictedClass(features[i], 0.5d);
       trainingError += Math.abs(outcome[i].get(0) - predict);
     }
-    assertEquals(11.0d, trainingError);
+    assertTrue("Training error was: " + trainingError
+        + " and should have been between 9 and 13.",
+        DoubleMath.fuzzyEquals(trainingError, 11, 2d));
   }
 
   @Test
