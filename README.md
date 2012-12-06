@@ -37,3 +37,7 @@ Everything else shall be found on the central maven repository, or in the case o
 You can simply build with "mvn clean package install" the created jar contains debugable code + sources.
 
 Note that there may be an issue to retrieve MRUnit-0.9.0-incubating, therefore you can simply download it and install it manually via Maven.
+
+E.G. like this: 
+
+> mvn install:install-file -DgroupId=org.apache.mrunit -DartifactId=mrunit -Dversion=0.9.0-incubating -Dpackaging=jar -Dfile=/home/thomasjungblut/.m2/repository/org/apache/mrunit/mrunit/0.9.0-incubating/mrunit-0.9.0-incubating-hadoop1.jar
