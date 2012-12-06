@@ -1,7 +1,8 @@
 Hey all,
 
 this is my code-sink for mainly java files.
-Have fun to browse through many things for:
+
+###Have fun to browse through many things for:
 
 - Datastructures & Algorithms
 - Apache Hadoop
@@ -12,7 +13,8 @@ Have fun to browse through many things for:
 - JCuda experiments
 
 License
-=============
+-------
+
 
 Since I am Apache committer, I consider everything inside of this repository 
 licensed by Apache 2.0 license, although I haven't put the usual header into the source files.
@@ -20,7 +22,7 @@ licensed by Apache 2.0 license, although I haven't put the usual header into the
 If something is not licensed via Apache 2.0, there is a reference or an additional licence header included in the specific source file.
 
 Package Layout
-=============
+--------------
 
 /src -> raw source code.
 /test -> testcases for the code in /src.
@@ -28,7 +30,7 @@ Package Layout
 /jcuda -> the cuda 3rd party libs for the de.jungblut.math.cuda package
 
 Build
-=============
+-----
 
 To build this library, you will need to install [my math lib on your local computer](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib"), build instructions can be found there as well.
 Everything else shall be found on the central maven repository, or in the case of JCUDA in the jcuda path which is automagically added.
