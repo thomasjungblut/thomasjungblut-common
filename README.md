@@ -15,7 +15,6 @@ this is my code-sink for mainly java files.
 License
 -------
 
-
 Since I am Apache committer, I consider everything inside of this repository 
 licensed by Apache 2.0 license, although I haven't put the usual header into the source files.
 
@@ -24,10 +23,10 @@ If something is not licensed via Apache 2.0, there is a reference or an addition
 Package Layout
 --------------
 
-/src -> raw source code.
-/test -> testcases for the code in /src.
-/files -> reserved directory for files in examples or ignored paths for output of applications.
-/jcuda -> the cuda 3rd party libs for the de.jungblut.math.cuda package
+- /src -> raw source code.
+- /test -> testcases for the code in /src.
+- /files -> reserved directory for files in examples or ignored paths for output of applications.
+- /jcuda -> the cuda 3rd party libs for the de.jungblut.math.cuda package
 
 Build
 -----
