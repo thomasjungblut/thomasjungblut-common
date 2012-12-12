@@ -12,7 +12,6 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 public enum ErrorFunction {
 
   SIGMOID_ERROR {
-
     @Override
     double getError(DoubleMatrix output, DoubleMatrix target) {
       return (output.multiply(-1d).multiplyElementWise(logMatrix(target))
@@ -49,7 +48,19 @@ public enum ErrorFunction {
         input.getColumnCount());
     for (int row = 0; row < log.getRowCount(); row++) {
       for (int col = 0; col < log.getColumnCount(); col++) {
-        log.set(row, col, Math.log(input.get(row, col)));
+        double d = input.get(row, col);
+        // guard the logarithm
+        if (Double.isNaN(d) || Double.isInfinite(d)) {
+          if (d <= 0d || d <= -0d) {
+            // assume a quite low value of 1e-5
+            log.set(row, col, -10d);
+          } else {
+            // if we had NaN and INFs, just set this to log(1) which is zero
+            log.set(row, col, 0d);
+          }
+        } else {
+          log.set(row, col, Math.log(d));
+        }
       }
     }
     return log;
