@@ -104,6 +104,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     } else {
       this.activations = activations;
     }
+    Preconditions.checkArgument(layer.length == activations.length,
+        "Size of layers and activations must match!");
     this.layers = new Layer[layer.length];
     for (int i = 0; i < layer.length; i++) {
       layers[i] = new Layer(layer[i]);
