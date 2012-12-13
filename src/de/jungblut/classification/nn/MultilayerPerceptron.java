@@ -187,7 +187,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return activations;
   }
 
-  private DoubleVector addBias(DoubleVector activations) {
+  private static DoubleVector addBias(DoubleVector activations) {
     DenseDoubleVector v = new DenseDoubleVector(activations.getLength() + 1);
     v.set(0, 1.0d); // bias unit is always at index zero
     for (int i = 0; i < activations.getLength(); i++) {
@@ -275,7 +275,34 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
     CostFunction costFunction = new MultilayerPerceptronCostFunction(this, x,
         y, lambda);
-    return trainInternal(minimizer, maxIterations, verbose, costFunction);
+    return trainInternal(minimizer, maxIterations, verbose, costFunction,
+        initTheta());
+  }
+
+  /**
+   * Full backpropagation training method. It performs weight finding by using a
+   * minimizer. Note that it only guarantees to find a global minimum solution
+   * in case of linear or convex problems (zero / one hidden layer), of course
+   * this is also dependend on the concrete minimizer implementation. If you
+   * have more than a single hidden layer, then it will usually trap into a
+   * local minimum. It supplies a vector so training can be resumed from a good
+   * starting point.
+   * 
+   * @param x the training examples.
+   * @param y the outcomes for the training examples.
+   * @param minimizer the minimizer to use to train the neural network.
+   * @param maxIterations the number of maximum iterations to train.
+   * @param lambda the given regularization parameter.
+   * @param verbose output to console with the last given errors.
+   * @param theta initial spot to start the minimizations.
+   * @return the cost of the training.
+   */
+  public final double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
+      Minimizer minimizer, int maxIterations, double lambda, boolean verbose,
+      DenseDoubleVector theta) {
+    CostFunction costFunction = new MultilayerPerceptronCostFunction(this, x,
+        y, lambda);
+    return trainInternal(minimizer, maxIterations, verbose, costFunction, theta);
   }
 
   /**
@@ -298,7 +325,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
     CostFunction costFunction = new GPUMultilayerPerceptronCostFunction(this,
         x, y, lambda);
-    return trainInternal(minimizer, maxIterations, verbose, costFunction);
+    return trainInternal(minimizer, maxIterations, verbose, costFunction,
+        initTheta());
   }
 
   /**
@@ -310,17 +338,12 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * @param costFunction the costfunction to use, normally GPU training uses the
    *          {@link GPUMultilayerPerceptronCostFunction} and the normal
    *          training uses {@link MultilayerPerceptronCostFunction}.
+   * @param initialTheta the initial weights to be used (init with initTheta()).
    * @return the cost of the training.
    */
   private double trainInternal(Minimizer minimizer, int maxIterations,
-      boolean verbose, CostFunction costFunction) {
-    // get our randomized weights into a foldable format
-    DenseDoubleMatrix[] weightMatrices = new DenseDoubleMatrix[getWeights().length];
-    for (int i = 0; i < weightMatrices.length; i++)
-      weightMatrices[i] = getWeights()[i].getWeights();
-
-    DenseDoubleVector pInput = DenseMatrixFolder.foldMatrices(weightMatrices);
-    DoubleVector theta = minimizer.minimize(costFunction, pInput,
+      boolean verbose, CostFunction costFunction, DenseDoubleVector initialTheta) {
+    DoubleVector theta = minimizer.minimize(costFunction, initialTheta,
         maxIterations, verbose);
     // compute the layer sizes to unfold the matrices correctly
     int[] layerSizes = new int[layers.length];
@@ -338,6 +361,16 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     }
 
     return costFunction.evaluateCost(theta).getFirst();
+  }
+
+  private DenseDoubleVector initTheta() {
+    // get our randomized weights into a foldable format
+    DenseDoubleMatrix[] weightMatrices = new DenseDoubleMatrix[getWeights().length];
+    for (int i = 0; i < weightMatrices.length; i++) {
+      weightMatrices[i] = getWeights()[i].getWeights();
+    }
+    DenseDoubleVector pInput = DenseMatrixFolder.foldMatrices(weightMatrices);
+    return pInput;
   }
 
   public WeightMatrix[] getWeights() {

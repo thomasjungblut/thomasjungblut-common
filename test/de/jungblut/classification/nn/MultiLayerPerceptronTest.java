@@ -94,7 +94,7 @@ public class MultiLayerPerceptronTest extends TestCase {
         new DenseDoubleVector(new double[] { 1 }),
         new DenseDoubleVector(new double[] { 1 }),
         new DenseDoubleVector(new double[] { 0 }) };
-    return new Tuple<DoubleVector[], DoubleVector[]>(train, prediction);
+    return new Tuple<>(train, prediction);
   }
 
   public Tuple<DoubleVector[], DoubleVector[]> sampleXORSoftMax() {
@@ -108,7 +108,7 @@ public class MultiLayerPerceptronTest extends TestCase {
         new DenseDoubleVector(new double[] { 1, 0 }),
         new DenseDoubleVector(new double[] { 1, 0 }),
         new DenseDoubleVector(new double[] { 0, 1 }) };
-    return new Tuple<DoubleVector[], DoubleVector[]>(train, prediction);
+    return new Tuple<>(train, prediction);
   }
 
   public void testPredictionsSoftMax(
