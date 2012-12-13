@@ -276,7 +276,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     CostFunction costFunction = new MultilayerPerceptronCostFunction(this, x,
         y, lambda);
     return trainInternal(minimizer, maxIterations, verbose, costFunction,
-        initTheta());
+        getFoldedThetaVector());
   }
 
   /**
@@ -326,7 +326,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     CostFunction costFunction = new GPUMultilayerPerceptronCostFunction(this,
         x, y, lambda);
     return trainInternal(minimizer, maxIterations, verbose, costFunction,
-        initTheta());
+        getFoldedThetaVector());
   }
 
   /**
@@ -363,14 +363,16 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return costFunction.evaluateCost(theta).getFirst();
   }
 
-  private DenseDoubleVector initTheta() {
+  /**
+   * @return the folded theta vector, seeded by the current weight matrices.
+   */
+  public DenseDoubleVector getFoldedThetaVector() {
     // get our randomized weights into a foldable format
     DenseDoubleMatrix[] weightMatrices = new DenseDoubleMatrix[getWeights().length];
     for (int i = 0; i < weightMatrices.length; i++) {
       weightMatrices[i] = getWeights()[i].getWeights();
     }
-    DenseDoubleVector pInput = DenseMatrixFolder.foldMatrices(weightMatrices);
-    return pInput;
+    return DenseMatrixFolder.foldMatrices(weightMatrices);
   }
 
   public WeightMatrix[] getWeights() {
