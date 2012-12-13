@@ -391,6 +391,10 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return this.error;
   }
 
+  public void setConfiguration(TrainingConfiguration conf) {
+    this.conf = conf;
+  }
+
   /**
    * At the beginning of each batch forward propagation we should reset the
    * gradients.
