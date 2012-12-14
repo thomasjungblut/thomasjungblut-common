@@ -12,27 +12,33 @@ import java.util.concurrent.Executors;
 
 import org.apache.commons.math3.random.RandomDataImpl;
 
+/**
+ * Ant colony optimization algorithm for TSP problems. <br/>
+ * TODO more comments, and more configurability from outside.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class AntColonyOptimization {
 
   // greedy
-  public static final double ALPHA = -0.2d;
+  private static final double ALPHA = -0.2d;
   // rapid selection
-  public static final double BETA = 9.6d;
+  private static final double BETA = 9.6d;
   // heuristic parameters
-  public static final double Q = 0.0001d; // somewhere between 0 and 1
-  public static final double PHEROMONE_PERSISTENCE = 0.3d; // between 0 and 1
-  public static final double INITIAL_PHEROMONES = 0.8d; // can be anything
+  private static final double Q = 0.0001d; // somewhere between 0 and 1
+  private static final double PHEROMONE_PERSISTENCE = 0.3d; // between 0 and 1
+  private static final double INITIAL_PHEROMONES = 0.8d; // can be anything
 
-  // use power of 2
-  public static final int NUM_AGENTS = 2048 * 20;
+  private static final int NUM_AGENTS = 2048 * 20;
   private static final int POOL_SIZE = Runtime.getRuntime()
       .availableProcessors();
 
   private static final RandomDataImpl rnd = new RandomDataImpl();
-
   private static final ExecutorService THREAD_POOL = Executors
       .newFixedThreadPool(POOL_SIZE);
 
+  // use power of 2
   private final ExecutorCompletionService<WalkedWay> agentCompletionService = new ExecutorCompletionService<WalkedWay>(
       THREAD_POOL);
 
@@ -42,12 +48,81 @@ public final class AntColonyOptimization {
   private final double[][] pheromones;
   private final Object[][] mutex;
 
+  private double alpha = ALPHA;
+  private double beta = BETA;
+  private double q = Q;
+  private double pheromonePersistence = PHEROMONE_PERSISTENCE;
+  private double initialPheromones = INITIAL_PHEROMONES;
+  private int agents = NUM_AGENTS;
+
   public AntColonyOptimization(String file) throws IOException {
-    // read the matrix
+    this(file, ALPHA, BETA, Q, PHEROMONE_PERSISTENCE, INITIAL_PHEROMONES,
+        NUM_AGENTS);
+  }
+
+  public AntColonyOptimization(String file, int numAgents) throws IOException {
+    this(file, ALPHA, BETA, Q, PHEROMONE_PERSISTENCE, INITIAL_PHEROMONES,
+        numAgents);
+  }
+
+  public AntColonyOptimization(String file, double alpha, double beta,
+      double q, double pheromonePersistence, double initialPheromones,
+      int agents) throws IOException {
+    this.alpha = alpha;
+    this.beta = beta;
+    this.q = q;
+    this.pheromonePersistence = pheromonePersistence;
+    this.initialPheromones = initialPheromones;
+    this.agents = agents;
+
     matrix = readMatrixFromFile(file);
     invertedMatrix = invertMatrix();
     pheromones = initializePheromones();
     mutex = initializeMutexObjects();
+  }
+
+  public final WalkedWay start() throws InterruptedException,
+      ExecutionException {
+
+    WalkedWay bestDistance = null;
+
+    int agentsSend = 0;
+    int agentsDone = 0;
+    int agentsWorking = 0;
+    for (int agentNumber = 0; agentNumber < agents; agentNumber++) {
+      agentCompletionService.submit(new Agent(this, rnd.nextInt(0,
+          matrix.length - 1)));
+      agentsSend++;
+      agentsWorking++;
+      while (agentsWorking >= POOL_SIZE) {
+        WalkedWay way = agentCompletionService.take().get();
+        if (bestDistance == null || way.distance < bestDistance.distance) {
+          bestDistance = way;
+          System.out.println("Agent returned with new best distance of: "
+              + way.distance);
+        }
+        agentsDone++;
+        agentsWorking--;
+      }
+    }
+    final int left = agentsSend - agentsDone;
+    System.out.println("Waiting for " + left
+        + " agents to finish their random walk!");
+
+    for (int i = 0; i < left; i++) {
+      WalkedWay way = agentCompletionService.take().get();
+      if (bestDistance == null || way.distance < bestDistance.distance) {
+        bestDistance = way;
+        System.out.println("Agent returned with new best distance of: "
+            + way.distance);
+      }
+    }
+
+    THREAD_POOL.shutdownNow();
+    System.out.println("Found best so far: " + bestDistance.distance);
+    System.out.println(Arrays.toString(bestDistance.way));
+
+    return bestDistance;
 
   }
 
@@ -79,9 +154,7 @@ public final class AntColonyOptimization {
   }
 
   private final double calculatePheromones(double current, double newPheromone) {
-    final double result = (1 - AntColonyOptimization.PHEROMONE_PERSISTENCE)
-        * current + newPheromone;
-    return result;
+    return (1d - pheromonePersistence) * current + newPheromone;
   }
 
   private final double[][] initializePheromones() {
@@ -89,14 +162,14 @@ public final class AntColonyOptimization {
     int rows = matrix.length;
     for (int columns = 0; columns < matrix.length; columns++) {
       for (int i = 0; i < rows; i++) {
-        localMatrix[columns][i] = INITIAL_PHEROMONES;
+        localMatrix[columns][i] = initialPheromones;
       }
     }
 
     return localMatrix;
   }
 
-  public final double[][] readMatrixFromFile(String file) throws IOException {
+  private final double[][] readMatrixFromFile(String file) throws IOException {
     final ArrayList<Record> records = new ArrayList<Record>();
     try (BufferedReader br = new BufferedReader(new FileReader(file))) {
       boolean readAhead = false;
@@ -179,51 +252,7 @@ public final class AntColonyOptimization {
       double x2, double y2) {
     final double xDiff = x2 - x1;
     final double yDiff = y2 - y1;
-    return Math.abs((Math.sqrt((xDiff * xDiff) + (yDiff * yDiff))));
-  }
-
-  final double start() throws InterruptedException, ExecutionException {
-
-    WalkedWay bestDistance = null;
-
-    int agentsSend = 0;
-    int agentsDone = 0;
-    int agentsWorking = 0;
-    for (int agentNumber = 0; agentNumber < NUM_AGENTS; agentNumber++) {
-      agentCompletionService.submit(new Agent(this, rnd.nextInt(0,
-          matrix.length - 1)));
-      agentsSend++;
-      agentsWorking++;
-      while (agentsWorking >= POOL_SIZE) {
-        WalkedWay way = agentCompletionService.take().get();
-        if (bestDistance == null || way.distance < bestDistance.distance) {
-          bestDistance = way;
-          System.out.println("Agent returned with new best distance of: "
-              + way.distance);
-        }
-        agentsDone++;
-        agentsWorking--;
-      }
-    }
-    final int left = agentsSend - agentsDone;
-    System.out.println("Waiting for " + left
-        + " agents to finish their random walk!");
-
-    for (int i = 0; i < left; i++) {
-      WalkedWay way = agentCompletionService.take().get();
-      if (bestDistance == null || way.distance < bestDistance.distance) {
-        bestDistance = way;
-        System.out.println("Agent returned with new best distance of: "
-            + way.distance);
-      }
-    }
-
-    THREAD_POOL.shutdownNow();
-    System.out.println("Found best so far: " + bestDistance.distance);
-    System.out.println(Arrays.toString(bestDistance.way));
-
-    return bestDistance.distance;
-
+    return (Math.sqrt((xDiff * xDiff) + (yDiff * yDiff)));
   }
 
   static class Record {
@@ -248,16 +277,16 @@ public final class AntColonyOptimization {
     }
   }
 
-  public static void main(String[] args) throws IOException,
-      InterruptedException, ExecutionException {
+  public double getAlpha() {
+    return this.alpha;
+  }
 
-    long start = System.currentTimeMillis();
-    AntColonyOptimization antColonyOptimization = new AntColonyOptimization(
-        "files/tsp/berlin52.tsp");
-    double result = antColonyOptimization.start();
-    System.out
-        .println("Took: " + (System.currentTimeMillis() - start) + " ms!");
-    System.out.println("Result was: " + result);
+  public double getBeta() {
+    return this.beta;
+  }
+
+  public double getQ() {
+    return this.q;
   }
 
 }
