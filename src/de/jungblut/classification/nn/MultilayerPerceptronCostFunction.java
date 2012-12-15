@@ -25,6 +25,13 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
 
   private final ActivationFunction[] activations;
   private final ErrorFunction error;
+  /*
+   * TODO "On each presentation of each training case, each hidden unit is
+   * randomly omitted from the network with a probability of 0.5, so a hidden
+   * unit cannot rely on other hidden units being present." We extend this to
+   * input units and the dropout probabilities are configurable for each layer.
+   */
+  private final double[] dropoutProbabilities;
 
   public MultilayerPerceptronCostFunction(MultilayerPerceptron network,
       DenseDoubleMatrix x, DenseDoubleMatrix y, double lambda) {
@@ -34,11 +41,12 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
     this.lambda = lambda;
     this.layerSizes = new int[network.getLayers().length];
     for (int i = 0; i < layerSizes.length; i++) {
-      layerSizes[i] = network.getLayers()[i].getLength();
+      this.layerSizes[i] = network.getLayers()[i].getLength();
     }
     this.unfoldParameters = computeUnfoldParameters(layerSizes);
     this.activations = network.getActivations();
     this.error = network.getError();
+    this.dropoutProbabilities = network.getDropoutProbabilities();
   }
 
   /**

@@ -1,7 +1,5 @@
 package de.jungblut.classification.nn;
 
-import gnu.trove.list.array.TDoubleArrayList;
-
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
@@ -24,12 +22,10 @@ import de.jungblut.writable.MatrixWritable;
 import de.jungblut.writable.VectorWritable;
 
 /**
- * Multilayer perceptron by my collegue Marvin Ritter using my math library. <br/>
- * I have changed it to a format that can be used for batch training for example
- * in a clustered environment.<br/>
- * Also I have added several minimizers that will find minimas.
+ * Multilayer perceptron implementation that works on GPU via JCuda and CPU. It
+ * features l1 regularization and dropout as well as a variety of activation
+ * functions and error functions that can be configured.
  * 
- * @author marvin.ritter
  * @author thomas.jungblut
  * 
  */
@@ -54,21 +50,19 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     double lambda;
     boolean verbose;
     ActivationFunction[] activations;
+    double[] dropoutProbabilities;
 
     public TrainingConfiguration(Minimizer minimizer,
         ActivationFunction[] activations, int maxIterations, double lambda,
         boolean verbose) {
-      this.activations = activations;
-      this.type = TrainingType.CPU;
-      this.minimizer = minimizer;
-      this.maxIterations = maxIterations;
-      this.lambda = lambda;
-      this.verbose = verbose;
+      this(TrainingType.CPU, minimizer, activations, maxIterations, lambda,
+          verbose, null);
     }
 
-    public TrainingConfiguration(TrainingType type,
-        ActivationFunction[] activations, Minimizer minimizer,
-        int maxIterations, double lambda, boolean verbose) {
+    public TrainingConfiguration(TrainingType type, Minimizer minimizer,
+        ActivationFunction[] activations, int maxIterations, double lambda,
+        boolean verbose, double[] dropoutProbabilities) {
+      this.dropoutProbabilities = dropoutProbabilities;
       this.type = type;
       this.activations = activations;
       this.minimizer = minimizer;
@@ -82,8 +76,10 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   private final WeightMatrix[] weights;
   private final Layer[] layers;
   private final ActivationFunction[] activations;
+
   private ErrorFunction error = ErrorFunction.SIGMOID_ERROR;
   private TrainingConfiguration conf;
+  private double[] dropoutProbabilities;
 
   /**
    * Multilayer perceptron initializer by using an int[] to describe the number
@@ -143,6 +139,13 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   public MultilayerPerceptron(int[] layer, TrainingConfiguration conf) {
     this(layer, conf.activations);
     this.conf = conf;
+    // dropout may be configured, so let's check the parameters
+    if (conf.dropoutProbabilities != null) {
+      Preconditions.checkArgument(
+          layer.length == conf.dropoutProbabilities.length,
+          "Size of layers and dropout probabilities must match!");
+      this.dropoutProbabilities = conf.dropoutProbabilities;
+    }
   }
 
   /**
@@ -210,49 +213,6 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       trainGPU(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
           conf.minimizer, conf.maxIterations, conf.lambda, conf.verbose);
     }
-  }
-
-  /**
-   * Full backpropagation training method. It checks whether the maximum
-   * iterations have been exceeded or a given error has been archived.
-   * 
-   * @deprecated this is deprecated, because this is a bit buggy. Please use the
-   *             other methods that use a optimizer.
-   * @param x the training examples.
-   * @param y the outcomes for the training examples.
-   * @param maxIterations the number of maximum iterations to train.
-   * @param maximumError the maximum error when training can be stopped.
-   * @param learningRate the given learning rate.
-   * @param lambda the given regularization parameter.
-   * @param verbose output to console with the last given errors.
-   * @return the last squared mean error.
-   */
-  @Deprecated
-  public double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
-      int maxIterations, double maximumError, double learningRate,
-      double lambda, boolean verbose) {
-    TDoubleArrayList errorList = new TDoubleArrayList();
-    int iteration = 0;
-    while (iteration < maxIterations) {
-      double mse = 0.0d;
-      resetGradients();
-      for (int i = 0; i < x.getRowCount(); i++) {
-        DoubleVector difference = forwardStep(x.getRowVector(i),
-            y.getRowVector(i));
-        mse += difference.pow(2).sum();
-        backwardStep(difference);
-      }
-      adjustWeights(x.getRowCount(), learningRate, lambda);
-      if (verbose) {
-        System.out.println(iteration + ": " + mse);
-      }
-      errorList.add(mse);
-      iteration++;
-      // stop learning if we have reached our maximum error.
-      if (mse < maximumError)
-        break;
-    }
-    return errorList.getQuick(errorList.size() - 1);
   }
 
   /**
@@ -395,57 +355,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.conf = conf;
   }
 
-  /**
-   * At the beginning of each batch forward propagation we should reset the
-   * gradients.
-   */
-  private void resetGradients() {
-    // reset all gradients / derivatives
-    for (WeightMatrix weight : weights) {
-      weight.resetDerivatives();
-    }
-  }
-
-  /**
-   * Do a forward step and calculate the difference between the outcome and the
-   * prediction.
-   */
-  private DoubleVector forwardStep(DoubleVector x, DoubleVector outcome) {
-    DenseDoubleVector prediction = predict(x);
-    return prediction.subtract(outcome);
-  }
-
-  /**
-   * Do a backward step by the given error in the last layer.
-   */
-  private void backwardStep(DoubleVector errorLastLayer) {
-    // set error of last layer and then use backward propagation the calculate
-    // the errors of the other layers
-    // the first layer can be left out, cause the input error is not wrong ;)
-    layers[layers.length - 1].setErrors(errorLastLayer);
-    for (int k = weights.length - 1; k > 0; k--) {
-      weights[k].backwardError();
-    }
-
-    // based on the errors we can now calculate the partial derivatives for all
-    // layers and add them to the
-    // internal matrix
-    for (WeightMatrix weight : weights) {
-      weight.addDerivativesFromError();
-    }
-  }
-
-  /**
-   * After a full forward and backward step we can adjust the weights by
-   * normalizing the via the learningrate and lambda. Here we also need the
-   * number of training examples seen.<br/>
-   */
-  private void adjustWeights(int numTrainingExamples, double learningRate,
-      double lambda) {
-    // adjust weights using the given learning rate
-    for (WeightMatrix weight : weights) {
-      weight.updateWeights(numTrainingExamples, learningRate, lambda);
-    }
+  public double[] getDropoutProbabilities() {
+    return this.dropoutProbabilities;
   }
 
   /**
