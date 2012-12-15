@@ -15,7 +15,7 @@ import de.jungblut.math.tuple.Tuple;
  * Neural network costfunction for a multilayer perceptron.
  * 
  */
-public final class MultilayerPerceptronCostFunction implements CostFunction {
+public class MultilayerPerceptronCostFunction implements CostFunction {
 
   private final DenseDoubleMatrix x;
   private final DenseDoubleMatrix y;
@@ -43,10 +43,7 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
     this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(m), x);
     this.y = y;
     this.lambda = lambda;
-    this.layerSizes = new int[network.getLayers().length];
-    for (int i = 0; i < layerSizes.length; i++) {
-      this.layerSizes[i] = network.getLayers()[i].getLength();
-    }
+    this.layerSizes = network.getLayers();
     this.unfoldParameters = computeUnfoldParameters(layerSizes);
     this.activations = network.getActivations();
     this.error = network.getError();
@@ -79,7 +76,7 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
     // TODO compute dropout for ax[0], copy X to not alter internal
     // representation
     for (int i = 1; i < layerSizes.length; i++) {
-      zx[i] = ax[i - 1].multiply(thetas[i - 1].transpose());
+      zx[i] = multiply(ax[i - 1], thetas[i - 1], false, true);
 
       if (i < (layerSizes.length - 1)) {
         ax[i] = new DenseDoubleMatrix(DenseDoubleVector.ones(m),
@@ -117,9 +114,10 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
 
     // calculate our gradients
     for (int i = 0; i < thetaGradients.length; i++) {
-      thetaGradients[i] = (DenseDoubleMatrix) (deltaX[i + 1].transpose()
-          .multiply(ax[i]).multiply(1.0d / m)).add((thetas[i].multiply(lambda
-          / m)));
+      DoubleMatrix gradDXA = multiply((DenseDoubleMatrix) deltaX[i + 1], ax[i],
+          true, false);
+      thetaGradients[i] = (DenseDoubleMatrix) (gradDXA.multiply(1.0d / m))
+          .add((thetas[i].multiply(lambda / m)));
       // subtract the regularized bias
       thetaGradients[i].setColumnVector(0,
           thetas[i].slice(0, thetas[i].getRowCount(), 0, 1)
@@ -132,6 +130,23 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
 
     return new Tuple<Double, DoubleVector>(j,
         DenseMatrixFolder.foldMatrices(thetaGradients));
+  }
+
+  /**
+   * General matrix multiplication of two matrices
+   * 
+   * @param ax the activation matrix.
+   * @param theta the weight matrix.
+   * @param axTranspose
+   * @param thetaTranspose
+   * @return the matrix that contains the result of the multiplication of both
+   *         parameters.
+   */
+  protected DoubleMatrix multiply(DenseDoubleMatrix a1, DenseDoubleMatrix a2,
+      boolean a1Transpose, boolean a2Transpose) {
+    a2 = a2Transpose ? a2.transpose() : a2;
+    a1 = a1Transpose ? a1.transpose() : a1;
+    return a1.multiply(a2);
   }
 
   /**

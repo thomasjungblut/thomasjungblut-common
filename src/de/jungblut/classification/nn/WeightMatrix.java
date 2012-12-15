@@ -2,93 +2,36 @@ package de.jungblut.classification.nn;
 
 import org.apache.commons.math3.random.RandomDataImpl;
 
-import de.jungblut.math.DoubleMatrix;
-import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
-import de.jungblut.math.dense.DenseDoubleVector;
 
+/**
+ * Weight matrix wrapper to encapsulate the random initialization.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class WeightMatrix {
 
-  private final Layer leftLayer;
-  private final Layer rightLayer;
-
   private DenseDoubleMatrix weights;
-  private DenseDoubleMatrix derivatives;
 
-  public WeightMatrix(Layer leftLayer, Layer rightLayer) {
-    this.leftLayer = leftLayer;
-    this.rightLayer = rightLayer;
+  public WeightMatrix(int unitsLeftLayer, int unitsRightLayer) {
     // extra row of weights for the bias unit, also random initialize them
-    this.weights = new DenseDoubleMatrix(rightLayer.getLength(),
-        leftLayer.getLength() + 1);
-    double eInit = Math.sqrt(6)
-        / Math.sqrt(leftLayer.getLength() + rightLayer.getLength());
+    this.weights = new DenseDoubleMatrix(unitsRightLayer, unitsLeftLayer + 1);
+    double eInit = Math.sqrt(6) / Math.sqrt(unitsLeftLayer + unitsRightLayer);
     RandomDataImpl rnd = new RandomDataImpl();
     for (int i = 0; i < weights.getColumnCount(); i++) {
       for (int j = 0; j < weights.getRowCount(); j++) {
         weights.set(j, i, rnd.nextUniform(-eInit, eInit));
       }
     }
-    this.derivatives = new DenseDoubleMatrix(weights.getRowCount(),
-        weights.getColumnCount());
   }
 
-  public WeightMatrix(Layer leftLayer, Layer rightLayer,
-      DenseDoubleMatrix weights, DenseDoubleMatrix derivatives) {
-    this.leftLayer = leftLayer;
-    this.rightLayer = rightLayer;
+  public WeightMatrix(DenseDoubleMatrix weights) {
     this.weights = weights;
-    this.derivatives = derivatives;
-  }
-
-  public void updateWeights(int m, double learningRate, double lambda) {
-    DoubleMatrix d = derivatives.divide(m).add(weights.multiply(lambda));
-    weights = (DenseDoubleMatrix) weights.subtract(d.multiply(learningRate));
-  }
-
-  public void addDerivativesFromError() {
-    DenseDoubleMatrix errors = rightLayer.getErrorsAsMatrix();
-    // get the activations as transposed matrix (1xn)
-    DenseDoubleMatrix activations = new DenseDoubleMatrix(
-        leftLayer.getActivationsWithBias()).transpose();
-    derivatives = (DenseDoubleMatrix) derivatives.add(errors
-        .multiply(activations));
-  }
-
-  public void resetDerivatives() {
-    for (int row = 0; row < weights.getRowCount(); row++) {
-      for (int col = 0; col < weights.getColumnCount(); col++) {
-        derivatives.set(row, col, 0.0d);
-      }
-    }
-  }
-
-  public void backwardError() {
-    DenseDoubleVector activations = leftLayer.getActivationsWithBias();
-    DoubleVector gPrime = activations.multiply(activations.multiply(-1.0).add(
-        1.0));
-    DenseDoubleVector rightErrors = rightLayer.getErrors();
-    DoubleVector leftError = weights.transpose().multiplyVector(rightErrors)
-        .multiply(gPrime);
-    // slice the first item away because that's our bias unit
-    leftLayer.setErrors(leftError.slice(1, leftError.getLength()));
-  }
-
-  public void forward() {
-    rightLayer.setInputs(weights.multiplyVector(leftLayer
-        .getActivationsWithBias()));
   }
 
   public DenseDoubleMatrix getWeights() {
     return weights;
-  }
-
-  public DenseDoubleMatrix getDerivatives() {
-    return derivatives;
-  }
-
-  public void setDerivatives(DenseDoubleMatrix derivatives) {
-    this.derivatives = derivatives;
   }
 
   public void setWeights(DenseDoubleMatrix weights) {

@@ -19,7 +19,6 @@ import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.writable.MatrixWritable;
-import de.jungblut.writable.VectorWritable;
 
 /**
  * Multilayer perceptron implementation that works on GPU via JCuda and CPU. It
@@ -77,7 +76,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   }
 
   private final WeightMatrix[] weights;
-  private final Layer[] layers;
+  private final int[] layers;
   private final ActivationFunction[] activations;
 
   private ErrorFunction error = ErrorFunction.SIGMOID_ERROR;
@@ -106,10 +105,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     }
     Preconditions.checkArgument(layer.length == activations.length,
         "Size of layers and activations must match!");
-    this.layers = new Layer[layer.length];
-    for (int i = 0; i < layer.length; i++) {
-      layers[i] = new Layer(layer[i]);
-    }
+    this.layers = layer;
 
     weights = new WeightMatrix[layers.length - 1];
     for (int i = 0; i < weights.length; i++) {
@@ -150,7 +146,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   /**
    * Custom serialization constructor for already trained networks.
    */
-  public MultilayerPerceptron(Layer[] layers, WeightMatrix[] weights,
+  public MultilayerPerceptron(int[] layers, WeightMatrix[] weights,
       ActivationFunction[] activations) {
     this.layers = layers;
     this.weights = weights;
@@ -304,13 +300,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       boolean verbose, CostFunction costFunction, DenseDoubleVector initialTheta) {
     DoubleVector theta = minimizer.minimize(costFunction, initialTheta,
         maxIterations, verbose);
-    // compute the layer sizes to unfold the matrices correctly
-    int[] layerSizes = new int[layers.length];
-    for (int i = 0; i < layerSizes.length; i++) {
-      layerSizes[i] = layers[i].getLength();
-    }
     int[][] unfoldParameters = MultilayerPerceptronCostFunction
-        .computeUnfoldParameters(layerSizes);
+        .computeUnfoldParameters(layers);
 
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
         theta, unfoldParameters);
@@ -338,8 +329,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return weights;
   }
 
-  public Layer[] getLayers() {
-    return layers;
+  public int[] getLayers() {
+    return this.layers;
   }
 
   public ActivationFunction[] getActivations() {
@@ -363,29 +354,22 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   }
 
   /**
-   * Deserializes a new neural network from the given input stream. Note that in
-   * will not be closed by this method.
+   * Deserializes a new neural network from the given input stream. Note that
+   * "in" will not be closed by this method.
    */
   public static MultilayerPerceptron deserialize(DataInput in)
       throws IOException {
     int numLayers = in.readInt();
-    Layer[] layers = new Layer[numLayers];
+    int[] layers = new int[numLayers];
     for (int i = 0; i < numLayers; i++) {
-      int layerLength = in.readInt();
-      DoubleVector activations = VectorWritable.readVector(in);
-      DoubleVector errors = VectorWritable.readVector(in);
-      layers[i] = new Layer(layerLength, (DenseDoubleVector) activations,
-          (DenseDoubleVector) errors);
+      layers[i] = in.readInt();
     }
 
     WeightMatrix[] weights = new WeightMatrix[numLayers - 1];
     for (int i = 0; i < weights.length; i++) {
-      DenseDoubleMatrix derivatives = (DenseDoubleMatrix) MatrixWritable
-          .read(in);
       DenseDoubleMatrix weightMatrix = (DenseDoubleMatrix) MatrixWritable
           .read(in);
-      weights[i] = new WeightMatrix(layers[i], layers[i + 1], weightMatrix,
-          derivatives);
+      weights[i] = new WeightMatrix(weightMatrix);
     }
 
     ActivationFunction[] funcs = new ActivationFunction[numLayers];
@@ -404,21 +388,17 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   /**
    * Serializes this network at its current state to a binary file. Note that
-   * out will not be closed in this method.
+   * "out" will not be closed in this method.
    */
   public static void serialize(MultilayerPerceptron model, DataOutput out)
       throws IOException {
     out.writeInt(model.layers.length);
     // first write all the layers
-    for (Layer l : model.layers) {
-      out.writeInt(l.getLength());
-      VectorWritable.writeVector(l.getActivations(), out);
-      VectorWritable.writeVector(l.getErrors(), out);
+    for (int l : model.layers) {
+      out.writeInt(l);
     }
     // write the weight matrices
     for (WeightMatrix mat : model.weights) {
-      DenseDoubleMatrix derivatives = mat.getDerivatives();
-      MatrixWritable.write(derivatives, out);
       DenseDoubleMatrix weights = mat.getWeights();
       MatrixWritable.write(weights, out);
     }
