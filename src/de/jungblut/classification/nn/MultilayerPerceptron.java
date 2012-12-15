@@ -50,19 +50,22 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     double lambda;
     boolean verbose;
     ActivationFunction[] activations;
-    double[] dropoutProbabilities;
+    double hiddenDropoutProbability;
+    double visibleDropoutProbability;
 
     public TrainingConfiguration(Minimizer minimizer,
         ActivationFunction[] activations, int maxIterations, double lambda,
         boolean verbose) {
       this(TrainingType.CPU, minimizer, activations, maxIterations, lambda,
-          verbose, null);
+          verbose, 0d, 0d);
     }
 
     public TrainingConfiguration(TrainingType type, Minimizer minimizer,
         ActivationFunction[] activations, int maxIterations, double lambda,
-        boolean verbose, double[] dropoutProbabilities) {
-      this.dropoutProbabilities = dropoutProbabilities;
+        boolean verbose, double hiddenDropoutProbability,
+        double visibleDropoutProbability) {
+      this.visibleDropoutProbability = visibleDropoutProbability;
+      this.hiddenDropoutProbability = hiddenDropoutProbability;
       this.type = type;
       this.activations = activations;
       this.minimizer = minimizer;
@@ -79,7 +82,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   private ErrorFunction error = ErrorFunction.SIGMOID_ERROR;
   private TrainingConfiguration conf;
-  private double[] dropoutProbabilities;
+  double hiddenDropoutProbability;
+  double visibleDropoutProbability;
 
   /**
    * Multilayer perceptron initializer by using an int[] to describe the number
@@ -139,13 +143,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   public MultilayerPerceptron(int[] layer, TrainingConfiguration conf) {
     this(layer, conf.activations);
     this.conf = conf;
-    // dropout may be configured, so let's check the parameters
-    if (conf.dropoutProbabilities != null) {
-      Preconditions.checkArgument(
-          layer.length == conf.dropoutProbabilities.length,
-          "Size of layers and dropout probabilities must match!");
-      this.dropoutProbabilities = conf.dropoutProbabilities;
-    }
+    this.hiddenDropoutProbability = this.conf.hiddenDropoutProbability;
+    this.visibleDropoutProbability = this.conf.visibleDropoutProbability;
   }
 
   /**
@@ -355,8 +354,12 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.conf = conf;
   }
 
-  public double[] getDropoutProbabilities() {
-    return this.dropoutProbabilities;
+  public double getHiddenDropoutProbability() {
+    return this.hiddenDropoutProbability;
+  }
+
+  public double getVisibleDropoutProbability() {
+    return this.visibleDropoutProbability;
   }
 
   /**

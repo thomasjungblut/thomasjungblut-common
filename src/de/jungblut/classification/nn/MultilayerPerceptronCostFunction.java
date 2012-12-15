@@ -1,5 +1,7 @@
 package de.jungblut.classification.nn;
 
+import java.util.Random;
+
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
@@ -31,7 +33,9 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
    * unit cannot rely on other hidden units being present." We extend this to
    * input units and the dropout probabilities are configurable for each layer.
    */
-  private final double[] dropoutProbabilities;
+  private final double visibleDropoutProbability;
+  private final double hiddenDropoutProbability;
+  private final Random rnd;
 
   public MultilayerPerceptronCostFunction(MultilayerPerceptron network,
       DenseDoubleMatrix x, DenseDoubleMatrix y, double lambda) {
@@ -46,7 +50,9 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
     this.unfoldParameters = computeUnfoldParameters(layerSizes);
     this.activations = network.getActivations();
     this.error = network.getError();
-    this.dropoutProbabilities = network.getDropoutProbabilities();
+    this.visibleDropoutProbability = network.getVisibleDropoutProbability();
+    this.hiddenDropoutProbability = network.getHiddenDropoutProbability();
+    this.rnd = new Random();
   }
 
   /**
@@ -70,12 +76,15 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
 
     // for the first weights, we don't need to compute Z
     ax[0] = x;
+    // TODO compute dropout for ax[0], copy X to not alter internal
+    // representation
     for (int i = 1; i < layerSizes.length; i++) {
       zx[i] = ax[i - 1].multiply(thetas[i - 1].transpose());
 
       if (i < (layerSizes.length - 1)) {
         ax[i] = new DenseDoubleMatrix(DenseDoubleVector.ones(m),
             activations[i].apply(zx[i]));
+        // TODO compute dropout for ax[i]
       } else {
         // the output doesn't need a bias
         ax[i] = (DenseDoubleMatrix) activations[i].apply(zx[i]);
