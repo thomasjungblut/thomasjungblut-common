@@ -18,9 +18,10 @@ public final class GPUMultilayerPerceptronCostFunction extends
   }
 
   @Override
-  protected DoubleMatrix multiply(DenseDoubleMatrix a1, DenseDoubleMatrix a2,
+  protected DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,
       boolean a1Transpose, boolean a2Transpose) {
-    return JCUDAMatrixUtils.multiply(a1, a2, a1Transpose, a2Transpose);
+    return JCUDAMatrixUtils.multiply((DenseDoubleMatrix) a1,
+        (DenseDoubleMatrix) a2, a1Transpose, a2Transpose);
   }
 
 }

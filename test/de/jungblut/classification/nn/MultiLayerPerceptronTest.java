@@ -21,17 +21,17 @@ public class MultiLayerPerceptronTest extends TestCase {
   public void testXORSoftMaxFminCG() {
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 2 },
         new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SOFTMAX.get() });
-    Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXORSoftMax();
+    Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXORSoftMax();
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
-        new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 40, 0.0d,
+        new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
         false);
     System.out.println(error);
     if (error < 0.01) {
       assertTrue(error < 0.01);
       testPredictionsSoftMax(sampleXOR, mlp);
     } else {
-      System.out.println("Test seems flaky..");
+      throw new RuntimeException("Test seems flaky..");
     }
   }
 
@@ -39,17 +39,17 @@ public class MultiLayerPerceptronTest extends TestCase {
   public void testXORFminCG() {
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 },
         new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SIGMOID.get() });
-    Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
+    Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
-        new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 40, 0.0d,
+        new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
         false);
     System.out.println(error);
     if (error < 0.01) {
       assertTrue(error < 0.001);
       testPredictions(sampleXOR, mlp);
     } else {
-      System.out.println("Test seems flaky..");
+      throw new RuntimeException("Test seems flaky..");
     }
   }
 
@@ -57,7 +57,7 @@ public class MultiLayerPerceptronTest extends TestCase {
   public void testXORPSO() {
     MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 },
         new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SIGMOID.get() });
-    Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
+    Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
         new DenseDoubleMatrix(sampleXOR.getSecond()),
@@ -67,11 +67,12 @@ public class MultiLayerPerceptronTest extends TestCase {
       assertTrue(error < 0.001);
       testPredictions(sampleXOR, mlp);
     } else {
-      System.out.println("Test seems flaky..");
+      throw new RuntimeException("Test seems flaky..");
     }
   }
 
-  public void testPredictions(Tuple<DoubleVector[], DoubleVector[]> sampleXOR,
+  public void testPredictions(
+      Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR,
       MultilayerPerceptron mlp) {
 
     DoubleVector[] train = sampleXOR.getFirst();
@@ -83,13 +84,13 @@ public class MultiLayerPerceptronTest extends TestCase {
     }
   }
 
-  public Tuple<DoubleVector[], DoubleVector[]> sampleXOR() {
+  public Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR() {
     DoubleVector[] train = new DoubleVector[] {
         new DenseDoubleVector(new double[] { 0, 0 }),
         new DenseDoubleVector(new double[] { 0, 1 }),
         new DenseDoubleVector(new double[] { 1, 0 }),
         new DenseDoubleVector(new double[] { 1, 1 }) };
-    DoubleVector[] prediction = new DoubleVector[] {
+    DenseDoubleVector[] prediction = new DenseDoubleVector[] {
         new DenseDoubleVector(new double[] { 0 }),
         new DenseDoubleVector(new double[] { 1 }),
         new DenseDoubleVector(new double[] { 1 }),
@@ -97,13 +98,13 @@ public class MultiLayerPerceptronTest extends TestCase {
     return new Tuple<>(train, prediction);
   }
 
-  public Tuple<DoubleVector[], DoubleVector[]> sampleXORSoftMax() {
+  public Tuple<DoubleVector[], DenseDoubleVector[]> sampleXORSoftMax() {
     DoubleVector[] train = new DoubleVector[] {
         new DenseDoubleVector(new double[] { 0, 0 }),
         new DenseDoubleVector(new double[] { 0, 1 }),
         new DenseDoubleVector(new double[] { 1, 0 }),
         new DenseDoubleVector(new double[] { 1, 1 }) };
-    DoubleVector[] prediction = new DoubleVector[] {
+    DenseDoubleVector[] prediction = new DenseDoubleVector[] {
         new DenseDoubleVector(new double[] { 0, 1 }),
         new DenseDoubleVector(new double[] { 1, 0 }),
         new DenseDoubleVector(new double[] { 1, 0 }),
@@ -112,7 +113,8 @@ public class MultiLayerPerceptronTest extends TestCase {
   }
 
   public void testPredictionsSoftMax(
-      Tuple<DoubleVector[], DoubleVector[]> sampleXOR, MultilayerPerceptron mlp) {
+      Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR,
+      MultilayerPerceptron mlp) {
 
     DoubleVector[] train = sampleXOR.getFirst();
     DoubleVector[] outcome = sampleXOR.getSecond();

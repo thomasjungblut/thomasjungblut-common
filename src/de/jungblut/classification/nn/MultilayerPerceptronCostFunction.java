@@ -14,6 +14,7 @@ import de.jungblut.math.tuple.Tuple;
 /**
  * Neural network costfunction for a multilayer perceptron.
  * 
+ * @author thomas.jungblut
  */
 public class MultilayerPerceptronCostFunction implements CostFunction {
 
@@ -27,12 +28,9 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
 
   private final ActivationFunction[] activations;
   private final ErrorFunction error;
-  /*
-   * TODO "On each presentation of each training case, each hidden unit is
-   * randomly omitted from the network with a probability of 0.5, so a hidden
-   * unit cannot rely on other hidden units being present." We extend this to
-   * input units and the dropout probabilities are configurable for each layer.
-   */
+
+  private final DenseDoubleVector ones;
+
   private final double visibleDropoutProbability;
   private final double hiddenDropoutProbability;
   private final Random rnd;
@@ -40,7 +38,8 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
   public MultilayerPerceptronCostFunction(MultilayerPerceptron network,
       DenseDoubleMatrix x, DenseDoubleMatrix y, double lambda) {
     this.m = x.getRowCount();
-    this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(m), x);
+    ones = DenseDoubleVector.ones(m);
+    this.x = new DenseDoubleMatrix(ones, x);
     this.y = y;
     this.lambda = lambda;
     this.layerSizes = network.getLayers();
@@ -72,16 +71,23 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
     DoubleMatrix[] zx = new DoubleMatrix[layerSizes.length];
 
     // for the first weights, we don't need to compute Z
-    ax[0] = x;
-    // TODO compute dropout for ax[0], copy X to not alter internal
-    // representation
+    if (visibleDropoutProbability > 0d) {
+      // compute dropout for ax[0], copy X to not alter internal
+      // representation
+      ax[0] = DenseDoubleMatrix.copy(x);
+      dropout(ax[0], visibleDropoutProbability);
+    } else {
+      ax[0] = x;
+    }
     for (int i = 1; i < layerSizes.length; i++) {
       zx[i] = multiply(ax[i - 1], thetas[i - 1], false, true);
 
       if (i < (layerSizes.length - 1)) {
-        ax[i] = new DenseDoubleMatrix(DenseDoubleVector.ones(m),
-            activations[i].apply(zx[i]));
-        // TODO compute dropout for ax[i]
+        ax[i] = new DenseDoubleMatrix(ones, activations[i].apply(zx[i]));
+        if (hiddenDropoutProbability > 0d) {
+          // compute dropout for ax[i]
+          dropout(ax[i], hiddenDropoutProbability);
+        }
       } else {
         // the output doesn't need a bias
         ax[i] = (DenseDoubleMatrix) activations[i].apply(zx[i]);
@@ -102,20 +108,20 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
     // also here we are following the math equations and nulling out the 0th
     // entry.
     DoubleMatrix[] deltaX = new DoubleMatrix[layerSizes.length];
-    // statically set the last delta to the difference of outcome and prediction
+    // set the last delta to the difference of outcome and prediction
     deltaX[deltaX.length - 1] = ax[layerSizes.length - 1].subtract(y);
     // compute the deltas onto the input layer
     for (int i = (layerSizes.length - 2); i > 0; i--) {
-      deltaX[i] = deltaX[i + 1].multiply(
-          thetas[i].slice(0, thetas[i].getRowCount(), 1,
-              thetas[i].getColumnCount())).multiplyElementWise(
-          activations[i].gradient(zx[i]));
+      DoubleMatrix slice = thetas[i].slice(0, thetas[i].getRowCount(), 1,
+          thetas[i].getColumnCount());
+      deltaX[i] = multiply(deltaX[i + 1], slice, false, false);
+      // apply the gradient of the activations
+      deltaX[i] = deltaX[i].multiplyElementWise(activations[i].gradient(zx[i]));
     }
 
-    // calculate our gradients
+    // calculate the gradients of the weights
     for (int i = 0; i < thetaGradients.length; i++) {
-      DoubleMatrix gradDXA = multiply((DenseDoubleMatrix) deltaX[i + 1], ax[i],
-          true, false);
+      DoubleMatrix gradDXA = multiply(deltaX[i + 1], ax[i], true, false);
       thetaGradients[i] = (DenseDoubleMatrix) (gradDXA.multiply(1.0d / m))
           .add((thetas[i].multiply(lambda / m)));
       // subtract the regularized bias
@@ -133,6 +139,26 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
   }
 
   /**
+   * Computes dropout for the activations matrix. Each element for each row has
+   * the similar probability p to be "dropped out" (set to 0) of the
+   * computation. This way, the network does learn to not rely on other units
+   * thus learning to detect more general features than drastically overfitting
+   * the dataset.
+   * 
+   * @param activations activations of units per record on each column.
+   * @param p dropout probability.
+   */
+  private void dropout(DenseDoubleMatrix activations, double p) {
+    for (int row = 0; row < activations.getRowCount(); row++) {
+      for (int col = 0; col < activations.getColumnCount(); col++) {
+        if (rnd.nextDouble() <= p) {
+          activations.set(row, col, 0d);
+        }
+      }
+    }
+  }
+
+  /**
    * General matrix multiplication of two matrices
    * 
    * @param ax the activation matrix.
@@ -142,7 +168,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
    * @return the matrix that contains the result of the multiplication of both
    *         parameters.
    */
-  protected DoubleMatrix multiply(DenseDoubleMatrix a1, DenseDoubleMatrix a2,
+  protected DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,
       boolean a1Transpose, boolean a2Transpose) {
     a2 = a2Transpose ? a2.transpose() : a2;
     a1 = a1Transpose ? a1.transpose() : a1;

@@ -59,6 +59,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
           verbose, 0d, 0d);
     }
 
+    // TODO replace this with a builder pattern
     public TrainingConfiguration(TrainingType type, Minimizer minimizer,
         ActivationFunction[] activations, int maxIterations, double lambda,
         boolean verbose, double hiddenDropoutProbability,
