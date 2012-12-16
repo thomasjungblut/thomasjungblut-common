@@ -267,6 +267,32 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * solution in case of linear or convex problems (zero / one hidden layer), of
    * course this is also dependend on the concrete minimizer implementation. If
    * you have more than a single hidden layer, then it will usually trap into a
+   * local minimum. It supplies a vector so training can be resumed from a good
+   * starting point.
+   * 
+   * @param x the training examples.
+   * @param y the outcomes for the training examples.
+   * @param minimizer the minimizer to use to train the neural network.
+   * @param maxIterations the number of maximum iterations to train.
+   * @param lambda the given regularization parameter.
+   * @param verbose output to console with the last given errors.
+   * @param theta initial spot to start the minimizations.
+   * @return the cost of the training.
+   */
+  public final double trainGPU(DenseDoubleMatrix x, DenseDoubleMatrix y,
+      Minimizer minimizer, int maxIterations, double lambda, boolean verbose,
+      DenseDoubleVector theta) {
+    CostFunction costFunction = new GPUMultilayerPerceptronCostFunction(this,
+        x, y, lambda);
+    return trainInternal(minimizer, maxIterations, verbose, costFunction, theta);
+  }
+
+  /**
+   * Full backpropagation training method on the GPU. It performs weight finding
+   * by using a minimizer. Note that it only guarantees to find a global minimum
+   * solution in case of linear or convex problems (zero / one hidden layer), of
+   * course this is also dependend on the concrete minimizer implementation. If
+   * you have more than a single hidden layer, then it will usually trap into a
    * local minimum.
    * 
    * @param x the training examples.
