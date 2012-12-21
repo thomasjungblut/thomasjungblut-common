@@ -1,5 +1,7 @@
 package de.jungblut.classification.regression;
 
+import java.util.Random;
+
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.classification.nn.MultilayerPerceptron;
 import de.jungblut.math.DoubleVector;
@@ -16,6 +18,8 @@ import de.jungblut.math.minimize.Minimizer;
  */
 public final class LogisticRegression extends AbstractClassifier {
 
+  public static long SEED = System.currentTimeMillis();
+
   private final double lambda;
   private final Minimizer minimizer;
   private final int numIterations;
@@ -23,6 +27,8 @@ public final class LogisticRegression extends AbstractClassifier {
 
   // learned weights
   private DoubleVector theta;
+
+  private Random random;
 
   /**
    * Creates a new logistic regression.
@@ -39,6 +45,7 @@ public final class LogisticRegression extends AbstractClassifier {
     this.minimizer = minimizer;
     this.numIterations = numIterations;
     this.verbose = verbose;
+    this.random = new Random(SEED);
   }
 
   /**
@@ -67,8 +74,8 @@ public final class LogisticRegression extends AbstractClassifier {
       biasedFeatures.set(i + 1, features.get(i));
     }
     return new DenseDoubleVector(
-        new double[] { LogisticRegressionCostFunction.sigmoid(biasedFeatures
-            .dot(theta)) });
+        new double[] { LogisticRegressionCostFunction.SIGMOID
+            .apply(biasedFeatures.dot(theta)) });
   }
 
   public void train(DenseDoubleMatrix x, DenseDoubleVector y) {
@@ -76,7 +83,7 @@ public final class LogisticRegression extends AbstractClassifier {
         y, lambda);
     DoubleVector initialTheta = new DenseDoubleVector(x.getColumnCount() + 1);
     for (int i = 0; i < initialTheta.getLength(); i++) {
-      initialTheta.set(i, Math.random());
+      initialTheta.set(i, (random.nextDouble() * 2) - 1d);
     }
     theta = minimizer.minimize(fnc, initialTheta, numIterations, verbose);
   }
@@ -90,8 +97,9 @@ public final class LogisticRegression extends AbstractClassifier {
     DoubleVector vec = new DenseDoubleMatrix(DenseDoubleVector.ones(input
         .getRowCount()), input).multiplyVector(theta);
     for (int i = 0; i < vec.getLength(); i++) {
-      vec.set(i,
-          LogisticRegressionCostFunction.sigmoid(vec.get(i)) > threshold ? 1.0d
+      vec.set(
+          i,
+          LogisticRegressionCostFunction.SIGMOID.apply(vec.get(i)) > threshold ? 1.0d
               : 0.0d);
     }
     return vec;

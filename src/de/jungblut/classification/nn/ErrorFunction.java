@@ -13,7 +13,7 @@ public enum ErrorFunction {
 
   SIGMOID_ERROR {
     @Override
-    double getError(DoubleMatrix output, DoubleMatrix target) {
+    public double getError(DoubleMatrix output, DoubleMatrix target) {
       return (output.multiply(-1d).multiplyElementWise(logMatrix(target))
           .subtract((output.subtractBy(1.0d))
               .multiplyElementWise(logMatrix(target.subtractBy(1d))))).sum();
@@ -22,13 +22,13 @@ public enum ErrorFunction {
   SOFTMAX_ERROR {
     // cross entropy
     @Override
-    double getError(DoubleMatrix output, DoubleMatrix target) {
+    public double getError(DoubleMatrix output, DoubleMatrix target) {
       return output.multiplyElementWise(logMatrix(target)).sum();
     }
   },
   SQUARED_MEAN_ERROR {
     @Override
-    double getError(DoubleMatrix output, DoubleMatrix target) {
+    public double getError(DoubleMatrix output, DoubleMatrix target) {
       double avg = 0d;
       for (int col = 0; col < output.getColumnCount(); col++) {
         for (int row = 0; row < output.getRowCount(); row++) {
@@ -40,7 +40,7 @@ public enum ErrorFunction {
     }
   };
 
-  abstract double getError(DoubleMatrix y, DoubleMatrix hypothesis);
+  public abstract double getError(DoubleMatrix y, DoubleMatrix hypothesis);
 
   // helper on calculating the log of every element of the matrix
   static DoubleMatrix logMatrix(DoubleMatrix input) {

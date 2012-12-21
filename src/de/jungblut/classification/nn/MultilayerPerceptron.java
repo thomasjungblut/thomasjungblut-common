@@ -36,6 +36,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   public static enum TrainingType {
     CPU, GPU
   }
+  
+  public static long SEED = System.currentTimeMillis();
 
   /**
    * Configuration for training a neural net through the {@link Classifier}

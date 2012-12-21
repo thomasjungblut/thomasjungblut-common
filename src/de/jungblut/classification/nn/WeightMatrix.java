@@ -19,6 +19,8 @@ public final class WeightMatrix {
     this.weights = new DenseDoubleMatrix(unitsRightLayer, unitsLeftLayer + 1);
     double eInit = Math.sqrt(6) / Math.sqrt(unitsLeftLayer + unitsRightLayer);
     RandomDataImpl rnd = new RandomDataImpl();
+    rnd.reSeed(MultilayerPerceptron.SEED);
+    rnd.reSeedSecure(MultilayerPerceptron.SEED);
     for (int i = 0; i < weights.getColumnCount(); i++) {
       for (int j = 0; j < weights.getRowCount(); j++) {
         weights.set(j, i, rnd.nextUniform(-eInit, eInit));

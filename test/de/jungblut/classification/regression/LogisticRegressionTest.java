@@ -24,6 +24,7 @@ public class LogisticRegressionTest extends TestCase {
   private static DenseDoubleMatrix x;
 
   static {
+    LogisticRegression.SEED = 0L;
     Tuple<DoubleVector[], DenseDoubleVector[]> readCsv = CsvDatasetReader
         .readCsv("files/logreg/ex2data1.txt", ',', null, 2, 2);
     features = readCsv.getFirst();
@@ -66,7 +67,7 @@ public class LogisticRegressionTest extends TestCase {
 
   @Test
   public void testRegressionInterface() {
-    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 100, false);
+    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 1000, false);
     clf.train(features, outcome);
     double trainingError = 0d;
     for (int i = 0; i < features.length; i++) {
@@ -80,7 +81,7 @@ public class LogisticRegressionTest extends TestCase {
 
   @Test
   public void testRegressionEvaluation() {
-    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 100, false);
+    Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 1000, false);
     EvaluationResult eval = Evaluator.evaluateClassifier(clf, features,
         outcome, 2, 0.9f, false, 0.5d);
     assertEquals(1d, eval.getPrecision());
