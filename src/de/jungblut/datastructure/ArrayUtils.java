@@ -231,6 +231,19 @@ public final class ArrayUtils {
   }
 
   /**
+   * Converts the given list of object type to its primitive counterpart.
+   */
+  public static int[] toPrimitiveArray(List<Integer> list) {
+    int[] arr = new int[list.size()];
+    int index = 0;
+    for (Integer i : list) {
+      Preconditions.checkNotNull(i);
+      arr[index++] = i.intValue();
+    }
+    return arr;
+  }
+
+  /**
    * Converts the given array of object type to its primitive counterpart.
    */
   public static int[] toPrimitiveArray(Integer[] array) {

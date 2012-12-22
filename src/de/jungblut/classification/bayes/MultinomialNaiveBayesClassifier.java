@@ -108,8 +108,7 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
     return probabilitySum;
   }
 
-  public final DenseDoubleVector getProbabilityDistribution(
-      DoubleVector document) {
+  private DenseDoubleVector getProbabilityDistribution(DoubleVector document) {
 
     int numClasses = classProbability.getLength();
     DenseDoubleVector distribution = new DenseDoubleVector(numClasses);

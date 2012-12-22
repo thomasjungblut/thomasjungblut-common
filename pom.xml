@@ -144,11 +144,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.apache.hama</groupId>
-			<artifactId>hama-examples</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hama</groupId>
 			<artifactId>hama-graph</artifactId>
 			<version>0.6.0</version>
 		</dependency>

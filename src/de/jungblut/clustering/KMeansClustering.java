@@ -54,6 +54,21 @@ public final class KMeansClustering {
   }
 
   /**
+   * Initializes a new {@link KMeansClustering}.
+   * 
+   * @param centers initial centers, maybe seeded from {@link CanopyClustering}.
+   * @param vectors the vectors to cluster.
+   */
+  public KMeansClustering(List<DoubleVector> centers, List<DoubleVector> vectors) {
+    this.k = centers.size();
+    this.vectors = vectors;
+    this.centers = new DoubleVector[k];
+    for (int i = 0; i < k; i++) {
+      this.centers[i] = centers.get(i);
+    }
+  }
+
+  /**
    * Starts the clustering process.
    * 
    * @param iterations the iterations to cluster.

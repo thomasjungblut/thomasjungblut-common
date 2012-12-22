@@ -14,14 +14,7 @@ public class KMeansClusteringTest extends TestCase {
 
   @Test
   public void testKMeansClustering() {
-    // we are "sampling" a 100x100 grid to a vector space and let's do some
-    // clustering.
-    ArrayList<DoubleVector> lst = new ArrayList<>();
-    for (int i = 0; i < 100; i++) {
-      for (int j = 0; j < 100; j++) {
-        lst.add(new DenseDoubleVector(new double[] { i, j }));
-      }
-    }
+    ArrayList<DoubleVector> lst = getClusteringInput();
 
     KMeansClustering clusterer = new KMeansClustering(2, lst, false);
     EuclidianDistance dist = new EuclidianDistance();
@@ -48,6 +41,18 @@ public class KMeansClusteringTest extends TestCase {
       double distOtherCenter = dist.measureDistance(v, centers[0]);
       assertTrue(distRightCenter < distOtherCenter);
     }
+  }
+
+  public static ArrayList<DoubleVector> getClusteringInput() {
+    // we are "sampling" a 100x100 grid to a vector space and let's do some
+    // clustering.
+    ArrayList<DoubleVector> lst = new ArrayList<>();
+    for (int i = 0; i < 100; i++) {
+      for (int j = 0; j < 100; j++) {
+        lst.add(new DenseDoubleVector(new double[] { i, j }));
+      }
+    }
+    return lst;
   }
 
 }
