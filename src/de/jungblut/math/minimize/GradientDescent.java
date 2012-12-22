@@ -36,7 +36,7 @@ public final class GradientDescent implements Minimizer {
     for (int iteration = 0; iteration < maxIterations; iteration++) {
       Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta);
       if (verbose) {
-        System.out.print("Interation " + iteration + " | Cost: "
+        System.out.print("Iteration " + iteration + " | Cost: "
             + evaluateCost.getFirst() + "\r");
       }
       shiftLeft(lastCosts);

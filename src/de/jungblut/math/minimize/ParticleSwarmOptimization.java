@@ -86,7 +86,7 @@ public final class ParticleSwarmOptimization implements Minimizer {
         }
       }
       if (verbose) {
-        System.out.print("Interation " + iteration + " | Cost: " + globalCost
+        System.out.print("Iteration " + iteration + " | Cost: " + globalCost
             + "\r");
       }
     }

@@ -215,7 +215,7 @@ public final class Fmincg implements Minimizer {
         f1 = f2;
         fX = new DenseDoubleVector(fX.toArray(), f1);
         if (verbose)
-          System.out.print("Interation " + i + " | Cost: " + f1 + "\r");
+          System.out.print("Iteration " + i + " | Cost: " + f1 + "\r");
         // Polack-Ribiere direction: s =
         // (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
         final double numerator = (df2.dot(df2) - df1.dot(df2)) / df1.dot(df1);

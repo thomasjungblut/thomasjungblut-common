@@ -2,7 +2,6 @@ package de.jungblut.crawl.extraction;
 
 import static de.jungblut.crawl.extraction.OutlinkExtractor.consumeStream;
 import static de.jungblut.crawl.extraction.OutlinkExtractor.extractOutlinks;
-import static de.jungblut.crawl.extraction.OutlinkExtractor.filter;
 import static de.jungblut.crawl.extraction.OutlinkExtractor.getConnection;
 
 import java.io.IOException;
@@ -39,10 +38,6 @@ public final class ArticleContentExtrator implements
   private final Pattern titleExtractor = Pattern
       .compile("<title>(.*?)</title>");
 
-  // just parse spiegel.de
-  private final Pattern filterPattern = Pattern
-      .compile("https?://www.spiegel.de/*");
-
   @Override
   public final ContentFetchResult extract(String site) {
 
@@ -53,8 +48,8 @@ public final class ArticleContentExtrator implements
       Tuple<InputStream, String> connection = getConnection(site);
       String html = consumeStream(connection.getFirst(), connection.getSecond());
       html = StringEscapeUtils.unescapeHtml(html);
-      final HashSet<String> outlinkSet = filter(
-          extractOutlinks(html, site, connection.getSecond()), filterPattern);
+      final HashSet<String> outlinkSet = extractOutlinks(html, site,
+          connection.getSecond());
 
       Matcher matcher = titleExtractor.matcher(html);
       boolean foundTitle = matcher.find();
