@@ -128,7 +128,7 @@ public final class KMeansClustering {
       if (verbose) {
         System.out.print("Iteration " + iteration + " | Cost: " + cost + "\r");
       }
-      double diff = lastCost - cost;
+      double diff = Math.abs(lastCost - cost);
       if (diff < delta) {
         break;
       }
