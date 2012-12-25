@@ -16,7 +16,7 @@ import de.jungblut.math.minimize.ParticleSwarmOptimization;
 import de.jungblut.math.tuple.Tuple;
 
 public class MultiLayerPerceptronTest extends TestCase {
-  
+
   static {
     MultilayerPerceptron.SEED = 0L;
   }

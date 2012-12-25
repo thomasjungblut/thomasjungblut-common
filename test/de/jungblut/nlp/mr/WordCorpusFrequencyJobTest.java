@@ -1,6 +1,11 @@
 package de.jungblut.nlp.mr;
 
+import java.nio.charset.Charset;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -56,8 +61,10 @@ public class WordCorpusFrequencyJobTest extends TestCase {
   }
 
   @Test
-  public void testReducer() {
-
+  public void testReducer() throws Exception {
+    String p = "/tmp/dict.txt";
+    reduceDriver.getConfiguration().set(
+        WordCorpusFrequencyJob.DICT_OUT_PATH_KEY, p);
     reduceDriver.setInputKey(new Text("this"));
 
     reduceDriver.setInputValues(Arrays.asList(new TextIntPairWritable(new Text(
@@ -68,5 +75,14 @@ public class WordCorpusFrequencyJobTest extends TestCase {
         new IntWritable(0)));
 
     reduceDriver.runTest();
+
+    // now check the dictionary
+    Path path = FileSystems.getDefault().getPath(p);
+    List<String> lines = Files.readAllLines(path, Charset.defaultCharset());
+    assertEquals(1, lines.size());
+    assertEquals("0\tthis", lines.get(0));
+    FileSystems.getDefault().provider().delete(path);
+    FileSystems.getDefault().provider()
+        .delete(FileSystems.getDefault().getPath("/tmp/.dict.txt.crc"));
   }
 }

@@ -1,6 +1,8 @@
 package de.jungblut.nlp.mr;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,6 +11,7 @@ import java.util.Map.Entry;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
@@ -38,6 +41,7 @@ import de.jungblut.nlp.Tokenizer;
  */
 public class WordCorpusFrequencyJob {
 
+  public static final String DICT_OUT_PATH_KEY = "dict.out.path";
   public static final String TOKENIZER_CLASS_KEY = "tokenizer.class";
 
   private static final Log LOG = LogFactory
@@ -87,7 +91,18 @@ public class WordCorpusFrequencyJob {
   public static class DocumentSumReducer extends
       Reducer<Text, TextIntPairWritable, Text, TextIntIntIntWritable> {
 
-    // TODO write the dictionary out as well
+    // write the dictionary out as well
+    private BufferedWriter dictWriter;
+
+    @Override
+    protected void setup(Context context) throws IOException,
+        InterruptedException {
+      FileSystem fs = org.apache.hadoop.fs.FileSystem.get(context
+          .getConfiguration());
+      this.dictWriter = new BufferedWriter(
+          new OutputStreamWriter(fs.create(new Path(context.getConfiguration()
+              .get(DICT_OUT_PATH_KEY)))));
+    }
 
     // ID assigned to the token
     int currentIndex = 0;
@@ -101,6 +116,7 @@ public class WordCorpusFrequencyJob {
         documents.put(new Text(docId.getFirst()), new IntWritable(docId
             .getSecond().get()));
       }
+      dictWriter.write(currentIndex + "\t" + key.toString() + "\n");
       for (Entry<Text, IntWritable> entry : documents.entrySet()) {
         context.write(entry.getKey(), new TextIntIntIntWritable(key,
             new IntWritable(documents.size()), entry.getValue(),
@@ -109,15 +125,22 @@ public class WordCorpusFrequencyJob {
       currentIndex++;
     }
 
+    @Override
+    protected void cleanup(Context context) throws IOException,
+        InterruptedException {
+      dictWriter.close();
+    }
+
   }
 
   public static void main(String[] args) throws Exception {
-    if (args.length != 2) {
-      System.out.println("Usage: <Comma separated input paths> <Output path>");
+    if (args.length != 3) {
+      System.out
+          .println("Usage: <Comma separated input paths> <Dictionary output path> <Output path>");
       System.exit(1);
     }
     Configuration conf = new Configuration();
-    Job job = createJob(args[0], args[1], conf);
+    Job job = createJob(args[0], args[1], args[2], conf);
 
     job.waitForCompletion(true);
 
@@ -168,13 +191,15 @@ public class WordCorpusFrequencyJob {
    * Creates a token frequency job.
    * 
    * @param in the input path, may comma separate multiple paths.
+   * @param dictOut the output path of the dictionary.
    * @param out the output directory.
    * @param conf the configuration.
    * @return a job with the configured propertys like name, key/value classes
    *         and input format as text.
    */
-  public static Job createJob(String in, String out, Configuration conf)
-      throws IOException {
+  public static Job createJob(String in, String dictOut, String out,
+      Configuration conf) throws IOException {
+    conf.set(DICT_OUT_PATH_KEY, dictOut);
     Job job = new Job(conf, "Token Document Frequency Calculator");
 
     job.setInputFormatClass(TextInputFormat.class);

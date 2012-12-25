@@ -89,13 +89,13 @@ public class TfIdfCalculatorJob {
    * 
    */
   public static void main(String[] args) throws Exception {
-    if (args.length != 3) {
+    if (args.length != 4) {
       System.out
-          .println("Usage: <Comma separated input paths> <immediate output path> <Output path>");
+          .println("Usage: <Comma separated input paths> <immediate output path> <Output path> <dictionary output path>");
       System.exit(1);
     }
     Configuration conf = new Configuration();
-    Job job = WordCorpusFrequencyJob.createJob(args[0], args[1], conf);
+    Job job = WordCorpusFrequencyJob.createJob(args[0], args[1], args[3], conf);
     job.waitForCompletion(true);
     long numDocs = WordCorpusFrequencyJob.getNumberOfDocuments(job);
     long numTokens = WordCorpusFrequencyJob.getNumberOfTokens(job);

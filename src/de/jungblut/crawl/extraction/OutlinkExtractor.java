@@ -34,7 +34,8 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   private static final String DEFAULT_ENCODING = "ISO-8859-1";
   private static final String USER_AGENT_KEY = "User-Agent";
   private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1";
-  private static final NodeFilter LINK_FILTER = new NodeClassFilter(LinkTag.class);
+  private static final NodeFilter LINK_FILTER = new NodeClassFilter(
+      LinkTag.class);
 
   private static final Pattern IGNORE_SUFFIX_PATTERN = Pattern
       .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|rm|smil|wmv|swf|wma|zip|rar|gz))$");
