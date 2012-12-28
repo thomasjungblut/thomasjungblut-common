@@ -1,12 +1,10 @@
 package de.jungblut.crawl.extraction;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -19,9 +17,9 @@ import org.htmlparser.tags.LinkTag;
 import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
 import org.htmlparser.util.SimpleNodeIterator;
+import org.mozilla.universalchardet.UniversalDetector;
 
 import de.jungblut.crawl.FetchResult;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Outlink extractor, parses a page just for its outlinks.
@@ -31,7 +29,7 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class OutlinkExtractor implements Extractor<FetchResult> {
 
-  private static final String DEFAULT_ENCODING = "ISO-8859-1";
+  private static final int BUFFER_SIZE = 64 * 1024;
   private static final String USER_AGENT_KEY = "User-Agent";
   private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1";
   private static final NodeFilter LINK_FILTER = new NodeClassFilter(
@@ -50,10 +48,10 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
       return null;
     try {
 
-      Tuple<InputStream, String> connection = getConnection(realUrl);
-      String html = consumeStream(connection.getFirst(), connection.getSecond());
-      final HashSet<String> set = extractOutlinks(html, realUrl,
-          connection.getSecond());
+      InputStream connection = getConnection(realUrl);
+      String html = consumeStream(connection);
+
+      final HashSet<String> set = extractOutlinks(html, realUrl);
 
       return new FetchResult(realUrl, set);
     } catch (ParserException pEx) {
@@ -68,11 +66,9 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   }
 
   /**
-   * @return a opened stream and its encoding, if the charset isn't accepted it
-   *         will fallback to ISO-8859-1.
+   * @return an opened stream.
    */
-  public static Tuple<InputStream, String> getConnection(String realUrl)
-      throws IOException {
+  public static InputStream getConnection(String realUrl) throws IOException {
     URL url = new URL(realUrl);
     // maybe we need to write our http connection. DNS cache and
     // inputstream reader...
@@ -83,11 +79,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
     URLConnection con = url.openConnection();
     // con.setConnectTimeout(50);
     con.addRequestProperty(USER_AGENT_KEY, USER_AGENT);
-    String encoding = con.getContentEncoding();
-    if (encoding == null || !Charset.isSupported(encoding)) {
-      encoding = DEFAULT_ENCODING;
-    }
-    return new Tuple<>(con.getInputStream(), encoding);
+    return con.getInputStream();
   }
 
   /**
@@ -108,8 +100,8 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   /**
    * Method to extract outlinks of a given HTML doc in string.
    */
-  public static HashSet<String> extractOutlinks(String in, String url,
-      String encoding) throws ParserException {
+  public static HashSet<String> extractOutlinks(String in, String url)
+      throws ParserException {
 
     final String baseUrl = extractBaseUrl(url);
     if (baseUrl == null)
@@ -117,7 +109,6 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
 
     final HashSet<String> set = new HashSet<>();
     Parser parser = new Parser(in);
-    parser.setEncoding(encoding == null ? DEFAULT_ENCODING : encoding);
     NodeList matches = parser.extractAllNodesThatMatch(LINK_FILTER);
     SimpleNodeIterator it = matches.elements();
     while (it.hasMoreNodes()) {
@@ -143,28 +134,30 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   /**
    * Consumes a given {@link InputStream} and returns a string consisting of the
    * html code of the site.
-   * 
-   * @throws IOException
    */
-  public static String consumeStream(InputStream stream, String encoding)
-      throws IOException {
-    StringBuilder sb = new StringBuilder();
-    try {
-      BufferedReader br = new BufferedReader(new InputStreamReader(stream,
-          encoding));
-      String line;
-      while ((line = br.readLine()) != null) {
-        sb.append(line);
-        sb.append('\n');
+  public static String consumeStream(InputStream stream) throws IOException {
+    UniversalDetector detector = new UniversalDetector(null);
+    // websites approach 1mb, so allocate that space
+    byte[] dest = new byte[1024 * 1024];
+    int offset = 0;
+    try (BufferedInputStream inputStream = new BufferedInputStream(stream,
+        BUFFER_SIZE)) {
+      byte[] buf = new byte[BUFFER_SIZE];
+      int length = -1;
+      while ((length = inputStream.read(buf)) != -1) {
+        detector.handleData(buf, 0, length);
+        if (offset + length > dest.length) {
+          byte[] tmpDest = new byte[dest.length * 2];
+          System.arraycopy(dest, 0, tmpDest, 0, offset);
+          dest = tmpDest;
+        }
+        System.arraycopy(buf, 0, dest, offset, length);
+        offset += length;
       }
-    } finally {
-      try {
-        stream.close();
-      } catch (IOException e) {
-        e.printStackTrace();
-      }
+      detector.dataEnd();
     }
-    return sb.toString();
+    String encoding = detector.getDetectedCharset();
+    return new String(dest, 0, offset, encoding);
   }
 
   /**

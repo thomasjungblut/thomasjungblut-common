@@ -19,7 +19,6 @@ import de.jungblut.crawl.Crawler;
 import de.jungblut.crawl.FetchResult;
 import de.jungblut.crawl.SequentialCrawler;
 import de.jungblut.crawl.extraction.ArticleContentExtrator.ContentFetchResult;
-import de.jungblut.math.tuple.Tuple;
 import de.l3s.boilerpipe.BoilerpipeExtractor;
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
 
@@ -35,30 +34,26 @@ public final class ArticleContentExtrator implements
 
   private final BoilerpipeExtractor extractor = ArticleExtractor.getInstance();
 
+  // I know I catch hell for parsing HTML with REGEX
   private final Pattern titleExtractor = Pattern
       .compile("<title>(.*?)</title>");
 
   @Override
-  public final ContentFetchResult extract(String site) {
+  public ContentFetchResult extract(String site) {
 
     if (site == null || !site.startsWith("http") || site.length() > 500)
       return null;
 
     try {
-      Tuple<InputStream, String> connection = getConnection(site);
-      String html = consumeStream(connection.getFirst(), connection.getSecond());
+      InputStream connection = getConnection(site);
+      String html = consumeStream(connection);
       html = StringEscapeUtils.unescapeHtml(html);
-      final HashSet<String> outlinkSet = extractOutlinks(html, site,
-          connection.getSecond());
+      final HashSet<String> outlinkSet = extractOutlinks(html, site);
 
       Matcher matcher = titleExtractor.matcher(html);
-      boolean foundTitle = matcher.find();
       String title = "";
-      if (foundTitle) {
-        String group = matcher.group();
-        // remove the tags from the grouping
-        title = group.substring("<title>".length(),
-            group.length() - "</title>".length());
+      if (matcher.find()) {
+        title = matcher.group(1);
       }
       String extractedLargestText = extractor.getText(html);
       return new ContentFetchResult(site, outlinkSet, title,

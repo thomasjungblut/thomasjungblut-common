@@ -12,7 +12,6 @@ import org.htmlparser.util.ParserException;
 
 import de.jungblut.crawl.FetchResult;
 import de.jungblut.crawl.extraction.HtmlExtrator.HtmlFetchResult;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Extractor for raw html.
@@ -29,11 +28,10 @@ public final class HtmlExtrator implements Extractor<HtmlFetchResult> {
       return null;
 
     try {
-      Tuple<InputStream, String> connection = getConnection(site);
-      String html = consumeStream(connection.getFirst(), connection.getSecond());
+      InputStream connection = getConnection(site);
+      String html = consumeStream(connection);
       html = StringEscapeUtils.unescapeHtml(html);
-      final HashSet<String> outlinkSet = extractOutlinks(html, site,
-          connection.getSecond());
+      final HashSet<String> outlinkSet = extractOutlinks(html, site);
       return new HtmlFetchResult(site, outlinkSet, html);
     } catch (ParserException pEx) {
       // ignore parser exceptions, they contain mostly garbage
