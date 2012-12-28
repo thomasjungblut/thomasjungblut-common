@@ -21,9 +21,8 @@ public class DBSCANTest extends TestCase {
 
     EuclidianDistance measure = new EuclidianDistance();
 
-    DBSCAN scan = new DBSCAN(input);
-
-    ArrayList<DoubleVector>[] cluster = scan.cluster(measure, 5, 100);
+    DBSCAN scan = new DBSCAN();
+    ArrayList<DoubleVector>[] cluster = scan.cluster(input, measure, 5, 100);
     // we should just have a single connected cluster with all the points, but
     // the noise
     assertEquals(1, cluster.length);

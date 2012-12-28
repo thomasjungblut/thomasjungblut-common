@@ -29,13 +29,8 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
  */
 public final class DBSCAN {
 
-  private final List<DoubleVector> points;
   private List<DoubleVector> noise;
   private ArrayList<DoubleVector>[] connectedComponents;
-
-  public DBSCAN(List<DoubleVector> points) {
-    this.points = points;
-  }
 
   /**
    * Clusters the points.
@@ -44,8 +39,8 @@ public final class DBSCAN {
    * @param minPoints the minimum points in a cluster.
    * @param epsilon the radius of a point to detect other points.
    */
-  public ArrayList<DoubleVector>[] cluster(DistanceMeasurer measurer,
-      int minPoints, double epsilon) {
+  public ArrayList<DoubleVector>[] cluster(List<DoubleVector> points,
+      DistanceMeasurer measurer, int minPoints, double epsilon) {
     // compute the distance matrix
     DoubleMatrix distanceMatrix = generateDistanceMatrix(measurer, points);
     // generate adjacency list
