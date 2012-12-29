@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletionService;
@@ -13,6 +12,9 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+
+import com.google.common.hash.BloomFilter;
+import com.google.common.hash.Funnels;
 
 import de.jungblut.crawl.extraction.Extractor;
 import de.jungblut.crawl.extraction.OutlinkExtractor;
@@ -67,7 +69,10 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
   public final void process(String seedUrl) throws InterruptedException,
       ExecutionException {
     final Deque<String> linksToCrawl = new ArrayDeque<>();
-    final HashSet<String> visited = new HashSet<>();
+    // overallocate a bit, the few KB doesn't matter anyway
+    BloomFilter<CharSequence> visited = BloomFilter.create(
+        Funnels.stringFunnel(), fetches * 2, 0.001d);
+
     final CompletionService<Set<T>> completionService = new ExecutorCompletionService<>(
         threadPool);
 
@@ -78,7 +83,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
     int currentRunningThreads = 0;
     // seed our to crawl set with the start url
     linksToCrawl.add(seedUrl);
-    visited.add(seedUrl);
+    visited.put(seedUrl);
     // while we have not fetched enough sites yet
     while (true) {
       // batch together up to 10 items or how much in the list is
@@ -112,7 +117,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
             // go through the found outlinks
             for (String out : v.outlinks) {
               // if we haven't visited them yet
-              if (visited.add(out)) {
+              if (!visited.mightContain(out)) {
                 // queue them up
                 linksToCrawl.offer(out);
               }
