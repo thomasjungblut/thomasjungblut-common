@@ -39,7 +39,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
       .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|rm|smil|wmv|swf|wma|zip|rar|gz))$");
 
   private static final Pattern BASE_URL = Pattern
-      .compile("(http[s]*://[a-z0-9.]+)");
+      .compile("(http[s]*://[a-z0-9.-]+)");
 
   @Override
   public FetchResult extract(String realUrl) {
@@ -117,13 +117,21 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
       if (link != null && !link.isEmpty()) {
         if (isValid(link)) {
           set.add(link);
-        } else {
-          // retry by expanding relative links
-          if (link.charAt(0) == '/') {
-            link = baseUrl + link;
-            if (isValid(link)) {
-              set.add(link);
-            }
+          continue;
+        }
+        if (link.startsWith("//")) {
+          link = "http:" + link;
+          if (isValid(link)) {
+            set.add(link);
+            continue;
+          }
+        }
+        // retry by expanding relative links
+        if (link.charAt(0) == '/') {
+          link = baseUrl + link;
+          if (isValid(link)) {
+            set.add(link);
+            continue;
           }
         }
       }
@@ -157,7 +165,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
       detector.dataEnd();
     }
     String encoding = detector.getDetectedCharset();
-    return new String(dest, 0, offset, encoding);
+    return new String(dest, 0, offset, encoding == null ? "UTF-8" : encoding);
   }
 
   /**

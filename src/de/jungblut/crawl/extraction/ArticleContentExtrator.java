@@ -60,11 +60,11 @@ public final class ArticleContentExtrator implements
           extractedLargestText);
     } catch (ParserException pEx) {
       // ignore parser exceptions, they contain mostly garbage
+    } catch (RuntimeException rEx) {
+      rEx.printStackTrace();
     } catch (Exception e) {
-      String errMsg = e.getMessage().length() > 150 ? e.getMessage().substring(
-          0, 150) : e.getMessage();
-      System.err.println(errMsg.replace("\n", "") + " >>> URL was: \"" + site
-          + "\"");
+      System.err.println(e.toString().replace("\n", "; ") + " >>> URL was: \""
+          + site + "\"");
     }
 
     return null;
