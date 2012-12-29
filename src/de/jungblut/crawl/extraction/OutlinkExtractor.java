@@ -1,10 +1,12 @@
 package de.jungblut.crawl.extraction;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.regex.Matcher;
@@ -29,17 +31,19 @@ import de.jungblut.crawl.FetchResult;
  */
 public final class OutlinkExtractor implements Extractor<FetchResult> {
 
-  private static final int BUFFER_SIZE = 64 * 1024;
+  private static final int BUFFER_SIZE = 1024 * 1024;
   private static final String USER_AGENT_KEY = "User-Agent";
   private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1";
   private static final NodeFilter LINK_FILTER = new NodeClassFilter(
       LinkTag.class);
 
   private static final Pattern IGNORE_SUFFIX_PATTERN = Pattern
-      .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|rm|smil|wmv|swf|wma|zip|rar|gz))$");
+      .compile(".*(\\.(css|js|bmp|gif|jpe?g|png|tiff?|mid|mp2|mp3|mp4|wav|avi|mov|mpeg|ram|m4v|pdf|iso|rm|smil|wmv|swf|wma|zip|rar|gz))$");
 
-  private static final Pattern BASE_URL = Pattern
+  private static final Pattern BASE_URL_PATTERN = Pattern
       .compile("(http[s]*://[a-z0-9.-]+)");
+  private static final Pattern GENERAL_URL_PATTERN = Pattern
+      .compile("\\bhttps?://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]");
 
   @Override
   public FetchResult extract(String realUrl) {
@@ -56,10 +60,10 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
       return new FetchResult(realUrl, set);
     } catch (ParserException pEx) {
       // ignore parser exceptions, they contain mostly garbage
+    } catch (RuntimeException rEx) {
+      rEx.printStackTrace();
     } catch (Exception e) {
-      String errMsg = e.getMessage().length() > 150 ? e.getMessage().substring(
-          0, 150) : e.getMessage();
-      System.err.println(errMsg.replace("\n", "") + " >>> URL was: \""
+      System.err.println(e.toString().replace("\n", "; ") + " >>> URL was: \""
           + realUrl + "\"");
     }
     return null;
@@ -98,9 +102,13 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   }
 
   /**
-   * Method to extract outlinks of a given HTML doc in string.
+   * Extracts outlinks of the given HTML doc in string.
+   * 
+   * @param html the html to extract the outlinkts from.
+   * @param url the url where we found the current document.
+   * @return a set of outlinks.
    */
-  public static HashSet<String> extractOutlinks(String in, String url)
+  public static HashSet<String> extractOutlinks(String html, String url)
       throws ParserException {
 
     final String baseUrl = extractBaseUrl(url);
@@ -108,17 +116,22 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
       return null;
 
     final HashSet<String> set = new HashSet<>();
-    Parser parser = new Parser(in);
+    Parser parser = new Parser(html);
     NodeList matches = parser.extractAllNodesThatMatch(LINK_FILTER);
     SimpleNodeIterator it = matches.elements();
     while (it.hasMoreNodes()) {
       LinkTag node = (LinkTag) it.nextNode();
-      String link = node.getLink();
+      String link = node.getLink().trim();
+      // remove the anchor if present
+      if (link.contains("#")) {
+        link = link.substring(0, link.lastIndexOf('#'));
+      }
       if (link != null && !link.isEmpty()) {
         if (isValid(link)) {
           set.add(link);
           continue;
         }
+        // sometimes people adress with "//"
         if (link.startsWith("//")) {
           link = "http:" + link;
           if (isValid(link)) {
@@ -134,6 +147,17 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
             continue;
           }
         }
+
+        // this is a relative url for the current directory
+        if (url.endsWith("/")) {
+          link = url + link;
+        } else {
+          link = url.substring(0, url.lastIndexOf('/') + 1) + link;
+        }
+        if (isValid(link)) {
+          set.add(link);
+          continue;
+        }
       }
     }
     return set;
@@ -144,28 +168,36 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
    * html code of the site.
    */
   public static String consumeStream(InputStream stream) throws IOException {
-    UniversalDetector detector = new UniversalDetector(null);
-    // websites approach 1mb, so allocate that space
-    byte[] dest = new byte[1024 * 1024];
-    int offset = 0;
-    try (BufferedInputStream inputStream = new BufferedInputStream(stream,
-        BUFFER_SIZE)) {
-      byte[] buf = new byte[BUFFER_SIZE];
-      int length = -1;
-      while ((length = inputStream.read(buf)) != -1) {
-        detector.handleData(buf, 0, length);
-        if (offset + length > dest.length) {
-          byte[] tmpDest = new byte[dest.length * 2];
-          System.arraycopy(dest, 0, tmpDest, 0, offset);
-          dest = tmpDest;
-        }
-        System.arraycopy(buf, 0, dest, offset, length);
-        offset += length;
+    try {
+      UniversalDetector detector = new UniversalDetector(null);
+      ReadableByteChannel bc = Channels.newChannel(stream);
+      ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+      int read = 0;
+      while ((read = bc.read(buffer)) != -1) {
+        detector.handleData(buffer.array(), buffer.position() - read, read);
+        buffer = resizeBuffer(buffer);
       }
       detector.dataEnd();
+      // copy the result back to a byte array
+      String encoding = detector.getDetectedCharset();
+      return new String(buffer.array(), 0, buffer.position(),
+          encoding == null ? "UTF-8" : encoding);
+    } finally {
+      if (stream != null) {
+        stream.close();
+      }
     }
-    String encoding = detector.getDetectedCharset();
-    return new String(dest, 0, offset, encoding == null ? "UTF-8" : encoding);
+  }
+
+  private static ByteBuffer resizeBuffer(ByteBuffer buffer) {
+    ByteBuffer result = buffer;
+    // double the size if we have only 10% capacity left
+    if (buffer.remaining() < (int) (buffer.capacity() * 0.1f)) {
+      result = ByteBuffer.allocate(buffer.capacity() * 2);
+      buffer.flip();
+      result.put(buffer);
+    }
+    return result;
   }
 
   /**
@@ -175,7 +207,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
    * @return a base url or null if none was found.
    */
   public static String extractBaseUrl(String url) {
-    Matcher matcher = BASE_URL.matcher(url);
+    Matcher matcher = BASE_URL_PATTERN.matcher(url);
     if (matcher.find()) {
       return matcher.group();
     }
@@ -187,9 +219,10 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
    * its a valid url by extracting a base url at at index 0.
    */
   public static boolean isValid(final String s) {
-    Matcher baseMatcher = BASE_URL.matcher(s);
+    Matcher baseMatcher = BASE_URL_PATTERN.matcher(s);
     return baseMatcher.find() && baseMatcher.start() == 0
-        && !IGNORE_SUFFIX_PATTERN.matcher(s).matches();
+        && !IGNORE_SUFFIX_PATTERN.matcher(s).matches()
+        && GENERAL_URL_PATTERN.matcher(s).matches();
   }
 
 }

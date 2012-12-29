@@ -26,7 +26,8 @@ import de.jungblut.crawl.extraction.OutlinkExtractor;
  * parameters of threadpool sizes and how many items should be batched. For my
  * 6k ADSL it works fine by 32 threads batched on 10 urls. You may scale this
  * linearly up, since this class has almost no contention and small sequential
- * code.
+ * code. It is also backed by a bloom filter to check if a URL was visited, so
+ * the memory footprint stays low.
  * 
  * @author thomas.jungblut
  */
@@ -36,14 +37,37 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
   private static final int THREAD_POOL_SIZE = 32;
   private static final int BATCH_SIZE = 10;
 
-  private final ExecutorService threadPool = Executors
-      .newFixedThreadPool(THREAD_POOL_SIZE);
-
   private Extractor<T> extractor;
   private FetchResultPersister<T> persister;
   private Thread persisterThread;
   private int fetches = 100000;
+  private int poolSize = THREAD_POOL_SIZE;
+  private int batchSize = BATCH_SIZE;
 
+  /**
+   * Constructs a new Multithreaded Crawler.
+   * 
+   * @param threadPoolSize the number of threads to use.
+   * @param batchSize the number of URLs a batch for a thread should contain.
+   * @param fetches the number of urls to fetch.
+   * @param extractor the extraction logic.
+   * @param writer the writer.
+   */
+  public MultithreadedCrawler(int threadPoolSize, int batchSize, int fetches,
+      Extractor<T> extractor, ResultWriter<T> writer) throws IOException {
+    this.poolSize = threadPoolSize;
+    this.batchSize = batchSize;
+    setup(fetches, extractor, writer);
+  }
+
+  /**
+   * Constructs a new Multithreaded Crawler with 32 threads working on 10 url
+   * batches at each time.
+   * 
+   * @param fetches the number of urls to fetch.
+   * @param extractor the extraction logic.
+   * @param writer the writer.
+   */
   public MultithreadedCrawler(int fetches, Extractor<T> extractor,
       ResultWriter<T> writer) throws IOException {
     setup(fetches, extractor, writer);
@@ -71,8 +95,8 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
     final Deque<String> linksToCrawl = new ArrayDeque<>();
     // overallocate a bit, the few KB doesn't matter anyway
     BloomFilter<CharSequence> visited = BloomFilter.create(
-        Funnels.stringFunnel(), fetches * 2, 0.001d);
-
+        Funnels.stringFunnel(), fetches, 0.001d);
+    ExecutorService threadPool = Executors.newFixedThreadPool(poolSize);
     final CompletionService<Set<T>> completionService = new ExecutorCompletionService<>(
         threadPool);
 
@@ -87,7 +111,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
     // while we have not fetched enough sites yet
     while (true) {
       // batch together up to 10 items or how much in the list is
-      final int length = linksToCrawl.size() > BATCH_SIZE ? BATCH_SIZE
+      final int length = linksToCrawl.size() > batchSize ? batchSize
           : linksToCrawl.size();
       // only schedule if we have fetches leftover
       if (fetches > 0) {
@@ -103,7 +127,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
       // Now we can have a look if other threads have completed yet.
       Future<Set<T>> poll = null;
       if ((linksToCrawl.isEmpty() && currentRunningThreads > 0)
-          || currentRunningThreads > THREAD_POOL_SIZE) {
+          || currentRunningThreads > poolSize) {
         poll = completionService.take();
       } else {
         poll = completionService.poll();
