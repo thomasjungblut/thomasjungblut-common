@@ -99,7 +99,7 @@ public final class AgglomerativeClustering {
     private ClusterNode left;
     private ClusterNode right;
 
-    private DoubleVector mean;
+    private final DoubleVector mean;
 
     private double splitDistance;
 
@@ -108,7 +108,7 @@ public final class AgglomerativeClustering {
      * the bottom.
      */
     ClusterNode(DoubleVector mean) {
-      this.mean = mean;
+      this.mean = mean.deepCopy();
       this.splitDistance = 0d;
     }
 
