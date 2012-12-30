@@ -43,7 +43,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
   private static final Pattern BASE_URL_PATTERN = Pattern
       .compile("(http[s]*://[a-z0-9.-]+)");
   private static final Pattern GENERAL_URL_PATTERN = Pattern
-      .compile("\\bhttps?://[-a-zA-Z0-9+&@#/%?=~_|!:,.;]*[-a-zA-Z0-9+&@#/%=~_|]");
+      .compile("\\bhttps?://[-a-zA-Z0-9+&#/%?=~_|!:,.;]*[-a-zA-Z0-9+&#/%=~_|]");
 
   @Override
   public FetchResult extract(String realUrl) {

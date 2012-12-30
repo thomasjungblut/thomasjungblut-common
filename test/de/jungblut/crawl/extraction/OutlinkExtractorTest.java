@@ -74,6 +74,11 @@ public class OutlinkExtractorTest extends TestCase {
     assertFalse(OutlinkExtractor.isValid("http://news.google.de/news/void()"));
     assertFalse(OutlinkExtractor.isValid("void(0)"));
     assertFalse(OutlinkExtractor.isValid("void(0);"));
+    assertFalse(OutlinkExtractor
+        .isValid("http://www.golem.de/news/news@golem.de"));
+    assertTrue(OutlinkExtractor
+        .isValid("http://handyattacke.de/cgi/websale6.cgi?shopid=etronixx&subshopid=attacke&act=load_tpl&tpl=inc_agbtext_handyattacke.htm"));
+
   }
 
   @Test
