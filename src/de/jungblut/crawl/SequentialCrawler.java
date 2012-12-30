@@ -2,6 +2,7 @@ package de.jungblut.crawl;
 
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.HashSet;
 import java.util.concurrent.ExecutionException;
@@ -39,13 +40,13 @@ public final class SequentialCrawler<T extends FetchResult> implements
   }
 
   @Override
-  public final void process(String seedUrl) throws InterruptedException,
+  public final void process(String... seedUrl) throws InterruptedException,
       ExecutionException {
     final Deque<String> linksToCrawl = new ArrayDeque<>();
     final HashSet<String> visited = new HashSet<>();
 
-    linksToCrawl.add(seedUrl);
-    visited.add(seedUrl);
+    linksToCrawl.addAll(Arrays.asList(seedUrl));
+    visited.addAll(Arrays.asList(seedUrl));
 
     while (fetches > 0 && !linksToCrawl.isEmpty()) {
       String urlToCrawl = linksToCrawl.poll();

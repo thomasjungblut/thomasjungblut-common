@@ -30,7 +30,7 @@ public interface Crawler<T extends FetchResult> {
    * Starts the crawler, starting by the seedURL. The real logic is implemented
    * by the crawler itself.
    */
-  public void process(String seedUrl) throws InterruptedException,
+  public void process(String... seedUrl) throws InterruptedException,
       ExecutionException;
 
 }

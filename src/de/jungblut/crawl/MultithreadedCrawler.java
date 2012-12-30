@@ -3,6 +3,7 @@ package de.jungblut.crawl;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
@@ -85,12 +86,8 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
     persisterThread.start();
   }
 
-  /*
-   * (non-Javadoc)
-   * @see de.jungblut.crawl.Crawler#process(java.lang.String)
-   */
   @Override
-  public final void process(String seedUrl) throws InterruptedException,
+  public final void process(String... seedUrls) throws InterruptedException,
       ExecutionException {
     final Deque<String> linksToCrawl = new ArrayDeque<>();
     // overallocate a bit, the few KB doesn't matter anyway
@@ -106,8 +103,10 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
 
     int currentRunningThreads = 0;
     // seed our to crawl set with the start url
-    linksToCrawl.add(seedUrl);
-    visited.put(seedUrl);
+    linksToCrawl.addAll(Arrays.asList(seedUrls));
+    for (String seed : seedUrls) {
+      visited.put(seed);
+    }
     // while we have not fetched enough sites yet
     while (true) {
       // batch together up to 10 items or how much in the list is
