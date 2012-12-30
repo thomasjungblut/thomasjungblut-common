@@ -143,6 +143,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
               if (!visited.mightContain(out)) {
                 // queue them up
                 linksToCrawl.offer(out);
+                visited.put(out);
               }
             }
             persister.add(v);
