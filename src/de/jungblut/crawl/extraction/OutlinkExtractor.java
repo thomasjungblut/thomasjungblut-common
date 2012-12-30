@@ -33,7 +33,7 @@ public final class OutlinkExtractor implements Extractor<FetchResult> {
 
   private static final int BUFFER_SIZE = 1024 * 1024;
   private static final String USER_AGENT_KEY = "User-Agent";
-  private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:2.0.1) Gecko/20100101 Firefox/4.0.1";
+  private static final String USER_AGENT = "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.97 Safari/537.11";
   private static final NodeFilter LINK_FILTER = new NodeClassFilter(
       LinkTag.class);
 
