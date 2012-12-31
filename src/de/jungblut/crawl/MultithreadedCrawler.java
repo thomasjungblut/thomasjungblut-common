@@ -90,9 +90,8 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
   public final void process(String... seedUrls) throws InterruptedException,
       ExecutionException {
     final Deque<String> linksToCrawl = new ArrayDeque<>();
-    // overallocate a bit, the few KB doesn't matter anyway
     BloomFilter<CharSequence> visited = BloomFilter.create(
-        Funnels.stringFunnel(), fetches, 0.001d);
+        Funnels.stringFunnel(), fetches);
     ExecutorService threadPool = Executors.newFixedThreadPool(poolSize);
     final CompletionService<Set<T>> completionService = new ExecutorCompletionService<>(
         threadPool);
