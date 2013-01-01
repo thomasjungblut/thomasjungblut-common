@@ -8,11 +8,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.concurrent.ExecutionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.htmlparser.NodeFilter;
+import org.htmlparser.Parser;
+import org.htmlparser.filters.NodeClassFilter;
+import org.htmlparser.tags.TitleTag;
+import org.htmlparser.util.NodeList;
 import org.htmlparser.util.ParserException;
+import org.htmlparser.util.SimpleNodeIterator;
 
 import de.jungblut.crawl.ConsoleResultWriter;
 import de.jungblut.crawl.Crawler;
@@ -34,9 +38,8 @@ public final class ArticleContentExtrator implements
 
   private final BoilerpipeExtractor extractor = ArticleExtractor.getInstance();
 
-  // I know I catch hell for parsing HTML with REGEX
-  private final Pattern titleExtractor = Pattern
-      .compile("<title>(.*?)</title>");
+  private static final NodeFilter TITLE_FILTER = new NodeClassFilter(
+      TitleTag.class);
 
   @Override
   public ContentFetchResult extract(String site) {
@@ -49,12 +52,8 @@ public final class ArticleContentExtrator implements
       String html = consumeStream(connection);
       html = StringEscapeUtils.unescapeHtml(html);
       final HashSet<String> outlinkSet = extractOutlinks(html, site);
+      String title = extractTitle(html);
 
-      Matcher matcher = titleExtractor.matcher(html);
-      String title = "";
-      if (matcher.find()) {
-        title = matcher.group(1);
-      }
       String extractedLargestText = extractor.getText(html);
       return new ContentFetchResult(site, outlinkSet, title,
           extractedLargestText);
@@ -68,6 +67,23 @@ public final class ArticleContentExtrator implements
     }
 
     return null;
+  }
+
+  /**
+   * Extracts the title from the given HTML.
+   * 
+   * @return never null, just an empty string if not parsable.
+   */
+  public static String extractTitle(String html) throws ParserException {
+    String title = "";
+    Parser parser = new Parser(html);
+    NodeList matches = parser.extractAllNodesThatMatch(TITLE_FILTER);
+    SimpleNodeIterator it = matches.elements();
+    while (it.hasMoreNodes()) {
+      TitleTag node = (TitleTag) it.nextNode();
+      title = node.getTitle().trim();
+    }
+    return title;
   }
 
   /**
