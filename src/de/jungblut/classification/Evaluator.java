@@ -35,7 +35,7 @@ public final class Evaluator {
 
     public double getAccuracy() {
       if (isBinary()) {
-        return ((double) truePositive + falseNegative)
+        return ((double) truePositive + trueNegative)
             / (truePositive + trueNegative + falsePositive + falseNegative);
       } else {
         return correct / (double) testSize;
@@ -51,7 +51,7 @@ public final class Evaluator {
       if (!isBinary()) {
         return correct;
       } else {
-        return truePositive + falseNegative;
+        return truePositive + trueNegative;
       }
     }
 
@@ -229,13 +229,13 @@ public final class Evaluator {
           if (outcomeClass == prediction) {
             result.truePositive++;
           } else {
-            result.trueNegative++;
+            result.falsePositive++;
           }
         } else {
           if (outcomeClass == prediction) {
-            result.falseNegative++;
+            result.trueNegative++;
           } else {
-            result.falsePositive++;
+            result.falseNegative++;
           }
         }
       }

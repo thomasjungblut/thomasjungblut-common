@@ -25,6 +25,8 @@ public class EvaluatorTest extends TestCase {
         readMushroomDataset.getFirst(), readMushroomDataset.getSecond(), 2,
         0.99f, false);
 
+    evaluation.print();
+
     assertEquals(2, evaluation.getNumLabels());
     assertEquals(true, evaluation.isBinary());
     assertEquals(8043, evaluation.getTrainSize());
@@ -32,9 +34,9 @@ public class EvaluatorTest extends TestCase {
     assertEquals(81, evaluation.getCorrect());
     assertEquals(1.0d, evaluation.getAccuracy());
     assertEquals(44, evaluation.truePositive);
-    assertEquals(37, evaluation.falseNegative);
+    assertEquals(0, evaluation.falseNegative);
     assertEquals(0, evaluation.falsePositive);
-    assertEquals(0, evaluation.trueNegative);
+    assertEquals(37, evaluation.trueNegative);
     assertEquals(1.0d, evaluation.getPrecision());
   }
 
