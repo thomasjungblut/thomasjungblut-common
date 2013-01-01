@@ -226,16 +226,16 @@ public final class Evaluator {
           prediction = classifier.getPredictedClass(testFeatures[i], threshold);
         }
         if (outcomeClass == 1) {
-          if (outcomeClass == prediction) {
-            result.truePositive++;
+          if (prediction == 1) {
+            result.truePositive++; // "Correct result"
           } else {
-            result.falsePositive++;
+            result.falseNegative++; // "Missing the correct result"
           }
-        } else {
-          if (outcomeClass == prediction) {
-            result.trueNegative++;
+        } else if (outcomeClass == 0) {
+          if (prediction == 0) {
+            result.trueNegative++; // "Correct absence of result"
           } else {
-            result.falseNegative++;
+            result.falsePositive++; // "Unexpected result"
           }
         }
       }
