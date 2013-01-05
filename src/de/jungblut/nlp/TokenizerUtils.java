@@ -15,7 +15,7 @@ import java.util.StringTokenizer;
  */
 public final class TokenizerUtils {
 
-  public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|";
+  public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|“„";
 
   private static final char[] CHARACTER_REPLACE_MAPPING = new char[256];
   static {
