@@ -4,6 +4,8 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
+import com.google.common.math.DoubleMath;
+
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
@@ -32,8 +34,8 @@ public class GradientDescentTest extends TestCase {
     DoubleVector minimizeFunction = GradientDescent.minimizeFunction(
         inlineFunction, start, 0.5d, 1E-20, 1000, false);
     // 1E-5 is close enough to zero for the test to pass
-    assertTrue(minimizeFunction.get(0) >= 0 && minimizeFunction.get(0) < 1E-5);
-    assertTrue(minimizeFunction.get(1) >= 0 && minimizeFunction.get(1) < 1E-5);
+    assertEquals(0, DoubleMath.fuzzyCompare(minimizeFunction.get(0), 0, 1E-5));
+    assertEquals(0, DoubleMath.fuzzyCompare(minimizeFunction.get(1), 0, 1E-5));
   }
 
 }

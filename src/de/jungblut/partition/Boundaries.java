@@ -12,11 +12,11 @@ public class Boundaries {
 
   private final Set<Range> boundaries = new TreeSet<>();
 
-  public Boundaries() {
+  Boundaries() {
     super();
   }
 
-  public void addRange(int start, int end) {
+  void addRange(int start, int end) {
     boundaries.add(new Range(start, end));
   }
 
@@ -25,7 +25,7 @@ public class Boundaries {
    * start -> split - 1<br>
    * split + 1 -> end <br>
    */
-  public void splitRange(int start, int split, int end) {
+  void splitRange(int start, int split, int end) {
     // removing the old one
     Range old = new Range(start, end);
     boundaries.remove(old);
@@ -70,10 +70,17 @@ public class Boundaries {
       this.end = end;
     }
 
+    /**
+     * @return the start of the sequence. 0 is the start index.
+     */
     public int getStart() {
       return start;
     }
 
+    /**
+     * @return the end of the sequence (inclusive): since the next start at
+     *         end+1, you have to check this boundary with <= in loops.
+     */
     public int getEnd() {
       return end;
     }

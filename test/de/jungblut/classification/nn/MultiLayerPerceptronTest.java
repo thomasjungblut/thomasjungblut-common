@@ -82,7 +82,8 @@ public class MultiLayerPerceptronTest extends TestCase {
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
         new DenseDoubleMatrix(sampleXOR.getSecond()),
-        new ParticleSwarmOptimization(1000, 2.8d, 0.2, 0.4), 400, 0.0d, false);
+        new ParticleSwarmOptimization(1000, 2.8d, 0.2, 0.4, 4), 400, 0.0d,
+        false);
     System.out.println(error);
     if (error < 0.01) {
       assertTrue(error < 0.001);

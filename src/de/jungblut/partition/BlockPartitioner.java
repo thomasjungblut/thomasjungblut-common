@@ -20,20 +20,15 @@ public class BlockPartitioner implements Partitioner {
     int leftPieces;
     int start = 0;
     while (neededSplits > 0) {
-      bounds.addRange(start, start += avg);
+      bounds.addRange(start, start += (avg - 1));
       start++;
       leftPieces = numberOfRows - start;
       neededSplits--;
-      if (neededSplits > 0)
+      if (neededSplits > 0) {
         avg = leftPieces / neededSplits;
+      }
     }
 
     return bounds;
-  }
-
-  public static void main(String[] args) {
-    Boundaries partition = new BlockPartitioner().partition(2, 10);
-    System.out.println(partition.getBoundaries().size());
-    System.out.println(partition.toString());
   }
 }

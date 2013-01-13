@@ -15,7 +15,7 @@ public class ParticleSwarmOptimizationTest extends TestCase {
   @Test
   public void testParticleSwarmOptimization() {
 
-    DoubleVector start = new DenseDoubleVector(new double[] { 2, 5 });
+    DoubleVector start = new DenseDoubleVector(new double[] { 22, 15 });
 
     // our function is f(x,y) = x^2+y^2
     CostFunction inlineFunction = new CostFunction() {
@@ -29,16 +29,16 @@ public class ParticleSwarmOptimizationTest extends TestCase {
     };
 
     DoubleVector minimizeFunction = ParticleSwarmOptimization.minimizeFunction(
-        inlineFunction, start, 1000, 0.1, 0.2, 0.4, 100, false);
+        inlineFunction, start, 1000, 0.1, 0.2, 0.4, 100, 8, false);
     // 1E-5 is close enough to zero for the test to pass
-    assertTrue(minimizeFunction.get(0) >= 0 && minimizeFunction.get(0) < 1E-5);
-    assertTrue(minimizeFunction.get(1) >= 0 && minimizeFunction.get(1) < 1E-5);
+    assertEquals(0, DoubleMath.fuzzyCompare(minimizeFunction.get(0), 0, 1E-5));
+    assertEquals(0, DoubleMath.fuzzyCompare(minimizeFunction.get(1), 0, 1E-5));
   }
 
   @Test
   public void testParticleSwarmOptimizationNonConvex() {
 
-    DoubleVector start = new DenseDoubleVector(new double[] { 1, 3 });
+    DoubleVector start = new DenseDoubleVector(new double[] { 100, 30 });
 
     CostFunction inlineFunction = new CostFunction() {
       @Override
@@ -53,10 +53,10 @@ public class ParticleSwarmOptimizationTest extends TestCase {
     };
 
     DoubleVector minimizeFunction = ParticleSwarmOptimization.minimizeFunction(
-        inlineFunction, start, 1000, 2.8, 0.4, 0.8, 65, false);
+        inlineFunction, start, 1000, 2.8, 0.4, 0.8, 65, 8, false);
 
-    assertTrue(DoubleMath.fuzzyEquals(minimizeFunction.get(0), 1d, 0.2));
-    assertTrue(DoubleMath.fuzzyEquals(minimizeFunction.get(1), 1d, 0.2));
+    assertEquals(0, DoubleMath.fuzzyCompare(minimizeFunction.get(0), 1d, 0.2));
+    assertEquals(0, DoubleMath.fuzzyCompare(minimizeFunction.get(1), 1d, 0.2));
   }
 
 }
