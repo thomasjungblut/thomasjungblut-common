@@ -36,6 +36,12 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
     this.verbose = verbose;
   }
 
+  public MaxEntMarkovModel(DenseDoubleMatrix theta, int classes) {
+    this(null, -1, false);
+    this.theta = theta;
+    this.classes = classes;
+  }
+
   @Override
   public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
     Preconditions
@@ -65,6 +71,13 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
         "Features must be an instance of the class UnrollableDoubleVector.");
     UnrollableDoubleVector unrollable = (UnrollableDoubleVector) features;
     return predict(unrollable.getMainVector(), unrollable.getSideVectors());
+  }
+
+  /**
+   * @return the learned parameters.
+   */
+  public DenseDoubleMatrix getTheta() {
+    return this.theta;
   }
 
   public DoubleVector predict(DoubleVector feature,

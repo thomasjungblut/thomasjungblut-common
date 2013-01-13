@@ -46,6 +46,20 @@ public final class SparseFeatureExtractorHelper {
   }
 
   /**
+   * Constructs this feature factory via a given dictionary.
+   * 
+   * @param words a list of words in sequence to learn on.
+   * @param labels the corresponding labels in parallel to the words.
+   * @param extractor the core implementation of the feature extractor.
+   * @param dictionary an already given dictionary.
+   */
+  public SparseFeatureExtractorHelper(List<String> words, List<Integer> labels,
+      SequenceFeatureExtractor extractor, String[] dictionary) {
+    this(words, labels, extractor);
+    this.dicts = dictionary;
+  }
+
+  /**
    * Vectorizes the given data from the constructor. Internally builds a
    * dictionary that can be saved to vectorize additional data with
    * {@link #vectorizeAdditionals(List, List)}.
@@ -98,6 +112,13 @@ public final class SparseFeatureExtractorHelper {
       }
     }
     return features;
+  }
+
+  /**
+   * @return the built dictionary.
+   */
+  public String[] getDictionary() {
+    return this.dicts;
   }
 
   /**
