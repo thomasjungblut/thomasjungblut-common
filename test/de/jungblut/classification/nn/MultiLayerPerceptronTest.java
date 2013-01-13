@@ -3,6 +3,13 @@ package de.jungblut.classification.nn;
 import static de.jungblut.math.activation.ActivationFunctionSelector.LINEAR;
 import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
 import static de.jungblut.math.activation.ActivationFunctionSelector.SOFTMAX;
+
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -23,8 +30,12 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORSoftMaxFminCG() {
-    MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 2 },
-        new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SOFTMAX.get() });
+    MultilayerPerceptron mlp = MultilayerPerceptron.TrainingConfiguration
+        .newConfiguration(
+            new int[] { 2, 4, 2 },
+            new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
+                SOFTMAX.get() }, new Fmincg(), 100).build();
+
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXORSoftMax();
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
@@ -41,8 +52,11 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORFminCG() {
-    MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 },
-        new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SIGMOID.get() });
+    MultilayerPerceptron mlp = MultilayerPerceptron.TrainingConfiguration
+        .newConfiguration(
+            new int[] { 2, 4, 1 },
+            new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
+                SIGMOID.get() }, new Fmincg(), 100).build();
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
@@ -59,8 +73,11 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORPSO() {
-    MultilayerPerceptron mlp = new MultilayerPerceptron(new int[] { 2, 4, 1 },
-        new ActivationFunction[] { LINEAR.get(), SIGMOID.get(), SIGMOID.get() });
+    MultilayerPerceptron mlp = MultilayerPerceptron.TrainingConfiguration
+        .newConfiguration(
+            new int[] { 2, 4, 1 },
+            new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
+                SIGMOID.get() }, new Fmincg(), 100).build();
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
@@ -73,6 +90,43 @@ public class MultiLayerPerceptronTest extends TestCase {
     } else {
       throw new RuntimeException("Test seems flaky..");
     }
+  }
+
+  @Test
+  public void testSerialization() throws Exception {
+    MultilayerPerceptron mlp = testXorSigmoidNetwork(null);
+    File tmp = File.createTempFile("neuraltest", ".tmp");
+    DataOutputStream out = new DataOutputStream(new FileOutputStream(tmp));
+    MultilayerPerceptron.serialize(mlp, out);
+    out.close();
+
+    DataInputStream in = new DataInputStream(new FileInputStream(tmp));
+    testXorSigmoidNetwork(MultilayerPerceptron.deserialize(in));
+    in.close();
+
+  }
+
+  private MultilayerPerceptron testXorSigmoidNetwork(MultilayerPerceptron mlp) {
+    if (mlp == null) {
+      mlp = MultilayerPerceptron.TrainingConfiguration
+          .newConfiguration(
+              new int[] { 2, 4, 1 },
+              new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
+                  SIGMOID.get() }, new Fmincg(), 100).build();
+    }
+    Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
+
+    double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
+        new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
+        false);
+    System.out.println(error);
+    if (error < 0.01) {
+      assertTrue(error < 0.001);
+      testPredictions(sampleXOR, mlp);
+    } else {
+      throw new RuntimeException("Test seems flaky..");
+    }
+    return mlp;
   }
 
   public void testPredictions(

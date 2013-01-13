@@ -23,7 +23,9 @@ import de.jungblut.writable.MatrixWritable;
 /**
  * Multilayer perceptron implementation that works on GPU via JCuda and CPU. It
  * features l1 regularization and dropout as well as a variety of activation
- * functions and error functions that can be configured.
+ * functions and error functions that can be configured. You can set this
+ * network up by using the builder given by {@link MultilayerPerceptron}.
+ * {@link TrainingConfiguration}.
  * 
  * @author thomas.jungblut
  * 
@@ -41,78 +43,152 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   /**
    * Configuration for training a neural net through the {@link Classifier}
-   * interfaces.
    * 
    */
   public static final class TrainingConfiguration {
-    TrainingType type;
-    Minimizer minimizer;
-    int maxIterations;
-    double lambda;
-    boolean verbose;
-    ActivationFunction[] activations;
-    double hiddenDropoutProbability;
-    double visibleDropoutProbability;
+    final Minimizer minimizer;
+    final int maxIterations;
+    final int[] layer;
+    final ActivationFunction[] activationFunctions;
 
-    public TrainingConfiguration(Minimizer minimizer,
-        ActivationFunction[] activations, int maxIterations, double lambda,
-        boolean verbose) {
-      this(TrainingType.CPU, minimizer, activations, maxIterations, lambda,
-          verbose, 0d, 0d);
-    }
+    TrainingType type = TrainingType.CPU;
+    double lambda = 0d;
+    boolean verbose = false;
+    double hiddenDropoutProbability = 0d;
+    double visibleDropoutProbability = 0d;
+    WeightMatrix[] weights;
 
-    // TODO replace this with a builder pattern
-    public TrainingConfiguration(TrainingType type, Minimizer minimizer,
-        ActivationFunction[] activations, int maxIterations, double lambda,
-        boolean verbose, double hiddenDropoutProbability,
-        double visibleDropoutProbability) {
-      this.visibleDropoutProbability = visibleDropoutProbability;
-      this.hiddenDropoutProbability = hiddenDropoutProbability;
-      this.type = type;
-      this.activations = activations;
+    private TrainingConfiguration(int[] layer,
+        ActivationFunction[] activations, Minimizer minimizer, int maxIterations) {
+      this.layer = layer;
       this.minimizer = minimizer;
       this.maxIterations = maxIterations;
+      this.activationFunctions = activations;
+    }
+
+    /**
+     * Sets the training type, it defaults to CPU- so only use if you want to
+     * use the GPU.
+     */
+    public TrainingConfiguration trainingType(TrainingType type) {
+      this.type = type;
+      return this;
+    }
+
+    /**
+     * Sets the regularization parameter lambda, defaults to 0 if not set.
+     */
+    public TrainingConfiguration lambda(double lambda) {
       this.lambda = lambda;
+      return this;
+    }
+
+    /**
+     * If verbose is true, progress indicators will be printed to STDOUT.
+     */
+    public TrainingConfiguration verbose(boolean verbose) {
       this.verbose = verbose;
+      return this;
+    }
+
+    /**
+     * Sets the hidden layer dropout probability.
+     */
+    public TrainingConfiguration hiddenLayerDropout(double d) {
+      this.hiddenDropoutProbability = d;
+      return this;
+    }
+
+    /**
+     * Sets the input layer dropout probability.
+     */
+    public TrainingConfiguration inputLayerDroptout(double d) {
+      this.visibleDropoutProbability = d;
+      return this;
+    }
+
+    /**
+     * Sets the initial weights, maybe from an already trained network, or from
+     * a fancy random initialization technique.
+     */
+    public TrainingConfiguration withWeights(WeightMatrix[] weights) {
+      this.weights = weights;
+      return this;
+    }
+
+    /**
+     * @return a new {@link MultilayerPerceptron} with the given configuration.
+     */
+    public MultilayerPerceptron build() {
+      return new MultilayerPerceptron(this);
+    }
+
+    /**
+     * Creates a new TrainingConfiguration with the mandatory configurations of
+     * the activation functions, the to be used minimizer and the maximum
+     * iterations.
+     * 
+     * @param layer the number of neurons for each layer, each index denotes a
+     *          layer.
+     * @param activations the activation functions to be used, each index
+     *          denotes a layer.
+     * @param minimizer the minimizer to be used.
+     * @param maxIterations how many iterations (epochs) to run.
+     * @return a brand new training configuration with the given parameters set.
+     */
+    public static TrainingConfiguration newConfiguration(int[] layer,
+        ActivationFunction[] activations, Minimizer minimizer, int maxIteration) {
+      return new TrainingConfiguration(layer, activations, minimizer,
+          maxIteration);
     }
 
   }
 
   private final WeightMatrix[] weights;
+  private final Minimizer minimizer;
+  private final int maxIterations;
   private final int[] layers;
   private final ActivationFunction[] activations;
 
+  private double lambda;
+  private double hiddenDropoutProbability;
+  private double visibleDropoutProbability;
+  private TrainingType type;
+  private boolean verbose;
   private ErrorFunction error = ErrorFunction.SIGMOID_ERROR;
-  private TrainingConfiguration conf;
-  double hiddenDropoutProbability;
-  double visibleDropoutProbability;
 
-  /**
-   * Multilayer perceptron initializer by using an int[] to describe the number
-   * of units per layer.<br/>
-   * For example if you want to solve the XOR problem by 2 input neurons, a
-   * hidden layer with 3 neurons and an output layer with one neuron, you can
-   * feed this contructor with int[]{2,3,1}.
-   */
-  public MultilayerPerceptron(int[] layer, ActivationFunction[] activations) {
+  private MultilayerPerceptron(TrainingConfiguration conf) {
+
+    this.layers = conf.layer;
+    this.maxIterations = conf.maxIterations;
+    this.minimizer = conf.minimizer;
+    this.lambda = conf.lambda;
+    this.type = conf.type;
+    this.hiddenDropoutProbability = conf.hiddenDropoutProbability;
+    this.visibleDropoutProbability = conf.visibleDropoutProbability;
+    this.verbose = conf.verbose;
+
     // if the activations are not supplied, we are using standard linear-sigmoid
     // functions
-    if (activations == null) {
-      this.activations = new ActivationFunction[layer.length];
+    if (this.activations == null) {
+      this.activations = new ActivationFunction[layers.length];
       this.activations[0] = new LinearActivationFunction();
-      for (int i = 1; i < layer.length; i++) {
+      for (int i = 1; i < layers.length; i++) {
         this.activations[i] = new SigmoidActivationFunction();
       }
     } else {
-      this.activations = activations;
+      this.activations = conf.activationFunctions;
     }
-    Preconditions.checkArgument(layer.length == activations.length,
+    Preconditions.checkArgument(layers.length == activations.length,
         "Size of layers and activations must match!");
-    this.layers = layer;
 
-    weights = new WeightMatrix[layers.length - 1];
-    for (int i = 0; i < weights.length; i++) {
-      weights[i] = new WeightMatrix(layers[i], layers[i + 1]);
+    if (conf.weights == null) {
+      this.weights = new WeightMatrix[layers.length - 1];
+      for (int i = 0; i < weights.length; i++) {
+        weights[i] = new WeightMatrix(layers[i], layers[i + 1]);
+      }
+    } else {
+      this.weights = conf.weights;
     }
 
     // choose the error function based on the output layer
@@ -130,30 +206,16 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   }
 
   /**
-   * Multilayer perceptron initializer by using an int[] to describe the number
-   * of units per layer.<br/>
-   * For example if you want to solve the XOR problem by 2 input neurons, a
-   * hidden layer with 3 neurons and an output layer with one neuron, you can
-   * feed this contructor with int[]{2,3,1}.
-   * 
-   * @param conf the configuration to train with through the {@link Classifier}
-   *          interface.
+   * Custom serialization constructor for already trained networks. Used mainly
+   * to query the network after a training session.
    */
-  public MultilayerPerceptron(int[] layer, TrainingConfiguration conf) {
-    this(layer, conf.activations);
-    this.conf = conf;
-    this.hiddenDropoutProbability = this.conf.hiddenDropoutProbability;
-    this.visibleDropoutProbability = this.conf.visibleDropoutProbability;
-  }
-
-  /**
-   * Custom serialization constructor for already trained networks.
-   */
-  public MultilayerPerceptron(int[] layers, WeightMatrix[] weights,
+  private MultilayerPerceptron(int[] layers, WeightMatrix[] weights,
       ActivationFunction[] activations) {
     this.layers = layers;
     this.weights = weights;
     this.activations = activations;
+    this.minimizer = null;
+    this.maxIterations = -1;
   }
 
   /**
@@ -199,17 +261,12 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   @Override
   public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
-    Preconditions
-        .checkNotNull(
-            conf,
-            "Configuration shouldn't be null here, have you used the correct constructor to provide this configuration?");
-
-    if (conf.type == TrainingType.CPU) {
+    if (type == TrainingType.CPU) {
       train(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
-          conf.minimizer, conf.maxIterations, conf.lambda, conf.verbose);
+          minimizer, maxIterations, lambda, verbose);
     } else {
       trainGPU(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
-          conf.minimizer, conf.maxIterations, conf.lambda, conf.verbose);
+          minimizer, maxIterations, lambda, verbose);
     }
   }
 
@@ -358,28 +415,24 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return weights;
   }
 
-  public int[] getLayers() {
+  int[] getLayers() {
     return this.layers;
   }
 
-  public ActivationFunction[] getActivations() {
+  ActivationFunction[] getActivations() {
     return activations;
   }
 
-  public ErrorFunction getError() {
-    return this.error;
-  }
-
-  public void setConfiguration(TrainingConfiguration conf) {
-    this.conf = conf;
-  }
-
-  public double getHiddenDropoutProbability() {
+  double getHiddenDropoutProbability() {
     return this.hiddenDropoutProbability;
   }
 
-  public double getVisibleDropoutProbability() {
+  double getVisibleDropoutProbability() {
     return this.visibleDropoutProbability;
+  }
+
+  ErrorFunction getError() {
+    return this.error;
   }
 
   /**
