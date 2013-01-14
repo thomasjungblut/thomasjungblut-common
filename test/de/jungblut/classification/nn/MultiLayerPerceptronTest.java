@@ -30,7 +30,7 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORSoftMaxFminCG() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.TrainingConfiguration
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
         .newConfiguration(
             new int[] { 2, 4, 2 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
@@ -52,7 +52,7 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORFminCG() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.TrainingConfiguration
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
         .newConfiguration(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
@@ -73,7 +73,7 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORPSO() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.TrainingConfiguration
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
         .newConfiguration(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
@@ -109,7 +109,7 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   private MultilayerPerceptron testXorSigmoidNetwork(MultilayerPerceptron mlp) {
     if (mlp == null) {
-      mlp = MultilayerPerceptron.TrainingConfiguration
+      mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
           .newConfiguration(
               new int[] { 2, 4, 1 },
               new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),

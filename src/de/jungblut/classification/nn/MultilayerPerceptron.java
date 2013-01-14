@@ -25,7 +25,7 @@ import de.jungblut.writable.MatrixWritable;
  * features l1 regularization and dropout as well as a variety of activation
  * functions and error functions that can be configured. You can set this
  * network up by using the builder given by {@link MultilayerPerceptron}.
- * {@link TrainingConfiguration}.
+ * {@link MultilayerPerceptronConfiguration}.
  * 
  * @author thomas.jungblut
  * 
@@ -45,7 +45,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * Configuration for training a neural net through the {@link Classifier}
    * 
    */
-  public static final class TrainingConfiguration {
+  public static final class MultilayerPerceptronConfiguration {
     final Minimizer minimizer;
     final int maxIterations;
     final int[] layer;
@@ -58,7 +58,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     double visibleDropoutProbability = 0d;
     WeightMatrix[] weights;
 
-    private TrainingConfiguration(int[] layer,
+    private MultilayerPerceptronConfiguration(int[] layer,
         ActivationFunction[] activations, Minimizer minimizer, int maxIterations) {
       this.layer = layer;
       this.minimizer = minimizer;
@@ -70,7 +70,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
      * Sets the training type, it defaults to CPU- so only use if you want to
      * use the GPU.
      */
-    public TrainingConfiguration trainingType(TrainingType type) {
+    public MultilayerPerceptronConfiguration trainingType(TrainingType type) {
       this.type = type;
       return this;
     }
@@ -78,7 +78,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     /**
      * Sets the regularization parameter lambda, defaults to 0 if not set.
      */
-    public TrainingConfiguration lambda(double lambda) {
+    public MultilayerPerceptronConfiguration lambda(double lambda) {
       this.lambda = lambda;
       return this;
     }
@@ -86,7 +86,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     /**
      * If verbose is true, progress indicators will be printed to STDOUT.
      */
-    public TrainingConfiguration verbose(boolean verbose) {
+    public MultilayerPerceptronConfiguration verbose(boolean verbose) {
       this.verbose = verbose;
       return this;
     }
@@ -94,7 +94,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     /**
      * Sets the hidden layer dropout probability.
      */
-    public TrainingConfiguration hiddenLayerDropout(double d) {
+    public MultilayerPerceptronConfiguration hiddenLayerDropout(double d) {
       this.hiddenDropoutProbability = d;
       return this;
     }
@@ -102,7 +102,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     /**
      * Sets the input layer dropout probability.
      */
-    public TrainingConfiguration inputLayerDroptout(double d) {
+    public MultilayerPerceptronConfiguration inputLayerDroptout(double d) {
       this.visibleDropoutProbability = d;
       return this;
     }
@@ -111,7 +111,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
      * Sets the initial weights, maybe from an already trained network, or from
      * a fancy random initialization technique.
      */
-    public TrainingConfiguration withWeights(WeightMatrix[] weights) {
+    public MultilayerPerceptronConfiguration withWeights(WeightMatrix[] weights) {
       this.weights = weights;
       return this;
     }
@@ -136,10 +136,11 @@ public final class MultilayerPerceptron extends AbstractClassifier {
      * @param maxIterations how many iterations (epochs) to run.
      * @return a brand new training configuration with the given parameters set.
      */
-    public static TrainingConfiguration newConfiguration(int[] layer,
-        ActivationFunction[] activations, Minimizer minimizer, int maxIteration) {
-      return new TrainingConfiguration(layer, activations, minimizer,
-          maxIteration);
+    public static MultilayerPerceptronConfiguration newConfiguration(
+        int[] layer, ActivationFunction[] activations, Minimizer minimizer,
+        int maxIteration) {
+      return new MultilayerPerceptronConfiguration(layer, activations,
+          minimizer, maxIteration);
     }
 
   }
@@ -157,7 +158,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   private boolean verbose;
   private ErrorFunction error = ErrorFunction.SIGMOID_ERROR;
 
-  private MultilayerPerceptron(TrainingConfiguration conf) {
+  private MultilayerPerceptron(MultilayerPerceptronConfiguration conf) {
 
     this.layers = conf.layer;
     this.maxIterations = conf.maxIterations;
