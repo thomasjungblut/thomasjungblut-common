@@ -28,7 +28,11 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
   public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
     int[] classes = new int[outcome.length];
     for (int i = 0; i < outcome.length; i++) {
-      classes[i] = outcome[i].maxIndex();
+      if (outcome[i].getDimension() == 1) {
+        classes[i] = (int) outcome[i].get(0);
+      } else {
+        classes[i] = outcome[i].maxIndex();
+      }
     }
     train(new SparseDoubleColumnMatrix(Arrays.asList(features)),
         new DenseIntVector(classes));
