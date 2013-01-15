@@ -1,7 +1,8 @@
 package de.jungblut.classification.bayes;
 
-import java.util.Arrays;
 import java.util.Iterator;
+
+import com.google.common.base.Preconditions;
 
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.math.DoubleVector;
@@ -9,7 +10,6 @@ import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
-import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 
 /**
  * Simple multinomial naive bayes classifier.
@@ -19,7 +19,6 @@ import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
  */
 public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
 
-  // TODO replace by a sparse matrix
   private DenseDoubleMatrix probabilityMatrix;
   private DenseDoubleVector classProbability;
 
@@ -53,28 +52,28 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
         classes[i] = outcome[i].maxIndex();
       }
     }
-    train(new SparseDoubleColumnMatrix(Arrays.asList(features)),
-        new DenseIntVector(classes));
+    trainInternal(features, new DenseIntVector(classes));
   }
 
   /**
    * Trains this classifier by the given word counts and the prediction.
    */
-  private void train(SparseDoubleColumnMatrix documentWordCounts,
-      DenseIntVector prediction) {
+  private void trainInternal(DoubleVector[] features, DenseIntVector prediction) {
+    Preconditions.checkArgument(features.length > 0,
+        "Features must contain at least a single item!");
+    Preconditions.checkArgument(features.length == prediction.getLength(),
+        "There must be an equal amount of features and prediction outcomes!");
 
-    final int numDistinctElements = prediction.getNumberOfDistinctElements();
-    probabilityMatrix = new DenseDoubleMatrix(numDistinctElements,
-        documentWordCounts.getRowCount(), 1.0d);
+    final int numDistinctClasses = prediction.getNumberOfDistinctElements();
+    probabilityMatrix = new DenseDoubleMatrix(numDistinctClasses,
+        features[0].getDimension(), 1.0d);
 
-    int[] columnIndices = documentWordCounts.columnIndices();
-    int[] tokenPerClass = new int[numDistinctElements];
-    int[] numDocumentsPerClass = new int[numDistinctElements];
+    int[] tokenPerClass = new int[numDistinctClasses];
+    int[] numDocumentsPerClass = new int[numDistinctClasses];
 
     // init the probability with the document length = word count for each token
-    for (int columnIndex : columnIndices) {
-      final DoubleVector document = documentWordCounts
-          .getColumnVector(columnIndex);
+    for (int columnIndex = 0; columnIndex < features.length; columnIndex++) {
+      final DoubleVector document = features[columnIndex];
       final int predictedClass = prediction.get(columnIndex);
       tokenPerClass[predictedClass] += document.getLength();
       numDocumentsPerClass[predictedClass]++;
@@ -87,33 +86,31 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
         probabilityMatrix.set(predictedClass, next.getIndex(), currentCount
             + next.getValue());
       }
-
     }
 
     // know we know the token distribution per class, we can calculate the
     // probability. It is intended for them to be negative in some cases
-    for (int row = 0; row < numDistinctElements; row++) {
-      for (int col = 0; col < probabilityMatrix.getColumnCount(); col++) {
-        double currentWordCount = probabilityMatrix.get(row, col);
+    for (int row = 0; row < numDistinctClasses; row++) {
+      for (int tokenColumn = 0; tokenColumn < probabilityMatrix
+          .getColumnCount(); tokenColumn++) {
+        double currentWordCount = probabilityMatrix.get(row, tokenColumn);
         double logLikelyhood = Math.log(currentWordCount
             / (tokenPerClass[row] + probabilityMatrix.getColumnCount() - 1));
-        probabilityMatrix.set(row, col, logLikelyhood);
+        probabilityMatrix.set(row, tokenColumn, logLikelyhood);
       }
     }
 
-    // we do add-one smoothing, so this may not sum to 1
-    // TODO checkout if we should normalize by the sum?
-    classProbability = new DenseDoubleVector(numDistinctElements);
-    for (int i = 0; i < numDistinctElements; i++) {
-      classProbability.set(i, (numDocumentsPerClass[i] + 1)
-          / (double) columnIndices.length);
+    classProbability = new DenseDoubleVector(numDistinctClasses);
+    for (int i = 0; i < numDistinctClasses; i++) {
+      classProbability.set(i, (numDocumentsPerClass[i])
+          / (double) features.length);
     }
   }
 
   /**
    * Returns the maximum likely class.
    */
-  public final int classify(DoubleVector document) {
+  public int classify(DoubleVector document) {
     return getProbabilityDistribution(document).maxIndex();
   }
 

@@ -1,5 +1,7 @@
 package de.jungblut.classification.bayes;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -9,6 +11,7 @@ import com.google.common.math.DoubleMath;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.sparse.SparseDoubleVector;
 
 public class MultinomialNaiveBayesClassifierTest extends TestCase {
 
@@ -18,11 +21,11 @@ public class MultinomialNaiveBayesClassifierTest extends TestCase {
     MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
 
     DoubleVector[] features = new DoubleVector[] {
-        new DenseDoubleVector(new double[] { 1, 0, 0, 0, 0 }),
-        new DenseDoubleVector(new double[] { 1, 0, 0, 0, 0 }),
-        new DenseDoubleVector(new double[] { 1, 1, 0, 0, 0 }),
-        new DenseDoubleVector(new double[] { 0, 0, 1, 1, 1 }),
-        new DenseDoubleVector(new double[] { 0, 0, 0, 1, 1 }), };
+        new SparseDoubleVector(new double[] { 1, 0, 0, 0, 0 }),
+        new SparseDoubleVector(new double[] { 1, 0, 0, 0, 0 }),
+        new SparseDoubleVector(new double[] { 1, 1, 0, 0, 0 }),
+        new SparseDoubleVector(new double[] { 0, 0, 1, 1, 1 }),
+        new SparseDoubleVector(new double[] { 0, 0, 0, 1, 1 }), };
     DenseDoubleVector[] outcome = new DenseDoubleVector[] {
         new DenseDoubleVector(new double[] { 1 }),
         new DenseDoubleVector(new double[] { 1 }),
@@ -32,9 +35,8 @@ public class MultinomialNaiveBayesClassifierTest extends TestCase {
     classifier.train(features, outcome);
 
     DenseDoubleVector classProbability = classifier.getClassProbability();
-    // we do add-one smoothing, so this may not sum to 1
-    assertTrue(DoubleMath.fuzzyEquals(classProbability.get(0), 3d / 5d, 0.01d));
-    assertTrue(DoubleMath.fuzzyEquals(classProbability.get(1), 4d / 5d, 0.01d));
+    assertTrue(DoubleMath.fuzzyEquals(classProbability.get(0), 2d / 5d, 0.01d));
+    assertTrue(DoubleMath.fuzzyEquals(classProbability.get(1), 3d / 5d, 0.01d));
 
     DoubleMatrix mat = classifier.getProbabilityMatrix();
     double[] realFirstRow = new double[] { -2.1972245773362196,
@@ -47,13 +49,15 @@ public class MultinomialNaiveBayesClassifierTest extends TestCase {
     double[] firstRow = mat.getRowVector(0).toArray();
     assertEquals(realFirstRow.length, firstRow.length);
     for (int i = 0; i < firstRow.length; i++) {
-      assertTrue(DoubleMath.fuzzyEquals(firstRow[i], realFirstRow[i], 0.05d));
+      assertTrue("" + Arrays.toString(firstRow),
+          DoubleMath.fuzzyEquals(firstRow[i], realFirstRow[i], 0.05d));
     }
 
     double[] secondRow = mat.getRowVector(1).toArray();
     assertEquals(realSecondRow.length, secondRow.length);
     for (int i = 0; i < firstRow.length; i++) {
-      assertTrue(DoubleMath.fuzzyEquals(secondRow[i], realSecondRow[i], 0.05d));
+      assertTrue("" + Arrays.toString(secondRow),
+          DoubleMath.fuzzyEquals(secondRow[i], realSecondRow[i], 0.05d));
     }
 
     DoubleVector claz = classifier.predict(new DenseDoubleVector(new double[] {
