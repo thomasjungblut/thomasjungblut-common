@@ -2,7 +2,6 @@ package de.jungblut.classification.bayes;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.math.DoubleVector;
@@ -11,7 +10,6 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.DenseIntVector;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Simple multinomial naive bayes classifier.
@@ -21,8 +19,29 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
 
+  // TODO replace by a sparse matrix
   private DenseDoubleMatrix probabilityMatrix;
   private DenseDoubleVector classProbability;
+
+  /**
+   * Default constructor to construct this classifier.
+   */
+  public MultinomialNaiveBayesClassifier() {
+  }
+
+  /**
+   * Deserialization constructor to instantiate an already trained classifier
+   * from the internal representations.
+   * 
+   * @param probabilityMatrix the probability matrix.
+   * @param classProbability the prior class probabilities.
+   */
+  public MultinomialNaiveBayesClassifier(DenseDoubleMatrix probabilityMatrix,
+      DenseDoubleVector classProbability) {
+    super();
+    this.probabilityMatrix = probabilityMatrix;
+    this.classProbability = classProbability;
+  }
 
   @Override
   public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
@@ -38,8 +57,11 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
         new DenseIntVector(classes));
   }
 
-  public final Tuple<DenseDoubleMatrix, DenseDoubleVector> train(
-      SparseDoubleColumnMatrix documentWordCounts, DenseIntVector prediction) {
+  /**
+   * Trains this classifier by the given word counts and the prediction.
+   */
+  private void train(SparseDoubleColumnMatrix documentWordCounts,
+      DenseIntVector prediction) {
 
     final int numDistinctElements = prediction.getNumberOfDistinctElements();
     probabilityMatrix = new DenseDoubleMatrix(numDistinctElements,
@@ -79,12 +101,13 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
       }
     }
 
+    // we do add-one smoothing, so this may not sum to 1
+    // TODO checkout if we should normalize by the sum?
     classProbability = new DenseDoubleVector(numDistinctElements);
     for (int i = 0; i < numDistinctElements; i++) {
       classProbability.set(i, (numDocumentsPerClass[i] + 1)
           / (double) columnIndices.length);
     }
-    return new Tuple<>(probabilityMatrix, classProbability);
   }
 
   /**
@@ -140,60 +163,17 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
   }
 
   /**
-   * This method prints a confusion matrix along with several metrics like
-   * accuracy. It prints to STDOUT if verbose.
-   * 
-   * @return returns accuracy.
+   * @return the internal prior class probability.
    */
-  public double evaluateModel(List<DoubleVector> testSetInputVector,
-      DenseIntVector testSetPrediction, String[] classNames, boolean verbose) {
+  public DenseDoubleVector getClassProbability() {
+    return this.classProbability;
+  }
 
-    // we add two columns to the confusion matrix to add false sums and overall
-    // sums to the rows
-    final int columnLength = classProbability.getLength() + 2;
-    int[][] confusionMatrix = new int[classProbability.getLength()][columnLength];
-    int truePositives = 0;
-    int index = 0;
-    for (DoubleVector v : testSetInputVector) {
-      int classifiedClass = this.classify(v);
-      int realClass = testSetPrediction.get(index);
-      if (classifiedClass == realClass) {
-        truePositives++;
-      } else {
-        confusionMatrix[classifiedClass][classProbability.getLength() + 1]++;
-      }
-
-      confusionMatrix[classifiedClass][realClass]++;
-      confusionMatrix[classifiedClass][classProbability.getLength()]++;
-
-      index++;
-    }
-
-    double accuracy = truePositives / (double) testSetInputVector.size();
-    if (verbose) {
-      System.out.println("Classified correctly: " + truePositives + " out of "
-          + testSetInputVector.size() + " documents! That's accuracy of "
-          + (accuracy * 100) + "%");
-    }
-
-    if (verbose) {
-      System.out.println("\nConfusion matrix:\n");
-
-      for (int i = 0; i < classProbability.getLength(); i++) {
-        System.out.format("%5d", i);
-      }
-
-      System.out.println("  SUM  FALSE\n");
-
-      for (int i = 0; i < classProbability.getLength(); i++) {
-        for (int j = 0; j < columnLength; j++) {
-          System.out.format("%5d", confusionMatrix[i][j]);
-        }
-        String clz = classNames != null ? classNames[i] : i + "";
-        System.out.println(" <- " + i + " classfied as " + clz);
-      }
-    }
-    return accuracy;
+  /**
+   * @return the internal probability matrix.
+   */
+  public DenseDoubleMatrix getProbabilityMatrix() {
+    return this.probabilityMatrix;
   }
 
 }
