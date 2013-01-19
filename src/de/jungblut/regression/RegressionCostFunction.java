@@ -38,12 +38,13 @@ public class RegressionCostFunction implements CostFunction {
     double j = (sqrErrors.sum() / 2 / m) + lambda
         * (theta.slice(2, theta.getLength()).pow(2).sum() / 2 / m);
 
-    DoubleVector gradient = new DenseDoubleVector(theta.getLength());
-    for (int i = 0; i < theta.getLength(); i++) {
-      gradient.set(i,
-          (predictions.subtract(y).multiply(x.getColumnVector(i))).sum() / m);
-      if (i > 1)
-        gradient.set(i, gradient.get(i) + lambda * (theta.get(i) / m));
+    DoubleVector gradient = x.transpose()
+        .multiplyVector(predictions.subtract(y)).divide(m);
+    if (lambda != 0d) {
+      double biasGradient = gradient.get(0);
+      gradient.add(theta.multiply(lambda).divide(m));
+      // we don't regularize the bias
+      gradient.set(0, biasGradient);
     }
 
     return new Tuple<>(j, gradient);

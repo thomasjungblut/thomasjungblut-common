@@ -39,16 +39,11 @@ public class PolynomialRegressionTest extends TestCase {
     int numPoly = 8;
     DenseDoubleMatrix xPoly = MathUtils.createPolynomials(x, numPoly);
     PolynomialRegression reg = new PolynomialRegression(xPoly, y, 3.0d, true);
-    DoubleVector trainModel = reg.trainModel(new Fmincg(), 200, false);
-
-    assertEquals(new DenseDoubleVector(new double[] { 6.915064696781851,
-        0.8395937966930411 }),
+    reg.trainModel(new Fmincg(), 200, false);
+    assertEquals(new DenseDoubleVector(new double[] { 7.657335780995228,
+        2.632094730677398 }),
         reg.predict(new DenseDoubleMatrix(new double[][] { { -15 }, { -29 } })));
-    assertEquals(new DenseDoubleVector(new double[] { 11.217608314024684,
-        12.449824953940029, 3.9687656618199205, 0.28643686866707746,
-        1.9362841391625838, 0.45867528189634876, 0.7930260902910359,
-        0.605370575894097, 0.11794150124685109 }), trainModel);
-    assertEquals(4.3750765806456995d, reg.meanSquaredError(reg.predict(xPoly)));
+    assertEquals(2.0734714302262063d, reg.meanSquaredError(reg.predict(xPoly)));
   }
 
 }

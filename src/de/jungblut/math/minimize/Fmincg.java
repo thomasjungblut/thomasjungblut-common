@@ -58,18 +58,18 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class Fmincg implements Minimizer {
 
-  private static final double RHO = 0.01; // a bunch of constants for line
-  // searches
-  private static final double SIG = 0.5; // RHO and SIG are the constants in
-  // the
-  // Wolfe-Powell conditions
-  private static final double INT = 0.1; // don't reevaluate within 0.1 of the
-  // limit of the current bracket
-  private static final double EXT = 3.0; // extrapolate maximum 3 times the
-  // current bracket
-  private static final int MAX = 20; // max 20 function evaluations per line
-  // search
-  private static final int RATIO = 100; // maximum allowed slope ratio
+  // a bunch of constants for line searches
+  private static final double RHO = 0.01;
+  // RHO and SIG are the constants in the Wolfe-Powell conditions
+  private static final double SIG = 0.5;
+  // don't reevaluate within 0.1 of the limit of the current bracket
+  private static final double INT = 0.1;
+  // extrapolate maximum 3 times the current bracket
+  private static final double EXT = 3.0;
+  // max 20 function evaluations per line search
+  private static final int MAX = 20;
+  // maximum allowed slope ratio
+  private static final int RATIO = 100;
 
   /**
    * Minimizes the given CostFunction with Nonlinear conjugate gradient method. <br/>
@@ -91,14 +91,14 @@ public final class Fmincg implements Minimizer {
     int i = 0; // zero the run length counter
     int red = 1; // starting point
     int ls_failed = 0; // no previous line search has failed
-    DenseDoubleVector fX = new DenseDoubleVector(0); // what we return as fX
-    // get function value and gradient
+    // what we return as fX get function value and gradient
+    DenseDoubleVector fX = new DenseDoubleVector(0);
     final Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(input);
     double f1 = evaluateCost.getFirst();
     DoubleVector df1 = evaluateCost.getSecond();
     i = i + (length < 0 ? 1 : 0);
-    DoubleVector s = df1.multiply(-1.0d); // search direction is
-    // steepest
+    // search direction is steepest
+    DoubleVector s = df1.multiply(-1.0d);
 
     double d1 = s.multiply(-1.0d).dot(s); // this is the slope
     double z1 = red / (1.0 - d1); // initial step is red/(|s|+1)
@@ -115,7 +115,7 @@ public final class Fmincg implements Minimizer {
       double f2 = evaluateCost2.getFirst();
       DoubleVector df2 = evaluateCost2.getSecond();
 
-      i = i + (length < 0 ? 1 : 0); // count epochs?!
+      i = i + (length < 0 ? 1 : 0); // count epochs
       double d2 = df2.dot(s);
       // initialize point 3 equal to point 1
       double f3 = f1;
@@ -132,7 +132,8 @@ public final class Fmincg implements Minimizer {
 
       while (true) {
         while (((f2 > f1 + z1 * RHO * d1) | (d2 > -SIG * d1)) && (M > 0)) {
-          limit = z1; // tighten the bracket
+          // tighten the bracket
+          limit = z1;
           double z2 = 0.0d;
           double A = 0.0d;
           double B = 0.0d;
@@ -140,27 +141,30 @@ public final class Fmincg implements Minimizer {
             // quadratic fit
             z2 = z3 - (0.5 * d3 * z3 * z3) / (d3 * z3 + f2 - f3);
           } else {
-            A = 6 * (f2 - f3) / z3 + 3 * (d2 + d3); // cubic fit
+            // cubic fit
+            A = 6 * (f2 - f3) / z3 + 3 * (d2 + d3);
             B = 3 * (f3 - f2) - z3 * (d3 + 2 * d2);
             // numerical error possible - ok!
             z2 = (Math.sqrt(B * B - A * d2 * z3 * z3) - B) / A;
           }
           if (Double.isNaN(z2) || Double.isInfinite(z2)) {
-            z2 = z3 / 2.0d; // if we had a numerical problem then
-            // bisect
+            // if we had a numerical problem then bisect
+            z2 = z3 / 2.0d;
           }
           // don't accept too close to limits
           z2 = Math.max(Math.min(z2, INT * z3), (1 - INT) * z3);
-          z1 = z1 + z2; // update the step
+          // update the step
+          z1 = z1 + z2;
           input = input.add(s.multiply(z2));
           final Tuple<Double, DoubleVector> evaluateCost3 = f
               .evaluateCost(input);
           f2 = evaluateCost3.getFirst();
           df2 = evaluateCost3.getSecond();
           M = M - 1;
-          i = i + (length < 0 ? 1 : 0); // count epochs?!
+          i = i + (length < 0 ? 1 : 0); // count epochs
           d2 = df2.dot(s);
-          z3 = z3 - z2; // z3 is now relative to the location of z2
+          // z3 is now relative to the location of z2
+          z3 = z3 - z2;
         }
         if (f2 > f1 + z1 * RHO * d1 || d2 > -SIG * d1) {
           break; // this is a failure
@@ -170,17 +174,19 @@ public final class Fmincg implements Minimizer {
         } else if (M == 0) {
           break; // failure
         }
-        double A = 6 * (f2 - f3) / z3 + 3 * (d2 + d3); // make cubic
-        // extrapolation
+        // make cubic extrapolation
+        double A = 6 * (f2 - f3) / z3 + 3 * (d2 + d3);
         double B = 3 * (f3 - f2) - z3 * (d3 + 2 * d2);
         double z2 = -d2 * z3 * z3 / (B + Math.sqrt(B * B - A * d2 * z3 * z3));
         // num prob or wrong sign?
         if (Double.isNaN(z2) || Double.isInfinite(z2) || z2 < 0)
-          if (limit < -0.5) { // if we have no upper limit
-            z2 = z1 * (EXT - 1); // the extrapolate the maximum
-            // amount
+          // if we have no upper limit
+          if (limit < -0.5) {
+            // the extrapolate the maximum amount
+            z2 = z1 * (EXT - 1);
           } else {
-            z2 = (limit - z1) / 2; // otherwise bisect
+            // otherwise bisect
+            z2 = (limit - z1) / 2;
           }
         else if ((limit > -0.5) && (z2 + z1 > limit)) {
           // extraplation beyond max?
