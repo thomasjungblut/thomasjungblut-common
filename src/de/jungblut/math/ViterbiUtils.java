@@ -13,7 +13,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
  * @author thomas.jungblut
  * 
  */
-public final class ViterbiUtils {
+public abstract class ViterbiUtils {
 
   /**
    * Do a decoding pass on the given HMM weights, the features to decode and how

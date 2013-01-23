@@ -38,7 +38,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
   public MultilayerPerceptronCostFunction(MultilayerPerceptron network,
       DenseDoubleMatrix x, DenseDoubleMatrix y, double lambda) {
     this.m = x.getRowCount();
-    ones = DenseDoubleVector.ones(m);
+    this.ones = DenseDoubleVector.ones(m);
     this.x = new DenseDoubleMatrix(ones, x);
     this.y = y;
     this.lambda = lambda;

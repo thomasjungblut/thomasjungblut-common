@@ -27,7 +27,7 @@ import de.jungblut.math.sparse.SparseDoubleVector;
  * @author thomas.jungblut
  * 
  */
-public final class VectorizerUtils {
+public abstract class VectorizerUtils {
 
   /**
    * Builds a sorted dictionary of tokens from a list of (tokenized) documents.

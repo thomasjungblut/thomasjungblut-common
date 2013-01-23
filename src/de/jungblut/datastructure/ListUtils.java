@@ -9,7 +9,7 @@ import java.util.List;
  * @author thomas.jungblut
  * 
  */
-public final class ListUtils {
+public abstract class ListUtils {
 
   /**
    * Merges two sorted segments into a single sorted list.

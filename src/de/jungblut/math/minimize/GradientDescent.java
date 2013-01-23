@@ -76,7 +76,7 @@ public final class GradientDescent implements Minimizer {
         verbose);
   }
 
-  private static void shiftLeft(double[] lastCosts) {
+  static void shiftLeft(double[] lastCosts) {
     final int lastIndex = lastCosts.length - 1;
     for (int i = 0; i < lastIndex; i++) {
       lastCosts[i] = lastCosts[i + 1];
@@ -85,12 +85,12 @@ public final class GradientDescent implements Minimizer {
     lastCosts[lastIndex] = Double.MAX_VALUE;
   }
 
-  private static boolean converged(double[] lastCosts, double limit) {
+  static boolean converged(double[] lastCosts, double limit) {
     return Math.abs(lastCosts[lastCosts.length - 1]
         - lastCosts[lastCosts.length - 2]) < limit;
   }
 
-  private static boolean ascending(double[] lastCosts) {
+  static boolean ascending(double[] lastCosts) {
     double last = lastCosts[0];
     boolean ascending = false;
     for (int i = 1; i < lastCosts.length; i++) {

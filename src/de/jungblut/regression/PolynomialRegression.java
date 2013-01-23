@@ -39,7 +39,7 @@ public final class PolynomialRegression {
     this.normalize = normalize;
     if (normalize) {
       Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize = MathUtils
-          .featureNormalize(x);
+          .meanNormalizeColumns(x);
       this.x = featureNormalize.getFirst();
       this.mean = featureNormalize.getSecond();
       this.stddev = featureNormalize.getThird();

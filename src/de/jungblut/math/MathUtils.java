@@ -2,6 +2,7 @@ package de.jungblut.math;
 
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
 
@@ -11,31 +12,34 @@ import de.jungblut.math.tuple.Tuple3;
  * @author thomas.jungblut
  * 
  */
-public class MathUtils {
+public abstract class MathUtils {
 
   /**
-   * @return normalized matrix (0 mean and stddev of 1) as well as the mean.
+   * @return mean normalized matrix (0 mean and stddev of 1) as well as the
+   *         mean.
    */
   public static Tuple<DoubleMatrix, DoubleVector> meanNormalizeRows(
-      DoubleMatrix matrix) {
-
+      DoubleMatrix pMatrix) {
+    DoubleMatrix matrix = new DenseDoubleMatrix(pMatrix.getRowCount(),
+        pMatrix.getColumnCount());
     DoubleVector meanVector = new DenseDoubleVector(matrix.getRowCount());
-
     for (int row = 0; row < matrix.getRowCount(); row++) {
       double mean = 0.0d;
       int nonZeroElements = 0;
       for (int column = 0; column < matrix.getColumnCount(); column++) {
-        double val = matrix.get(row, column);
+        double val = pMatrix.get(row, column);
         if (val != DoubleMatrix.NOT_FLAGGED) {
           mean += val;
           nonZeroElements++;
         }
       }
-      if (nonZeroElements != 0.0d)
+      // prevent division by zero
+      if (nonZeroElements != 0.0d) {
         mean = mean / nonZeroElements;
+      }
       meanVector.set(row, mean);
       for (int column = 0; column < matrix.getColumnCount(); column++) {
-        double val = matrix.get(row, column);
+        double val = pMatrix.get(row, column);
         if (val != DoubleMatrix.NOT_FLAGGED) {
           matrix.set(row, column, val - mean);
         }
@@ -49,23 +53,11 @@ public class MathUtils {
    * @return the normalized matrix (0 mean and stddev of 1) as well as the mean
    *         and the stddev.
    */
-  public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
+  public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> meanNormalizeColumns(
       DoubleMatrix x) {
-    return featureNormalize(x, true);
-  }
-
-  /**
-   * @return the normalized matrix (0 mean and stddev of 1) as well as the mean
-   *         and the stddev.
-   */
-  public static Tuple3<DoubleMatrix, DoubleVector, DoubleVector> featureNormalize(
-      DoubleMatrix x, boolean normalizeLastColumn) {
     DenseDoubleMatrix toReturn = new DenseDoubleMatrix(x.getRowCount(),
         x.getColumnCount());
-    int length = x.getColumnCount();
-    if (!normalizeLastColumn) {
-      length = length - 1;
-    }
+    final int length = x.getColumnCount();
     DoubleVector meanVector = new DenseDoubleVector(length);
     DoubleVector stddevVector = new DenseDoubleVector(length);
     for (int col = 0; col < length; col++) {
@@ -114,4 +106,28 @@ public class MathUtils {
     return m;
   }
 
+  /**
+   * Calculates the numerical gradient from a cost function using the central
+   * difference theorem. f'(x) = (f(x + h) - f(x - h)) / 2.
+   * 
+   * @param vector the parameters to derive.
+   * @param f the costfunction to return the cost at a given parameterset.
+   * @return a numerical gradient.
+   */
+  public static DoubleVector numericalGradient(DoubleVector vector,
+      CostFunction f) {
+    DoubleVector gradient = new DenseDoubleVector(vector.getLength());
+    DoubleVector tmp = vector.deepCopy();
+    double stepSize = 0.00001;
+    double eps = Math.sqrt(2.2E-16);
+    for (int i = 0; i < vector.getLength(); i++) {
+      stepSize = eps * (Math.abs(vector.get(i)) + 1d);
+      tmp.set(i, vector.get(i) + stepSize);
+      double add = f.evaluateCost(tmp).getFirst().doubleValue();
+      tmp.set(i, vector.get(i) - stepSize);
+      double diff = f.evaluateCost(tmp).getFirst().doubleValue();
+      gradient.set(i, (add - diff) / (2d * stepSize));
+    }
+    return gradient;
+  }
 }

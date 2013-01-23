@@ -18,7 +18,7 @@ import com.google.common.base.Preconditions;
  * @author thomas.jungblut
  * 
  */
-public final class ArrayUtils {
+public abstract class ArrayUtils {
 
   /**
    * Finds the occurence of the given key in the given array. Linear search,
@@ -1182,6 +1182,57 @@ public final class ArrayUtils {
       }
     }
     return array;
+  }
+
+  /**
+   * Creates the given array from a varargs parameter.
+   * 
+   * @param arrays the array to create.
+   * @return the inputted stuff as array.
+   */
+  public static int[] create(int... arrays) {
+    return arrays;
+  }
+
+  /**
+   * Creates the given array from a varargs parameter.
+   * 
+   * @param arrays the array to create.
+   * @return the inputted stuff as array.
+   */
+  public static long[] create(long... arrays) {
+    return arrays;
+  }
+
+  /**
+   * Creates the given array from a varargs parameter.
+   * 
+   * @param arrays the array to create.
+   * @return the inputted stuff as array.
+   */
+  public static double[] create(double... arrays) {
+    return arrays;
+  }
+
+  /**
+   * Creates the given array from a varargs parameter.
+   * 
+   * @param arrays the array to create.
+   * @return the inputted stuff as array.
+   */
+  public static byte[] create(byte... arrays) {
+    return arrays;
+  }
+
+  /**
+   * Creates the given array from a varargs parameter.
+   * 
+   * @param arrays the array to create.
+   * @return the inputted stuff as array.
+   */
+  @SafeVarargs
+  public static <T> T[] create(T... arrays) {
+    return arrays;
   }
 
 }

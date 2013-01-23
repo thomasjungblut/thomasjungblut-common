@@ -13,7 +13,7 @@ import java.util.StringTokenizer;
  * @author thomas.jungblut
  * 
  */
-public final class TokenizerUtils {
+public abstract class TokenizerUtils {
 
   public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|“„";
 
