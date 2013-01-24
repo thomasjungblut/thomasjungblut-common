@@ -65,7 +65,7 @@ public final class GermanStemmer {
    * 
    * @return true if, and only if, the given term consists in letters.
    */
-  private boolean isStemmable(String term) {
+  private static boolean isStemmable(String term) {
     for (int c = 0; c < term.length(); c++) {
       if (!Character.isLetter(term.charAt(c)))
         return false;
@@ -134,7 +134,7 @@ public final class GermanStemmer {
   /**
    * Removes a particle denotion ("ge") from a term.
    */
-  private void removeParticleDenotion(StringBuilder buffer) {
+  private static void removeParticleDenotion(StringBuilder buffer) {
     if (buffer.length() > 4) {
       for (int c = 0; c < buffer.length() - 3; c++) {
         if (buffer.substring(c, c + 4).equals("gege")) {
@@ -214,7 +214,7 @@ public final class GermanStemmer {
    * character combinations. Umlauts will remain as their corresponding vowel,
    * as "ß" remains as "ss".
    */
-  private void resubstitute(StringBuilder buffer) {
+  private static void resubstitute(StringBuilder buffer) {
     for (int c = 0; c < buffer.length(); c++) {
       if (buffer.charAt(c) == '*') {
         char x = buffer.charAt(c - 1);

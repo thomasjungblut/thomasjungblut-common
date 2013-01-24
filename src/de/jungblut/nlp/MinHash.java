@@ -80,6 +80,7 @@ public final class MinHash {
    * 
    * @return a similarity between 0 and 1, where 1 is very similar.
    */
+  @SuppressWarnings("static-method")
   public double measureSimilarity(int[] left, int[] right) {
     Preconditions.checkArgument(left.length == right.length,
         "Left length was not equal to right length! " + left.length + " != "

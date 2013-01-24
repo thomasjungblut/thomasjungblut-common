@@ -23,7 +23,7 @@ public final class NegatedCostFunction implements CostFunction {
   public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
     Tuple<Double, DoubleVector> evaluateCost = minableCostFunction
         .evaluateCost(input);
-    return new Tuple<Double, DoubleVector>(-evaluateCost.getFirst(),
+    return new Tuple<>(-evaluateCost.getFirst(),
         evaluateCost.getSecond().multiply(-1));
   }
 

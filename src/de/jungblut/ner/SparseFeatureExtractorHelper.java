@@ -41,7 +41,7 @@ public final class SparseFeatureExtractorHelper {
     this.extractor = extractor;
     // calculate how many different classes are there (assuming they are
     // starting with 0)
-    this.classSet = new HashSet<Integer>(labels);
+    this.classSet = new HashSet<>(labels);
     this.classes = classSet.size();
   }
 
@@ -164,7 +164,7 @@ public final class SparseFeatureExtractorHelper {
       }
     }
 
-    return new Tuple<DoubleVector[], DenseDoubleVector[]>(features, outcome);
+    return new Tuple<>(features, outcome);
   }
 
 }

@@ -18,7 +18,7 @@ public final class BasicFeatureExtractor implements SequenceFeatureExtractor {
   public List<String> computeFeatures(List<String> words, int previousLabel,
       int position) {
     String currentWord = words.get(position);
-    List<String> features = new ArrayList<String>();
+    List<String> features = new ArrayList<>();
 
     features.add("word=" + currentWord);
     features.add("prevLabel=" + previousLabel);

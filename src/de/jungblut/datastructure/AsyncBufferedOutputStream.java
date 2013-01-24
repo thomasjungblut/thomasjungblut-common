@@ -20,7 +20,7 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
 
   private final FlushThread flusher = new FlushThread();
   private final Thread flusherThread = new Thread(flusher);
-  private final BlockingQueue<byte[]> buffers = new LinkedBlockingQueue<byte[]>();
+  private final BlockingQueue<byte[]> buffers = new LinkedBlockingQueue<>();
 
   private final byte[] buf;
 
