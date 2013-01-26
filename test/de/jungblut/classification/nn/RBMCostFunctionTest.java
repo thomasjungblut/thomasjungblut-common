@@ -13,16 +13,21 @@ public class RBMCostFunctionTest extends TestCase {
 
   @Test
   public void testCostFunction() {
-    DenseDoubleMatrix mat = new DenseDoubleMatrix(new double[][] {
-        { 0, 1, 1, 1, 0 }, { 1, 0, 0, 0, 1 }, { 0, 0, 1, 1, 1 },
-        { 1, 1, 0, 0, 0 }, { 1, 0, 0, 0, 0 }, { 0, 1, 1, 1, 0 },
-        { 0, 0, 0, 0, 0 } });
 
-    RBMCostFunction fnc = new RBMCostFunction(mat, 10);
-    WeightMatrix pInput = new WeightMatrix(mat.getColumnCount(), 10);
+    DenseDoubleMatrix mat = new DenseDoubleMatrix(new double[][] {
+        { 1, 1, 1, 0, 0, 0 }, { 1, 0, 1, 0, 0, 0 }, { 1, 1, 1, 0, 0, 0 },
+        { 0, 0, 1, 1, 1, 0 }, { 0, 0, 1, 1, 0, 0 }, { 0, 0, 1, 1, 1, 0 } });
+
+    RBMCostFunction fnc = new RBMCostFunction(mat, 2);
+    WeightMatrix pInput = new WeightMatrix(mat.getColumnCount(), 2);
     DoubleVector theta = Fmincg.minimizeFunction(fnc,
         DenseMatrixFolder.foldMatrices(pInput.getWeights()), 100, true);
-    System.out.println(theta);
+    int[][] pms = MultilayerPerceptronCostFunction
+        .computeUnfoldParameters(new int[] { 6, 2 });
+    DenseDoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta, pms)[0];
+    for (int i = 0; i < thetaMat.getRowCount(); i++) {
+      System.out.println(thetaMat.getRowVector(i));
+    }
   }
 
   public static void main(String[] args) {

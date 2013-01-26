@@ -6,6 +6,7 @@ import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.function.DoubleVectorFunction;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.tuple.Tuple;
@@ -43,19 +44,40 @@ public final class RBMCostFunction implements CostFunction {
     DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
 
     DoubleMatrix hiddenActivations = SIGMOID.apply(x.multiply(thetaTransposed));
+    binarize(hiddenActivations);
+    DoubleMatrix positiveAssociations = x.transpose().multiply(
+        hiddenActivations);
+
     // start reconstructing the input
     DoubleMatrix fantasy = hiddenActivations.multiply(thetas[0]);
-    // set out fantasy bias back to 1
-    fantasy.setColumnVector(0, ones);
     DoubleMatrix hiddenFantasyActivations = SIGMOID.apply(fantasy
         .multiply(thetaTransposed));
-
-    double j = ErrorFunction.SIGMOID_ERROR.getError(hiddenActivations,
+    // set out fantasy bias back to 1
+    fantasy.setColumnVector(0, ones);
+    binarize(hiddenFantasyActivations);
+    DoubleMatrix negativeAssociations = fantasy.transpose().multiply(
         hiddenFantasyActivations);
 
-    // TODO still work in progress, the gradient needs to be done correctly
+    double j = x.subtract(fantasy).pow(2).sum();
+
+    thetaGradients[0] = (DenseDoubleMatrix) positiveAssociations
+        .subtract(negativeAssociations).transpose().divide(x.getRowCount());
 
     return new Tuple<Double, DoubleVector>(j,
         DenseMatrixFolder.foldMatrices(thetaGradients));
+  }
+
+  private void binarize(DoubleMatrix hiddenActivations) {
+    // set the states to binary 0 or 1
+    final double rand = Math.random();
+    for (int i = 0; i < hiddenActivations.getRowCount(); i++) {
+      hiddenActivations.setRowVector(i, hiddenActivations.getRowVector(i)
+          .apply(new DoubleVectorFunction() {
+            @Override
+            public double calculate(int index, double value) {
+              return value > rand ? 1d : 0d;
+            }
+          }));
+    }
   }
 }
