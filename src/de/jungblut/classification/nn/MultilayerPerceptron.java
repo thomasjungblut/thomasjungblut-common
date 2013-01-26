@@ -102,7 +102,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     /**
      * Sets the input layer dropout probability.
      */
-    public MultilayerPerceptronConfiguration inputLayerDroptout(double d) {
+    public MultilayerPerceptronConfiguration inputLayerDropout(double d) {
       this.visibleDropoutProbability = d;
       return this;
     }
