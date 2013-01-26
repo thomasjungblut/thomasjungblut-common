@@ -14,6 +14,9 @@ public class RBMCostFunctionTest extends TestCase {
   @Test
   public void testCostFunction() {
 
+    // testcase from
+    // https://github.com/echen/restricted-boltzmann-machines
+
     DenseDoubleMatrix mat = new DenseDoubleMatrix(new double[][] {
         { 1, 1, 1, 0, 0, 0 }, { 1, 0, 1, 0, 0, 0 }, { 1, 1, 1, 0, 0, 0 },
         { 0, 0, 1, 1, 1, 0 }, { 0, 0, 1, 1, 0, 0 }, { 0, 0, 1, 1, 1, 0 } });
@@ -22,9 +25,9 @@ public class RBMCostFunctionTest extends TestCase {
     WeightMatrix pInput = new WeightMatrix(mat.getColumnCount(), 2);
     DoubleVector theta = Fmincg.minimizeFunction(fnc,
         DenseMatrixFolder.foldMatrices(pInput.getWeights()), 100, true);
-    int[][] pms = MultilayerPerceptronCostFunction
-        .computeUnfoldParameters(new int[] { 6, 2 });
-    DenseDoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta, pms)[0];
+    int[][] pms = { { 2, 7 } };
+    DenseDoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta, pms)[0]
+        .transpose();
     for (int i = 0; i < thetaMat.getRowCount(); i++) {
       System.out.println(thetaMat.getRowVector(i));
     }

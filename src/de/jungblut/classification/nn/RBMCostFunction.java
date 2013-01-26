@@ -1,12 +1,13 @@
 package de.jungblut.classification.nn;
 
+import java.util.Random;
+
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.function.DoubleVectorFunction;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.tuple.Tuple;
@@ -44,17 +45,17 @@ public final class RBMCostFunction implements CostFunction {
     DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
 
     DoubleMatrix hiddenActivations = SIGMOID.apply(x.multiply(thetaTransposed));
-    binarize(hiddenActivations);
     DoubleMatrix positiveAssociations = x.transpose().multiply(
         hiddenActivations);
+    // binarize to 1 or 0
+    binarize(hiddenActivations);
 
     // start reconstructing the input
-    DoubleMatrix fantasy = hiddenActivations.multiply(thetas[0]);
-    DoubleMatrix hiddenFantasyActivations = SIGMOID.apply(fantasy
-        .multiply(thetaTransposed));
+    DoubleMatrix fantasy = SIGMOID.apply(hiddenActivations.multiply(thetas[0]));
     // set out fantasy bias back to 1
     fantasy.setColumnVector(0, ones);
-    binarize(hiddenFantasyActivations);
+    DoubleMatrix hiddenFantasyActivations = SIGMOID.apply(fantasy
+        .multiply(thetaTransposed));
     DoubleMatrix negativeAssociations = fantasy.transpose().multiply(
         hiddenFantasyActivations);
 
@@ -68,16 +69,12 @@ public final class RBMCostFunction implements CostFunction {
   }
 
   private void binarize(DoubleMatrix hiddenActivations) {
-    // set the states to binary 0 or 1
-    final double rand = Math.random();
+    final Random r = new Random();
     for (int i = 0; i < hiddenActivations.getRowCount(); i++) {
-      hiddenActivations.setRowVector(i, hiddenActivations.getRowVector(i)
-          .apply(new DoubleVectorFunction() {
-            @Override
-            public double calculate(int index, double value) {
-              return value > rand ? 1d : 0d;
-            }
-          }));
+      for (int j = 0; j < hiddenActivations.getColumnCount(); j++) {
+        hiddenActivations.set(i, j,
+            hiddenActivations.get(i, j) > r.nextDouble() ? 1d : 0d);
+      }
     }
   }
 }
