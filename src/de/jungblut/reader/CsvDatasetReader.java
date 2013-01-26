@@ -15,7 +15,7 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public class CsvDatasetReader {
+public abstract class CsvDatasetReader {
 
   /**
    * Reads a csv into feature and outcome arrays.

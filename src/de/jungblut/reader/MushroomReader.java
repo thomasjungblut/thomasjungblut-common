@@ -20,7 +20,7 @@ import de.jungblut.math.tuple.Tuple;
  * incremented numbers beginning from 0.
  * 
  */
-public final class MushroomReader {
+public abstract class MushroomReader {
 
   private static final String MUSHROOM_DATASET_PATH = "files/mushroom/mushroom_dataset.csv";
 

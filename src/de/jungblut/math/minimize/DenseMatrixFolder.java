@@ -4,7 +4,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class DenseMatrixFolder {
+public abstract class DenseMatrixFolder {
 
   /**
    * Folds the given matrices column-wise into a single vector.

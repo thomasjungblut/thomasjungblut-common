@@ -16,15 +16,15 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public class MNISTReader {
+public abstract class MNISTReader {
 
-  public static Tuple<DoubleVector[], DenseDoubleVector[]> readMNISTTrainImages() {
+  public static Tuple<DoubleVector[], DenseDoubleVector[]> readMNISTTrainImages(
+      String path) {
     List<DoubleVector> features = new ArrayList<>();
     List<DenseDoubleVector> prediction = new ArrayList<>();
     String line = null;
     int numLine = 0;
-    try (BufferedReader br = new BufferedReader(new FileReader(
-        "files/mnist/train.csv"))) {
+    try (BufferedReader br = new BufferedReader(new FileReader(path))) {
 
       while ((line = br.readLine()) != null) {
         if (numLine == 0) {

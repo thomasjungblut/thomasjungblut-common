@@ -20,7 +20,7 @@ import de.jungblut.nlp.TokenizerUtils;
  * @author thomas.jungblut
  * 
  */
-public final class TwentyNewsgroupReader {
+public abstract class TwentyNewsgroupReader {
 
   private static final StringPool HASH_STRING_POOL = StringPool.getPool();
 
