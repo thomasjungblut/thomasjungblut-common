@@ -61,6 +61,12 @@ public final class RBMCostFunction implements CostFunction {
 
     double j = x.subtract(fantasy).pow(2).sum();
 
+    /*
+     * Sutskever and Tieleman have shown that it is not following the gradient
+     * of any function (Sutskever and Tieleman, 2010). XXX Thus we have to use
+     * something else than a cost function, because this is not minimizable.
+     * TODO but we could try out the numerical gradient.
+     */
     thetaGradients[0] = (DenseDoubleMatrix) positiveAssociations
         .subtract(negativeAssociations).transpose().divide(x.getRowCount());
 
