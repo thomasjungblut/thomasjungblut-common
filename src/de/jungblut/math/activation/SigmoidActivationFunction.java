@@ -1,5 +1,7 @@
 package de.jungblut.math.activation;
 
+import org.apache.commons.math3.util.FastMath;
+
 /**
  * Implementation of the sigmoid function.
  * 
@@ -19,7 +21,7 @@ public final class SigmoidActivationFunction extends AbstractActivationFunction 
   }
 
   static double sigmoid(double input) {
-    return 1.0 / (1.0 + Math.exp(-input));
+    return 1.0 / (1.0 + FastMath.exp(-input));
   }
 
   static double sigmoidGradient(double input) {
