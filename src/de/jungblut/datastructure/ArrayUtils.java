@@ -1235,4 +1235,30 @@ public abstract class ArrayUtils {
     return arrays;
   }
 
+  /**
+   * Merges two sorted arrays to a single new array.
+   * 
+   * @param a sorted array.
+   * @param b sorted array.
+   * @return a new array that merged both into a new sorted array.
+   */
+  public static int[] merge(int[] a, int[] b) {
+    int[] toReturn = new int[a.length + b.length];
+    int i = 0, j = 0, k = 0;
+    while (i < a.length && j < b.length) {
+      if (a[i] < b[j]) {
+        toReturn[k] = a[i];
+        i++;
+      } else {
+        toReturn[k] = b[j];
+        j++;
+      }
+      k++;
+    }
+
+    System.arraycopy(a, i, toReturn, k, a.length - i);
+    System.arraycopy(b, j, toReturn, k + a.length - i, b.length - j);
+
+    return toReturn;
+  }
 }

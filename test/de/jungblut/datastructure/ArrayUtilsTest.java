@@ -243,6 +243,15 @@ public class ArrayUtilsTest extends TestCase {
 
   }
 
+  @Test
+  public void testMerge() {
+    int[] arr = new int[] { 1, 2, 5 };
+    int[] arr2 = new int[] { 3, 5, 6, 7 };
+    int[] merge = ArrayUtils.merge(arr, arr2);
+    int[] expected = new int[] { 1, 2, 3, 5, 5, 6, 7 };
+    assertArrayEquals(expected, merge);
+  }
+
   static int[] getRandomInput(int n, int k) {
     Random r = new Random();
     int[] arr = new int[n];
