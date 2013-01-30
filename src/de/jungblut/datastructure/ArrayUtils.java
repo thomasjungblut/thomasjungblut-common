@@ -1261,4 +1261,38 @@ public abstract class ArrayUtils {
 
     return toReturn;
   }
+
+  /**
+   * Merges two sorted subparts of the given number array. TODO testcases.
+   * 
+   * @param numbers the array which has two sorted sub arrays.
+   * @param startA the start index of the first sorted array.
+   * @param startB the start index of the second sorted array. (so the end of
+   *          the first sorted array is startB-1).
+   * @param endB the end of the second array.
+   */
+  public static void merge(int[] numbers, int startA, int startB, int endB) {
+    int[] toReturn = new int[endB - startA + 1];
+    int i = 0, k = startA, j = startB + 1;
+    while (i < toReturn.length) {
+      if (numbers[k] < numbers[j]) {
+        toReturn[i] = numbers[k];
+        k++;
+      } else {
+        toReturn[i] = numbers[j];
+        j++;
+      }
+      i++;
+      // if we hit the limit of an array, copy the rest
+      if (j > endB) {
+        System.arraycopy(numbers, k, toReturn, i, startB - k + 1);
+        break;
+      }
+      if (k > startB) {
+        System.arraycopy(numbers, j, toReturn, i, endB - j + 1);
+        break;
+      }
+    }
+    System.arraycopy(toReturn, 0, numbers, startA, toReturn.length);
+  }
 }
