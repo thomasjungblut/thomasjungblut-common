@@ -1263,17 +1263,20 @@ public abstract class ArrayUtils {
   }
 
   /**
-   * Merges two sorted subparts of the given number array. TODO testcases.
+   * Merges two sorted subparts of the given number array. E.G: if you want to
+   * merge { 1, 2, 5, 3, 5, 6, 7 } you have to pass merge(concat, 0, 2, 6),
+   * because you are starting at zero, the second sorted array begins at index
+   * 3, so it is 3-1=2. The end is the length of the array - 1.
    * 
    * @param numbers the array which has two sorted sub arrays.
-   * @param startA the start index of the first sorted array.
-   * @param startB the start index of the second sorted array. (so the end of
-   *          the first sorted array is startB-1).
-   * @param endB the end of the second array.
+   * @param startIndexA the start index of the first sorted array.
+   * @param endIndexA the end index of the first sorted array.
+   * @param endIndexB the end of the second array.
    */
-  public static void merge(int[] numbers, int startA, int startB, int endB) {
-    int[] toReturn = new int[endB - startA + 1];
-    int i = 0, k = startA, j = startB + 1;
+  public static void merge(int[] numbers, int startIndexA, int endIndexA,
+      int endIndexB) {
+    int[] toReturn = new int[endIndexB - startIndexA + 1];
+    int i = 0, k = startIndexA, j = endIndexA + 1;
     while (i < toReturn.length) {
       if (numbers[k] < numbers[j]) {
         toReturn[i] = numbers[k];
@@ -1284,15 +1287,15 @@ public abstract class ArrayUtils {
       }
       i++;
       // if we hit the limit of an array, copy the rest
-      if (j > endB) {
-        System.arraycopy(numbers, k, toReturn, i, startB - k + 1);
+      if (j > endIndexB) {
+        System.arraycopy(numbers, k, toReturn, i, endIndexA - k + 1);
         break;
       }
-      if (k > startB) {
-        System.arraycopy(numbers, j, toReturn, i, endB - j + 1);
+      if (k > endIndexA) {
+        System.arraycopy(numbers, j, toReturn, i, endIndexB - j + 1);
         break;
       }
     }
-    System.arraycopy(toReturn, 0, numbers, startA, toReturn.length);
+    System.arraycopy(toReturn, 0, numbers, startIndexA, toReturn.length);
   }
 }

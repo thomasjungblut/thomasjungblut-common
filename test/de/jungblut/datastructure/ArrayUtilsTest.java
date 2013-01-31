@@ -252,6 +252,27 @@ public class ArrayUtilsTest extends TestCase {
     assertArrayEquals(expected, merge);
   }
 
+  @Test
+  public void testInplaceMerge() {
+    int[] arr = new int[] { 1, 2, 5 };
+    int[] arr2 = new int[] { 3, 5, 6, 7 };
+    int[] concat = ArrayUtils.concat(arr, arr2);
+    ArrayUtils.merge(concat, 0, 2, 6);
+    int[] expected = new int[] { 1, 2, 3, 5, 5, 6, 7 };
+    assertArrayEquals(expected, concat);
+
+    concat = ArrayUtils.concat(arr2, arr);
+    ArrayUtils.merge(concat, 0, 3, 6);
+    expected = new int[] { 1, 2, 3, 5, 5, 6, 7 };
+    assertArrayEquals(expected, concat);
+
+    concat = ArrayUtils.concat(arr2, arr2);
+    ArrayUtils.merge(concat, 0, 3, 7);
+    expected = new int[] { 3, 3, 5, 5, 6, 6, 7, 7 };
+    assertArrayEquals(expected, concat);
+
+  }
+
   static int[] getRandomInput(int n, int k) {
     Random r = new Random();
     int[] arr = new int[n];
