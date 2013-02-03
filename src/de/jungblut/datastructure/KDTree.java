@@ -194,25 +194,26 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
   @Override
   public Iterator<DoubleVector> iterator() {
     return new AbstractIterator<DoubleVector>() {
+
+      private final Deque<KDTreeNode> toVisit = new ArrayDeque<KDTreeNode>();
       KDTreeNode current;
+      {
+        toVisit.add(root);
+      }
 
       @Override
       protected DoubleVector computeNext() {
-        if (current == null) {
-          current = root;
-        } else {
+        current = toVisit.poll();
+        if (current != null) {
           if (current.left != null) {
-            current = current.left;
+            toVisit.add(current.left);
           }
           if (current.right != null) {
-            current = current.right;
+            toVisit.add(current.right);
           }
-          if (current.right == null && current.left == null) {
-            return endOfData();
-          }
+          return current.keyVector;
         }
-
-        return current.keyVector;
+        return endOfData();
       }
 
     };

@@ -29,12 +29,21 @@ public class KDTreeTest extends TestCase {
     for (DenseDoubleVector v : array)
       tree.add(v, null);
 
+    DenseDoubleVector[] result = new DenseDoubleVector[] {
+        new DenseDoubleVector(new double[] { 2, 3 }),
+        new DenseDoubleVector(new double[] { 5, 4 }),
+        new DenseDoubleVector(new double[] { 8, 1 }),
+        new DenseDoubleVector(new double[] { 9, 6 }),
+        new DenseDoubleVector(new double[] { 4, 7 }),
+        new DenseDoubleVector(new double[] { 7, 2 }), };
+
     int index = 0;
     Iterator<DoubleVector> iterator = tree.iterator();
     while (iterator.hasNext()) {
       DoubleVector next = iterator.next();
-      assertTrue(array[index++] == next);
+      assertEquals(result[index++], next);
     }
+    assertEquals(result.length, index);
   }
 
   @Test
@@ -142,6 +151,14 @@ public class KDTreeTest extends TestCase {
         new SparseDoubleVector(new double[] { 8, 1 }),
         new SparseDoubleVector(new double[] { 7, 2 }), };
 
+    DoubleVector[] result = new DoubleVector[] {
+        new SparseDoubleVector(new double[] { 2, 3 }),
+        new SparseDoubleVector(new double[] { 5, 4 }),
+        new SparseDoubleVector(new double[] { 8, 1 }),
+        new SparseDoubleVector(new double[] { 9, 6 }),
+        new SparseDoubleVector(new double[] { 4, 7 }),
+        new SparseDoubleVector(new double[] { 7, 2 }), };
+
     for (DoubleVector v : array)
       tree.add(v, null);
 
@@ -149,8 +166,9 @@ public class KDTreeTest extends TestCase {
     Iterator<DoubleVector> iterator = tree.iterator();
     while (iterator.hasNext()) {
       DoubleVector next = iterator.next();
-      assertTrue(array[index++] == next);
+      assertEquals(result[index++], next);
     }
+    assertEquals(array.length, index);
   }
 
   @Test
