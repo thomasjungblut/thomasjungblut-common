@@ -9,12 +9,12 @@ package de.jungblut.math.activation;
  */
 public enum ActivationFunctionSelector {
 
-  LINEAR, LOG, SIGMOID, SOFTMAX, TANH;
+  LINEAR, LOG, SIGMOID, SOFTMAX, TANH, ELLIOT;
 
   private static final ActivationFunction[] FUNCTIONS = new ActivationFunction[] {
       new LinearActivationFunction(), new LogActivationFunction(),
       new SigmoidActivationFunction(), new SoftMaxActivationFunction(),
-      new TanhActivationFunction() };
+      new TanhActivationFunction(), new ElliotActivationFunction() };
 
   public ActivationFunction get() {
     return FUNCTIONS[this.ordinal()];

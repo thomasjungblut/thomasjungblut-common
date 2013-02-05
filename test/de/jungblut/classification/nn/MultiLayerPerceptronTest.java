@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
+import de.jungblut.math.activation.ActivationFunctionSelector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
@@ -37,6 +38,30 @@ public class MultiLayerPerceptronTest extends TestCase {
                 SOFTMAX.get() }, new Fmincg(), 100).build();
 
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXORSoftMax();
+
+    double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
+        new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
+        false);
+    System.out.println(error);
+    if (error < 0.01) {
+      assertTrue(error < 0.01);
+      testPredictionsSoftMax(sampleXOR, mlp);
+    } else {
+      throw new RuntimeException("Test seems flaky..");
+    }
+  }
+
+  @Test
+  public void testXORElliotFminCG() {
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
+        .newConfiguration(
+            new int[] { 2, 4, 1 },
+            new ActivationFunction[] { LINEAR.get(),
+                ActivationFunctionSelector.ELLIOT.get(),
+                ActivationFunctionSelector.ELLIOT.get() }, new Fmincg(), 100)
+        .build();
+
+    Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
 
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
         new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
