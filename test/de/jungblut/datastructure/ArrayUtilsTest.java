@@ -199,6 +199,16 @@ public class ArrayUtilsTest extends TestCase {
   }
 
   @Test
+  public void testIntersectionUnsorted() {
+    int[] arr = new int[] { 3, 5, 6, 1, 2, 3, 2, 2 };
+    int[] arr2 = new int[] { 3, 2, 3, 3 };
+
+    int[] intersect = ArrayUtils.intersectionUnsorted(arr, arr2);
+    Arrays.sort(intersect);
+    assertArrayEquals(new int[] { 2, 3 }, intersect);
+  }
+
+  @Test
   public void testMissingNumber() {
     int[] arr = new int[] { 0, 1, 2, 3, 5 };
 

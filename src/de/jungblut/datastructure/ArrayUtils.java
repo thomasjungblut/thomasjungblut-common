@@ -1018,6 +1018,26 @@ public abstract class ArrayUtils {
   }
 
   /**
+   * Computes the intersection of two <b>unsorted</b> arrays. Will deduplicate
+   * the items, so the return is a set of integers.
+   */
+  public static int[] intersectionUnsorted(int[] arr, int[] arr2) {
+    TIntHashSet set = new TIntHashSet();
+    TIntHashSet toReturn = new TIntHashSet();
+    for (int a : arr) {
+      set.add(a);
+    }
+
+    for (int a : arr2) {
+      if (set.contains(a)) {
+        toReturn.add(a);
+      }
+    }
+
+    return toReturn.toArray();
+  }
+
+  /**
    * If array contains unique integers in a range between 0 and n-1, this
    * function finds the only one missing in linear time and constant memory.
    * This is more of a typical homework or interview question than of actually
