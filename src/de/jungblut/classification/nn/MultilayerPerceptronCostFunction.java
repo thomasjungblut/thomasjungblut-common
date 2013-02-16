@@ -96,7 +96,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
 
     // only calculate the regularization term if lambda is not 0
     double regularization = 0.0d;
-    if (lambda != 0.0d) {
+    if (lambda != 0d) {
       for (DenseDoubleMatrix theta : thetas) {
         regularization += (theta.slice(0, theta.getRowCount(), 1,
             theta.getColumnCount())).pow(2).sum();
@@ -122,12 +122,16 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
     // calculate the gradients of the weights
     for (int i = 0; i < thetaGradients.length; i++) {
       DoubleMatrix gradDXA = multiply(deltaX[i + 1], ax[i], true, false);
-      thetaGradients[i] = (DenseDoubleMatrix) (gradDXA.multiply(1.0d / m))
-          .add((thetas[i].multiply(lambda / m)));
-      // subtract the regularized bias
-      thetaGradients[i].setColumnVector(0,
-          thetas[i].slice(0, thetas[i].getRowCount(), 0, 1)
-              .multiply(lambda / m).getColumnVector(0));
+      thetaGradients[i] = (DenseDoubleMatrix) (gradDXA.multiply(1.0d / m));
+      if (lambda != 0d) {
+        thetaGradients[i] = (DenseDoubleMatrix) thetaGradients[i]
+            .add((thetas[i].multiply(lambda / m)));
+        // subtract the regularized bias
+        DoubleVector regBias = thetas[i]
+            .slice(0, thetas[i].getRowCount(), 0, 1).multiply(lambda / m)
+            .getColumnVector(0);
+        thetaGradients[i].setColumnVector(0, regBias);
+      }
     }
 
     // calculate our cost function (error in the last layer)

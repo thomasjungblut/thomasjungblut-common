@@ -13,7 +13,7 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public class RegressionCostFunction implements CostFunction {
+public final class RegressionCostFunction implements CostFunction {
 
   private final DoubleMatrix x;
   private final DoubleVector y;

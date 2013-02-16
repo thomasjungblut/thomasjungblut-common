@@ -171,7 +171,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
     // if the activations are not supplied, we are using standard linear-sigmoid
     // functions
-    if (this.activations == null) {
+    if (conf.activationFunctions == null) {
       this.activations = new ActivationFunction[layers.length];
       this.activations[0] = new LinearActivationFunction();
       for (int i = 1; i < layers.length; i++) {

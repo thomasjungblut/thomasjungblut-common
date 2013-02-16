@@ -58,14 +58,16 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class Fmincg implements Minimizer {
 
+  // extrapolate maximum 3 times the current bracket.
+  // this can be set higher for bigger extrapolations
+  public static double EXT = 3.0;
+
   // a bunch of constants for line searches
   private static final double RHO = 0.01;
   // RHO and SIG are the constants in the Wolfe-Powell conditions
   private static final double SIG = 0.5;
   // don't reevaluate within 0.1 of the limit of the current bracket
   private static final double INT = 0.1;
-  // extrapolate maximum 3 times the current bracket
-  private static final double EXT = 3.0;
   // max 20 function evaluations per line search
   private static final int MAX = 20;
   // maximum allowed slope ratio
