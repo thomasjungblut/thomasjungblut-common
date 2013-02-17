@@ -46,9 +46,9 @@ public class LogisticRegressionTest extends TestCase {
     DoubleVector theta = Fmincg.minimizeFunction(fnc, new DenseDoubleVector(
         new double[] { 0, 0, 0 }), 1000, false);
 
-    assertEquals(-25.052165981708658, theta.get(0));
-    assertEquals(0.20535460559228136, theta.get(1));
-    assertEquals(0.20058370043792928, theta.get(2));
+    assertTrue(DoubleMath.fuzzyEquals(theta.get(0), -25.05, 0.1));
+    assertTrue(DoubleMath.fuzzyEquals(theta.get(1), 0.2, 0.1));
+    assertTrue(DoubleMath.fuzzyEquals(theta.get(2), 0.2, 0.1));
   }
 
   @Test

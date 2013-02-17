@@ -167,7 +167,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
    */
   public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
       DoubleVector vec, int k, DistanceMeasurer measurer) {
-    PriorityQueue<VectorDistanceTuple<VALUE>> queue = new PriorityQueue<>(k);
+    PriorityQueue<VectorDistanceTuple<VALUE>> queue = new PriorityQueue<>();
     KDTreeNode current = root;
 
     queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,

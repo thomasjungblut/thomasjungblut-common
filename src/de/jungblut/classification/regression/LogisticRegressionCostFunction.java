@@ -1,12 +1,12 @@
 package de.jungblut.classification.regression;
 
+import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
+
 import java.util.Collections;
 
 import de.jungblut.classification.nn.ErrorFunction;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.activation.ActivationFunction;
-import de.jungblut.math.activation.ActivationFunctionSelector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -22,9 +22,6 @@ import de.jungblut.math.tuple.Tuple;
  * 
  */
 public final class LogisticRegressionCostFunction implements CostFunction {
-
-  static final ActivationFunction SIGMOID = ActivationFunctionSelector.SIGMOID
-      .get();
 
   private static final ErrorFunction ERROR_FUNCTION = ErrorFunction.SIGMOID_ERROR;
 
@@ -57,7 +54,7 @@ public final class LogisticRegressionCostFunction implements CostFunction {
     double reg = input.slice(1, input.getLength()).pow(2).sum() * lambda
         / (2.0d * m);
     DenseDoubleMatrix hypo = new DenseDoubleMatrix(
-        Collections.singletonList(SIGMOID.apply(x.multiplyVector(input))));
+        Collections.singletonList(SIGMOID.get().apply(x.multiplyVector(input))));
     double sum = ERROR_FUNCTION.getError(y, hypo);
     double j = (1.0d / m) * sum + reg;
 

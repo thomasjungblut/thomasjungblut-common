@@ -1,5 +1,6 @@
 package de.jungblut.classification.regression;
 
+import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
 import java.util.Random;
 
 import de.jungblut.classification.AbstractClassifier;
@@ -73,9 +74,8 @@ public final class LogisticRegression extends AbstractClassifier {
     for (int i = 0; i < features.getLength(); i++) {
       biasedFeatures.set(i + 1, features.get(i));
     }
-    return new DenseDoubleVector(
-        new double[] { LogisticRegressionCostFunction.SIGMOID
-            .apply(biasedFeatures.dot(theta)) });
+    return new DenseDoubleVector(new double[] { SIGMOID.get().apply(
+        biasedFeatures.dot(theta)) });
   }
 
   public void train(DenseDoubleMatrix x, DenseDoubleVector y) {
@@ -97,10 +97,7 @@ public final class LogisticRegression extends AbstractClassifier {
     DoubleVector vec = new DenseDoubleMatrix(DenseDoubleVector.ones(input
         .getRowCount()), input).multiplyVector(theta);
     for (int i = 0; i < vec.getLength(); i++) {
-      vec.set(
-          i,
-          LogisticRegressionCostFunction.SIGMOID.apply(vec.get(i)) > threshold ? 1.0d
-              : 0.0d);
+      vec.set(i, SIGMOID.get().apply(vec.get(i)) > threshold ? 1.0d : 0.0d);
     }
     return vec;
   }
