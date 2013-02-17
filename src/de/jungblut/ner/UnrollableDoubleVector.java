@@ -119,7 +119,7 @@ public final class UnrollableDoubleVector implements DoubleVector {
   }
 
   @Override
-  public DoubleVector pow(int x) {
+  public DoubleVector pow(double x) {
     return this.mainVector.pow(x);
   }
 
