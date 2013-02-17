@@ -28,6 +28,7 @@ import de.jungblut.math.DoubleVector.DoubleVectorElement;
 public final class KDTree<VALUE> implements Iterable<DoubleVector> {
 
   private KDTreeNode root;
+  private int size;
 
   final class KDTreeNode {
     final int splitDimension;
@@ -114,6 +115,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     } else {
       root = new KDTreeNode(median(vec, 0), vec, value);
     }
+    size++;
   }
 
   /**
@@ -217,6 +219,13 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       }
 
     };
+  }
+
+  /**
+   * @return the size of the kd-tree.
+   */
+  public int size() {
+    return size;
   }
 
   @Override
