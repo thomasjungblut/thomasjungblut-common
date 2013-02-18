@@ -31,7 +31,9 @@ public final class VectorFunnel implements Funnel<DoubleVector> {
       }
     } else {
       final int dimension = from.getDimension();
-      for (int i = 0; i < dimension; i++) {
+      // traverse backwards, because sparse vectors are iterated descending, so
+      // we get the same funneling for same vectors of different types.
+      for (int i = dimension - 1; i >= 0; i--) {
         into.putInt(i);
         into.putDouble(from.get(i));
       }

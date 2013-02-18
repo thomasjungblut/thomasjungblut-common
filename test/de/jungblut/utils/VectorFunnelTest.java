@@ -17,7 +17,17 @@ public class VectorFunnelTest extends TestCase {
     DenseDoubleVector vec = new DenseDoubleVector(new double[] { 1, 1 });
     long hash = Hashing.murmur3_128().newHasher().putObject(vec, funnel).hash()
         .asLong();
-    assertEquals(1057272797145820176L, hash);
+    assertEquals(4270060439366700849L, hash);
+  }
+
+  @Test
+  public void testSparseFunnelingWithDenseData() {
+    VectorFunnel funnel = new VectorFunnel();
+    SparseDoubleVector vec = new SparseDoubleVector(new double[] { 1, 1 });
+    long hash = Hashing.murmur3_128().newHasher().putObject(vec, funnel).hash()
+        .asLong();
+    // should yield the same hashcode like the testDenseFunneling test
+    assertEquals(4270060439366700849L, hash);
   }
 
   @Test
