@@ -16,7 +16,7 @@ public class KNearestNeighboursTest extends TestCase {
   @Test
   public void testKNN() throws Exception {
     Tuple<DoubleVector[], DenseDoubleVector[]> mushroom = MushroomReader
-        .readMushroomDataset();
+        .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
     DoubleVector[] fullFeatures = mushroom.getFirst();
     DenseDoubleVector[] fullOutcome = mushroom.getSecond();
 

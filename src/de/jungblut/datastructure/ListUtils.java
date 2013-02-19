@@ -9,7 +9,11 @@ import java.util.List;
  * @author thomas.jungblut
  * 
  */
-public abstract class ListUtils {
+public final class ListUtils {
+
+  private ListUtils() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * Merges two sorted segments into a single sorted list.

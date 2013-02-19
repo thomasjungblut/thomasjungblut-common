@@ -18,7 +18,11 @@ import com.google.common.base.Preconditions;
  * @author thomas.jungblut
  * 
  */
-public abstract class ArrayUtils {
+public final class ArrayUtils {
+
+  private ArrayUtils() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * Finds the occurence of the given key in the given array. Linear search,

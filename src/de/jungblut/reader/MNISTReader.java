@@ -16,7 +16,11 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public abstract class MNISTReader {
+public final class MNISTReader {
+
+  private MNISTReader() {
+    throw new IllegalAccessError();
+  }
 
   public static Tuple<DoubleVector[], DenseDoubleVector[]> readMNISTTrainImages(
       String path) {
@@ -50,8 +54,7 @@ public abstract class MNISTReader {
       e.printStackTrace();
     }
 
-    return new Tuple<DoubleVector[], DenseDoubleVector[]>(
-        features.toArray(new DoubleVector[features.size()]),
+    return new Tuple<>(features.toArray(new DoubleVector[features.size()]),
         prediction.toArray(new DenseDoubleVector[features.size()]));
   }
 }

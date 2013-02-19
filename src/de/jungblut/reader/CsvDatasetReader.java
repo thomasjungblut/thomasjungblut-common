@@ -15,7 +15,11 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public abstract class CsvDatasetReader {
+public final class CsvDatasetReader {
+
+  private CsvDatasetReader() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * Reads a csv into feature and outcome arrays.
@@ -29,15 +33,13 @@ public abstract class CsvDatasetReader {
    */
   public static Tuple<DoubleVector[], DenseDoubleVector[]> readCsv(String path,
       char separator, Character quote, int numFeatures, int outcomeIndex) {
-    CSVReader reader = null;
     ArrayList<DoubleVector> featureList = new ArrayList<>();
     ArrayList<DenseDoubleVector> outcomeList = new ArrayList<>();
-    try {
-      if (quote != null) {
-        reader = new CSVReader(new FileReader(path), separator, quote);
-      } else {
-        reader = new CSVReader(new FileReader(path), separator);
-      }
+    // really Java7? You can't add an expression into try/catch?
+    try (@SuppressWarnings("resource")
+    CSVReader reader = (quote != null ? new CSVReader(new FileReader(path),
+        separator, quote) : new CSVReader(new FileReader(path), separator))) {
+
       String[] line;
       while ((line = reader.readNext()) != null) {
         double[] fArray = new double[line.length - 1];
@@ -55,20 +57,13 @@ public abstract class CsvDatasetReader {
 
     } catch (IOException e) {
       e.printStackTrace();
-    } finally {
-      if (reader != null) {
-        try {
-          reader.close();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
-      }
     }
+
     DoubleVector[] features = featureList.toArray(new DoubleVector[featureList
         .size()]);
     DenseDoubleVector[] outcome = outcomeList
         .toArray(new DenseDoubleVector[outcomeList.size()]);
-    return new Tuple<DoubleVector[], DenseDoubleVector[]>(features, outcome);
+    return new Tuple<>(features, outcome);
 
   }
 }

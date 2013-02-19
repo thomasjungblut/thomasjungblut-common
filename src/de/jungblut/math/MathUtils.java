@@ -12,7 +12,11 @@ import de.jungblut.math.tuple.Tuple3;
  * @author thomas.jungblut
  * 
  */
-public abstract class MathUtils {
+public final class MathUtils {
+
+  private MathUtils() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * @return mean normalized matrix (0 mean and stddev of 1) as well as the

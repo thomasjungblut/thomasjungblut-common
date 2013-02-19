@@ -20,20 +20,22 @@ import de.jungblut.math.tuple.Tuple;
  * incremented numbers beginning from 0.
  * 
  */
-public abstract class MushroomReader {
+public final class MushroomReader {
 
-  private static final String MUSHROOM_DATASET_PATH = "files/mushroom/mushroom_dataset.csv";
+  private MushroomReader() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * @return a tuple, on first dimension are the features, on the second are the
    *         outcomes (0 or 1 in the first element of a vector)
    */
-  public static Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset() {
+  public static Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset(
+      String path) {
     List<DoubleVector> list = new ArrayList<>();
     List<String[]> buffer = new ArrayList<>();
     HashMultimap<Integer, String> multiMap = HashMultimap.create();
-    try (BufferedReader br = new BufferedReader(new FileReader(
-        MUSHROOM_DATASET_PATH))) {
+    try (BufferedReader br = new BufferedReader(new FileReader(path))) {
       int numLines = 0;
       String line = null;
       while ((line = br.readLine()) != null) {
