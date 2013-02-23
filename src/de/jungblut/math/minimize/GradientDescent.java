@@ -43,7 +43,7 @@ public final class GradientDescent implements Minimizer {
       lastCosts[lastIndex] = evaluateCost.getFirst();
       // break if we converged below the limit or have degraded into gradient
       // ascent due to too large learning rate
-      if (converged(lastCosts, limit) || ascending(lastCosts)) {
+      if (converged(lastCosts, limit)) {
         break;
       }
       DoubleVector gradient = evaluateCost.getSecond();
