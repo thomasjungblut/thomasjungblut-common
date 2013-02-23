@@ -20,9 +20,11 @@ import de.jungblut.nlp.TokenizerUtils;
  * @author thomas.jungblut
  * 
  */
-public abstract class TwentyNewsgroupReader {
+public final class TwentyNewsgroupReader {
 
-  private static final StringPool HASH_STRING_POOL = StringPool.getPool();
+  private TwentyNewsgroupReader() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * Needs the "20news-bydate" directory that has test and train subdirectories
@@ -32,6 +34,7 @@ public abstract class TwentyNewsgroupReader {
    */
   public static Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups(
       File directory) {
+    final StringPool pool = StringPool.getPool();
     String[] classList = directory.list();
     Arrays.sort(classList);
     List<String[]> docList = new ArrayList<>();
@@ -54,7 +57,7 @@ public abstract class TwentyNewsgroupReader {
           whiteSpaceTokens = TokenizerUtils.removeEmpty(whiteSpaceTokens);
           whiteSpaceTokens = TokenizerUtils.buildNGramms(whiteSpaceTokens, 2);
           for (int i = 0; i < whiteSpaceTokens.length; i++) {
-            whiteSpaceTokens[i] = HASH_STRING_POOL.pool(whiteSpaceTokens[i]);
+            whiteSpaceTokens[i] = pool.pool(whiteSpaceTokens[i]);
           }
           docList.add(whiteSpaceTokens);
           prediction.add(classIndex);

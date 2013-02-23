@@ -29,7 +29,8 @@ public class VotingTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    data = MushroomReader.readMushroomDataset();
+    data = MushroomReader
+        .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
     logisticTrainingError = trainInternal(factory.newInstance());
   }
 

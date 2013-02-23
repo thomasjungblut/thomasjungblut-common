@@ -19,7 +19,8 @@ public class OnePassExclusiveClusteringTest extends TestCase {
     double t1 = 100;
     ArrayList<DoubleVector> input = KMeansClusteringTest.getClusteringInput();
     EuclidianDistance measure = new EuclidianDistance();
-    OnePassExclusiveClustering clusterer = new OnePassExclusiveClustering(measure, t1);
+    OnePassExclusiveClustering clusterer = new OnePassExclusiveClustering(
+        measure, t1);
     List<DoubleVector> centers = clusterer.cluster(input, true);
 
     assertEquals(100, centers.size());

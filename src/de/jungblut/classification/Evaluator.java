@@ -21,6 +21,10 @@ import de.jungblut.partition.Boundaries.Range;
  */
 public final class Evaluator {
 
+  private Evaluator() {
+    throw new IllegalAccessError();
+  }
+
   public static class EvaluationResult {
     int numLabels, correct, trainSize, testSize, truePositive, falsePositive,
         trueNegative, falseNegative;

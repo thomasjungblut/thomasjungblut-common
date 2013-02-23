@@ -19,7 +19,7 @@ public class EvaluatorTest extends TestCase {
 
     // knn is stable with the mushroom data, so let's test it.
     Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset = MushroomReader
-        .readMushroomDataset();
+        .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
     EvaluationResult evaluation = Evaluator.evaluateClassifier(
         new KNearestNeighbours(new ManhattanDistance(), 2, 4),
         readMushroomDataset.getFirst(), readMushroomDataset.getSecond(), 2,
@@ -41,7 +41,7 @@ public class EvaluatorTest extends TestCase {
   @Test
   public void testCrossValidation() throws Exception {
     Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset = MushroomReader
-        .readMushroomDataset();
+        .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
 
     EvaluationResult evaluation = Evaluator.tenFoldCrossValidation(
         new ClassifierFactory() {

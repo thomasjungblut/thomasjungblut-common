@@ -1,6 +1,7 @@
 package de.jungblut.classification.regression;
 
 import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
+
 import java.util.Random;
 
 import de.jungblut.classification.AbstractClassifier;
