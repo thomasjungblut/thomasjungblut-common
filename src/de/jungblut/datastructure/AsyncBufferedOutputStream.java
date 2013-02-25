@@ -19,7 +19,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public final class AsyncBufferedOutputStream extends FilterOutputStream {
 
   private final FlushThread flusher = new FlushThread();
-  private final Thread flusherThread = new Thread(flusher);
+  private final Thread flusherThread = new Thread(flusher, "FlushThread");
   private final BlockingQueue<byte[]> buffers = new LinkedBlockingQueue<>();
 
   private final byte[] buf;
@@ -116,16 +116,17 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
     flush();
     flusher.closed = true;
     try {
+      flusherThread.interrupt();
       flusherThread.join();
     } catch (InterruptedException e) {
-      e.printStackTrace();
+      // this is expected to happen
     }
     out.close();
   }
 
   class FlushThread implements Runnable {
 
-    boolean closed = false;
+    volatile boolean closed = false;
 
     @Override
     public void run() {
@@ -135,12 +136,19 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
           byte[] take = buffers.take();
           out.write(take);
         }
-        // write the last buffers to the streams
-        for (byte[] buf : buffers) {
-          out.write(buf);
-        }
-      } catch (InterruptedException | IOException e) {
+      } catch (IOException e) {
         e.printStackTrace();
+      } catch (InterruptedException e) {
+        // this is expected to happen
+      } finally {
+        try {
+          // write the last buffers to the streams
+          for (byte[] buf : buffers) {
+            out.write(buf);
+          }
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
       }
     }
   }
