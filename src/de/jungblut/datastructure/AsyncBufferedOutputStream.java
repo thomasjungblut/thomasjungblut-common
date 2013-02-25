@@ -9,9 +9,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * BufferedOutputStream that asynchronously flushes to disk, so callers don't
  * have to wait until the flush happens. Buffers are put into a queue that is
- * written asynchronously to disk once it is really available. TODO To make it
- * use less memory if the producer is too fast, this should limit the number of
- * buffers. Also it should not create new byte arrays everytime then.
+ * written asynchronously to disk once it is really available.
  * 
  * @author thomas.jungblut
  * 
@@ -22,16 +20,37 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
   private final Thread flusherThread = new Thread(flusher, "FlushThread");
   private final BlockingQueue<byte[]> buffers = new LinkedBlockingQueue<>();
 
-  private final byte[] buf;
+  private final int maxBuffers;
 
+  private final byte[] buf;
   private int count = 0;
 
+  /**
+   * Creates an asynchronous buffered output stream with 8K buffer and 5 maximal
+   * buffers.
+   */
   public AsyncBufferedOutputStream(OutputStream out) {
-    this(out, 8 * 1024);
+    this(out, 8 * 1024, 5);
   }
 
+  /**
+   * Creates an asynchronous buffered output stream with defined buffersize and
+   * 5 maximal buffers.
+   */
   public AsyncBufferedOutputStream(OutputStream out, int bufSize) {
+    this(out, bufSize, 5);
+  }
+
+  /**
+   * Creates an asynchronous buffered output stream.
+   * 
+   * @param out the outputstream to layer on.
+   * @param bufSize the buffer size.
+   * @param maxBuffers the number of buffers to keep in parallel.
+   */
+  public AsyncBufferedOutputStream(OutputStream out, int bufSize, int maxBuffers) {
     super(out);
+    this.maxBuffers = maxBuffers;
     buf = new byte[bufSize];
     flusherThread.start();
   }
@@ -42,6 +61,15 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    */
   private void flushBuffer() throws IOException {
     if (count > 0) {
+      if (buffers.size() >= maxBuffers) {
+        try {
+          while (buffers.size() >= maxBuffers) {
+            Thread.sleep(50);
+          }
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
       final byte[] copy = new byte[count];
       System.arraycopy(buf, 0, copy, 0, copy.length);
       buffers.add(copy);
