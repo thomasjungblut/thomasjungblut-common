@@ -13,6 +13,36 @@ import org.junit.Test;
 public class AsyncBufferedOutputStreamTest extends TestCase {
 
   @Test
+  public void testHugeWrites() throws Exception {
+    File tempFile = File.createTempFile("async_test_huge", "tmp", new File(
+        "/tmp/"));
+    tempFile.deleteOnExit();
+    byte[] ones = new byte[513 * 1024];
+    Arrays.fill(ones, (byte) 1);
+
+    try (AsyncBufferedOutputStream out = new AsyncBufferedOutputStream(
+        new FileOutputStream(tempFile), 512 * 1024)) {
+      // write a few small data to prefill the buffer
+      out.write(25);
+      out.write(22);
+
+      out.write(ones, 0, ones.length);
+
+    }
+
+    try (BufferedInputStream in = new BufferedInputStream(new FileInputStream(
+        tempFile))) {
+      int numItems = 513 * 1024;
+      assertEquals(25, in.read());
+      assertEquals(22, in.read());
+      for (int i = 0; i < numItems; i++) {
+        assertEquals(1, in.read());
+      }
+    }
+
+  }
+
+  @Test
   public void testWrites() throws Exception {
     File tempFile = File.createTempFile("async_test", "tmp", new File("/tmp/"));
     tempFile.deleteOnExit();
@@ -86,4 +116,5 @@ public class AsyncBufferedOutputStreamTest extends TestCase {
     }
 
   }
+
 }
