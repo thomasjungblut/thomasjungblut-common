@@ -197,7 +197,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
   public Iterator<DoubleVector> iterator() {
     return new AbstractIterator<DoubleVector>() {
 
-      private final Deque<KDTreeNode> toVisit = new ArrayDeque<KDTreeNode>();
+      private final Deque<KDTreeNode> toVisit = new ArrayDeque<>();
       KDTreeNode current;
       {
         toVisit.add(root);

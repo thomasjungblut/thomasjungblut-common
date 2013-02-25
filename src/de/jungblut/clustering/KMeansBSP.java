@@ -265,13 +265,13 @@ public final class KMeansBSP
     if (peer.getPeerName().equals(peer.getPeerName(0))) {
       String pathString = conf.get(CENTER_OUT_PATH);
       if (pathString != null) {
-        final SequenceFile.Writer dataWriter = SequenceFile.createWriter(
+        try (SequenceFile.Writer dataWriter = SequenceFile.createWriter(
             FileSystem.get(conf), conf, new Path(pathString),
-            VectorWritable.class, NullWritable.class, CompressionType.NONE);
-        for (DoubleVector center : centers) {
-          dataWriter.append(new VectorWritable(center), value);
+            VectorWritable.class, NullWritable.class, CompressionType.NONE)) {
+          for (DoubleVector center : centers) {
+            dataWriter.append(new VectorWritable(center), value);
+          }
         }
-        dataWriter.close();
       }
     }
   }
@@ -350,32 +350,32 @@ public final class KMeansBSP
       FileSystem fs) throws IOException {
     FileStatus[] stati = fs.listStatus(out);
     TIntObjectHashMap<DoubleVector> centerMap = new TIntObjectHashMap<>();
-    SequenceFile.Reader centerReader = new SequenceFile.Reader(fs, centerPath,
-        conf);
-    int index = 0;
-    VectorWritable center = new VectorWritable();
-    while (centerReader.next(center, NullWritable.get())) {
-      centerMap.put(index++, center.getVector());
+    try (SequenceFile.Reader centerReader = new SequenceFile.Reader(fs,
+        centerPath, conf)) {
+      int index = 0;
+      VectorWritable center = new VectorWritable();
+      while (centerReader.next(center, NullWritable.get())) {
+        centerMap.put(index++, center.getVector());
+      }
     }
-    centerReader.close();
-
     TIntObjectHashMap<List<DoubleVector>> map = new TIntObjectHashMap<>();
     for (FileStatus status : stati) {
       if (!status.isDir()) {
         Path path = status.getPath();
         LOG.info("Found output file: " + path.toString());
-        SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
-        IntWritable key = new IntWritable();
-        VectorWritable v = new VectorWritable();
-        while (reader.next(key, v)) {
-          List<DoubleVector> list = map.get(key.get());
-          if (list == null) {
-            list = new ArrayList<>();
-            map.put(key.get(), list);
+        try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
+            conf)) {
+          IntWritable key = new IntWritable();
+          VectorWritable v = new VectorWritable();
+          while (reader.next(key, v)) {
+            List<DoubleVector> list = map.get(key.get());
+            if (list == null) {
+              list = new ArrayList<>();
+              map.put(key.get(), list);
+            }
+            list.add(v.getVector());
           }
-          list.add(v.getVector());
         }
-        reader.close();
       }
     }
     // add the centers as an individual part of the map to be distinctly plotted
@@ -404,25 +404,23 @@ public final class KMeansBSP
         conf, center, VectorWritable.class, NullWritable.class,
         CompressionType.NONE);
     final NullWritable value = NullWritable.get();
-
-    final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs, conf,
-        in, VectorWritable.class, NullWritable.class, CompressionType.NONE);
-
-    Random r = new Random();
-    for (int i = 0; i < count; i++) {
-
-      double[] arr = new double[dimension];
-      for (int d = 0; d < dimension; d++) {
-        arr[d] = r.nextInt(count);
-      }
-      VectorWritable vector = new VectorWritable(new DenseDoubleVector(arr));
-      dataWriter.append(vector, value);
-      if (k > i) {
-        centerWriter.append(vector, value);
-      } else if (k == i) {
-        centerWriter.close();
+    try (final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs,
+        conf, in, VectorWritable.class, NullWritable.class,
+        CompressionType.NONE)) {
+      Random r = new Random();
+      for (int i = 0; i < count; i++) {
+        double[] arr = new double[dimension];
+        for (int d = 0; d < dimension; d++) {
+          arr[d] = r.nextInt(count);
+        }
+        VectorWritable vector = new VectorWritable(new DenseDoubleVector(arr));
+        dataWriter.append(vector, value);
+        if (k > i) {
+          centerWriter.append(vector, value);
+        } else if (k == i) {
+          centerWriter.close();
+        }
       }
     }
-    dataWriter.close();
   }
 }

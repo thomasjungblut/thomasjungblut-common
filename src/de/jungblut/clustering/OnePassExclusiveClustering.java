@@ -70,8 +70,8 @@ public final class OnePassExclusiveClustering {
    * @return a list of centers that describe the given vectors.
    */
   public List<DoubleVector> cluster(List<DoubleVector> values, boolean verbose) {
-    ArrayList<DoubleVector> toReturn = new ArrayList<DoubleVector>();
-    KDTree<DoubleVector> tree = new KDTree<DoubleVector>();
+    ArrayList<DoubleVector> toReturn = new ArrayList<>();
+    KDTree<DoubleVector> tree = new KDTree<>();
     for (DoubleVector value : values) {
       tree.add(value, null);
     }
