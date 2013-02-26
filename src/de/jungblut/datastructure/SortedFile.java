@@ -9,10 +9,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
+import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.QuickSort;
 
@@ -26,7 +29,8 @@ import org.apache.hadoop.util.QuickSort;
  * 
  * @param <M> the message type extending WritableComparable.
  */
-public final class SortedFile<M extends WritableComparable<?>> implements
+@SuppressWarnings("rawtypes")
+public final class SortedFile<M extends WritableComparable> implements
     IndexedSortable, Closeable {
 
   private static final float SPILL_TRIGGER_BUFFER_FILL_PERCENTAGE = 0.9f;
@@ -39,12 +43,15 @@ public final class SortedFile<M extends WritableComparable<?>> implements
   private final int bufferThresholdSize;
 
   private int fileCount;
+  private List<File> files;
   private TIntArrayList offsets;
   private TIntArrayList indices;
   private int size;
+  private boolean mergeFiles;
+  private Class<M> msgClass;
 
   /**
-   * Creates a sorted file.
+   * Creates a single sorted file.
    * 
    * @param dir the directory to use for swapping, will be created if not
    *          exists.
@@ -59,14 +66,38 @@ public final class SortedFile<M extends WritableComparable<?>> implements
    */
   public SortedFile(String dir, String finalFileName, int bufferSize,
       Class<M> msgClass) throws IOException {
+    this(dir, finalFileName, bufferSize, msgClass, true);
+  }
+
+  /**
+   * Creates a sorted file. This is a test constructor, that tests the
+   * intermediate output files.
+   * 
+   * @param dir the directory to use for swapping, will be created if not
+   *          exists.
+   * @param finalFileName the final file where the data should end up merged.
+   * @param bufferSize the buffersize. By default, the spill starts when 90% of
+   *          the buffer is reached, so you should overallocated ~10% of the
+   *          data.
+   * @param msgClass the class that implements the comparable, usually the
+   *          message class that will be added into collect.
+   * @param mergeFiles if true the files will be merged at the end.
+   * @throws IOException in case the directory couldn't be created if not
+   *           exists.
+   */
+  SortedFile(String dir, String finalFileName, int bufferSize,
+      Class<M> msgClass, boolean mergeFiles) throws IOException {
     this.dir = dir;
     this.destinationFileName = finalFileName;
+    this.msgClass = msgClass;
+    this.mergeFiles = mergeFiles;
     Files.createDirectories(Paths.get(dir));
     this.bufferThresholdSize = (int) (bufferSize * SPILL_TRIGGER_BUFFER_FILL_PERCENTAGE);
     this.comp = WritableComparator.get(msgClass);
     this.buf = new DataOutputBuffer(bufferSize);
     this.offsets = new TIntArrayList();
     this.indices = new TIntArrayList();
+    this.files = new ArrayList<>();
   }
 
   /**
@@ -102,8 +133,8 @@ public final class SortedFile<M extends WritableComparable<?>> implements
     offsets.add(bufferEnd);
     SORTER.sort(this, 0, size);
     // write to file
-    try (DataOutputStream os = new DataOutputStream(new FileOutputStream(
-        new File(dir, fileCount + ".bin")))) {
+    File file = new File(dir, fileCount + ".bin");
+    try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
       // write the size in front, so we can allocate appropriate sized array
       // later on
       os.writeInt(size);
@@ -113,9 +144,12 @@ public final class SortedFile<M extends WritableComparable<?>> implements
         int off = offsets.get(x);
         int follow = x + 1;
         int len = offsets.get(follow) - off;
+        // write the length in front of the record
+        WritableUtils.writeVInt(os, len);
         os.write(buf.getData(), off, len);
       }
     }
+    this.files.add(file);
     fileCount++;
   }
 
@@ -149,7 +183,9 @@ public final class SortedFile<M extends WritableComparable<?>> implements
     if (buf.getLength() > 0) {
       sortAndSpill(buf.getLength());
     }
-    // TODO now the files must be merged together into destinationFileName
+    if (mergeFiles) {
+      Merger.<M> merge(msgClass, new File(destinationFileName), files);
+    }
   }
 
 }
