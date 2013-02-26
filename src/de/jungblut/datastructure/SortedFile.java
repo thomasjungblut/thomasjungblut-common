@@ -2,7 +2,6 @@ package de.jungblut.datastructure;
 
 import gnu.trove.list.array.TIntArrayList;
 
-import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -84,7 +83,6 @@ public final class SortedFile<M extends WritableComparable<?>> implements
     indices.add(size);
     size++;
     if (buf.getLength() > bufferThresholdSize) {
-      offsets.add(buf.getLength());
       sortAndSpill(buf.getLength());
       offsets.clear();
       indices.clear();
@@ -100,10 +98,12 @@ public final class SortedFile<M extends WritableComparable<?>> implements
    * @throws IOException when IO error happens.
    */
   private void sortAndSpill(int bufferEnd) throws IOException {
+    // add the end of the buffer to the list for convenience
+    offsets.add(bufferEnd);
     SORTER.sort(this, 0, size);
     // write to file
-    try (DataOutputStream os = new DataOutputStream(new BufferedOutputStream(
-        new FileOutputStream(new File(dir, fileCount + ".bin"))))) {
+    try (DataOutputStream os = new DataOutputStream(new FileOutputStream(
+        new File(dir, fileCount + ".bin")))) {
       // write the size in front, so we can allocate appropriate sized array
       // later on
       os.writeInt(size);
@@ -112,9 +112,8 @@ public final class SortedFile<M extends WritableComparable<?>> implements
         int x = indices.get(index);
         int off = offsets.get(x);
         int follow = x + 1;
-        int len = follow >= offsets.size() ? buf.getLength() : offsets
-            .get(follow);
-        os.write(buf.getData(), off, len - off);
+        int len = offsets.get(follow) - off;
+        os.write(buf.getData(), off, len);
       }
     }
     fileCount++;
@@ -123,26 +122,18 @@ public final class SortedFile<M extends WritableComparable<?>> implements
   @Override
   public int compare(int left, int right) {
     // calculate the offsets for the data.
-    int leftEnd = left + 1;
-    int rightEnd = right + 1;
-    left = indices.get(left);
-    right = indices.get(right);
-    int il = offsets.get(left);
-    int ile = 0;
-    if (leftEnd >= offsets.size()) {
-      ile = buf.getLength();
-    } else {
-      ile = offsets.get(leftEnd);
-    }
-    int jr = offsets.get(right);
-    int jre = 0;
-    if (rightEnd >= offsets.size()) {
-      jre = buf.getLength();
-    } else {
-      jre = offsets.get(rightEnd);
-    }
-    // compare with the comparator
-    return comp.compare(buf.getData(), il, ile, buf.getData(), jr, jre);
+    int leftTranslated = indices.get(left);
+    int leftEndTranslated = leftTranslated + 1;
+    int rightTranslated = indices.get(right);
+    int rightEndTranslated = rightTranslated + 1;
+
+    int leftOffset = offsets.get(leftTranslated);
+    int rightOffset = offsets.get(rightTranslated);
+
+    int leftLen = offsets.get(leftEndTranslated) - leftOffset;
+    int rightLen = offsets.get(rightEndTranslated) - rightOffset;
+    return comp.compare(buf.getData(), leftOffset, leftLen, buf.getData(),
+        rightOffset, rightLen);
   }
 
   @Override

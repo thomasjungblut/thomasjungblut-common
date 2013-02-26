@@ -1,5 +1,7 @@
 package de.jungblut.datastructure;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 import org.apache.hadoop.conf.Configuration;
@@ -19,10 +21,12 @@ public class SortedFileTest extends TestCase {
   public void testSortedFile() throws Exception {
     FileSystem fs = FileSystem.get(new Configuration());
     try {
+      int[] result = new int[290];
+      Arrays.fill(result, 1);
       try (SortedFile<IntWritable> file = new SortedFile<>(TMP_SORTED_FILES,
           TMP_FINAL_FILE, 89, IntWritable.class)) {
         // add data descending
-        for (int i = 290; i > 0; i--) {
+        for (int i = 289; i >= 0; i--) {
           file.collect(new IntWritable(i));
         }
       }
@@ -41,12 +45,17 @@ public class SortedFileTest extends TestCase {
         for (int i = 0; i < items; i++) {
           iw.readFields(open);
           assertTrue(last < iw.get());
+          result[iw.get()] = 0;
           last = iw.get();
           readItems++;
         }
       }
 
       assertEquals(290, readItems);
+      // check if every item is now zero
+      for (int i = 0; i < result.length; i++) {
+        assertEquals("Item at index " + i + " was non-zero!", 0, result[i]);
+      }
 
     } finally {
       fs.delete(new Path(TMP_SORTED_FILES), true);
