@@ -2,13 +2,18 @@ package de.jungblut.datastructure;
 
 import gnu.trove.list.array.TIntArrayList;
 
+import java.io.BufferedOutputStream;
 import java.io.Closeable;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +22,9 @@ import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
 import org.apache.hadoop.io.WritableUtils;
 import org.apache.hadoop.util.IndexedSortable;
+import org.apache.hadoop.util.IndexedSorter;
 import org.apache.hadoop.util.QuickSort;
+import org.apache.hadoop.util.ReflectionUtils;
 
 /**
  * A file that serializes WritableComparables to a buffer, once it hits a
@@ -34,7 +41,7 @@ public final class SortedFile<M extends WritableComparable> implements
     IndexedSortable, Closeable {
 
   private static final float SPILL_TRIGGER_BUFFER_FILL_PERCENTAGE = 0.9f;
-  private static final QuickSort SORTER = new QuickSort();
+  private static final IndexedSorter SORTER = new QuickSort();
 
   private final String dir;
   private final String destinationFileName;
@@ -93,6 +100,10 @@ public final class SortedFile<M extends WritableComparable> implements
     this.mergeFiles = mergeFiles;
     Files.createDirectories(Paths.get(dir));
     this.bufferThresholdSize = (int) (bufferSize * SPILL_TRIGGER_BUFFER_FILL_PERCENTAGE);
+    // create an instance of the msgClass beforehand, so raw comparators are
+    // registered
+    @SuppressWarnings("unused")
+    M instance = ReflectionUtils.newInstance(msgClass, null);
     this.comp = WritableComparator.get(msgClass);
     this.buf = new DataOutputBuffer(bufferSize);
     this.offsets = new TIntArrayList();
@@ -134,7 +145,8 @@ public final class SortedFile<M extends WritableComparable> implements
     SORTER.sort(this, 0, size);
     // write to file
     File file = new File(dir, fileCount + ".bin");
-    try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
+    try (DataOutputStream os = new DataOutputStream(new BufferedOutputStream(
+        new FileOutputStream(file)))) {
       // write the size in front, so we can allocate appropriate sized array
       // later on
       os.writeInt(size);
@@ -180,12 +192,36 @@ public final class SortedFile<M extends WritableComparable> implements
 
   @Override
   public void close() throws IOException {
+
     if (buf.getLength() > 0) {
       sortAndSpill(buf.getLength());
     }
     if (mergeFiles) {
-      Merger.<M> merge(msgClass, new File(destinationFileName), files);
+      try {
+        System.out.println("Starting merge of " + files.size() + " files.");
+        Merger.<M> merge(msgClass, new File(destinationFileName), files);
+      } finally {
+        // delete the temporary files by walking the file dir
+        Files.walkFileTree(Paths.get(dir), new SimpleFileVisitor<Path>() {
+          @Override
+          public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+              throws IOException {
+            Files.delete(file);
+            return FileVisitResult.CONTINUE;
+          }
+
+          @Override
+          public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+              throws IOException {
+            if (exc == null) {
+              Files.delete(dir);
+              return FileVisitResult.CONTINUE;
+            } else {
+              throw exc;
+            }
+          }
+        });
+      }
     }
   }
-
 }

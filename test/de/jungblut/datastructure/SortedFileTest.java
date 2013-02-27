@@ -18,7 +18,7 @@ import org.junit.Test;
 public class SortedFileTest extends TestCase {
 
   private static final String TMP_SORTED_FILES = "/tmp/sorted_files/";
-  private static final String TMP_FINAL_FILE = "/tmp/sorted_files/final_file.bin";
+  private static final String TMP_FINAL_FILE = "/tmp/final_file.bin";
 
   @Test
   public void testMergedFile() throws Exception {
@@ -46,6 +46,7 @@ public class SortedFileTest extends TestCase {
 
     } finally {
       fs.delete(new Path(TMP_SORTED_FILES), true);
+      fs.delete(new Path(TMP_FINAL_FILE), true);
     }
   }
 
@@ -94,6 +95,7 @@ public class SortedFileTest extends TestCase {
 
     } finally {
       fs.delete(new Path(TMP_SORTED_FILES), true);
+      fs.delete(new Path(TMP_FINAL_FILE), true);
     }
   }
 }
