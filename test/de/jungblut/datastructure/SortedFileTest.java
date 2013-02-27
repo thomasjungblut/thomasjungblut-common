@@ -58,7 +58,7 @@ public class SortedFileTest extends TestCase {
       int[] result = new int[290];
       Arrays.fill(result, 1);
       try (SortedFile<IntWritable> file = new SortedFile<>(TMP_SORTED_FILES,
-          TMP_FINAL_FILE, 89, IntWritable.class, false)) {
+          TMP_FINAL_FILE, 89, IntWritable.class, false, false)) {
         // add data descending
         for (int i = 289; i >= 0; i--) {
           file.collect(new IntWritable(i));

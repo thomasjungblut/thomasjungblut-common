@@ -56,9 +56,14 @@ public final class SortedFile<M extends WritableComparable> implements
   private int size;
   private boolean mergeFiles;
   private Class<M> msgClass;
+  private boolean intermediateMerge;
 
   /**
-   * Creates a single sorted file.
+   * Creates a single sorted file. This means, there is no intermediate
+   * fileformat, the sorted file can be read with the provided msgClass's
+   * read/write methods. The first 4 bytes are the number of times the class was
+   * serialized to the file in total. So the output file is not usable for
+   * further merging.
    * 
    * @param dir the directory to use for swapping, will be created if not
    *          exists.
@@ -73,12 +78,33 @@ public final class SortedFile<M extends WritableComparable> implements
    */
   public SortedFile(String dir, String finalFileName, int bufferSize,
       Class<M> msgClass) throws IOException {
-    this(dir, finalFileName, bufferSize, msgClass, true);
+    this(dir, finalFileName, bufferSize, msgClass, true, false);
   }
 
   /**
-   * Creates a sorted file. This is a test constructor, that tests the
-   * intermediate output files.
+   * Creates a single sorted file.
+   * 
+   * @param dir the directory to use for swapping, will be created if not
+   *          exists.
+   * @param finalFileName the final file where the data should end up merged.
+   * @param bufferSize the buffersize. By default, the spill starts when 90% of
+   *          the buffer is reached, so you should overallocated ~10% of the
+   *          data.
+   * @param msgClass the class that implements the comparable, usually the
+   *          message class that will be added into collect.
+   * @param intermediateMerge if true, the outputted single sorted file has a
+   *          special format so the {@link Merger} can read it for further
+   *          merging.
+   * @throws IOException in case the directory couldn't be created if not
+   *           exists.
+   */
+  public SortedFile(String dir, String finalFileName, int bufferSize,
+      Class<M> msgClass, boolean intermediateMerge) throws IOException {
+    this(dir, finalFileName, bufferSize, msgClass, true, intermediateMerge);
+  }
+
+  /**
+   * Creates a sorted file.
    * 
    * @param dir the directory to use for swapping, will be created if not
    *          exists.
@@ -89,15 +115,20 @@ public final class SortedFile<M extends WritableComparable> implements
    * @param msgClass the class that implements the comparable, usually the
    *          message class that will be added into collect.
    * @param mergeFiles if true the files will be merged at the end.
+   * @param intermediateMerge if true, the outputted single sorted file has a
+   *          special format so the {@link Merger} can read it for further
+   *          merging.
    * @throws IOException in case the directory couldn't be created if not
    *           exists.
    */
   SortedFile(String dir, String finalFileName, int bufferSize,
-      Class<M> msgClass, boolean mergeFiles) throws IOException {
+      Class<M> msgClass, boolean mergeFiles, boolean intermediateMerge)
+      throws IOException {
     this.dir = dir;
     this.destinationFileName = finalFileName;
     this.msgClass = msgClass;
     this.mergeFiles = mergeFiles;
+    this.intermediateMerge = intermediateMerge;
     Files.createDirectories(Paths.get(dir));
     this.bufferThresholdSize = (int) (bufferSize * SPILL_TRIGGER_BUFFER_FILL_PERCENTAGE);
     // create an instance of the msgClass beforehand, so raw comparators are
@@ -198,8 +229,11 @@ public final class SortedFile<M extends WritableComparable> implements
     }
     if (mergeFiles) {
       try {
-        System.out.println("Starting merge of " + files.size() + " files.");
-        Merger.<M> merge(msgClass, new File(destinationFileName), files);
+        System.out.println("Starting"
+            + (intermediateMerge ? " intermediate" : "") + " merge of "
+            + files.size() + " files.");
+        Merger.<M> merge(msgClass, intermediateMerge, new File(
+            destinationFileName), files);
       } finally {
         // delete the temporary files by walking the file dir
         Files.walkFileTree(Paths.get(dir), new SimpleFileVisitor<Path>() {

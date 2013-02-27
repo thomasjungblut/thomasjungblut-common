@@ -10,6 +10,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
@@ -38,11 +39,13 @@ public final class Merger<M extends WritableComparable> {
   private final File outputFile;
   private final List<File> mergeFiles;
   private final WritableComparator comp;
+  private final boolean intermediateMerge;
 
-  private Merger(Class<M> msgClass, File outputFile, List<File> list)
-      throws IOException {
+  private Merger(Class<M> msgClass, boolean intermediateMerge, File outputFile,
+      List<File> list) throws IOException {
     Preconditions.checkArgument(list.size() > 0,
         "Number of merged files can not be zero or negative!");
+    this.intermediateMerge = intermediateMerge;
     this.outputFile = outputFile;
     this.mergeFiles = list;
     this.comp = WritableComparator.get(msgClass);
@@ -52,14 +55,15 @@ public final class Merger<M extends WritableComparable> {
    * Merges all given files together.
    */
   private void mergeFiles() throws IOException {
-    if (mergeFiles.size() == 1) {
-      // just move if we have a single file
+    // just move if we have a single file and intermediate merge turned on
+    if (intermediateMerge && mergeFiles.size() == 1) {
       FileSystems
           .getDefault()
           .provider()
           .move(Paths.get(mergeFiles.get(0).toURI()),
               Paths.get(outputFile.toURI()),
               StandardCopyOption.REPLACE_EXISTING);
+      return;
     }
 
     /*
@@ -89,6 +93,11 @@ public final class Merger<M extends WritableComparable> {
         if (peek == null) {
           break;
         }
+        if (intermediateMerge) {
+          // when intermediate merging, we add the length of the following
+          // record to the stream
+          WritableUtils.writeVInt(dos, peek.getLength());
+        }
         dos.write(peek.getBytes(), peek.getOffset(), peek.getLength());
         if (peek.hasNext()) {
           peek.next();
@@ -101,6 +110,12 @@ public final class Merger<M extends WritableComparable> {
         }
         // always adjust root of the heap
         segments.adjustTop();
+      }
+    }
+    if (!intermediateMerge) {
+      // delete the temporary files if not intermediate
+      for (File file : mergeFiles) {
+        Files.delete(file.toPath());
       }
     }
   }
@@ -180,6 +195,31 @@ public final class Merger<M extends WritableComparable> {
 
   }
 
+  /*
+   * Some helper functions for various types of arguments.
+   */
+
+  public static <M extends WritableComparable<?>> void mergeIntermediate(
+      Class<M> msgClass, String outputFile, String... files) throws IOException {
+    mergeIntermediate(msgClass, outputFile, Arrays.asList(files));
+  }
+
+  public static <M extends WritableComparable<?>> void mergeIntermediate(
+      Class<M> msgClass, File outputFile, File... files) throws IOException {
+    merge(msgClass, true, outputFile, Arrays.asList(files));
+  }
+
+  public static <M extends WritableComparable<?>> void mergeIntermediate(
+      Class<M> msgClass, File outputFile, List<File> list) throws IOException {
+    merge(msgClass, true, outputFile, list);
+  }
+
+  public static <M extends WritableComparable<?>> void mergeIntermediate(
+      Class<M> msgClass, String outputFile, List<String> list)
+      throws IOException {
+    merge(msgClass, true, new File(outputFile), toFiles(list));
+  }
+
   public static <M extends WritableComparable<?>> void merge(Class<M> msgClass,
       String outputFile, String... files) throws IOException {
     merge(msgClass, outputFile, Arrays.asList(files));
@@ -187,21 +227,32 @@ public final class Merger<M extends WritableComparable> {
 
   public static <M extends WritableComparable<?>> void merge(Class<M> msgClass,
       String outputFile, List<String> list) throws IOException {
-    List<File> files = new ArrayList<>(list.size());
-    for (String s : list) {
-      files.add(new File(s));
-    }
-    merge(msgClass, new File(outputFile), files);
+    List<File> files = toFiles(list);
+    merge(msgClass, false, new File(outputFile), files);
   }
 
   public static <M extends WritableComparable<?>> void merge(Class<M> msgClass,
       File outputFile, File... files) throws IOException {
-    merge(msgClass, outputFile, Arrays.asList(files));
+    merge(msgClass, false, outputFile, Arrays.asList(files));
   }
 
   public static <M extends WritableComparable<?>> void merge(Class<M> msgClass,
       File outputFile, List<File> list) throws IOException {
-    new Merger<>(msgClass, outputFile, list).mergeFiles();
+    merge(msgClass, false, outputFile, list);
+  }
+
+  public static <M extends WritableComparable<?>> void merge(Class<M> msgClass,
+      boolean intermediateMerge, File outputFile, List<File> list)
+      throws IOException {
+    new Merger<>(msgClass, intermediateMerge, outputFile, list).mergeFiles();
+  }
+
+  private static List<File> toFiles(List<String> list) {
+    List<File> fList = new ArrayList<>(list.size());
+    for (String s : list) {
+      fList.add(new File(s));
+    }
+    return fList;
   }
 
 }
