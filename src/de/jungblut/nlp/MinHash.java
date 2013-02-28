@@ -90,13 +90,7 @@ public final class MinHash {
       return 0d;
 
     int[] union = ArrayUtils.union(left, right);
-    // copy and sort to not mutate left and right
-    int[] lcp = Arrays.copyOf(left, left.length);
-    int[] rcp = Arrays.copyOf(right, right.length);
-    Arrays.sort(lcp);
-    Arrays.sort(rcp);
-    // to compute the intersection
-    int[] intersection = ArrayUtils.intersection(lcp, rcp);
+    int[] intersection = ArrayUtils.intersectionUnsorted(left, right);
 
     return intersection.length / (double) union.length;
   }
