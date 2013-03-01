@@ -26,7 +26,7 @@ public final class MinHash {
    * define some hashfunctions
    */
 
-  enum HashType {
+  public static enum HashType {
     LINEAR, MURMUR128, MD5
   }
 
