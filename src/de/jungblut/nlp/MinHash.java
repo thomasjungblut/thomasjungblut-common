@@ -7,6 +7,7 @@ import java.util.Random;
 import java.util.Set;
 
 import com.google.common.base.Preconditions;
+import com.google.common.hash.Hashing;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
@@ -21,24 +22,114 @@ import de.jungblut.math.DoubleVector.DoubleVectorElement;
  */
 public final class MinHash {
 
-  private final int numHashes;
+  /*
+   * define some hashfunctions
+   */
 
-  private final int[] seed1;
-  private final int[] seed2;
-
-  private MinHash(int numHashes) {
-    this(numHashes, System.currentTimeMillis());
+  enum HashType {
+    LINEAR, MURMUR128, MD5
   }
 
-  private MinHash(int numHashes, long seed) {
-    this.numHashes = numHashes;
-    this.seed1 = new int[numHashes];
-    this.seed2 = new int[numHashes];
+  abstract class HashFunction {
 
+    protected int seed;
+
+    public HashFunction(int seed) {
+      this.seed = seed;
+    }
+
+    abstract int hash(byte[] bytes);
+
+  }
+
+  class LinearHashFunction extends HashFunction {
+
+    private int seed2;
+
+    public LinearHashFunction(int seed, int seed2) {
+      super(seed);
+      this.seed2 = seed2;
+    }
+
+    @Override
+    int hash(byte[] bytes) {
+      long hashValue = 31;
+      for (byte byteVal : bytes) {
+        hashValue *= seed * byteVal;
+        hashValue += seed2;
+      }
+      return Math.abs((int) (hashValue % 2147482949));
+    }
+
+  }
+
+  class Murmur128HashFunction extends HashFunction {
+
+    com.google.common.hash.HashFunction murmur;
+
+    public Murmur128HashFunction(int seed) {
+      super(seed);
+      this.murmur = Hashing.murmur3_128(seed);
+    }
+
+    @Override
+    int hash(byte[] bytes) {
+      return murmur.hashBytes(bytes).asInt();
+    }
+
+  }
+
+  class MD5HashFunction extends HashFunction {
+
+    com.google.common.hash.HashFunction md5;
+
+    public MD5HashFunction(int seed) {
+      super(seed);
+      this.md5 = Hashing.md5();
+    }
+
+    @Override
+    int hash(byte[] bytes) {
+      return md5.hashBytes(bytes).asInt();
+    }
+
+  }
+
+  /*
+   * Hashfunction end
+   */
+
+  private final int numHashes;
+
+  private final HashFunction[] functions;
+
+  private MinHash(int numHashes) {
+    this(numHashes, HashType.LINEAR, System.currentTimeMillis());
+  }
+
+  private MinHash(int numHashes, HashType type) {
+    this(numHashes, type, System.currentTimeMillis());
+  }
+
+  private MinHash(int numHashes, HashType type, long seed) {
+    this.numHashes = numHashes;
+    this.functions = new HashFunction[numHashes];
     Random r = new Random(seed);
     for (int i = 0; i < numHashes; i++) {
-      this.seed1[i] = r.nextInt();
-      this.seed2[i] = r.nextInt();
+      switch (type) {
+        case LINEAR:
+          functions[i] = new LinearHashFunction(r.nextInt(), r.nextInt());
+          break;
+        case MURMUR128:
+          functions[i] = new Murmur128HashFunction(r.nextInt());
+          break;
+        case MD5:
+          functions[i] = new MD5HashFunction(r.nextInt());
+          break;
+        default:
+          throw new IllegalArgumentException(
+              "Don't know the equivalent hashfunction to: " + type);
+      }
     }
   }
 
@@ -64,7 +155,7 @@ public final class MinHash {
         bytesToHash[1] = (byte) (value >> 16);
         bytesToHash[2] = (byte) (value >> 8);
         bytesToHash[3] = (byte) value;
-        int hash = hash(bytesToHash, seed1[i], seed2[i]);
+        int hash = functions[i].hash(bytesToHash);
         if (minHashes[i] > hash) {
           minHashes[i] = hash;
         }
@@ -124,7 +215,8 @@ public final class MinHash {
   }
 
   /**
-   * Creates a {@link MinHash} instance with the given number of hash functions.
+   * Creates a {@link MinHash} instance with the given number of hash functions
+   * with a linear hashing function.
    */
   public static MinHash create(int numHashes) {
     return new MinHash(numHashes);
@@ -132,22 +224,26 @@ public final class MinHash {
 
   /**
    * Creates a {@link MinHash} instance with the given number of hash functions
-   * and a seed to be used in parallel systems.
+   * and a seed to be used in parallel systems. This method uses a linear
+   * hashfunction.
    */
   public static MinHash create(int numHashes, long seed) {
-    return new MinHash(numHashes, seed);
+    return new MinHash(numHashes, HashType.LINEAR, seed);
   }
 
   /**
-   * Linear hashfunction with two random seeds.
+   * Creates a {@link MinHash} instance with the given number of hash functions.
    */
-  private static int hash(byte[] bytes, int seed1, int seed2) {
-    long hashValue = 31;
-    for (byte byteVal : bytes) {
-      hashValue *= seed1 * byteVal;
-      hashValue += seed2;
-    }
-    return Math.abs((int) (hashValue % 2147482949));
+  public static MinHash create(int numHashes, HashType type) {
+    return new MinHash(numHashes, type);
+  }
+
+  /**
+   * Creates a {@link MinHash} instance with the given number of hash functions
+   * and a seed to be used in parallel systems.
+   */
+  public static MinHash create(int numHashes, HashType type, long seed) {
+    return new MinHash(numHashes, type, seed);
   }
 
 }

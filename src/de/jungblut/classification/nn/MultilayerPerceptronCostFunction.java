@@ -9,6 +9,7 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
+import de.jungblut.math.minimize.StochasticCostFunction;
 import de.jungblut.math.tuple.Tuple;
 
 /**
@@ -16,7 +17,8 @@ import de.jungblut.math.tuple.Tuple;
  * 
  * @author thomas.jungblut
  */
-public class MultilayerPerceptronCostFunction implements CostFunction {
+public class MultilayerPerceptronCostFunction implements CostFunction,
+    StochasticCostFunction {
 
   private final DenseDoubleMatrix x;
   private final DenseDoubleMatrix y;
@@ -52,6 +54,17 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
   }
 
   /**
+   * Stochastic learning function for neural networks.
+   */
+  @Override
+  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input,
+      DoubleVector x, DenseDoubleVector y) {
+    return forwardBackward(input,
+        new DenseDoubleMatrix(java.util.Collections.singletonList(x)),
+        new DenseDoubleMatrix(y.toArray(), 1, y.getDimension()));
+  }
+
+  /**
    * Input contains the network parameters (weights) as a folded vector. Code
    * mainly taken from ml-class to work with the fmincg to optimize the theta
    * weights. I have generified it to a solution to work with multiple hidden
@@ -59,7 +72,11 @@ public class MultilayerPerceptronCostFunction implements CostFunction {
    */
   @Override
   public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+    return forwardBackward(input, x, y);
+  }
 
+  private Tuple<Double, DoubleVector> forwardBackward(DoubleVector input,
+      DenseDoubleMatrix x, DenseDoubleMatrix y) {
     DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters);
     DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
