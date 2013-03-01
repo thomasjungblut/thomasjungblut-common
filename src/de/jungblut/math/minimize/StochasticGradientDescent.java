@@ -1,6 +1,5 @@
 package de.jungblut.math.minimize;
 
-import static de.jungblut.math.minimize.GradientDescent.ascending;
 import static de.jungblut.math.minimize.GradientDescent.converged;
 import static de.jungblut.math.minimize.GradientDescent.shiftLeft;
 
@@ -64,9 +63,8 @@ public final class StochasticGradientDescent implements StochasticMinimizer {
       }
       shiftLeft(lastCosts);
       lastCosts[lastIndex] = cost;
-      // break if we converged below the limit or have degraded into gradient
-      // ascent due to too large learning rate
-      if (converged(lastCosts, limit) || ascending(lastCosts)) {
+      // break if we converged below the limit
+      if (converged(lastCosts, limit)) {
         break;
       }
     }

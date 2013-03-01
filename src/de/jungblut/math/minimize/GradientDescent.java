@@ -41,8 +41,7 @@ public final class GradientDescent implements Minimizer {
       }
       shiftLeft(lastCosts);
       lastCosts[lastIndex] = evaluateCost.getFirst();
-      // break if we converged below the limit or have degraded into gradient
-      // ascent due to too large learning rate
+      // break if we converged below the limit
       if (converged(lastCosts, limit)) {
         break;
       }

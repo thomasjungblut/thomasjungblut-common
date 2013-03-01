@@ -9,6 +9,8 @@ import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import junit.framework.TestCase;
 
@@ -16,6 +18,8 @@ import org.junit.Test;
 
 import com.google.common.math.DoubleMath;
 
+import de.jungblut.datastructure.CollectionInputProvider;
+import de.jungblut.datastructure.InputProvider;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
@@ -24,6 +28,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
 import de.jungblut.math.minimize.ParticleSwarmOptimization;
+import de.jungblut.math.minimize.StochasticGradientDescent;
 import de.jungblut.math.tuple.Tuple;
 
 public class MultiLayerPerceptronTest extends TestCase {
@@ -154,6 +159,20 @@ public class MultiLayerPerceptronTest extends TestCase {
   }
 
   @Test
+  public void testXORStochastic() {
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
+        .newConfiguration(
+            new int[] { 2, 4, 1 },
+            new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
+                SIGMOID.get() },
+            new StochasticGradientDescent(streamXORInput(), 0.1, 1e-45), 10000)
+        .build();
+    mlp.trainStochastic();
+    testPredictions(sampleXOR(), mlp);
+  }
+
+  @SuppressWarnings("resource")
+  @Test
   public void testSerialization() throws Exception {
     MultilayerPerceptron mlp = testXorSigmoidNetwork(null);
     File tmp = File.createTempFile("neuraltest", ".tmp");
@@ -225,7 +244,7 @@ public class MultiLayerPerceptronTest extends TestCase {
       outcome[i] = new DenseDoubleVector(new double[] { i });
     }
 
-    return new Tuple<DoubleVector[], DenseDoubleVector[]>(train, outcome);
+    return new Tuple<>(train, outcome);
   }
 
   private Tuple<DoubleVector[], DenseDoubleVector[]> sampleParable() {
@@ -238,7 +257,19 @@ public class MultiLayerPerceptronTest extends TestCase {
       outcome[i] = new DenseDoubleVector(new double[] { i * i });
     }
 
-    return new Tuple<DoubleVector[], DenseDoubleVector[]>(train, outcome);
+    return new Tuple<>(train, outcome);
+  }
+
+  public InputProvider<Tuple<DoubleVector, DenseDoubleVector>> streamXORInput() {
+    List<Tuple<DoubleVector, DenseDoubleVector>> list = new ArrayList<>();
+
+    Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
+    DoubleVector[] first = sampleXOR.getFirst();
+    DenseDoubleVector[] second = sampleXOR.getSecond();
+    for (int i = 0; i < first.length; i++) {
+      list.add(new Tuple<>(first[i], second[i]));
+    }
+    return new CollectionInputProvider<>(list);
   }
 
   public Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR() {

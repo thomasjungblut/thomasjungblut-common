@@ -18,6 +18,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Minimizer;
+import de.jungblut.math.minimize.StochasticMinimizer;
 import de.jungblut.writable.MatrixWritable;
 
 /**
@@ -47,6 +48,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    */
   public static final class MultilayerPerceptronConfiguration {
     final Minimizer minimizer;
+    final StochasticMinimizer stochasticMinimizer;
     final int maxIterations;
     final int[] layer;
     final ActivationFunction[] activationFunctions;
@@ -62,6 +64,17 @@ public final class MultilayerPerceptron extends AbstractClassifier {
         ActivationFunction[] activations, Minimizer minimizer, int maxIterations) {
       this.layer = layer;
       this.minimizer = minimizer;
+      this.stochasticMinimizer = null;
+      this.maxIterations = maxIterations;
+      this.activationFunctions = activations;
+    }
+
+    private MultilayerPerceptronConfiguration(int[] layer,
+        ActivationFunction[] activations, StochasticMinimizer minimizer,
+        int maxIterations) {
+      this.layer = layer;
+      this.minimizer = null;
+      this.stochasticMinimizer = minimizer;
       this.maxIterations = maxIterations;
       this.activationFunctions = activations;
     }
@@ -80,6 +93,14 @@ public final class MultilayerPerceptron extends AbstractClassifier {
      */
     public MultilayerPerceptronConfiguration lambda(double lambda) {
       this.lambda = lambda;
+      return this;
+    }
+
+    /**
+     * Sets verbose to true. Progress indicators will be printed to STDOUT.
+     */
+    public MultilayerPerceptronConfiguration verbose() {
+      this.verbose = true;
       return this;
     }
 
@@ -143,10 +164,31 @@ public final class MultilayerPerceptron extends AbstractClassifier {
           minimizer, maxIteration);
     }
 
+    /**
+     * Creates a new TrainingConfiguration with the mandatory configurations of
+     * the activation functions, the to be used minimizer and the maximum
+     * iterations.
+     * 
+     * @param layer the number of neurons for each layer, each index denotes a
+     *          layer.
+     * @param activations the activation functions to be used, each index
+     *          denotes a layer.
+     * @param minimizer the stochastic minimizer to be used.
+     * @param maxIterations how many iterations (epochs) to run.
+     * @return a brand new training configuration with the given parameters set.
+     */
+    public static MultilayerPerceptronConfiguration newConfiguration(
+        int[] layer, ActivationFunction[] activations,
+        StochasticMinimizer minimizer, int maxIteration) {
+      return new MultilayerPerceptronConfiguration(layer, activations,
+          minimizer, maxIteration);
+    }
+
   }
 
   private final WeightMatrix[] weights;
   private final Minimizer minimizer;
+  private final StochasticMinimizer stochasticMinimizer;
   private final int maxIterations;
   private final int[] layers;
   private final ActivationFunction[] activations;
@@ -163,6 +205,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.layers = conf.layer;
     this.maxIterations = conf.maxIterations;
     this.minimizer = conf.minimizer;
+    this.stochasticMinimizer = conf.stochasticMinimizer;
     this.lambda = conf.lambda;
     this.type = conf.type;
     this.hiddenDropoutProbability = conf.hiddenDropoutProbability;
@@ -216,6 +259,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.weights = weights;
     this.activations = activations;
     this.minimizer = null;
+    this.stochasticMinimizer = null;
     this.maxIterations = -1;
   }
 
@@ -268,6 +312,27 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     } else {
       trainGPU(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
           minimizer, maxIterations, lambda, verbose);
+    }
+  }
+
+  /**
+   * Stochastically train the neural network, the data will be supplied to the
+   * {@link StochasticMinimizer} implementation.
+   */
+  public final void trainStochastic() {
+    Preconditions.checkNotNull(stochasticMinimizer,
+        "Stochastic Minimizer must be supplied!");
+    MultilayerPerceptronCostFunction costFunction = new MultilayerPerceptronCostFunction(
+        this, new DenseDoubleMatrix(1, 0), null, lambda);
+    DenseDoubleVector foldedTheta = getFoldedThetaVector();
+    DoubleVector theta = stochasticMinimizer.minimize(costFunction,
+        foldedTheta, maxIterations, verbose);
+    int[][] unfoldParameters = MultilayerPerceptronCostFunction
+        .computeUnfoldParameters(layers);
+    DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
+        theta, unfoldParameters);
+    for (int i = 0; i < unfoldMatrices.length; i++) {
+      getWeights()[i].setWeights(unfoldMatrices[i]);
     }
   }
 
@@ -385,6 +450,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    */
   private double trainInternal(Minimizer minimizer, int maxIterations,
       boolean verbose, CostFunction costFunction, DenseDoubleVector initialTheta) {
+    Preconditions.checkNotNull(minimizer, "Minimizer must be supplied!");
     DoubleVector theta = minimizer.minimize(costFunction, initialTheta,
         maxIterations, verbose);
     int[][] unfoldParameters = MultilayerPerceptronCostFunction

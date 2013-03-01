@@ -59,8 +59,14 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
   @Override
   public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input,
       DoubleVector x, DenseDoubleVector y) {
-    return forwardBackward(input,
-        new DenseDoubleMatrix(java.util.Collections.singletonList(x)),
+    DenseDoubleMatrix tmpX = new DenseDoubleMatrix(1, x.getLength() + 1);
+    // add bias
+    tmpX.set(0, 0, 1d);
+    // copy the rest into the matrix
+    for (int i = 1; i < tmpX.getColumnCount(); i++) {
+      tmpX.set(0, i, x.get(i - 1));
+    }
+    return backpropagate(input, tmpX,
         new DenseDoubleMatrix(y.toArray(), 1, y.getDimension()));
   }
 
@@ -72,10 +78,18 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
    */
   @Override
   public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
-    return forwardBackward(input, x, y);
+    return backpropagate(input, x, y);
   }
 
-  private Tuple<Double, DoubleVector> forwardBackward(DoubleVector input,
+  /**
+   * Do a full forward pass and backpropagate the error.
+   * 
+   * @param input the input parameters (theta).
+   * @param x the features.
+   * @param y the outcome.
+   * @return a tuple of cost and gradient.
+   */
+  private Tuple<Double, DoubleVector> backpropagate(DoubleVector input,
       DenseDoubleMatrix x, DenseDoubleMatrix y) {
     DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters);
