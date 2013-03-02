@@ -27,8 +27,7 @@ public class QLearningTest extends TestCase {
     int numIterations = 3;
     double learningRate = 0.5;
     double discountFactor = 0.1;
-    // no random choice
-    QLearning qLearning = new QLearning(width * height, 4, 0f);
+    QLearning qLearning = new QLearning(width * height, 4);
     qLearning.addEndState(9, 10);
     qLearning.addEndState(10, -100);
     qLearning.addEndState(11, -100);

@@ -17,8 +17,6 @@ import de.jungblut.datastructure.ArrayUtils;
  */
 public final class QLearning {
 
-  private static final float DEFAULT_EXPLORATION_PROBABILITY = 0.3f;
-
   /*
    * First dimension: states, second dimension for each state the associated
    * action. The values of each cell, represent the q value.
@@ -29,49 +27,26 @@ public final class QLearning {
   // a map between the endstate index and the associated reward granted when
   // reaching the goal
   private final HashMap<Integer, Double> rewardMap = new HashMap<>();
-  private final float explorationProbability;
   private final Random random;
 
   /**
-   * Creates a QLearning instance with given number of states and actions and a
-   * default exploration probability of 30%.
+   * Creates a QLearning instance with given number of states and actions.
    * 
    * @param numStates the number of states in your model.
    * @param numActions the number of actions in your model
    */
   public QLearning(int numStates, int numActions) {
-    this(numStates, numActions, DEFAULT_EXPLORATION_PROBABILITY);
-  }
-
-  /**
-   * Creates a QLearning instance with given number of states and actions and
-   * the given exploration probability.
-   * 
-   * @param numStates the number of states in your model.
-   * @param numActions the number of actions in your model
-   * @param explorationProbability the probability that the next action is
-   *          randomly selected.
-   */
-  public QLearning(int numStates, int numActions, float explorationProbability) {
-    this(numStates, numActions, explorationProbability, System
-        .currentTimeMillis());
+    this(numStates, numActions, System.currentTimeMillis());
   }
 
   /**
    * Test and root constructor for checks and tests.
    */
-  QLearning(int numStates, int numActions, float explorationProbability,
-      long seed) {
+  QLearning(int numStates, int numActions, long seed) {
     Preconditions.checkArgument(numStates > 1,
         "Number of states must be at least > 1. Supplied: " + numStates);
     Preconditions.checkArgument(numActions > 1,
         "Number of actions must be at least > 1. Supplied: " + numActions);
-    Preconditions.checkArgument(explorationProbability >= 0f
-        && explorationProbability <= 1f,
-        "ExplorationProbability must be between 0f and 1f! Supplied: "
-            + explorationProbability);
-    // invert the probability, to save 1-X statements later on
-    this.explorationProbability = 1f - explorationProbability;
     this.numActions = numActions;
     this.qValues = new double[numStates][numActions];
     this.random = new Random(seed);
@@ -102,13 +77,13 @@ public final class QLearning {
   /**
    * @return the next action your model needs to take based on the current
    *         state. This is either randomly selected based on the given
-   *         explorationProbability in the constructor, or by choosing the
-   *         largest q-value of the current state.
+   *         explorationProbability, or by choosing the largest q-value of the
+   *         current state.
    */
-  public int getNextAction(int currentState) {
+  public int getNextAction(int currentState, float explorationProbability) {
     // check if we need to explore
     if (explorationProbability > 0f
-        && random.nextFloat() > explorationProbability) {
+        && random.nextFloat() > (1f - explorationProbability)) {
       // choose a random option of the statespace
       return random.nextInt(numActions);
     } else {
