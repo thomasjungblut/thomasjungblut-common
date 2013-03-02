@@ -32,17 +32,17 @@ public class KMeansMapper extends
     Path centroids = new Path(conf.get("centroid.path"));
     FileSystem fs = FileSystem.get(conf);
 
-    SequenceFile.Reader reader = new SequenceFile.Reader(fs, centroids, conf);
-    ClusterCenter key = new ClusterCenter();
-    IntWritable value = new IntWritable();
-    int index = 0;
-    while (reader.next(key, value)) {
-      ClusterCenter clusterCenter = new ClusterCenter(key);
-      clusterCenter.setClusterIndex(index++);
-      centers.add(clusterCenter);
+    try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, centroids,
+        conf)) {
+      ClusterCenter key = new ClusterCenter();
+      IntWritable value = new IntWritable();
+      int index = 0;
+      while (reader.next(key, value)) {
+        ClusterCenter clusterCenter = new ClusterCenter(key);
+        clusterCenter.setClusterIndex(index++);
+        centers.add(clusterCenter);
+      }
     }
-    reader.close();
-
     distanceMeasurer = new ManhattanDistance();
   }
 

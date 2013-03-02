@@ -60,13 +60,13 @@ public class KMeansReducer extends
     Path outPath = new Path(conf.get("centroid.path"));
     FileSystem fs = FileSystem.get(conf);
     fs.delete(outPath, true);
-    final SequenceFile.Writer out = SequenceFile.createWriter(fs,
+    try (SequenceFile.Writer out = SequenceFile.createWriter(fs,
         context.getConfiguration(), outPath, ClusterCenter.class,
-        IntWritable.class);
-    final IntWritable value = new IntWritable(0);
-    for (ClusterCenter center : centers) {
-      out.append(center, value);
+        IntWritable.class)) {
+      final IntWritable value = new IntWritable(0);
+      for (ClusterCenter center : centers) {
+        out.append(center, value);
+      }
     }
-    out.close();
   }
 }

@@ -108,13 +108,14 @@ public class KMeansClusteringJob {
         Path path = status.getPath();
         if (!path.getName().equals("_SUCCESS")) {
           LOG.info("FOUND " + path.toString());
-          SequenceFile.Reader reader = new SequenceFile.Reader(fs, path, conf);
-          ClusterCenter key = new ClusterCenter();
-          VectorWritable v = new VectorWritable();
-          while (reader.next(key, v)) {
-            LOG.info(key + " / " + v);
+          try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
+              conf)) {
+            ClusterCenter key = new ClusterCenter();
+            VectorWritable v = new VectorWritable();
+            while (reader.next(key, v)) {
+              LOG.info(key + " / " + v);
+            }
           }
-          reader.close();
         }
       }
     }
@@ -122,37 +123,37 @@ public class KMeansClusteringJob {
 
   public static void writeExampleVectors(Configuration conf, Path in,
       FileSystem fs) throws IOException {
-    final SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs, conf,
-        in, ClusterCenter.class, VectorWritable.class);
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(1, 2));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(16, 3));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(3, 3));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(2, 2));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(2, 3));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(25, 1));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(7, 6));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(6, 5));
-    dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
-        new VectorWritable(-1, -23));
-    dataWriter.close();
+    try (SequenceFile.Writer dataWriter = SequenceFile.createWriter(fs, conf,
+        in, ClusterCenter.class, VectorWritable.class)) {
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(1, 2));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(16, 3));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(3, 3));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(2, 2));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(2, 3));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(25, 1));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(7, 6));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(6, 5));
+      dataWriter.append(new ClusterCenter(new VectorWritable(0, 0)),
+          new VectorWritable(-1, -23));
+    }
   }
 
   public static void writeExampleCenters(Configuration conf, Path center,
       FileSystem fs) throws IOException {
-    final SequenceFile.Writer centerWriter = SequenceFile.createWriter(fs,
-        conf, center, ClusterCenter.class, IntWritable.class);
-    final IntWritable value = new IntWritable(0);
-    centerWriter.append(new ClusterCenter(new VectorWritable(1, 1)), value);
-    centerWriter.append(new ClusterCenter(new VectorWritable(5, 5)), value);
-    centerWriter.close();
+    try (SequenceFile.Writer centerWriter = SequenceFile.createWriter(fs, conf,
+        center, ClusterCenter.class, IntWritable.class)) {
+      final IntWritable value = new IntWritable(0);
+      centerWriter.append(new ClusterCenter(new VectorWritable(1, 1)), value);
+      centerWriter.append(new ClusterCenter(new VectorWritable(5, 5)), value);
+    }
   }
 
 }
