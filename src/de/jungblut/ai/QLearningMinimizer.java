@@ -34,6 +34,10 @@ public final class QLearningMinimizer implements StochasticMinimizer {
     theta = theta.add(learningRate * (reward + discount * networkOutput.max()));
   }
 
+  public DoubleVector getTheta() {
+    return this.theta;
+  }
+
   public void setFeatures(DoubleVector x) {
     this.x = x;
   }
