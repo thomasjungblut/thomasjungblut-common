@@ -21,12 +21,9 @@ public final class QLearningMinimizer implements StochasticMinimizer {
   @Override
   public DoubleVector minimize(StochasticCostFunction f, DoubleVector theta,
       int maxIterations, boolean verbose) {
-    if (this.theta == null) {
-      this.theta = theta;
-    }
-    f.evaluateCost(this.theta, x, y);
-
-    return this.theta;
+    this.theta = theta;
+    f.evaluateCost(theta, x, y);
+    return theta;
   }
 
   public void update(DoubleVector networkOutput, double reward,
