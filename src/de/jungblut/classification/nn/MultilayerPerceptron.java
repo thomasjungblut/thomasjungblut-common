@@ -322,11 +322,22 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   public final void trainStochastic() {
     Preconditions.checkNotNull(stochasticMinimizer,
         "Stochastic Minimizer must be supplied!");
+
+    DenseDoubleVector foldedTheta = getFoldedThetaVector();
+    trainStochastic(foldedTheta);
+  }
+
+  /**
+   * Stochastically train the neural network, the data will be supplied to the
+   * {@link StochasticMinimizer} implementation.
+   * 
+   * @param theta predefined theta parameters.
+   */
+  public final void trainStochastic(DoubleVector theta) {
     MultilayerPerceptronCostFunction costFunction = new MultilayerPerceptronCostFunction(
         this, new DenseDoubleMatrix(1, 0), null, lambda);
-    DenseDoubleVector foldedTheta = getFoldedThetaVector();
-    DoubleVector theta = stochasticMinimizer.minimize(costFunction,
-        foldedTheta, maxIterations, verbose);
+    theta = stochasticMinimizer.minimize(costFunction, theta, maxIterations,
+        verbose);
     int[][] unfoldParameters = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(layers);
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(

@@ -1,6 +1,7 @@
 package de.jungblut.ai;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.StochasticCostFunction;
 import de.jungblut.math.minimize.StochasticMinimizer;
 
@@ -11,18 +12,34 @@ import de.jungblut.math.minimize.StochasticMinimizer;
  * @author thomas.jungblut
  * 
  */
-public class QLearningMinimizer implements StochasticMinimizer {
+public final class QLearningMinimizer implements StochasticMinimizer {
+
+  private DoubleVector x;
+  private DenseDoubleVector y;
+  private DoubleVector theta;
 
   @Override
   public DoubleVector minimize(StochasticCostFunction f, DoubleVector theta,
       int maxIterations, boolean verbose) {
-    // TODO
-    /*
-     * for each state we have, run the cost function and check for rewards- then
-     * apply the gradients to our theta vector.
-     */
+    if (this.theta == null) {
+      this.theta = theta;
+    }
+    f.evaluateCost(this.theta, x, y);
 
-    return theta;
+    return this.theta;
+  }
+
+  public void update(DoubleVector networkOutput, double reward,
+      double learningRate, double discount) {
+    theta = theta.add(learningRate * (reward + discount * networkOutput.max()));
+  }
+
+  public void setFeatures(DoubleVector x) {
+    this.x = x;
+  }
+
+  public void setOutcome(DenseDoubleVector y) {
+    this.y = y;
   }
 
 }
