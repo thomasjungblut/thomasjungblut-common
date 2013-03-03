@@ -4,6 +4,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.StochasticCostFunction;
 import de.jungblut.math.minimize.StochasticMinimizer;
+import de.jungblut.math.tuple.Tuple;
 
 /**
  * Minimizer that works with the q-learning value update function while training
@@ -22,7 +23,10 @@ public final class QLearningMinimizer implements StochasticMinimizer {
   public DoubleVector minimize(StochasticCostFunction f, DoubleVector theta,
       int maxIterations, boolean verbose) {
     this.theta = theta;
-    f.evaluateCost(theta, x, y);
+    Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta, x, y);
+    if (verbose) {
+      System.out.println("Current Cost: " + evaluateCost.getFirst());
+    }
     return theta;
   }
 
