@@ -1059,6 +1059,84 @@ public final class ArrayUtils {
   }
 
   /**
+   * @return the min value in this array,
+   */
+  public static int min(int[] array) {
+    int minValue = array[0];
+    for (int aVector : array) {
+      if (minValue > aVector) {
+        minValue = aVector;
+      }
+    }
+    return minValue;
+  }
+
+  /**
+   * @return the minimum index in this array,
+   */
+  public static int minIndex(int[] array) {
+    int minIndex = 0;
+    for (int i = 0; i < array.length; i++) {
+      if (array[minIndex] > array[i]) {
+        minIndex = i;
+      }
+    }
+    return minIndex;
+  }
+
+  /**
+   * @return the minimum value in this array,
+   */
+  public static long min(long[] array) {
+    long minValue = array[0];
+    for (long aVector : array) {
+      if (minValue > aVector) {
+        minValue = aVector;
+      }
+    }
+    return minValue;
+  }
+
+  /**
+   * @return the minimum index in this array,
+   */
+  public static int minIndex(long[] array) {
+    int minIndex = 0;
+    for (int i = 0; i < array.length; i++) {
+      if (array[minIndex] > array[i]) {
+        minIndex = i;
+      }
+    }
+    return minIndex;
+  }
+
+  /**
+   * @return the minimum value in this array,
+   */
+  public static double min(double[] array) {
+    double minValue = array[0];
+    for (double aVector : array) {
+      if (minValue > aVector) {
+        minValue = aVector;
+      }
+    }
+    return minValue;
+  }
+
+  /**
+   * @return the minimum index in this array,
+   */
+  public static int minIndex(double[] array) {
+    int minIndex = 0;
+    for (int i = 0; i < array.length; i++) {
+      if (array[minIndex] > array[i]) {
+        minIndex = i;
+      }
+    }
+    return minIndex;
+  }
+
+  /**
    * @return the maximum value in this array,
    */
   public static int max(int[] array) {
