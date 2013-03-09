@@ -83,6 +83,18 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     public int compareTo(VectorDistanceTuple<VALUE> o) {
       return Double.compare(o.dist, dist);
     }
+
+    @Override
+    public String toString() {
+      return keyVector + " - " + value + " -> " + dist;
+    }
+  }
+
+  /**
+   * Adds the given vector with a null value to this tree.
+   */
+  public void add(DoubleVector vec) {
+    add(vec, null);
   }
 
   /**
@@ -127,14 +139,23 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
    */
   public List<DoubleVector> rangeQuery(DoubleVector lower, DoubleVector upper) {
     List<DoubleVector> list = Lists.newArrayList();
+    List<KDTreeNode> rangeInternal = rangeInternal(lower, upper);
+    for (KDTreeNode node : rangeInternal) {
+      list.add(node.keyVector);
+    }
+    return list;
+  }
 
+  private List<KDTreeNode> rangeInternal(DoubleVector lower, DoubleVector upper) {
+    List<KDTreeNode> list = Lists.newArrayList();
     Deque<KDTreeNode> toVisit = new ArrayDeque<>();
     toVisit.add(root);
     while (!toVisit.isEmpty()) {
       KDTreeNode next = toVisit.pop();
       if (strictLower(upper, next.keyVector)
-          && strictHigher(lower, next.keyVector))
-        list.add(next.keyVector);
+          && strictHigher(lower, next.keyVector)) {
+        list.add(next);
+      }
 
       if (next.left != null && checkSubtree(lower, upper, next.left)) {
         toVisit.add(next.left);
@@ -143,7 +164,6 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         toVisit.add(next.right);
       }
     }
-
     return list;
   }
 
@@ -160,6 +180,31 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       return greater || lower2;
     }
     return false;
+  }
+
+  /**
+   * @return all nearest neighbors to the given vector within a distance
+   *         threshold epsilon.
+   */
+  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
+      DoubleVector vec, DistanceMeasurer measurer, double epsilon) {
+    List<VectorDistanceTuple<VALUE>> list = Lists.newArrayList();
+    // create a bounding box arround the given vec and the epsilon radius
+    DoubleVector lower = vec.subtract(epsilon);
+    DoubleVector upper = vec.add(epsilon);
+
+    List<KDTreeNode> inRange = rangeInternal(lower, upper);
+    for (KDTreeNode vectorInRange : inRange) {
+      double dist = measurer.measureDistance(vec, vectorInRange.keyVector);
+      // now filter the bounding box by distance to filter out the difference
+      // between the square and the circle
+      if (dist < epsilon) {
+        list.add(new VectorDistanceTuple<>(vectorInRange.keyVector,
+            vectorInRange.value, dist));
+      }
+    }
+
+    return list;
   }
 
   /**
