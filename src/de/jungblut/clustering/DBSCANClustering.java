@@ -38,8 +38,8 @@ public final class DBSCANClustering {
     for (int i = 0; i < end; i++) {
       if (!visited.contains(i)) {
         visited.add(i);
-        TIntArrayList neighbours = getNearestNeighbours(points, i, measurer,
-            epsilon);
+        TIntArrayList neighbours = getNearestNeighbours(visited, null, points,
+            i, measurer, epsilon);
 
         if (neighbours.size() > minPoints) {
           currentCluster.add(points.get(i));
@@ -54,14 +54,21 @@ public final class DBSCANClustering {
     return clusterList;
   }
 
-  private static TIntArrayList getNearestNeighbours(List<DoubleVector> points,
-      int x, DistanceMeasurer measurer, double epsilon) {
+  private static TIntArrayList getNearestNeighbours(TIntHashSet visited,
+      TIntHashSet currentNeighbours, List<DoubleVector> points, int x,
+      DistanceMeasurer measurer, double epsilon) {
     TIntArrayList list = new TIntArrayList();
     final DoubleVector ref = points.get(x);
     for (int i = 0; i < points.size(); i++) {
-      double dist = measurer.measureDistance(ref, points.get(i));
-      if (dist < epsilon) {
-        list.add(i);
+      // filter based on what we've seen at the time
+      if (!visited.contains(i)) {
+        if (currentNeighbours != null && currentNeighbours.contains(i)) {
+          continue;
+        }
+        double dist = measurer.measureDistance(ref, points.get(i));
+        if (dist < epsilon) {
+          list.add(i);
+        }
       }
     }
 
@@ -78,20 +85,11 @@ public final class DBSCANClustering {
       int neighbour = neighbours.get(i);
       if (!visited.contains(neighbour)) {
         visited.add(neighbour);
-        TIntArrayList expandedNeighbours = getNearestNeighbours(points,
-            neighbour, measurer, epsilon);
-        // check minpoints
-        if (expandedNeighbours.size() >= minPoints) {
-          // add the expanded list to our neighbours
-
-          for (int x = 0; x < expandedNeighbours.size(); x++) {
-            int expandedNeighbour = expandedNeighbours.get(x);
-            if (!currentNeighbours.contains(expandedNeighbour)) {
-              currentNeighbours.add(expandedNeighbour);
-              neighbours.add(expandedNeighbour);
-            }
-          }
-        }
+        TIntArrayList expandedNeighbours = getNearestNeighbours(visited,
+            currentNeighbours, points, neighbour, measurer, epsilon);
+        // add the expanded list to our neighbours
+        currentNeighbours.addAll(expandedNeighbours);
+        neighbours.addAll(expandedNeighbours);
         // add the point to our cluster
         currentCluster.add(points.get(neighbour));
       }
