@@ -28,6 +28,7 @@ public final class Evaluator {
   public static class EvaluationResult {
     int numLabels, correct, trainSize, testSize, truePositive, falsePositive,
         trueNegative, falseNegative;
+    double logLossSum;
 
     public double getPrecision() {
       return ((double) truePositive) / (truePositive + falsePositive);
@@ -84,10 +85,11 @@ public final class Evaluator {
       falsePositive += res.falsePositive;
       trueNegative += res.trueNegative;
       falseNegative += res.falseNegative;
+      logLossSum += res.logLossSum;
     }
 
     public void average(int pn) {
-      double n = pn;
+      final double n = pn;
       numLabels /= n;
       correct /= n;
       trainSize /= n;
@@ -96,6 +98,16 @@ public final class Evaluator {
       falsePositive /= n;
       trueNegative /= n;
       falseNegative /= n;
+      logLossSum /= n;
+    }
+
+    public double getLogLoss() {
+      if (isBinary()) {
+        return this.logLossSum * -1d
+            / (truePositive + trueNegative + falsePositive + falseNegative);
+      } else {
+        return (this.logLossSum) * -1d / testSize;
+      }
     }
 
     public int getTruePositive() {
@@ -120,6 +132,7 @@ public final class Evaluator {
       System.out.println("Testset size: " + getTestSize());
       System.out.println("Correctly classified: " + getCorrect());
       System.out.println("Accuracy: " + getAccuracy());
+      System.out.println("LogLoss: " + getLogLoss());
       if (isBinary()) {
         System.out.println("TP: " + truePositive);
         System.out.println("FP: " + falsePositive);
@@ -223,11 +236,13 @@ public final class Evaluator {
     if (numLabels == 2) {
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = ((int) testOutcome[i].get(0));
+        DoubleVector predictedVector = classifier.predict(testFeatures[i]);
         int prediction = 0;
         if (threshold == null) {
-          prediction = classifier.getPredictedClass(testFeatures[i]);
+          prediction = classifier.predictClassInternal(predictedVector);
         } else {
-          prediction = classifier.getPredictedClass(testFeatures[i], threshold);
+          prediction = classifier.predictClassInternal(predictedVector,
+              threshold);
         }
         if (outcomeClass == 1) {
           if (prediction == 1) {
@@ -242,6 +257,11 @@ public final class Evaluator {
             result.falsePositive++; // "Unexpected result"
           }
         }
+
+        DoubleVector multiply = testOutcome[i].subtractFrom(1d).multiply(
+            log(predictedVector.subtractFrom(1d)));
+        result.logLossSum += testOutcome[i].multiply(log(predictedVector))
+            .add(multiply).sum();
       }
     } else {
       for (int i = 0; i < testFeatures.length; i++) {
@@ -353,6 +373,26 @@ public final class Evaluator {
       boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
         numLabels, 10, threshold, verbose);
+  }
+
+  /*
+   * Some helper functions.
+   */
+
+  private static DoubleVector log(DoubleVector v) {
+    DoubleVector vx = new DenseDoubleVector(v.getLength());
+    for (int i = 0; i < v.getLength(); i++) {
+      double d = v.get(i);
+      if (Double.isNaN(d) || Double.isInfinite(d)) {
+        d = 0d;
+      } else if (d <= 0d || d <= -0d) {
+        d = -10d;
+      } else {
+        d = Math.log(d);
+      }
+      vx.set(i, d);
+    }
+    return vx;
   }
 
 }
