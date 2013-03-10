@@ -493,11 +493,11 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return weights;
   }
 
-  int[] getLayers() {
+  public int[] getLayers() {
     return this.layers;
   }
 
-  ActivationFunction[] getActivations() {
+  public ActivationFunction[] getActivations() {
     return activations;
   }
 
