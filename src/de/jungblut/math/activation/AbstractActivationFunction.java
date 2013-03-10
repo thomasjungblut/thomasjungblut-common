@@ -117,4 +117,9 @@ public abstract class AbstractActivationFunction implements ActivationFunction {
     }
   }
 
+  @Override
+  public String toString() {
+    return getClass().getSimpleName();
+  }
+
 }
