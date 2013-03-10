@@ -119,8 +119,8 @@ public final class Voting extends AbstractClassifier {
     }
     int possibleOutcomes = result[0].getDimension() == 1 ? 2 : result[0]
         .getDimension();
-    DoubleVector toReturn = new DenseDoubleVector(possibleOutcomes == 2 ? 1
-        : possibleOutcomes);
+    DoubleVector toReturn = new DenseDoubleVector(
+        result[0].getDimension() == 1 ? 1 : possibleOutcomes);
     // now combine the results based on the rule
     switch (type) {
       case MAJORITY:
