@@ -208,6 +208,14 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
   }
 
   /**
+   * @return all nearest neighbors to the given vector.
+   */
+  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
+      DoubleVector vec, DistanceMeasurer measurer) {
+    return getNearestNeighbours(vec, Integer.MAX_VALUE, measurer);
+  }
+
+  /**
    * @return the k nearest neighbors to the given vector.
    */
   public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
