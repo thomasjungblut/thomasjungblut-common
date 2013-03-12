@@ -58,7 +58,7 @@ public final class MeanShiftClustering {
       for (VectorDistanceTuple<Integer> neighbour : neighbours) {
         if (neighbour.getDistance() < h) {
           double normDistance = neighbour.getDistance() / h;
-          weightSum -= gaussianGradient(normDistance * normDistance);
+          weightSum -= gaussianGradient(normDistance);
           numerator = numerator.add(neighbour.getVector().multiply(weightSum));
         }
       }
@@ -114,7 +114,7 @@ public final class MeanShiftClustering {
   }
 
   private static double gaussianGradient(double stddev) {
-    return -FastMath.exp(-(stddev * stddev) / 2d) * stddev / SQRT_2_PI;
+    return -FastMath.exp(-(stddev * stddev) / 2d) / (SQRT_2_PI * stddev);
   }
 
   public static void main(String[] args) throws Exception {

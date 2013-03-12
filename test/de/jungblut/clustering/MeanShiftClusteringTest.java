@@ -15,7 +15,7 @@ public class MeanShiftClusteringTest extends TestCase {
 
   @Test
   public void testMeanShiftClustering() {
-    double h = 450;
+    double h = 150;
     List<DoubleVector> centers = MeanShiftClustering.cluster(
         drawTwoDistinctDistributions(), h, 100, true);
 
@@ -30,13 +30,14 @@ public class MeanShiftClusteringTest extends TestCase {
     double mean2 = 750;
     RandomDataImpl random = new RandomDataImpl();
     for (int i = 0; i < 50; i++) {
-      double nextGaussian1 = random.nextGaussian(mean1, 100);
-      double nextGaussian2 = random.nextGaussian(mean2, 100);
+      double nextGaussian1 = random.nextGaussian(mean1, Math.sqrt(100));
+      assertTrue(nextGaussian1 >= 150 && nextGaussian1 <= 350);
+      double nextGaussian2 = random.nextGaussian(mean2, Math.sqrt(100));
+      assertTrue(nextGaussian2 >= 650 && nextGaussian2 <= 850);
       lst.add(new DenseDoubleVector(new double[] { nextGaussian1 }));
       lst.add(new DenseDoubleVector(new double[] { nextGaussian2 }));
     }
 
     return lst;
   }
-
 }

@@ -1,7 +1,6 @@
 package de.jungblut.reader;
 
 import java.io.File;
-import java.io.PrintStream;
 
 import javax.imageio.ImageIO;
 
