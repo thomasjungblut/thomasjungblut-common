@@ -50,9 +50,8 @@ public final class MeanShiftClustering {
       List<DoubleVector> centers, double h) {
     int remainingConvergence = 0;
     for (DoubleVector v : centers) {
-      // TODO radius search
       List<VectorDistanceTuple<Integer>> neighbours = kdTree
-          .getNearestNeighbours(v);
+          .getNearestNeighbours(v, h);
       double weightSum = 0d;
       DoubleVector numerator = new DenseDoubleVector(v.getLength());
       for (VectorDistanceTuple<Integer> neighbour : neighbours) {
@@ -88,9 +87,8 @@ public final class MeanShiftClustering {
     for (int i = 0; i < points.size(); i++) {
       if (!assignedIndices.get(i)) {
         DoubleVector v = points.get(i);
-        // TODO radius search
         List<VectorDistanceTuple<Integer>> neighbours = kdTree
-            .getNearestNeighbours(v);
+            .getNearestNeighbours(v, h);
         DoubleVector center = new DenseDoubleVector(v.getLength());
         int added = 0;
         for (VectorDistanceTuple<Integer> neighbour : neighbours) {

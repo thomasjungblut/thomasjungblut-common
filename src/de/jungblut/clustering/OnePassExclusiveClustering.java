@@ -73,8 +73,8 @@ public final class OnePassExclusiveClustering {
       if (!set.get(i)) {
         DoubleVector v = values.get(i);
         DoubleVector center = v.deepCopy();
-        List<VectorDistanceTuple<Integer>> nns = tree
-            .getNearestNeighbours(v, k);
+        List<VectorDistanceTuple<Integer>> nns = tree.getNearestNeighbours(v,
+            k, t1);
         int sum = 1;
         for (VectorDistanceTuple<Integer> nn : nns) {
           if (nn.getDistance() < t1 && !set.get(nn.getValue())) {

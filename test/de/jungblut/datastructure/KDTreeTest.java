@@ -8,11 +8,44 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
+import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
 public class KDTreeTest extends TestCase {
+
+  @Test
+  public void testKNearestNeighboursRadiusSearch() throws Exception {
+    KDTree<Object> tree = new KDTree<>();
+    DenseDoubleVector[] array = new DenseDoubleVector[] {
+        new DenseDoubleVector(new double[] { 2, 3 }),
+        new DenseDoubleVector(new double[] { 5, 4 }),
+        new DenseDoubleVector(new double[] { 9, 6 }),
+        new DenseDoubleVector(new double[] { 4, 7 }),
+        new DenseDoubleVector(new double[] { 8, 1 }),
+        new DenseDoubleVector(new double[] { 7, 2 }), };
+
+    for (DenseDoubleVector v : array) {
+      tree.add(v);
+    }
+
+    double maxDist = new EuclidianDistance()
+        .measureDistance(array[0], array[1]) + 0.1d;
+    List<VectorDistanceTuple<Object>> nearestNeighbours = tree
+        .getNearestNeighbours(new DenseDoubleVector(new double[] { 5, 4 }),
+            maxDist);
+    assertEquals(4, nearestNeighbours.size());
+    assertTrue(array[1] == nearestNeighbours.get(0).getVector());
+    assertTrue(nearestNeighbours.get(0).dist <= maxDist);
+    assertTrue(array[5] == nearestNeighbours.get(1).getVector());
+    assertTrue(nearestNeighbours.get(1).dist <= maxDist);
+    assertTrue(array[0] == nearestNeighbours.get(2).getVector());
+    assertTrue(nearestNeighbours.get(2).dist <= maxDist);
+    assertTrue(array[3] == nearestNeighbours.get(3).getVector());
+    assertTrue(nearestNeighbours.get(3).dist <= maxDist);
+
+  }
 
   @Test
   public void testInsert() throws Exception {
@@ -25,16 +58,17 @@ public class KDTreeTest extends TestCase {
         new DenseDoubleVector(new double[] { 8, 1 }),
         new DenseDoubleVector(new double[] { 7, 2 }), };
 
-    for (DenseDoubleVector v : array)
-      tree.add(v, null);
+    for (DenseDoubleVector v : array) {
+      tree.add(v);
+    }
 
     DenseDoubleVector[] result = new DenseDoubleVector[] {
         new DenseDoubleVector(new double[] { 2, 3 }),
-        new DenseDoubleVector(new double[] { 5, 4 }),
         new DenseDoubleVector(new double[] { 8, 1 }),
-        new DenseDoubleVector(new double[] { 9, 6 }),
+        new DenseDoubleVector(new double[] { 5, 4 }),
+        new DenseDoubleVector(new double[] { 7, 2 }),
         new DenseDoubleVector(new double[] { 4, 7 }),
-        new DenseDoubleVector(new double[] { 7, 2 }), };
+        new DenseDoubleVector(new double[] { 9, 6 }) };
 
     int index = 0;
     Iterator<DoubleVector> iterator = tree.iterator();
@@ -56,8 +90,9 @@ public class KDTreeTest extends TestCase {
         new DenseDoubleVector(new double[] { 8, 1 }),
         new DenseDoubleVector(new double[] { 7, 2 }), };
 
-    for (DenseDoubleVector v : array)
-      tree.add(v, null);
+    for (DenseDoubleVector v : array) {
+      tree.add(v);
+    }
 
     List<VectorDistanceTuple<Object>> nearestNeighbours = tree
         .getNearestNeighbours(new DenseDoubleVector(new double[] { 0, 0 }), 1);
@@ -151,11 +186,11 @@ public class KDTreeTest extends TestCase {
 
     DoubleVector[] result = new DoubleVector[] {
         new SparseDoubleVector(new double[] { 2, 3 }),
-        new SparseDoubleVector(new double[] { 5, 4 }),
         new SparseDoubleVector(new double[] { 8, 1 }),
-        new SparseDoubleVector(new double[] { 9, 6 }),
+        new SparseDoubleVector(new double[] { 5, 4 }),
+        new SparseDoubleVector(new double[] { 7, 2 }),
         new SparseDoubleVector(new double[] { 4, 7 }),
-        new SparseDoubleVector(new double[] { 7, 2 }), };
+        new SparseDoubleVector(new double[] { 9, 6 }) };
 
     for (DoubleVector v : array)
       tree.add(v, null);

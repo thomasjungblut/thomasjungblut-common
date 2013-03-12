@@ -150,7 +150,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       boolean right = false;
       // traverse the tree to the free spot in dimension
       while (true) {
-        right = current.keyVector.get(current.splitDimension) > vec
+        right = current.keyVector.get(current.splitDimension) <= vec
             .get(current.splitDimension);
         KDTreeNode next = right ? current.right : current.left;
         if (next == null) {
@@ -237,11 +237,27 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
    */
   public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
       DoubleVector vec, int k) {
+    return getNearestNeighbours(vec, k, Double.MAX_VALUE);
+  }
+
+  /**
+   * @return the k nearest neighbors to the given vector.
+   */
+  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
+      DoubleVector vec, double radius) {
+    return getNearestNeighbours(vec, Integer.MAX_VALUE, radius);
+  }
+
+  /**
+   * @return the k nearest neighbors to the given vector.
+   */
+  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
+      DoubleVector vec, int k, double radius) {
     LimitedPriorityQueue<VectorDistanceTuple<VALUE>> queue = new LimitedPriorityQueue<>(
         k);
     HyperRectangle hr = HyperRectangle.infiniteHyperRectangle(vec
         .getDimension());
-    getNearestNeighbourInternal(root, vec, hr, Double.MAX_VALUE, k, queue);
+    getNearestNeighbourInternal(root, vec, hr, radius, k, queue);
     return queue.toList();
   }
 
@@ -265,12 +281,12 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         hyperRectangle.min.deepCopy(), hyperRectangle.max.deepCopy());
     leftHyperRectangle.max.set(s, pivot.get(s));
     rightHyperRectangle.min.set(s, pivot.get(s));
-    boolean right = target.get(s) >= pivot.get(s);
+    boolean left = target.get(s) <= pivot.get(s);
     KDTreeNode nearestNode;
     HyperRectangle nearestHyperRectangle;
     KDTreeNode furtherstNode;
     HyperRectangle furtherstHyperRectangle;
-    if (right) {
+    if (left) {
       nearestNode = current.left;
       nearestHyperRectangle = leftHyperRectangle;
       furtherstNode = current.right;
@@ -284,28 +300,24 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     getNearestNeighbourInternal(nearestNode, target, nearestHyperRectangle,
         maxDistSquared, k, queue);
 
-    double distanceSquared;
-
-    if (!queue.isFull()) {
-      distanceSquared = Double.MAX_VALUE;
-    } else {
-      distanceSquared = queue.getMaximumPriority();
-    }
-
+    double distanceSquared = queue.isFull() ? queue.getMaximumPriority()
+        : Double.MAX_VALUE;
     maxDistSquared = Math.min(maxDistSquared, distanceSquared);
-
     DoubleVector closest = furtherstHyperRectangle.closestPoint(target);
     if (EUCLIDIAN.measureDistance(closest, target) < maxDistSquared) {
       if (distancePivotToTarget < distanceSquared) {
         distanceSquared = distancePivotToTarget;
-        queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
-            distanceSquared), distanceSquared);
-        if (queue.isFull()) {
-          maxDistSquared = queue.getMaximumPriority();
-        } else {
-          maxDistSquared = Double.MAX_VALUE;
+        double realDistance = EUCLIDIAN.measureDistance(current.keyVector,
+            target);
+        if (realDistance <= maxDistSquared) {
+          queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
+              realDistance), realDistance);
         }
+        maxDistSquared = queue.isFull() ? queue.getMaximumPriority()
+            : Double.MAX_VALUE;
+        maxDistSquared = Math.min(maxDistSquared, distanceSquared);
       }
+      // now inspect the furthest away node as well
       getNearestNeighbourInternal(furtherstNode, target,
           furtherstHyperRectangle, maxDistSquared, k, queue);
     }

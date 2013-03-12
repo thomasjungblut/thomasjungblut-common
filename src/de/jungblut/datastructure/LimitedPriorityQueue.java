@@ -26,6 +26,11 @@ public final class LimitedPriorityQueue<T> {
     public int compareTo(Entry<T> t) {
       return Double.compare(t.value, this.value);
     }
+    
+    @Override
+    public String toString() {
+      return data.toString();
+    }
   };
 
   private final PriorityQueue<Entry<T>> queue;
@@ -89,5 +94,10 @@ public final class LimitedPriorityQueue<T> {
     // reverse to get the smallest cost first
     Collections.reverse(list);
     return list;
+  }
+  
+  @Override
+  public String toString() {
+    return queue.toString();
   }
 }

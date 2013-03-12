@@ -31,7 +31,7 @@ public class KNearestNeighboursTest extends TestCase {
     DenseDoubleVector[] trainOutcome = ArrayUtils.subArray(fullOutcome,
         fullOutcome.length - 100);
 
-    KNearestNeighbours knn = new KNearestNeighbours(2, 4);
+    KNearestNeighbours knn = new KNearestNeighbours(2, 10);
     knn.train(trainFeatures, trainOutcome);
 
     int correct = 0;

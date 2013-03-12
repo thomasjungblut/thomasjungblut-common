@@ -16,14 +16,13 @@ public class OnePassExclusiveClusteringTest extends TestCase {
   @Test
   public void testClustering() {
 
-    double t1 = 10;
+    double t1 = 100;
     ArrayList<DoubleVector> input = KMeansClusteringTest.getClusteringInput();
     EuclidianDistance measure = new EuclidianDistance();
-    OnePassExclusiveClustering clusterer = new OnePassExclusiveClustering(t1,
-        100, 1);
+    OnePassExclusiveClustering clusterer = new OnePassExclusiveClustering(t1);
     List<DoubleVector> centers = clusterer.cluster(input, true);
 
-    assertEquals(268, centers.size());
+    assertEquals(78, centers.size());
     // now check if the properties hold
     for (DoubleVector v : centers) {
       // remove all vectors that are in t1

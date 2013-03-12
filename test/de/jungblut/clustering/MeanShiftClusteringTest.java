@@ -8,20 +8,46 @@ import junit.framework.TestCase;
 import org.apache.commons.math3.random.RandomDataImpl;
 import org.junit.Test;
 
+import de.jungblut.datastructure.KDTree;
+import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
+import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
 public class MeanShiftClusteringTest extends TestCase {
 
   @Test
-  public void testMeanShiftClustering() {
-    double h = 150;
-    List<DoubleVector> centers = MeanShiftClustering.cluster(
-        drawTwoDistinctDistributions(), h, 100, true);
+  public void testKDLookup() {
+    // TODO we definitely need this as the KDTree testcase
+    List<DoubleVector> points = drawTwoDistinctDistributions();
+    KDTree<Integer> kdTree = new KDTree<>();
+    int index = 0;
+    for (DoubleVector v : points) {
+      kdTree.add(v, index++);
+    }
+    System.out.println(kdTree.toString());
 
-    System.out.println(centers);
+    double maxRadius = new EuclidianDistance().measureDistance(
+        new double[] { 250 }, new double[] { 351 });
+
+    List<VectorDistanceTuple<Integer>> neighbours = kdTree
+        .getNearestNeighbours(new DenseDoubleVector(new double[] { 250 }),
+            maxRadius);
+    System.out.println(maxRadius);
+    System.out.println(neighbours.size());
+    System.out.println(neighbours);
 
   }
+
+  // @Test
+  // public void testMeanShiftClustering() {
+  // double h = 10;
+  // List<DoubleVector> centers = MeanShiftClustering.cluster(
+  // drawTwoDistinctDistributions(), h, 100, true);
+  //
+  // System.out.println(centers);
+  //
+  // }
 
   public List<DoubleVector> drawTwoDistinctDistributions() {
     List<DoubleVector> lst = new ArrayList<>(100);
