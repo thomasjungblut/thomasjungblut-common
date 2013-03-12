@@ -31,12 +31,13 @@ public final class MeanShiftClustering {
     }
 
     List<DoubleVector> centers = observeCenters(kdTree, points, h, verbose);
+    BitSet convergedSet = new BitSet(centers.size());
     List<DoubleVector> shifts = new ArrayList<>(centers.size());
     for (int i = 0; i < centers.size(); i++) {
       shifts.add(new DenseDoubleVector(points.get(0).getDimension()));
     }
     for (int i = 0; i < maxIterations; i++) {
-      int converged = meanShift(kdTree, centers, shifts, h);
+      int converged = meanShift(kdTree, centers, shifts, convergedSet, h);
       if (verbose) {
         System.out.println("Iteration: " + i
             + " | Number of centers not converged yet: " + converged + "/"
@@ -51,31 +52,37 @@ public final class MeanShiftClustering {
   }
 
   private static int meanShift(KDTree<Integer> kdTree,
-      List<DoubleVector> centers, List<DoubleVector> shifts, double h) {
+      List<DoubleVector> centers, List<DoubleVector> shifts,
+      BitSet convergedSet, double h) {
     int remainingConvergence = 0;
     for (int i = 0; i < centers.size(); i++) {
-      DoubleVector v = centers.get(i);
-      List<VectorDistanceTuple<Integer>> neighbours = kdTree
-          .getNearestNeighbours(v, h);
-      double weightSum = 0d;
-      DoubleVector numerator = new DenseDoubleVector(v.getLength());
-      for (VectorDistanceTuple<Integer> neighbour : neighbours) {
-        if (neighbour.getDistance() < h) {
-          double normDistance = neighbour.getDistance() / h;
-          weightSum -= gaussianGradient(normDistance);
-          numerator = numerator.add(neighbour.getVector().multiply(weightSum));
+      if (!convergedSet.get(i)) {
+        DoubleVector v = centers.get(i);
+        List<VectorDistanceTuple<Integer>> neighbours = kdTree
+            .getNearestNeighbours(v, h);
+        double weightSum = 0d;
+        DoubleVector numerator = new DenseDoubleVector(v.getLength());
+        for (VectorDistanceTuple<Integer> neighbour : neighbours) {
+          if (neighbour.getDistance() < h) {
+            double normDistance = neighbour.getDistance() / h;
+            weightSum -= gaussianGradient(normDistance);
+            numerator = numerator
+                .add(neighbour.getVector().multiply(weightSum));
+          }
         }
-      }
-      if (weightSum > 0d) {
-        DoubleVector shift = v.divide(numerator);
-        DoubleVector oldShift = shifts.get(i);
-        // check how the last shift was and if there wasn't too much movement,
-        // stay converged
-        if (shift.subtract(oldShift).abs().sum() > 1e-5) {
-          remainingConvergence++;
-          // apply the shift
-          centers.set(i, centers.get(i).add(shift));
-          shifts.set(i, shift);
+        if (weightSum > 0d) {
+          DoubleVector shift = v.divide(numerator);
+          DoubleVector oldShift = shifts.get(i);
+          // check how the last shift was and if there wasn't too much movement,
+          // stay converged
+          if (shift.subtract(oldShift).abs().sum() > 1e-5) {
+            remainingConvergence++;
+            // apply the shift
+            centers.set(i, centers.get(i).add(shift));
+            shifts.set(i, shift);
+          } else {
+            convergedSet.set(i);
+          }
         }
       }
     }
