@@ -30,9 +30,13 @@ public final class MeanShiftClustering {
       kdTree.add(v, index++);
     }
 
-    List<DoubleVector> centers = observeCenters(kdTree, points, h);
+    List<DoubleVector> centers = observeCenters(kdTree, points, h, verbose);
+    List<DoubleVector> shifts = new ArrayList<>(centers.size());
+    for (int i = 0; i < centers.size(); i++) {
+      shifts.add(new DenseDoubleVector(points.get(0).getDimension()));
+    }
     for (int i = 0; i < maxIterations; i++) {
-      int converged = meanShift(kdTree, centers, h);
+      int converged = meanShift(kdTree, centers, shifts, h);
       if (verbose) {
         System.out.println("Iteration: " + i
             + " | Number of centers not converged yet: " + converged + "/"
@@ -47,9 +51,10 @@ public final class MeanShiftClustering {
   }
 
   private static int meanShift(KDTree<Integer> kdTree,
-      List<DoubleVector> centers, double h) {
+      List<DoubleVector> centers, List<DoubleVector> shifts, double h) {
     int remainingConvergence = 0;
-    for (DoubleVector v : centers) {
+    for (int i = 0; i < centers.size(); i++) {
+      DoubleVector v = centers.get(i);
       List<VectorDistanceTuple<Integer>> neighbours = kdTree
           .getNearestNeighbours(v, h);
       double weightSum = 0d;
@@ -62,16 +67,15 @@ public final class MeanShiftClustering {
         }
       }
       if (weightSum > 0d) {
-        // TODO convergence when the shift doesn't change, or when the center
-        // doesn't move anymore?
         DoubleVector shift = v.divide(numerator);
-        DoubleVector vCopy = v.deepCopy().add(shift);
-        if (vCopy.subtract(v).abs().sum() > 1e-5) {
+        DoubleVector oldShift = shifts.get(i);
+        // check how the last shift was and if there wasn't too much movement,
+        // stay converged
+        if (shift.subtract(oldShift).abs().sum() > 1e-5) {
           remainingConvergence++;
-          // copy the stuff to the real center
-          for (int i = 0; i < v.getLength(); i++) {
-            v.set(i, vCopy.get(i));
-          }
+          // apply the shift
+          centers.set(i, centers.get(i).add(shift));
+          shifts.set(i, shift);
         }
       }
     }
@@ -79,7 +83,7 @@ public final class MeanShiftClustering {
   }
 
   private static List<DoubleVector> observeCenters(KDTree<Integer> kdTree,
-      List<DoubleVector> points, double h) {
+      List<DoubleVector> points, double h, boolean verbose) {
     List<DoubleVector> centers = new ArrayList<>();
     BitSet assignedIndices = new BitSet(kdTree.size());
     // we are doing one pass over the dataset to determine the first centers
@@ -103,6 +107,9 @@ public final class MeanShiftClustering {
         if (added > 1) {
           DoubleVector newCenter = center.divide(added);
           centers.add(newCenter);
+          if (verbose && centers.size() % 1000 == 0) {
+            System.out.println("#Centers found: " + centers.size());
+          }
         }
       }
       assignedIndices.set(i);

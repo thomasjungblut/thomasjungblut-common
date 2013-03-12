@@ -9,6 +9,8 @@ import junit.framework.TestCase;
 import org.apache.commons.math3.random.RandomDataImpl;
 import org.junit.Test;
 
+import com.google.common.math.DoubleMath;
+
 import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.EuclidianDistance;
@@ -43,9 +45,10 @@ public class MeanShiftClusteringTest extends TestCase {
     double h = 100;
     List<DoubleVector> centers = MeanShiftClustering.cluster(
         drawTwoDistinctDistributions(null), h, 100, true);
-
     System.out.println(centers);
-
+    assertEquals(2, centers.size());
+    assertTrue(DoubleMath.fuzzyEquals(centers.get(0).get(0), 250, 5));
+    assertTrue(DoubleMath.fuzzyEquals(centers.get(1).get(0), 750, 5));
   }
 
   public List<DoubleVector> drawTwoDistinctDistributions(
