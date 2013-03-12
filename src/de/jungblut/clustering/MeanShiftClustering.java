@@ -1,12 +1,8 @@
 package de.jungblut.clustering;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
-
-import javax.imageio.ImageIO;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -14,7 +10,6 @@ import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.reader.ImageReader;
 
 public final class MeanShiftClustering {
 
@@ -127,14 +122,6 @@ public final class MeanShiftClustering {
 
   private static double gaussianGradient(double stddev) {
     return -FastMath.exp(-(stddev * stddev) / 2d) / (SQRT_2_PI * stddev);
-  }
-
-  public static void main(String[] args) throws Exception {
-    DoubleVector[] luv = ImageReader.readImageAsLUV(ImageIO.read(new File(
-        "files/img/lenna.png")));
-    List<DoubleVector> cluster = MeanShiftClustering.cluster(
-        Arrays.asList(luv), 3d, 100, true);
-    System.out.println(cluster.size());
   }
 
 }
