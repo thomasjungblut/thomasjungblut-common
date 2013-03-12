@@ -257,7 +257,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         k);
     HyperRectangle hr = HyperRectangle.infiniteHyperRectangle(vec
         .getDimension());
-    getNearestNeighbourInternal(root, vec, hr, radius, k, queue);
+    getNearestNeighbourInternal(root, vec, hr, radius, k, radius, queue);
     return queue.toList();
   }
 
@@ -267,7 +267,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
    */
   private void getNearestNeighbourInternal(KDTreeNode current,
       DoubleVector target, HyperRectangle hyperRectangle,
-      double maxDistSquared, int k,
+      double maxDistSquared, int k, final double radius,
       LimitedPriorityQueue<VectorDistanceTuple<VALUE>> queue) {
     if (current == null) {
       return;
@@ -281,7 +281,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         hyperRectangle.min.deepCopy(), hyperRectangle.max.deepCopy());
     leftHyperRectangle.max.set(s, pivot.get(s));
     rightHyperRectangle.min.set(s, pivot.get(s));
-    boolean left = target.get(s) <= pivot.get(s);
+    boolean left = target.get(s) > pivot.get(s);
     KDTreeNode nearestNode;
     HyperRectangle nearestHyperRectangle;
     KDTreeNode furtherstNode;
@@ -298,20 +298,22 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       furtherstHyperRectangle = leftHyperRectangle;
     }
     getNearestNeighbourInternal(nearestNode, target, nearestHyperRectangle,
-        maxDistSquared, k, queue);
+        maxDistSquared, k, radius, queue);
 
     double distanceSquared = queue.isFull() ? queue.getMaximumPriority()
         : Double.MAX_VALUE;
     maxDistSquared = Math.min(maxDistSquared, distanceSquared);
     DoubleVector closest = furtherstHyperRectangle.closestPoint(target);
-    if (EUCLIDIAN.measureDistance(closest, target) < maxDistSquared) {
+    double closestDistance = EUCLIDIAN.measureDistance(closest, target);
+    // check subtrees even if they aren't in your maxDist but within our radius
+    if (closestDistance < maxDistSquared || closestDistance < radius) {
       if (distancePivotToTarget < distanceSquared) {
-        distanceSquared = distancePivotToTarget;
-        double realDistance = EUCLIDIAN.measureDistance(current.keyVector,
-            target);
-        if (realDistance <= maxDistSquared) {
+        distanceSquared = distancePivotToTarget > 0d ? distancePivotToTarget
+            : distanceSquared;
+        // check if we are within our defined radius
+        if (distancePivotToTarget <= radius) {
           queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
-              realDistance), realDistance);
+              distancePivotToTarget), distancePivotToTarget);
         }
         maxDistSquared = queue.isFull() ? queue.getMaximumPriority()
             : Double.MAX_VALUE;
@@ -319,7 +321,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       }
       // now inspect the furthest away node as well
       getNearestNeighbourInternal(furtherstNode, target,
-          furtherstHyperRectangle, maxDistSquared, k, queue);
+          furtherstHyperRectangle, maxDistSquared, k, radius, queue);
     }
   }
 

@@ -30,19 +30,23 @@ public class KDTreeTest extends TestCase {
       tree.add(v);
     }
 
+    System.out.println(tree);
+
     double maxDist = new EuclidianDistance()
-        .measureDistance(array[0], array[1]) + 0.1d;
+        .measureDistance(array[0], array[1]);
     List<VectorDistanceTuple<Object>> nearestNeighbours = tree
         .getNearestNeighbours(new DenseDoubleVector(new double[] { 5, 4 }),
             maxDist);
+    System.out.println(maxDist);
+    System.out.println(nearestNeighbours);
     assertEquals(4, nearestNeighbours.size());
     assertTrue(array[1] == nearestNeighbours.get(0).getVector());
     assertTrue(nearestNeighbours.get(0).dist <= maxDist);
     assertTrue(array[5] == nearestNeighbours.get(1).getVector());
     assertTrue(nearestNeighbours.get(1).dist <= maxDist);
-    assertTrue(array[0] == nearestNeighbours.get(2).getVector());
+    assertTrue(array[3] == nearestNeighbours.get(2).getVector());
     assertTrue(nearestNeighbours.get(2).dist <= maxDist);
-    assertTrue(array[3] == nearestNeighbours.get(3).getVector());
+    assertTrue(array[0] == nearestNeighbours.get(3).getVector());
     assertTrue(nearestNeighbours.get(3).dist <= maxDist);
 
   }
