@@ -41,7 +41,7 @@ public final class CanopyClustering {
       DoubleVector p1 = points.get(0);
       points.remove(0);
       DoubleVector canopy = p1.deepCopy();
-      int assigned = 0;
+      int assigned = 1;
       // one can speed this up by an inverted index or a kd-tree
       Iterator<DoubleVector> iterator = points.iterator();
       while (iterator.hasNext()) {
@@ -60,7 +60,7 @@ public final class CanopyClustering {
         }
       }
       // average it
-      if (assigned > 0) {
+      if (assigned > 1) {
         canopy = canopy.divide(assigned);
       }
       canopyList.add(canopy);

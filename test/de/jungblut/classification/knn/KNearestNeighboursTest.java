@@ -5,7 +5,6 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.jungblut.datastructure.ArrayUtils;
-import de.jungblut.distance.ManhattanDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
@@ -32,8 +31,7 @@ public class KNearestNeighboursTest extends TestCase {
     DenseDoubleVector[] trainOutcome = ArrayUtils.subArray(fullOutcome,
         fullOutcome.length - 100);
 
-    KNearestNeighbours knn = new KNearestNeighbours(new ManhattanDistance(), 2,
-        4);
+    KNearestNeighbours knn = new KNearestNeighbours(2, 4);
     knn.train(trainFeatures, trainOutcome);
 
     int correct = 0;

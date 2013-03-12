@@ -8,7 +8,6 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
-import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
@@ -61,8 +60,7 @@ public class KDTreeTest extends TestCase {
       tree.add(v, null);
 
     List<VectorDistanceTuple<Object>> nearestNeighbours = tree
-        .getNearestNeighbours(new DenseDoubleVector(new double[] { 0, 0 }), 1,
-            new EuclidianDistance());
+        .getNearestNeighbours(new DenseDoubleVector(new double[] { 0, 0 }), 1);
     assertEquals(1, nearestNeighbours.size());
     assertTrue(array[0] == nearestNeighbours.get(0).getVector());
   }
@@ -186,8 +184,7 @@ public class KDTreeTest extends TestCase {
       tree.add(v, null);
 
     List<VectorDistanceTuple<Object>> nearestNeighbours = tree
-        .getNearestNeighbours(new SparseDoubleVector(new double[] { 0, 0 }), 1,
-            new EuclidianDistance());
+        .getNearestNeighbours(new SparseDoubleVector(new double[] { 0, 0 }), 1);
     assertEquals(1, nearestNeighbours.size());
     assertTrue(array[0] == nearestNeighbours.get(0).getVector());
   }

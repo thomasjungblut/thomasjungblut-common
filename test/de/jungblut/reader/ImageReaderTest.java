@@ -20,7 +20,6 @@ public class ImageReaderTest extends TestCase {
 
     DoubleVector[] luvVectors = ImageReader.readImageAsLUV(ImageIO
         .read(new File(LENNA_PATH)));
-    System.setOut(new PrintStream("files/vectors.txt"));
     assertEquals(512 * 512, luvVectors.length);
     for (int i = 0; i < luvVectors.length; i++) {
       assertEquals(3, luvVectors[i].getLength());

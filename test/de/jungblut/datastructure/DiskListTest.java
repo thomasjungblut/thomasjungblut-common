@@ -12,6 +12,7 @@ public class DiskListTest extends TestCase {
   @Test
   public void testReadWrite() throws IOException {
 
+    @SuppressWarnings("resource")
     DiskList<IntWritable> list = new DiskList<>("/tmp/disklist.tmp");
     long size = 5242880;
     IntWritable instance = fill(list, size);
@@ -41,6 +42,7 @@ public class DiskListTest extends TestCase {
   @Test
   public void testReadWriteIterator() throws IOException {
 
+    @SuppressWarnings("resource")
     DiskList<IntWritable> list = new DiskList<>("/tmp/disklist.tmp",
         new IntWritable());
     long size = 5242880;

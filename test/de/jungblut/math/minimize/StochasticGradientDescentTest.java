@@ -49,7 +49,7 @@ public class StochasticGradientDescentTest extends TestCase {
         DoubleVector gradient = MathUtils.numericalGradient(prediction,
             inlineFunction);
 
-        return new Tuple<Double, DoubleVector>(cost, gradient);
+        return new Tuple<>(cost, gradient);
       }
     };
 

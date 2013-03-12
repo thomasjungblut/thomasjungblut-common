@@ -24,7 +24,7 @@ public class ParticleSwarmOptimizationTest extends TestCase {
 
         double cost = Math.pow(input.get(0), 2) + Math.pow(input.get(1), 2);
 
-        return new Tuple<Double, DoubleVector>(cost, null);
+        return new Tuple<>(cost, null);
       }
     };
 
@@ -48,7 +48,7 @@ public class ParticleSwarmOptimizationTest extends TestCase {
         // that's the rosenbrock function
         double cost = Math.pow((1 - x), 2) + 100 * Math.pow((y - x * x), 2);
 
-        return new Tuple<Double, DoubleVector>(cost, null);
+        return new Tuple<>(cost, null);
       }
     };
 

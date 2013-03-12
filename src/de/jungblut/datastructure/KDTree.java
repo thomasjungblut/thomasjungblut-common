@@ -1,19 +1,19 @@
 package de.jungblut.datastructure;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
-import java.util.PriorityQueue;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
 
 import de.jungblut.distance.DistanceMeasurer;
+import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
+import de.jungblut.math.dense.DenseDoubleVector;
 
 /**
  * Implementation of a kd-tree that handles dense vectors as well as sparse
@@ -26,6 +26,8 @@ import de.jungblut.math.DoubleVector.DoubleVectorElement;
  * 
  */
 public final class KDTree<VALUE> implements Iterable<DoubleVector> {
+
+  private static final DistanceMeasurer EUCLIDIAN = new EuclidianDistance();
 
   private KDTreeNode root;
   private int size;
@@ -87,6 +89,47 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     @Override
     public String toString() {
       return keyVector + " - " + value + " -> " + dist;
+    }
+  }
+
+  private static final class HyperRectangle {
+
+    protected DoubleVector min;
+    protected DoubleVector max;
+
+    public HyperRectangle(DoubleVector min, DoubleVector max) {
+      this.min = min;
+      this.max = max;
+    }
+
+    public DoubleVector closestPoint(DoubleVector t) {
+      DoubleVector p = new DenseDoubleVector(t.getDimension());
+      for (int i = 0; i < t.getDimension(); ++i) {
+        if (t.get(i) <= min.get(i)) {
+          p.set(i, min.get(i));
+        } else if (t.get(i) >= max.get(i)) {
+          p.set(i, max.get(i));
+        } else {
+          p.set(i, t.get(i));
+        }
+      }
+      return p;
+    }
+
+    public static HyperRectangle infiniteHyperRectangle(int dimension) {
+      DoubleVector min = new DenseDoubleVector(dimension);
+      DoubleVector max = new DenseDoubleVector(dimension);
+      for (int i = 0; i < dimension; ++i) {
+        min.set(i, Double.NEGATIVE_INFINITY);
+        max.set(i, Double.POSITIVE_INFINITY);
+      }
+
+      return new HyperRectangle(min, max);
+    }
+
+    @Override
+    public String toString() {
+      return "min: " + min + " ; max: " + max;
     }
   }
 
@@ -183,64 +226,89 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
   }
 
   /**
-   * @return all nearest neighbors to the given vector within a distance
-   *         threshold epsilon.
+   * @return the nearest neighbors to the given vector.
    */
-  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
-      DoubleVector vec, DistanceMeasurer measurer, double epsilon) {
-    List<VectorDistanceTuple<VALUE>> list = Lists.newArrayList();
-    // create a bounding box arround the given vec and the epsilon radius
-    DoubleVector lower = vec.subtract(epsilon);
-    DoubleVector upper = vec.add(epsilon);
-
-    List<KDTreeNode> inRange = rangeInternal(lower, upper);
-    for (KDTreeNode vectorInRange : inRange) {
-      double dist = measurer.measureDistance(vec, vectorInRange.keyVector);
-      // now filter the bounding box by distance to filter out the difference
-      // between the square and the circle
-      if (dist < epsilon) {
-        list.add(new VectorDistanceTuple<>(vectorInRange.keyVector,
-            vectorInRange.value, dist));
-      }
-    }
-
-    return list;
-  }
-
-  /**
-   * @return all nearest neighbors to the given vector.
-   */
-  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
-      DoubleVector vec, DistanceMeasurer measurer) {
-    return getNearestNeighbours(vec, Integer.MAX_VALUE, measurer);
+  public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(DoubleVector vec) {
+    return getNearestNeighbours(vec, Integer.MAX_VALUE);
   }
 
   /**
    * @return the k nearest neighbors to the given vector.
    */
   public List<VectorDistanceTuple<VALUE>> getNearestNeighbours(
-      DoubleVector vec, int k, DistanceMeasurer measurer) {
-    PriorityQueue<VectorDistanceTuple<VALUE>> queue = new PriorityQueue<>();
-    KDTreeNode current = root;
+      DoubleVector vec, int k) {
+    LimitedPriorityQueue<VectorDistanceTuple<VALUE>> queue = new LimitedPriorityQueue<>(
+        k);
+    HyperRectangle hr = HyperRectangle.infiniteHyperRectangle(vec
+        .getDimension());
+    getNearestNeighbourInternal(root, vec, hr, Double.MAX_VALUE, k, queue);
+    return queue.toList();
+  }
 
-    queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
-        measurer.measureDistance(current.keyVector, vec)));
-    while (true) {
-      if (queue.size() > k)
-        queue.remove();
-      boolean right = current.keyVector.get(current.splitDimension) > vec
-          .get(current.splitDimension);
-      KDTreeNode next = right ? current.right : current.left;
-      if (next == null) {
-        break;
-      } else {
-        current = next;
-        queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
-            measurer.measureDistance(current.keyVector, vec)));
-      }
+  /**
+   * Euclidian distance based recursive algorithm for nearest neighbour queries
+   * based on Andrew W. Moore.
+   */
+  private void getNearestNeighbourInternal(KDTreeNode current,
+      DoubleVector target, HyperRectangle hyperRectangle,
+      double maxDistSquared, int k,
+      LimitedPriorityQueue<VectorDistanceTuple<VALUE>> queue) {
+    if (current == null) {
+      return;
+    }
+    int s = current.splitDimension;
+    DoubleVector pivot = current.keyVector;
+    double distancePivotToTarget = EUCLIDIAN.measureDistance(pivot, target);
+
+    HyperRectangle leftHyperRectangle = hyperRectangle;
+    HyperRectangle rightHyperRectangle = new HyperRectangle(
+        hyperRectangle.min.deepCopy(), hyperRectangle.max.deepCopy());
+    leftHyperRectangle.max.set(s, pivot.get(s));
+    rightHyperRectangle.min.set(s, pivot.get(s));
+    boolean right = target.get(s) >= pivot.get(s);
+    KDTreeNode nearestNode;
+    HyperRectangle nearestHyperRectangle;
+    KDTreeNode furtherstNode;
+    HyperRectangle furtherstHyperRectangle;
+    if (right) {
+      nearestNode = current.left;
+      nearestHyperRectangle = leftHyperRectangle;
+      furtherstNode = current.right;
+      furtherstHyperRectangle = rightHyperRectangle;
+    } else {
+      nearestNode = current.right;
+      nearestHyperRectangle = rightHyperRectangle;
+      furtherstNode = current.left;
+      furtherstHyperRectangle = leftHyperRectangle;
+    }
+    getNearestNeighbourInternal(nearestNode, target, nearestHyperRectangle,
+        maxDistSquared, k, queue);
+
+    double distanceSquared;
+
+    if (!queue.isFull()) {
+      distanceSquared = Double.MAX_VALUE;
+    } else {
+      distanceSquared = queue.getMaximumPriority();
     }
 
-    return new ArrayList<>(queue);
+    maxDistSquared = Math.min(maxDistSquared, distanceSquared);
+
+    DoubleVector closest = furtherstHyperRectangle.closestPoint(target);
+    if (EUCLIDIAN.measureDistance(closest, target) < maxDistSquared) {
+      if (distancePivotToTarget < distanceSquared) {
+        distanceSquared = distancePivotToTarget;
+        queue.add(new VectorDistanceTuple<>(current.keyVector, current.value,
+            distanceSquared), distanceSquared);
+        if (queue.isFull()) {
+          maxDistSquared = queue.getMaximumPriority();
+        } else {
+          maxDistSquared = Double.MAX_VALUE;
+        }
+      }
+      getNearestNeighbourInternal(furtherstNode, target,
+          furtherstHyperRectangle, maxDistSquared, k, queue);
+    }
   }
 
   /**

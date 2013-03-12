@@ -6,7 +6,6 @@ import org.junit.Test;
 
 import de.jungblut.classification.Evaluator.EvaluationResult;
 import de.jungblut.classification.knn.KNearestNeighbours;
-import de.jungblut.distance.ManhattanDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
@@ -21,9 +20,8 @@ public class EvaluatorTest extends TestCase {
     Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset = MushroomReader
         .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
     EvaluationResult evaluation = Evaluator.evaluateClassifier(
-        new KNearestNeighbours(new ManhattanDistance(), 2, 4),
-        readMushroomDataset.getFirst(), readMushroomDataset.getSecond(), 2,
-        0.99f, false);
+        new KNearestNeighbours(2, 4), readMushroomDataset.getFirst(),
+        readMushroomDataset.getSecond(), 2, 0.99f, false);
 
     assertEquals(2, evaluation.getNumLabels());
     assertEquals(true, evaluation.isBinary());
@@ -47,7 +45,7 @@ public class EvaluatorTest extends TestCase {
         new ClassifierFactory() {
           @Override
           public Classifier newInstance() {
-            return new KNearestNeighbours(new ManhattanDistance(), 2, 4);
+            return new KNearestNeighbours(2, 4);
           }
         }, readMushroomDataset.getFirst(), readMushroomDataset.getSecond(), 2,
         null, false);
