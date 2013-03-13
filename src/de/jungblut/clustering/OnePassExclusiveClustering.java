@@ -7,6 +7,7 @@ import java.util.List;
 
 import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
+import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 
 /**
@@ -24,9 +25,10 @@ import de.jungblut.math.DoubleVector;
  */
 public final class OnePassExclusiveClustering {
 
-  private int minSize = 2;
-  private int k = Integer.MAX_VALUE;
-  private double t1 = 1d;
+  private int minSize;
+  private int k;
+  private double t1;
+  private boolean mergeOverlaps;
 
   /**
    * Constructs a one pass clustering algorithm. With unlimited maximum number
@@ -35,7 +37,7 @@ public final class OnePassExclusiveClustering {
    * @param t1 the maximum distance of neighbourhood.
    */
   public OnePassExclusiveClustering(double t1) {
-    this.t1 = t1;
+    this(t1, Integer.MAX_VALUE, 2, false);
   }
 
   /**
@@ -45,8 +47,11 @@ public final class OnePassExclusiveClustering {
    * @param k the maximum number of neighbours to retrieve inside the t1
    *          threshold.
    * @param minSize the minimum size of a cluster.
+   * @param mergeOverlaps if true, overlapping found centers by t1 distance will
+   *          be merged.
    */
-  public OnePassExclusiveClustering(double t1, int k, int minSize) {
+  public OnePassExclusiveClustering(double t1, int k, int minSize,
+      boolean mergeOverlaps) {
     this.t1 = t1;
     this.k = k;
     this.minSize = minSize;
@@ -60,12 +65,13 @@ public final class OnePassExclusiveClustering {
    * @return a list of centers that describe the given vectors.
    */
   public List<DoubleVector> cluster(List<DoubleVector> values, boolean verbose) {
-    ArrayList<DoubleVector> toReturn = new ArrayList<>();
+    ArrayList<DoubleVector> centers = new ArrayList<>();
     KDTree<Integer> tree = new KDTree<>();
     int index = 0;
     for (DoubleVector value : values) {
       tree.add(value, index++);
     }
+    tree.balanceBySort();
 
     BitSet set = new BitSet(values.size());
     int items = 0;
@@ -85,7 +91,27 @@ public final class OnePassExclusiveClustering {
         }
         // ignore clusters violating the threshold.
         if (sum >= minSize) {
-          toReturn.add(center.divide(sum));
+          DoubleVector newCenter = center.divide(sum);
+          if (mergeOverlaps) {
+            boolean noOverlap = true;
+            // merge overlapping clusters within our t1
+            for (int x = 0; x < centers.size(); x++) {
+              DoubleVector ref = centers.get(x);
+              double dist = EuclidianDistance.get().measureDistance(ref,
+                  newCenter);
+              if (dist < t1) {
+                // average both centers
+                centers.set(x, ref.add(newCenter).divide(2d));
+                noOverlap = false;
+                break;
+              }
+            }
+            if (noOverlap) {
+              centers.add(newCenter);
+            }
+          } else {
+            centers.add(newCenter);
+          }
         }
         set.set(i);
       }
@@ -94,9 +120,9 @@ public final class OnePassExclusiveClustering {
         String progressString = NumberFormat.getPercentInstance().format(
             items / (double) tree.size());
         System.out.format("Processed %d/%d = %s. Centers found: %d.\n", items,
-            tree.size(), progressString, toReturn.size());
+            tree.size(), progressString, centers.size());
       }
     }
-    return toReturn;
+    return centers;
   }
 }

@@ -22,7 +22,6 @@ import de.jungblut.math.dense.DenseDoubleVector;
 public final class MeanShiftClustering {
 
   private static final double SQRT_2_PI = FastMath.sqrt(2 * Math.PI);
-  private static final EuclidianDistance DISTANCE = new EuclidianDistance();
 
   /**
    * Clusters a bunch of given points using the Mean Shift algorithm. It first
@@ -50,6 +49,7 @@ public final class MeanShiftClustering {
     for (DoubleVector v : points) {
       kdTree.add(v, index++);
     }
+    kdTree.balanceBySort();
     // start observing the centers
     List<DoubleVector> centers = observeCenters(kdTree, points, windowSize,
         verbose);
@@ -80,7 +80,8 @@ public final class MeanShiftClustering {
       // find centers to merge if they are within our merge window
       for (int j = i + 1; j < centers.size(); j++) {
         DoubleVector center = centers.get(j);
-        double dist = DISTANCE.measureDistance(referenceVector, center);
+        double dist = EuclidianDistance.get().measureDistance(referenceVector,
+            center);
         if (dist < mergeWindow) {
           centers.remove(j);
           centers.set(i, referenceVector.add(center).divide(2d));

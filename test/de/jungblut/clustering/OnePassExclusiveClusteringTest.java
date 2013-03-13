@@ -19,10 +19,11 @@ public class OnePassExclusiveClusteringTest extends TestCase {
     double t1 = 10;
     ArrayList<DoubleVector> input = KMeansClusteringTest.getClusteringInput();
     EuclidianDistance measure = new EuclidianDistance();
-    OnePassExclusiveClustering clusterer = new OnePassExclusiveClustering(t1);
-    List<DoubleVector> centers = clusterer.cluster(input, true);
+    OnePassExclusiveClustering clusterer = new OnePassExclusiveClustering(t1,
+        Integer.MAX_VALUE, 1, false);
+    List<DoubleVector> centers = clusterer.cluster(input, false);
 
-    assertEquals(120, centers.size());
+    assertEquals(6377, centers.size());
     // now check if the properties hold
     for (DoubleVector v : centers) {
       // remove all vectors that are in t1

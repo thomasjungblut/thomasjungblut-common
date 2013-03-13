@@ -1,6 +1,9 @@
 package de.jungblut.datastructure;
 
+import java.lang.reflect.Array;
 import java.util.ArrayDeque;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
@@ -8,8 +11,8 @@ import java.util.List;
 import com.google.common.base.Strings;
 import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Doubles;
 
-import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
@@ -26,8 +29,6 @@ import de.jungblut.math.dense.DenseDoubleVector;
  * 
  */
 public final class KDTree<VALUE> implements Iterable<DoubleVector> {
-
-  private static final DistanceMeasurer EUCLIDIAN = new EuclidianDistance();
 
   private KDTreeNode root;
   private int size;
@@ -133,6 +134,47 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     }
   }
 
+  private final class BreadthFirstIterator extends AbstractIterator<KDTreeNode> {
+
+    private final Deque<KDTreeNode> toVisit = new ArrayDeque<>();
+    KDTreeNode current;
+
+    public BreadthFirstIterator() {
+      toVisit.add(root);
+    }
+
+    @Override
+    protected KDTreeNode computeNext() {
+      current = toVisit.poll();
+      if (current != null) {
+        if (current.left != null) {
+          toVisit.add(current.left);
+        }
+        if (current.right != null) {
+          toVisit.add(current.right);
+        }
+        return current;
+      }
+      return endOfData();
+    }
+  }
+
+  private final class VectorBFSIterator extends AbstractIterator<DoubleVector> {
+
+    private BreadthFirstIterator inOrderIterator;
+
+    public VectorBFSIterator() {
+      inOrderIterator = new BreadthFirstIterator();
+    }
+
+    @Override
+    protected DoubleVector computeNext() {
+      KDTreeNode next = inOrderIterator.computeNext();
+      return next != null ? next.keyVector : endOfData();
+    }
+
+  }
+
   /**
    * Adds the given vector with a null value to this tree.
    */
@@ -171,6 +213,47 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       root = new KDTreeNode(median(vec, 0), vec, value);
     }
     size++;
+  }
+
+  /**
+   * Balances this kd-tree by sorting along the split dimension and rebuilding
+   * the tree.
+   */
+  public void balanceBySort() {
+    @SuppressWarnings("unchecked")
+    KDTreeNode[] nodes = (KDTreeNode[]) Array.newInstance(KDTreeNode.class,
+        size());
+    int index = 0;
+    Iterator<KDTreeNode> iterateNodes = iterateNodes();
+    while (iterateNodes.hasNext()) {
+      nodes[index++] = iterateNodes.next();
+    }
+
+    Arrays.sort(nodes, new Comparator<KDTreeNode>() {
+      @Override
+      public int compare(KDTreeNode o1, KDTreeNode o2) {
+        return Doubles.compare(o1.keyVector.get(o1.splitDimension),
+            o2.keyVector.get(o2.splitDimension));
+      }
+    });
+
+    // do an inverse binary search to build up the tree from the root
+    root = fix(nodes, 0, nodes.length - 1);
+  }
+
+  /**
+   * Fixup the tree recursively by divide and conquering the sorted array.
+   */
+  private KDTreeNode fix(KDTreeNode[] nodes, int start, int end) {
+    if (start > end) {
+      return null;
+    } else {
+      int mid = (start + end) >>> 1;
+      KDTreeNode midNode = nodes[mid];
+      midNode.left = fix(nodes, start, mid - 1);
+      midNode.right = fix(nodes, mid + 1, end);
+      return midNode;
+    }
   }
 
   /**
@@ -274,7 +357,8 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     }
     int s = current.splitDimension;
     DoubleVector pivot = current.keyVector;
-    double distancePivotToTarget = EUCLIDIAN.measureDistance(pivot, target);
+    double distancePivotToTarget = EuclidianDistance.get().measureDistance(
+        pivot, target);
 
     HyperRectangle leftHyperRectangle = hyperRectangle;
     HyperRectangle rightHyperRectangle = new HyperRectangle(
@@ -304,7 +388,8 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         : Double.MAX_VALUE;
     maxDistSquared = Math.min(maxDistSquared, distanceSquared);
     DoubleVector closest = furtherstHyperRectangle.closestPoint(target);
-    double closestDistance = EUCLIDIAN.measureDistance(closest, target);
+    double closestDistance = EuclidianDistance.get().measureDistance(closest,
+        target);
     // check subtrees even if they aren't in your maxDist but within our radius
     if (closestDistance < maxDistSquared || closestDistance < radius) {
       if (distancePivotToTarget < distanceSquared) {
@@ -325,35 +410,13 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
     }
   }
 
-  /**
-   * Basic in order traversal.
-   */
   @Override
   public Iterator<DoubleVector> iterator() {
-    return new AbstractIterator<DoubleVector>() {
+    return new VectorBFSIterator();
+  }
 
-      private final Deque<KDTreeNode> toVisit = new ArrayDeque<>();
-      KDTreeNode current;
-      {
-        toVisit.add(root);
-      }
-
-      @Override
-      protected DoubleVector computeNext() {
-        current = toVisit.poll();
-        if (current != null) {
-          if (current.left != null) {
-            toVisit.add(current.left);
-          }
-          if (current.right != null) {
-            toVisit.add(current.right);
-          }
-          return current.keyVector;
-        }
-        return endOfData();
-      }
-
-    };
+  Iterator<KDTreeNode> iterateNodes() {
+    return new BreadthFirstIterator();
   }
 
   /**
@@ -374,7 +437,7 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
       int depth) {
     if (node != null) {
       sb.append("\n").append(Strings.repeat("\t", depth));
-      sb.append(node.keyVector);
+      sb.append(node.keyVector + " " + node.splitDimension);
       prettyPrintIternal(node.left, sb, depth + 1);
       prettyPrintIternal(node.right, sb, depth + 1);
     }

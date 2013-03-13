@@ -4,6 +4,8 @@ import de.jungblut.math.DoubleVector;
 
 public final class EuclidianDistance implements DistanceMeasurer {
 
+  private static final EuclidianDistance DISTANCE = new EuclidianDistance();
+
   @Override
   public double measureDistance(double[] set1, double[] set2) {
     double sum = 0;
@@ -20,6 +22,13 @@ public final class EuclidianDistance implements DistanceMeasurer {
   @Override
   public double measureDistance(DoubleVector vec1, DoubleVector vec2) {
     return Math.sqrt(vec2.subtract(vec1).pow(2).sum());
+  }
+
+  /**
+   * @return a cached euclidian distance measurer.
+   */
+  public static EuclidianDistance get() {
+    return DISTANCE;
   }
 
 }

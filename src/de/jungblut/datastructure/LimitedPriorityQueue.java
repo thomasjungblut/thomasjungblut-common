@@ -26,7 +26,7 @@ public final class LimitedPriorityQueue<T> {
     public int compareTo(Entry<T> t) {
       return Double.compare(t.value, this.value);
     }
-    
+
     @Override
     public String toString() {
       return data.toString();
@@ -95,7 +95,7 @@ public final class LimitedPriorityQueue<T> {
     Collections.reverse(list);
     return list;
   }
-  
+
   @Override
   public String toString() {
     return queue.toString();

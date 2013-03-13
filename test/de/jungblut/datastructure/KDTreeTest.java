@@ -16,6 +16,40 @@ import de.jungblut.math.sparse.SparseDoubleVector;
 public class KDTreeTest extends TestCase {
 
   @Test
+  public void testBalanceByFix() throws Exception {
+    // this yields to a pretty inbalanced tree (degenerated)
+    KDTree<Object> tree = new KDTree<>();
+    DenseDoubleVector[] array = new DenseDoubleVector[] {
+        new DenseDoubleVector(new double[] { 1 }),
+        new DenseDoubleVector(new double[] { 2 }),
+        new DenseDoubleVector(new double[] { 3 }),
+        new DenseDoubleVector(new double[] { 4 }),
+        new DenseDoubleVector(new double[] { 5 }),
+        new DenseDoubleVector(new double[] { 6 }),
+        new DenseDoubleVector(new double[] { 7 }), };
+    DenseDoubleVector[] bfsResult = new DenseDoubleVector[] {
+        new DenseDoubleVector(new double[] { 4 }),
+        new DenseDoubleVector(new double[] { 2 }),
+        new DenseDoubleVector(new double[] { 6 }),
+        new DenseDoubleVector(new double[] { 1 }),
+        new DenseDoubleVector(new double[] { 3 }),
+        new DenseDoubleVector(new double[] { 5 }),
+        new DenseDoubleVector(new double[] { 7 }), };
+
+    for (DenseDoubleVector v : array) {
+      tree.add(v);
+    }
+    System.out.println(tree);
+    tree.balanceBySort();
+    System.out.println(tree);
+    int index = 0;
+    for (DoubleVector v : tree) {
+      assertEquals(bfsResult[index++], v);
+    }
+
+  }
+
+  @Test
   public void testKNearestNeighboursRadiusSearch() throws Exception {
     KDTree<Object> tree = new KDTree<>();
     DenseDoubleVector[] array = new DenseDoubleVector[] {
@@ -30,15 +64,11 @@ public class KDTreeTest extends TestCase {
       tree.add(v);
     }
 
-    System.out.println(tree);
-
     double maxDist = new EuclidianDistance()
         .measureDistance(array[0], array[1]);
     List<VectorDistanceTuple<Object>> nearestNeighbours = tree
         .getNearestNeighbours(new DenseDoubleVector(new double[] { 5, 4 }),
             maxDist);
-    System.out.println(maxDist);
-    System.out.println(nearestNeighbours);
     assertEquals(4, nearestNeighbours.size());
     assertTrue(array[1] == nearestNeighbours.get(0).getVector());
     assertTrue(nearestNeighbours.get(0).dist <= maxDist);
