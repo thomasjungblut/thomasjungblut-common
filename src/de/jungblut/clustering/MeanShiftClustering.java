@@ -8,16 +8,17 @@ import org.apache.commons.math3.util.FastMath;
 
 import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
+import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
 public final class MeanShiftClustering {
 
   private static final double SQRT_2_PI = FastMath.sqrt(2 * Math.PI);
+  private static final EuclidianDistance DISTANCE = new EuclidianDistance();
 
-  // window size h
-  public static List<DoubleVector> cluster(List<DoubleVector> points, double h,
-      int maxIterations, boolean verbose) {
+  public static List<DoubleVector> cluster(List<DoubleVector> points,
+      double windowSize, double mergeWindow, int maxIterations, boolean verbose) {
 
     KDTree<Integer> kdTree = new KDTree<>();
     int index = 0;
@@ -25,14 +26,11 @@ public final class MeanShiftClustering {
       kdTree.add(v, index++);
     }
 
-    List<DoubleVector> centers = observeCenters(kdTree, points, h, verbose);
-    BitSet convergedSet = new BitSet(centers.size());
-    List<DoubleVector> shifts = new ArrayList<>(centers.size());
-    for (int i = 0; i < centers.size(); i++) {
-      shifts.add(new DenseDoubleVector(points.get(0).getDimension()));
-    }
+    List<DoubleVector> centers = observeCenters(kdTree, points, windowSize,
+        verbose);
     for (int i = 0; i < maxIterations; i++) {
-      int converged = meanShift(kdTree, centers, shifts, convergedSet, h);
+      int converged = meanShift(kdTree, centers, windowSize);
+      merge(centers, mergeWindow);
       if (verbose) {
         System.out.println("Iteration: " + i
             + " | Number of centers not converged yet: " + converged + "/"
@@ -46,38 +44,45 @@ public final class MeanShiftClustering {
     return centers;
   }
 
+  private static void merge(List<DoubleVector> centers, double mergeWindow) {
+    for (int i = 0; i < centers.size(); i++) {
+      DoubleVector referenceVector = centers.get(i);
+      // find centers to merge if they are within our merge window
+      for (int j = i + 1; j < centers.size(); j++) {
+        DoubleVector center = centers.get(j);
+        double dist = DISTANCE.measureDistance(referenceVector, center);
+        if (dist < mergeWindow) {
+          centers.remove(j);
+          centers.set(i, referenceVector.add(center).divide(2d));
+          j--;
+        }
+      }
+    }
+  }
+
   private static int meanShift(KDTree<Integer> kdTree,
-      List<DoubleVector> centers, List<DoubleVector> shifts,
-      BitSet convergedSet, double h) {
+      List<DoubleVector> centers, double h) {
     int remainingConvergence = 0;
     for (int i = 0; i < centers.size(); i++) {
-      if (!convergedSet.get(i)) {
-        DoubleVector v = centers.get(i);
-        List<VectorDistanceTuple<Integer>> neighbours = kdTree
-            .getNearestNeighbours(v, h);
-        double weightSum = 0d;
-        DoubleVector numerator = new DenseDoubleVector(v.getLength());
-        for (VectorDistanceTuple<Integer> neighbour : neighbours) {
-          if (neighbour.getDistance() < h) {
-            double normDistance = neighbour.getDistance() / h;
-            weightSum -= gaussianGradient(normDistance);
-            numerator = numerator
-                .add(neighbour.getVector().multiply(weightSum));
-          }
+      DoubleVector v = centers.get(i);
+      List<VectorDistanceTuple<Integer>> neighbours = kdTree
+          .getNearestNeighbours(v, h);
+      double weightSum = 0d;
+      DoubleVector numerator = new DenseDoubleVector(v.getLength());
+      for (VectorDistanceTuple<Integer> neighbour : neighbours) {
+        if (neighbour.getDistance() < h) {
+          double normDistance = neighbour.getDistance() / h;
+          weightSum -= gaussianGradient(normDistance);
+          numerator = numerator.add(neighbour.getVector().multiply(weightSum));
         }
-        if (weightSum > 0d) {
-          DoubleVector shift = v.divide(numerator);
-          DoubleVector oldShift = shifts.get(i);
-          // check how the last shift was and if there wasn't too much movement,
-          // stay converged
-          if (shift.subtract(oldShift).abs().sum() > 1e-5) {
-            remainingConvergence++;
-            // apply the shift
-            centers.set(i, centers.get(i).add(shift));
-            shifts.set(i, shift);
-          } else {
-            convergedSet.set(i);
-          }
+      }
+      if (weightSum > 0d) {
+        DoubleVector shift = v.divide(numerator);
+        DoubleVector newCenter = v.add(shift);
+        if (v.subtract(newCenter).abs().sum() > 1e-5) {
+          remainingConvergence++;
+          // apply the shift
+          centers.set(i, newCenter);
         }
       }
     }

@@ -7,6 +7,7 @@ import java.util.List;
 import junit.framework.TestCase;
 
 import org.apache.commons.math3.random.RandomDataImpl;
+import org.apache.commons.math3.random.Well1024a;
 import org.junit.Test;
 
 import com.google.common.math.DoubleMath;
@@ -22,7 +23,8 @@ public class MeanShiftClusteringTest extends TestCase {
   @Test
   public void testKDLookup() {
     HashSet<DoubleVector> lefts = new HashSet<>();
-    List<DoubleVector> points = drawTwoDistinctDistributions(lefts);
+    List<DoubleVector> points = drawTwoDistinctDistributions(lefts,
+        System.currentTimeMillis());
     KDTree<Integer> kdTree = new KDTree<>();
     int index = 0;
     for (DoubleVector v : points) {
@@ -42,22 +44,21 @@ public class MeanShiftClusteringTest extends TestCase {
 
   @Test
   public void testMeanShiftClustering() {
-    double h = 100;
+    double h = 10;
     List<DoubleVector> centers = MeanShiftClustering.cluster(
-        drawTwoDistinctDistributions(null), h, 100, true);
-    System.out.println(centers);
+        drawTwoDistinctDistributions(null, 5L), h, 50, 2000, false);
     assertEquals(2, centers.size());
-    assertTrue(DoubleMath.fuzzyEquals(centers.get(0).get(0), 250, 5));
-    assertTrue(DoubleMath.fuzzyEquals(centers.get(1).get(0), 750, 5));
+    assertTrue(DoubleMath.fuzzyEquals(centers.get(0).get(0), 244, 5));
+    assertTrue(DoubleMath.fuzzyEquals(centers.get(1).get(0), 742, 5));
   }
 
   public List<DoubleVector> drawTwoDistinctDistributions(
-      HashSet<DoubleVector> leftDistribution) {
+      HashSet<DoubleVector> leftDistribution, long seed) {
     List<DoubleVector> lst = new ArrayList<>(100);
 
     double mean1 = 250;
     double mean2 = 750;
-    RandomDataImpl random = new RandomDataImpl();
+    RandomDataImpl random = new RandomDataImpl(new Well1024a(seed));
     for (int i = 0; i < 50; i++) {
       double nextGaussian1 = random.nextGaussian(mean1, Math.sqrt(100));
       assertTrue(nextGaussian1 >= 150 && nextGaussian1 <= 350);
