@@ -12,28 +12,55 @@ import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
+/**
+ * Sequential Mean Shift Clustering using a gaussian kernel and euclidian
+ * distance measurement.
+ * 
+ * @author thomasjungblut
+ * 
+ */
 public final class MeanShiftClustering {
 
   private static final double SQRT_2_PI = FastMath.sqrt(2 * Math.PI);
   private static final EuclidianDistance DISTANCE = new EuclidianDistance();
 
+  /**
+   * Clusters a bunch of given points using the Mean Shift algorithm. It first
+   * observes possible centers that are within the given windowSize. Once we
+   * have initial centers found, we do a meanshift step and afterwards merge
+   * centers that are within the mergeWindow of each other. This algorithm is
+   * guranteed to converge to a minimum solution.
+   * 
+   * @param points the points to cluster.
+   * @param windowSize the window size to observe points arround the center in.
+   *          This is also used to observe initial centers.
+   * @param mergeWindow the merge window size, if a pair of centers is within
+   *          this mergeWindow the centers are merged together.
+   * @param maxIterations the maximum number of iterations to do before
+   *          breaking.
+   * @param verbose if true, progress will be reported after each iteration.
+   * @return the centers of the meanshift algorithm.
+   */
   public static List<DoubleVector> cluster(List<DoubleVector> points,
       double windowSize, double mergeWindow, int maxIterations, boolean verbose) {
-
+    // initialize our lookup structure
     KDTree<Integer> kdTree = new KDTree<>();
+    // assign an index to each point
     int index = 0;
     for (DoubleVector v : points) {
       kdTree.add(v, index++);
     }
-
+    // start observing the centers
     List<DoubleVector> centers = observeCenters(kdTree, points, windowSize,
         verbose);
+    // now iterate over our found centers
     for (int i = 0; i < maxIterations; i++) {
       int converged = meanShift(kdTree, centers, windowSize);
+      // merge if centers are within the mergeWindow
       merge(centers, mergeWindow);
       if (verbose) {
         System.out.println("Iteration: " + i
-            + " | Number of centers not converged yet: " + converged + "/"
+            + " | Remaining centers converging: " + converged + "/"
             + centers.size());
       }
       if (converged == 0) {
@@ -44,6 +71,9 @@ public final class MeanShiftClustering {
     return centers;
   }
 
+  /**
+   * Merges two centers when they are within the given distance of each other.
+   */
   private static void merge(List<DoubleVector> centers, double mergeWindow) {
     for (int i = 0; i < centers.size(); i++) {
       DoubleVector referenceVector = centers.get(i);
@@ -54,12 +84,21 @@ public final class MeanShiftClustering {
         if (dist < mergeWindow) {
           centers.remove(j);
           centers.set(i, referenceVector.add(center).divide(2d));
+          // decrement to not omit the following record
           j--;
         }
       }
     }
   }
 
+  /**
+   * Core mean shift algorithm.
+   * 
+   * @param kdTree the kdtree containing the points to cluster.
+   * @param centers the already observed centers.
+   * @param h the window size "h".
+   * @return the number of centers that haven't converged yet.
+   */
   private static int meanShift(KDTree<Integer> kdTree,
       List<DoubleVector> centers, double h) {
     int remainingConvergence = 0;
@@ -89,6 +128,9 @@ public final class MeanShiftClustering {
     return remainingConvergence;
   }
 
+  /**
+   * Small one pass exclusive clustering.
+   */
   private static List<DoubleVector> observeCenters(KDTree<Integer> kdTree,
       List<DoubleVector> points, double h, boolean verbose) {
     List<DoubleVector> centers = new ArrayList<>();
@@ -125,6 +167,9 @@ public final class MeanShiftClustering {
     return centers;
   }
 
+  /**
+   * @return the gradient of the gaussian with the given standard deviation.
+   */
   private static double gaussianGradient(double stddev) {
     return -FastMath.exp(-(stddev * stddev) / 2d) / (SQRT_2_PI * stddev);
   }
