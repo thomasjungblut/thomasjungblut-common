@@ -1,7 +1,6 @@
 package de.jungblut.datastructure;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 
@@ -87,12 +86,9 @@ public final class LimitedPriorityQueue<T> {
 
   public List<T> toList() {
     List<T> list = new ArrayList<>(getSize());
-    while (!queue.isEmpty()) {
-      Entry<T> poll = queue.poll();
-      list.add(poll.data);
+    for (Entry<T> entry : queue) {
+      list.add(entry.data);
     }
-    // reverse to get the smallest cost first
-    Collections.reverse(list);
     return list;
   }
 

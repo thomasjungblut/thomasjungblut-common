@@ -1,5 +1,7 @@
 package de.jungblut.distance;
 
+import org.apache.commons.math3.util.FastMath;
+
 import de.jungblut.math.DoubleVector;
 
 public final class EuclidianDistance implements DistanceMeasurer {
@@ -16,12 +18,18 @@ public final class EuclidianDistance implements DistanceMeasurer {
       sum += (diff * diff);
     }
 
-    return Math.sqrt(sum);
+    return FastMath.sqrt(sum);
   }
 
   @Override
   public double measureDistance(DoubleVector vec1, DoubleVector vec2) {
-    return Math.sqrt(vec2.subtract(vec1).pow(2).sum());
+    if (vec1.isSparse() || vec2.isSparse()) {
+      return FastMath.sqrt(vec2.subtract(vec1).pow(2).sum());
+    } else {
+      // dense vectors usually doesn't do a defensive copy, so it is faster than
+      // the implementation above.
+      return measureDistance(vec1.toArray(), vec2.toArray());
+    }
   }
 
   /**

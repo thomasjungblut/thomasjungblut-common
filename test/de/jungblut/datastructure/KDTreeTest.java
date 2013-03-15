@@ -1,5 +1,6 @@
 package de.jungblut.datastructure;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -69,6 +70,8 @@ public class KDTreeTest extends TestCase {
     List<VectorDistanceTuple<Object>> nearestNeighbours = tree
         .getNearestNeighbours(new DenseDoubleVector(new double[] { 5, 4 }),
             maxDist);
+    Collections.sort(nearestNeighbours);
+    Collections.reverse(nearestNeighbours);
     assertEquals(4, nearestNeighbours.size());
     assertTrue(array[1] == nearestNeighbours.get(0).getVector());
     assertTrue(nearestNeighbours.get(0).dist <= maxDist);
