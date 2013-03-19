@@ -111,8 +111,9 @@ public final class QLearning {
     }
 
     double lastQValue = qValues[lastState][executedAction];
-    qValues[lastState][executedAction] = lastQValue + learningRate
-        * (reward + discount * ArrayUtils.max(qValues[currentState]));
+    qValues[lastState][executedAction] = lastQValue
+        + learningRate
+        * (reward + discount * ArrayUtils.max(qValues[currentState]) - lastQValue);
   }
 
 }
