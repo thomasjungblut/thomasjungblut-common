@@ -15,8 +15,8 @@ import de.jungblut.math.DoubleVector;
  * clustering algorithm will iterate once over a constructed kd-tree and find
  * nearest neighbours inside a distance threshold. The found neighbours are
  * going to be put into a bitset and will be omitted from search in the
- * following kd-tree vectors. Found clusters are checked against a minimum size
- * and maybe discarded when exceeding the configured threshold. This is
+ * following kd-tree searches. Found clusters are checked against a minimum size
+ * and maybe discarded when not reaching the configured threshold. This is
  * considered a very fast algorithm, it can be used instead of
  * {@link CanopyClustering}.
  * 
