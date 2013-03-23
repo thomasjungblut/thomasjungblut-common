@@ -1,25 +1,37 @@
 package de.jungblut.distance;
 
+import java.util.Arrays;
+
 import org.apache.commons.math3.util.FastMath;
 
 import de.jungblut.math.DoubleVector;
 
+/**
+ * Haversine distance implementation that picks up lat/lng in degrees at
+ * array/vector index 0 and 1 and returns the distance in meters between those
+ * two vectors.
+ * 
+ * @author thomas.jungblut
+ * 
+ */
 public final class HaversineDistance implements DistanceMeasurer {
 
-  static final double DEG_TO_RAD = Math.PI / 180d;
+  private static final double EARTH_RADIUS_IN_METERS = 6372797.560856;
 
   @Override
   public final double measureDistance(double[] a, double[] b) {
     // lat must be on index 0 and lng on index 1
-    double latitudeArc = (a[0] - b[0]) * DEG_TO_RAD;
-    double longitudeArc = (a[1] - a[1]) * DEG_TO_RAD;
-    double latitudeH = FastMath.sin(latitudeArc * 0.5);
-    latitudeH *= latitudeH;
-    double lontitudeH = FastMath.sin(longitudeArc * 0.5);
-    lontitudeH *= lontitudeH;
-    double tmp = FastMath.cos(a[0] * DEG_TO_RAD)
-        * FastMath.cos(b[0] * DEG_TO_RAD);
-    return 2.0 * FastMath.asin(FastMath.sqrt(latitudeH + tmp * lontitudeH));
+    a = Arrays.copyOf(a, a.length);
+    b = Arrays.copyOf(b, b.length);
+    // first convert them to radians
+    a[0] = a[0] / 180.0 * Math.PI;
+    a[1] = a[1] / 180.0 * Math.PI;
+    b[0] = b[0] / 180.0 * Math.PI;
+    b[1] = b[1] / 180.0 * Math.PI;
+
+    return FastMath.acos(FastMath.sin(a[0]) * FastMath.sin(a[0])
+        + FastMath.cos(a[0]) * FastMath.cos(a[0]) * FastMath.cos(a[1] - b[1]))
+        * EARTH_RADIUS_IN_METERS;
   }
 
   @Override
