@@ -21,16 +21,16 @@ public final class HaversineDistance implements DistanceMeasurer {
   @Override
   public final double measureDistance(double[] a, double[] b) {
     // lat must be on index 0 and lng on index 1
-    a = Arrays.copyOf(a, a.length);
-    b = Arrays.copyOf(b, b.length);
+    a = Arrays.copyOf(a, 2);
+    b = Arrays.copyOf(b, 2);
     // first convert them to radians
     a[0] = a[0] / 180.0 * Math.PI;
     a[1] = a[1] / 180.0 * Math.PI;
     b[0] = b[0] / 180.0 * Math.PI;
     b[1] = b[1] / 180.0 * Math.PI;
 
-    return FastMath.acos(FastMath.sin(a[0]) * FastMath.sin(a[0])
-        + FastMath.cos(a[0]) * FastMath.cos(a[0]) * FastMath.cos(a[1] - b[1]))
+    return FastMath.acos(FastMath.sin(a[0]) * FastMath.sin(b[0])
+        + FastMath.cos(a[0]) * FastMath.cos(b[0]) * FastMath.cos(a[1] - b[1]))
         * EARTH_RADIUS_IN_METERS;
   }
 
