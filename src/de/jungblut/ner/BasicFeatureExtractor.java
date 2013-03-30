@@ -12,7 +12,8 @@ import java.util.List;
  * @author thomas.jungblut
  * 
  */
-public final class BasicFeatureExtractor implements SequenceFeatureExtractor {
+public final class BasicFeatureExtractor implements
+    SequenceFeatureExtractor<String> {
 
   @Override
   public List<String> computeFeatures(List<String> words, int previousLabel,

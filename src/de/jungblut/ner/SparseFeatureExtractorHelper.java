@@ -17,11 +17,11 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public final class SparseFeatureExtractorHelper {
+public final class SparseFeatureExtractorHelper<K> {
 
-  private final List<String> words;
+  private final List<K> words;
   private final List<Integer> labels;
-  private final SequenceFeatureExtractor extractor;
+  private final SequenceFeatureExtractor<K> extractor;
   private final HashSet<Integer> classSet;
 
   private int classes;
@@ -34,8 +34,8 @@ public final class SparseFeatureExtractorHelper {
    * @param labels the corresponding labels in parallel to the words.
    * @param extractor the core implementation of the feature extractor.
    */
-  public SparseFeatureExtractorHelper(List<String> words, List<Integer> labels,
-      SequenceFeatureExtractor extractor) {
+  public SparseFeatureExtractorHelper(List<K> words, List<Integer> labels,
+      SequenceFeatureExtractor<K> extractor) {
     this.words = words;
     this.labels = labels;
     this.extractor = extractor;
@@ -53,8 +53,8 @@ public final class SparseFeatureExtractorHelper {
    * @param extractor the core implementation of the feature extractor.
    * @param dictionary an already given dictionary.
    */
-  public SparseFeatureExtractorHelper(List<String> words, List<Integer> labels,
-      SequenceFeatureExtractor extractor, String[] dictionary) {
+  public SparseFeatureExtractorHelper(List<K> words, List<Integer> labels,
+      SequenceFeatureExtractor<K> extractor, String[] dictionary) {
     this(words, labels, extractor);
     this.dicts = dictionary;
   }
@@ -79,7 +79,7 @@ public final class SparseFeatureExtractorHelper {
    *         the second the outcome.
    */
   public Tuple<DoubleVector[], DenseDoubleVector[]> vectorizeAdditionals(
-      List<String> words, List<Integer> labels) {
+      List<K> words, List<Integer> labels) {
     return extractInternal(words, labels);
   }
 
@@ -87,7 +87,7 @@ public final class SparseFeatureExtractorHelper {
    * Vectorizes the given data for each label. Internally uses a dictionary that
    * was created by {@link #vectorize()} or creates one on this data.
    */
-  public DoubleVector[] vectorizeEachLabel(List<String> words) {
+  public DoubleVector[] vectorizeEachLabel(List<K> words) {
     List<List<String>> stringFeatures = new ArrayList<>();
     for (int i = 0; i < words.size(); i++) {
       if (i == 0) {
@@ -125,7 +125,7 @@ public final class SparseFeatureExtractorHelper {
    * Generates the feature vectors and the dictionary.
    */
   private Tuple<DoubleVector[], DenseDoubleVector[]> extractInternal(
-      List<String> words, List<Integer> labels) {
+      List<K> words, List<Integer> labels) {
     List<List<String>> stringFeatures = new ArrayList<>();
     for (int i = 0; i < words.size(); i++) {
       stringFeatures.add(extractor.computeFeatures(words,

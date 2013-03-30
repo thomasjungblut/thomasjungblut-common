@@ -10,7 +10,7 @@ import java.util.List;
  * @author thomas.jungblut
  * 
  */
-public interface SequenceFeatureExtractor {
+public interface SequenceFeatureExtractor<K> {
 
   /**
    * Compute a feature for the given sequence (the complete list words). Given
@@ -22,7 +22,7 @@ public interface SequenceFeatureExtractor {
    * @param position the current position.
    * @return a set of features for this position.
    */
-  public List<String> computeFeatures(List<String> words, int prevLabel,
+  public List<String> computeFeatures(List<K> words, int prevLabel,
       int position);
 
 }
