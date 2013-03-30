@@ -56,8 +56,8 @@ public class NamedEntityRecognitionTest extends TestCase {
       }
     }
 
-    SparseFeatureExtractorHelper fact = new SparseFeatureExtractorHelper(words,
-        labels, new BasicFeatureExtractor());
+    SparseFeatureExtractorHelper<String> fact = new SparseFeatureExtractorHelper<>(
+        words, labels, new BasicFeatureExtractor());
     Tuple<DoubleVector[], DenseDoubleVector[]> vectorize = fact.vectorize();
     DoubleVector[] features = vectorize.getFirst();
     DenseDoubleVector[] outcome = vectorize.getSecond();
