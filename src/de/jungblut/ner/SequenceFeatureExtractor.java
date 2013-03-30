@@ -13,7 +13,9 @@ import java.util.List;
 public interface SequenceFeatureExtractor {
 
   /**
-   * Compute a feature for the given
+   * Compute a feature for the given sequence (the complete list words). Given
+   * are the previous label and the current index (position). This method will
+   * be called for every index in the list of words.
    * 
    * @param words all words in that sequence.
    * @param prevLabel the previous label.
