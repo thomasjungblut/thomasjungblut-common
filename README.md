@@ -34,10 +34,14 @@ Build
 To build this library, you will need to install [my math lib on your local computer](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib"), build instructions can be found there as well.
 Everything else shall be found on the central maven repository, or in the case of JCUDA in the jcuda path which is automagically added.
 
-You can simply build with "mvn clean package install" the created jar contains debugable code + sources.
+You can simply build with:
+
+> mvn clean package install
+
+The created jar contains debuggable code + sources.
 
 Note that there may be an issue to retrieve MRUnit-0.9.0-incubating, therefore you can simply download it and install it manually via Maven.
 
 E.G. like this: 
 
-> mvn install:install-file -DgroupId=org.apache.mrunit -DartifactId=mrunit -Dversion=0.9.0-incubating -Dpackaging=jar -Dfile=/home/thomasjungblut/.m2/repository/org/apache/mrunit/mrunit/0.9.0-incubating/mrunit-0.9.0-incubating-hadoop1.jar
+> mvn install:install-file -DgroupId=org.apache.mrunit -DartifactId=mrunit -Dversion=0.9.0-incubating -Dpackaging=jar -Dfile=<Path to MRUnit>/mrunit-0.9.0-incubating-hadoop1.jar
