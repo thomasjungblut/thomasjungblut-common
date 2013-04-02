@@ -12,8 +12,8 @@ import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.tuple.Tuple;
 
 /**
- * Conditional likelihood cost function, used in a hidden markov model to
- * optimize the weights.
+ * Conditional likelihood cost function, used in a maximum entropy markov model
+ * to optimize the weights.
  * 
  * @author thomas.jungblut
  * 
