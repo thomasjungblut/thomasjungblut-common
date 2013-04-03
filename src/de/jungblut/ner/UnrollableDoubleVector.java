@@ -213,4 +213,14 @@ public final class UnrollableDoubleVector implements DoubleVector {
     return this.mainVector.getName();
   }
 
+  @Override
+  public DoubleVector log() {
+    return this.mainVector.log();
+  }
+
+  @Override
+  public DoubleVector exp() {
+    return this.mainVector.exp();
+  }
+
 }

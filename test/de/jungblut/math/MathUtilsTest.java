@@ -4,8 +4,6 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.google.common.math.DoubleMath;
-
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -59,8 +57,7 @@ public class MathUtilsTest extends TestCase {
     DenseDoubleMatrix expected = new DenseDoubleMatrix(new double[][] {
         { 2, 4, 5, 25 }, { 5, 25, 1, 1 }, { 7, 49, 25, 625 } });
     DenseDoubleMatrix polys = MathUtils.createPolynomials(mat, 2);
-    assertEquals(0,
-        DoubleMath.fuzzyCompare(polys.subtract(expected).sum(), 0, 1E-5));
+    assertEquals(polys.subtract(expected).sum(), 0, 1E-5);
   }
 
   @Test
@@ -95,7 +92,7 @@ public class MathUtilsTest extends TestCase {
     assertEquals(v1.getLength(), v2.getLength());
     for (int i = 0; i < v2.getLength(); i++) {
       double d1 = v2.get(i);
-      assertEquals(0, DoubleMath.fuzzyCompare(v1.get(i), d1, 1E-5));
+      assertEquals(v1.get(i), d1, 1E-5);
     }
   }
 }

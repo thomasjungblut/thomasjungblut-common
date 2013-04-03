@@ -4,8 +4,6 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.google.common.math.DoubleMath;
-
 import de.jungblut.classification.Evaluator.EvaluationResult;
 import de.jungblut.classification.knn.KNearestNeighbours;
 import de.jungblut.math.DoubleVector;
@@ -32,7 +30,7 @@ public class EvaluatorTest extends TestCase {
     assertEquals(8043, evaluation.getTrainSize());
     assertEquals(81, evaluation.getTestSize());
     assertEquals(81, evaluation.getCorrect());
-    assertTrue(DoubleMath.fuzzyEquals(1d, evaluation.getAccuracy(), EPS));
+    assertEquals(1d, evaluation.getAccuracy(), EPS);
     assertEquals(44, evaluation.truePositive);
     assertEquals(0, evaluation.falseNegative);
     assertEquals(0, evaluation.falsePositive);

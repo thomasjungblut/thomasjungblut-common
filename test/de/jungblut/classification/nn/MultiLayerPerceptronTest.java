@@ -16,8 +16,6 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.google.common.math.DoubleMath;
-
 import de.jungblut.datastructure.CollectionInputProvider;
 import de.jungblut.datastructure.InputProvider;
 import de.jungblut.math.DoubleVector;
@@ -53,7 +51,7 @@ public class MultiLayerPerceptronTest extends TestCase {
     double diff = testRegressionPredictions(sample, mlp);
     // this actually takes some time to converge properly, so we just test for
     // 10k epochs with a loose threshold.
-    assertTrue(DoubleMath.fuzzyEquals(diff, 59297d, 100d));
+    assertEquals(diff, 59297d, 100d);
     System.out.println(diff);
   }
 
@@ -71,7 +69,7 @@ public class MultiLayerPerceptronTest extends TestCase {
 
     mlp.train(sample.getFirst(), sample.getSecond());
     double diff = testRegressionPredictions(sample, mlp);
-    assertTrue(DoubleMath.fuzzyEquals(diff, 2449d, 10d));
+    assertEquals(diff, 2449d, 10d);
   }
 
   @Test

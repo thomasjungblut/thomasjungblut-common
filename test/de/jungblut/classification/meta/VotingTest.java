@@ -4,8 +4,6 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.google.common.math.DoubleMath;
-
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.ClassifierFactory;
 import de.jungblut.classification.meta.Voting.CombiningType;
@@ -47,9 +45,9 @@ public class VotingTest extends TestCase {
   public void testAverageVoting() {
     Voting voter = new Voting(CombiningType.AVERAGE, factory, 20, false);
     double trainingError = trainInternal(voter);
-    assertTrue("Error of single logistic regression: " + logisticTrainingError
-        + " and voted regression was higher: " + trainingError,
-        DoubleMath.fuzzyEquals(logisticTrainingError, trainingError, 0.2d));
+    assertEquals("Error of single logistic regression: "
+        + logisticTrainingError + " and voted regression was higher: "
+        + trainingError, logisticTrainingError, trainingError, 0.2d);
   }
 
   // returns the trainingset error

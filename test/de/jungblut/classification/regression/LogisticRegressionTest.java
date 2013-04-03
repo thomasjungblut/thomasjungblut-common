@@ -4,8 +4,6 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.google.common.math.DoubleMath;
-
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.Evaluator;
 import de.jungblut.classification.Evaluator.EvaluationResult;
@@ -46,9 +44,9 @@ public class LogisticRegressionTest extends TestCase {
     DoubleVector theta = Fmincg.minimizeFunction(fnc, new DenseDoubleVector(
         new double[] { 0, 0, 0 }), 1000, false);
 
-    assertTrue(DoubleMath.fuzzyEquals(theta.get(0), -25.05, 0.1));
-    assertTrue(DoubleMath.fuzzyEquals(theta.get(1), 0.2, 0.1));
-    assertTrue(DoubleMath.fuzzyEquals(theta.get(2), 0.2, 0.1));
+    assertEquals(theta.get(0), -25.05, 0.1);
+    assertEquals(theta.get(1), 0.2, 0.1);
+    assertEquals(theta.get(2), 0.2, 0.1);
   }
 
   @Test
@@ -74,9 +72,8 @@ public class LogisticRegressionTest extends TestCase {
       int predict = clf.getPredictedClass(features[i], 0.5d);
       trainingError += Math.abs(outcome[i].get(0) - predict);
     }
-    assertTrue("Training error was: " + trainingError
-        + " and should have been between 9 and 13.",
-        DoubleMath.fuzzyEquals(trainingError, 11, 2d));
+    assertEquals("Training error was: " + trainingError
+        + " and should have been between 9 and 13.", trainingError, 11, 2d);
   }
 
   @Test

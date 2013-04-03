@@ -6,8 +6,6 @@ import junit.framework.TestCase;
 
 import org.junit.Test;
 
-import com.google.common.math.DoubleMath;
-
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -35,8 +33,8 @@ public class MultinomialNaiveBayesClassifierTest extends TestCase {
     classifier.train(features, outcome);
 
     DenseDoubleVector classProbability = classifier.getClassProbability();
-    assertTrue(DoubleMath.fuzzyEquals(classProbability.get(0), 2d / 5d, 0.01d));
-    assertTrue(DoubleMath.fuzzyEquals(classProbability.get(1), 3d / 5d, 0.01d));
+    assertEquals(classProbability.get(0), 2d / 5d, 0.01d);
+    assertEquals(classProbability.get(1), 3d / 5d, 0.01d);
 
     DoubleMatrix mat = classifier.getProbabilityMatrix();
     double[] realFirstRow = new double[] { -2.1972245773362196,
@@ -49,26 +47,26 @@ public class MultinomialNaiveBayesClassifierTest extends TestCase {
     double[] firstRow = mat.getRowVector(0).toArray();
     assertEquals(realFirstRow.length, firstRow.length);
     for (int i = 0; i < firstRow.length; i++) {
-      assertTrue("" + Arrays.toString(firstRow),
-          DoubleMath.fuzzyEquals(firstRow[i], realFirstRow[i], 0.05d));
+      assertEquals("" + Arrays.toString(firstRow), firstRow[i],
+          realFirstRow[i], 0.05d);
     }
 
     double[] secondRow = mat.getRowVector(1).toArray();
     assertEquals(realSecondRow.length, secondRow.length);
     for (int i = 0; i < firstRow.length; i++) {
-      assertTrue("" + Arrays.toString(secondRow),
-          DoubleMath.fuzzyEquals(secondRow[i], realSecondRow[i], 0.05d));
+      assertEquals("" + Arrays.toString(secondRow), secondRow[i],
+          realSecondRow[i], 0.05d);
     }
 
     DoubleVector claz = classifier.predict(new DenseDoubleVector(new double[] {
         1, 0, 0, 0, 0 }));
-    assertTrue("" + claz, DoubleMath.fuzzyEquals(claz.get(0), 0.14, 0.05d));
-    assertTrue("" + claz, DoubleMath.fuzzyEquals(claz.get(1), 0.85, 0.05d));
+    assertEquals("" + claz, claz.get(0), 0.14, 0.05d);
+    assertEquals("" + claz, claz.get(1), 0.85, 0.05d);
 
     claz = classifier.predict(new DenseDoubleVector(new double[] { 0, 0, 0, 1,
         1 }));
-    assertTrue("" + claz, DoubleMath.fuzzyEquals(claz.get(0), 0.85, 0.05d));
-    assertTrue("" + claz, DoubleMath.fuzzyEquals(claz.get(1), 0.15, 0.05d));
+    assertEquals("" + claz, claz.get(0), 0.85, 0.05d);
+    assertEquals("" + claz, claz.get(1), 0.15, 0.05d);
   }
 
 }

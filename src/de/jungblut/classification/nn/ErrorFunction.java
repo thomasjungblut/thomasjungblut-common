@@ -53,7 +53,7 @@ public enum ErrorFunction {
         if (Double.isNaN(d) || Double.isInfinite(d)) {
           log.set(row, col, 0d);
         } else if (d <= 0d || d <= -0d) {
-          // assume a quite low value of log(1e-5)
+          // assume a quite low value of log(1e-5) ~= -11.51
           log.set(row, col, -10d);
         } else {
           log.set(row, col, Math.log(d));
