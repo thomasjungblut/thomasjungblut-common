@@ -15,7 +15,8 @@ public class DBSCANTest extends TestCase {
 
   @Test
   public void testDBSCAN() {
-    ArrayList<DoubleVector> input = KMeansClusteringTest.getClusteringInput();
+    ArrayList<DoubleVector> input = KMeansClusteringTest.getClusteringInput(10,
+        10);
     // add some noise!
     input.add(new DenseDoubleVector(new double[] { 2000, 2000 }));
 

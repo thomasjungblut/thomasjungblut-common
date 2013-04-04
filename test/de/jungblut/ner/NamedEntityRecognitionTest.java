@@ -30,7 +30,8 @@ public class NamedEntityRecognitionTest extends TestCase {
     String test = "files/ner/dev";
 
     List<String> lines = Files.readAllLines(
-        FileSystems.getDefault().getPath(train), Charset.defaultCharset());
+        FileSystems.getDefault().getPath(train), Charset.defaultCharset())
+        .subList(0, 2000);
     List<String> testLines = Files.readAllLines(FileSystems.getDefault()
         .getPath(test), Charset.defaultCharset());
 
@@ -91,8 +92,8 @@ public class NamedEntityRecognitionTest extends TestCase {
         new SparseDoubleRowMatrix(testFeatures), new SparseDoubleRowMatrix(
             vectorizeEachLabel));
     // check if specific names are included
-    HashSet<String> names = new HashSet<>(Arrays.asList("Clinton", "Carl",
-        "Vinson", "Marc", "Dutroux", "Jens", "Howard"));
+    HashSet<String> names = new HashSet<>(Arrays.asList("Benjamin",
+        "Netanyahu", "David", "Levy", "Jones"));
 
     for (int i = 0; i < predict.getRowCount(); i++) {
       int predictedClass = (int) predict.get(i, 0);

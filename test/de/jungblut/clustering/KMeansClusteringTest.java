@@ -46,9 +46,13 @@ public class KMeansClusteringTest extends TestCase {
   public static ArrayList<DoubleVector> getClusteringInput() {
     // we are "sampling" a 100x100 grid to a vector space and let's do some
     // clustering.
+    return getClusteringInput(100, 100);
+  }
+
+  public static ArrayList<DoubleVector> getClusteringInput(int x, int y) {
     ArrayList<DoubleVector> lst = new ArrayList<>();
-    for (int i = 0; i < 100; i++) {
-      for (int j = 0; j < 100; j++) {
+    for (int i = 0; i < x; i++) {
+      for (int j = 0; j < y; j++) {
         lst.add(new DenseDoubleVector(new double[] { i, j }));
       }
     }

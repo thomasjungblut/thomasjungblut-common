@@ -1,5 +1,7 @@
 package de.jungblut.classification;
 
+import java.util.Arrays;
+
 import junit.framework.TestCase;
 
 import org.junit.Test;
@@ -24,7 +26,6 @@ public class EvaluatorTest extends TestCase {
     EvaluationResult evaluation = Evaluator.evaluateClassifier(
         new KNearestNeighbours(2, 10), readMushroomDataset.getFirst(),
         readMushroomDataset.getSecond(), 2, 0.99f, false);
-    evaluation.print();
     assertEquals(2, evaluation.getNumLabels());
     assertEquals(true, evaluation.isBinary());
     assertEquals(8043, evaluation.getTrainSize());
@@ -41,6 +42,10 @@ public class EvaluatorTest extends TestCase {
   public void testCrossValidation() throws Exception {
     Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset = MushroomReader
         .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
+    DoubleVector[] features = readMushroomDataset.getFirst();
+    features = Arrays.copyOf(features, 500);
+    DenseDoubleVector[] outcome = readMushroomDataset.getSecond();
+    outcome = Arrays.copyOf(outcome, 500);
 
     EvaluationResult evaluation = Evaluator.tenFoldCrossValidation(
         new ClassifierFactory() {
@@ -48,12 +53,12 @@ public class EvaluatorTest extends TestCase {
           public Classifier newInstance() {
             return new KNearestNeighbours(2, 4);
           }
-        }, readMushroomDataset.getFirst(), readMushroomDataset.getSecond(), 2,
-        null, false);
+        }, features, outcome, 2, null, false);
     assertEquals(2, evaluation.getNumLabels());
     assertEquals(true, evaluation.isBinary());
-    assertEquals(7310, evaluation.getTrainSize());
-    assertEquals(813, evaluation.getTestSize());
+    assertEquals(449, evaluation.getTrainSize());
+    assertEquals(50, evaluation.getTestSize());
+
   }
 
 }

@@ -22,7 +22,6 @@ public interface SequenceFeatureExtractor<K> {
    * @param position the current position.
    * @return a set of features for this position.
    */
-  public List<String> computeFeatures(List<K> words, int prevLabel,
-      int position);
+  public List<String> computeFeatures(List<K> words, int prevLabel, int position);
 
 }

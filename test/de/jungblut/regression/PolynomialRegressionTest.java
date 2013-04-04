@@ -40,10 +40,13 @@ public class PolynomialRegressionTest extends TestCase {
     DenseDoubleMatrix xPoly = MathUtils.createPolynomials(x, numPoly);
     PolynomialRegression reg = new PolynomialRegression(xPoly, y, 3.0d, true);
     reg.trainModel(new Fmincg(), 200, false);
-    assertEquals(new DenseDoubleVector(new double[] { 7.657335780995228,
-        2.632094730677398 }),
-        reg.predict(new DenseDoubleMatrix(new double[][] { { -15 }, { -29 } })));
-    assertEquals(2.0734714302262063d, reg.meanSquaredError(reg.predict(xPoly)));
+    DenseDoubleVector real = new DenseDoubleVector(new double[] {
+        7.657335780995228, 2.632094730677398 });
+    DoubleVector predict = reg.predict(new DenseDoubleMatrix(new double[][] {
+        { -15 }, { -29 } }));
+    assertEquals(0, real.subtract(predict).abs().sum(), 0.01);
+    assertEquals(2.0734714302262063d, reg.meanSquaredError(reg.predict(xPoly)),
+        0.1);
   }
 
 }

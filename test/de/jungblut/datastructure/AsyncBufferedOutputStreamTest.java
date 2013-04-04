@@ -85,8 +85,7 @@ public class AsyncBufferedOutputStreamTest extends TestCase {
     byte[] ones = new byte[32];
     Arrays.fill(ones, (byte) 1);
     byte[] zeros = new byte[32];
-    // that should yield to 256mb
-    int numItems = 4194304;
+    int numItems = 10000;
     try (AsyncBufferedOutputStream out = new AsyncBufferedOutputStream(
         new FileOutputStream(tempFile), 512 * 1024)) {
 
