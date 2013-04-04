@@ -86,10 +86,17 @@ public class HMMTest extends TestCase {
     // observe an umbrella
     DoubleVector predict = hmm.predict(new DenseDoubleVector(new double[] { 0d,
         1d }));
-    // so it is very likely that it rains ~99%
+    // so it is very likely that it rains ~91%
     assertEquals(1, predict.maxIndex());
-    assertEquals(0.99, predict.get(1), 0.01);
-    assertEquals(0.01, predict.get(0), 0.1);
+    assertEquals(0.91, predict.get(1), 0.01);
+    assertEquals(0.08, predict.get(0), 0.1);
+    // observe no umbrella after observing one
+    predict = hmm.predict(new DenseDoubleVector(new double[] { 1d, 0d }),
+        predict);
+    // so it is very likely that it is sunny now
+    assertEquals(0, predict.maxIndex());
+    assertEquals(0.99, predict.get(0), 0.01);
+    assertEquals(0.001, predict.get(1), 0.01);
   }
 
 }
