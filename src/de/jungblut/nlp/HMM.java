@@ -14,8 +14,10 @@ import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
+import de.jungblut.math.ViterbiUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.writable.MatrixWritable;
 import de.jungblut.writable.VectorWritable;
 
@@ -37,6 +39,7 @@ public final class HMM extends AbstractClassifier implements Writable {
    * numHiddenStates * numHiddenStates.
    */
   private DoubleMatrix transitionProbabilityMatrix;
+
   /**
    * emission matrix of an probability observation/feature o_t generated from a
    * state i. (in literature called B) = numHiddenStates * numVisibleStates.
@@ -111,15 +114,17 @@ public final class HMM extends AbstractClassifier implements Writable {
    * Decodes the given observation sequence (features) with the current HMM.
    * This discovers the best hidden state sequence Q that is derived by
    * executing the Viterbi algorithm with the given observations and the HMM's
-   * parameters lambda.
+   * parameters lambda. This is a proxy to {@link ViterbiUtils}
+   * {@link #decode(DoubleVector[], DoubleVector[])}.
    * 
    * @param observationSequence the given sequence of features.
-   * @return the int array denoting the path through the hidden state sequences
-   *         (from 0 to numHiddenStates).
+   * @return a matrix containing the predicted hidden state on each row vector.
    */
-  public int[] decode(DoubleVector observationSequence) {
-    // TODO
-    return null;
+  public DoubleMatrix decode(DoubleVector[] observationSequence,
+      DoubleVector[] featuresPerHiddenState) {
+    return ViterbiUtils.decode(emissionProbabilityMatrix,
+        new SparseDoubleRowMatrix(observationSequence),
+        new SparseDoubleRowMatrix(featuresPerHiddenState), numHiddenStates);
   }
 
   /**
@@ -437,8 +442,16 @@ public final class HMM extends AbstractClassifier implements Writable {
 
   public DoubleVector predict(DoubleVector features,
       DenseDoubleVector previousOutcome) {
-    // TODO predict and take the transition probability into account
-    return null;
+    // predict and take the transition probability into account
+    DoubleVector probabilities = emissionProbabilityMatrix
+        .multiplyVectorColumn(features);
+    // multiply with the given transition probability of the previous outcome
+    probabilities = probabilities.multiply(transitionProbabilityMatrix
+        .multiplyVector(previousOutcome));
+    // multiply with the hidden state prior
+    probabilities = probabilities.multiply(hiddenPriorProbability);
+    // normalize again
+    return probabilities.divide(probabilities.sum());
   }
 
   public int getNumHiddenStates() {
