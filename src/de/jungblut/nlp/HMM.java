@@ -405,8 +405,8 @@ public final class HMM extends AbstractClassifier implements Writable {
       Iterator<DoubleVectorElement> iterateNonZero = feat.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
-        emissionProbabilityMatrix.set(next.getIndex(), index,
-            emissionProbabilityMatrix.get(next.getIndex(), index) + 1);
+        emissionProbabilityMatrix.set(index, next.getIndex(),
+            emissionProbabilityMatrix.get(index, next.getIndex()) + 1);
       }
       // now handle the feature by counting the transitions between the hidden
       // states with the next feature
@@ -433,7 +433,7 @@ public final class HMM extends AbstractClassifier implements Writable {
     // clamp the features to the visible units, calculate the joint
     // probability for each hidden state and put it into the vector
     DoubleVector probabilities = emissionProbabilityMatrix
-        .multiplyVectorColumn(features);
+        .multiplyVector(features);
     // multiply with the hidden state prior
     probabilities = probabilities.multiply(hiddenPriorProbability);
     // normalize again
@@ -441,13 +441,14 @@ public final class HMM extends AbstractClassifier implements Writable {
   }
 
   public DoubleVector predict(DoubleVector features,
-      DenseDoubleVector previousOutcome) {
+      DoubleVector previousOutcome) {
     // predict and take the transition probability into account
     DoubleVector probabilities = emissionProbabilityMatrix
-        .multiplyVectorColumn(features);
-    // multiply with the given transition probability of the previous outcome
-    probabilities = probabilities.multiply(transitionProbabilityMatrix
-        .multiplyVector(previousOutcome));
+        .multiplyVector(features);
+    DoubleVector transitionProbabilities = transitionProbabilityMatrix
+        .multiplyVector(previousOutcome);
+    // multiply the given transition probability of the previous outcome
+    probabilities = probabilities.multiply(transitionProbabilities);
     // multiply with the hidden state prior
     probabilities = probabilities.multiply(hiddenPriorProbability);
     // normalize again

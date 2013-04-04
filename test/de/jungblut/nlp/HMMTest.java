@@ -67,7 +67,6 @@ public class HMMTest extends TestCase {
     assertEquals(hmm.getHiddenPriorProbability().get(0), 0.71, 0.01);
     assertEquals(hmm.getHiddenPriorProbability().get(1), 0.29, 0.01);
 
-    // the transition matrix is equally working
     assertEquals(hmm.getTransitionProbabilityMatrix().getRowCount(), 2);
     assertEquals(hmm.getTransitionProbabilityMatrix().getColumnCount(), 2);
     assertEquals(hmm.getTransitionProbabilityMatrix().get(0, 0), 0.71, 0.01);
@@ -79,18 +78,18 @@ public class HMMTest extends TestCase {
     // and otherwise observe the same like the observation
     assertEquals(hmm.getEmissionProbabilitiyMatrix().getRowCount(), 2);
     assertEquals(hmm.getEmissionProbabilitiyMatrix().getColumnCount(), 2);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 0), 0.99, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 1), 0.01, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 0), 0.08, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 1), 0.91, 0.01);
+    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 0), 0.96, 0.01);
+    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 1), 0.03, 0.01);
+    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 0), 0.003, 0.01);
+    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 1), 0.99, 0.01);
 
     // observe an umbrella
     DoubleVector predict = hmm.predict(new DenseDoubleVector(new double[] { 0d,
         1d }));
-    // so it is very likely that it rains ~80%
+    // so it is very likely that it rains ~99%
     assertEquals(1, predict.maxIndex());
-    assertEquals(0.82, predict.get(1), 0.01);
-    assertEquals(0.18, predict.get(0), 0.1);
+    assertEquals(0.99, predict.get(1), 0.01);
+    assertEquals(0.01, predict.get(0), 0.1);
   }
 
 }
