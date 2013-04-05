@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.commons.math3.util.FastMath;
 import org.apache.hadoop.io.Writable;
 
 import de.jungblut.classification.AbstractClassifier;
@@ -83,7 +84,12 @@ public final class HMM extends AbstractClassifier implements Writable {
    */
   private void normalizeProbabilities() {
     normalize(hiddenPriorProbability, transitionProbabilityMatrix,
-        emissionProbabilityMatrix);
+        emissionProbabilityMatrix, false);
+  }
+
+  private void logNormalizeProbabilities() {
+    normalize(hiddenPriorProbability, transitionProbabilityMatrix,
+        emissionProbabilityMatrix, true);
   }
 
   /**
@@ -129,7 +135,7 @@ public final class HMM extends AbstractClassifier implements Writable {
 
   /**
    * Trains the current models parameters by executing a baum-welch expectation
-   * maximization algorithm.
+   * maximization algorithm. TODO this should also be log-scaled for accuracy.
    * 
    * @param features the visible state activations (the vector will be traversed
    *          for non-zero entries, so the value actually doesn't matter).
@@ -217,7 +223,7 @@ public final class HMM extends AbstractClassifier implements Writable {
 
       // normalize again after baumwelch pass
       normalize(hiddenPriorProbability, transitionProbabilityMatrix,
-          emissionProbabilityMatrix);
+          emissionProbabilityMatrix, false);
       // measure the difference by taking the squared difference of every matrix
       // element and every vector element in our priors
       double difference = this.transitionProbabilityMatrix
@@ -238,6 +244,9 @@ public final class HMM extends AbstractClassifier implements Writable {
         break;
       }
     }
+    // normalize logarithmic for predictions
+    normalize(hiddenPriorProbability, transitionProbabilityMatrix,
+        emissionProbabilityMatrix, true);
 
   }
 
@@ -324,7 +333,7 @@ public final class HMM extends AbstractClassifier implements Writable {
 
   private static void normalize(DoubleVector hiddenPriorProbability,
       DoubleMatrix transitionProbabilityMatrix,
-      DoubleMatrix emissionProbabilitiyMatrix) {
+      DoubleMatrix emissionProbabilitiyMatrix, boolean log) {
     double sum = hiddenPriorProbability.sum();
     if (sum != 0d) {
       for (int i = 0; i < hiddenPriorProbability.getDimension(); i++) {
@@ -337,11 +346,17 @@ public final class HMM extends AbstractClassifier implements Writable {
       // the underlying array wrapped by the vector object so we can directly
       // mutate the values beneath
       DoubleVector rowVector = transitionProbabilityMatrix.getRowVector(row);
-      transitionProbabilityMatrix.setRowVector(row,
-          rowVector.divide(rowVector.sum()));
+      rowVector = rowVector.divide(rowVector.sum());
+      if (log) {
+        rowVector = rowVector.log();
+      }
+      transitionProbabilityMatrix.setRowVector(row, rowVector);
       rowVector = emissionProbabilitiyMatrix.getRowVector(row);
-      emissionProbabilitiyMatrix.setRowVector(row,
-          rowVector.divide(rowVector.sum()));
+      rowVector = rowVector.divide(rowVector.sum());
+      if (log) {
+        rowVector = rowVector.log();
+      }
+      emissionProbabilitiyMatrix.setRowVector(row, rowVector);
     }
   }
 
@@ -419,8 +434,8 @@ public final class HMM extends AbstractClassifier implements Writable {
     }
 
     // now we can divide by the counts and normalize the probabilities so they
-    // sum to 1
-    normalizeProbabilities();
+    // sum to 1 and log them
+    logNormalizeProbabilities();
   }
 
   @Override
@@ -434,23 +449,29 @@ public final class HMM extends AbstractClassifier implements Writable {
     // probability for each hidden state and put it into the vector
     DoubleVector probabilities = emissionProbabilityMatrix
         .multiplyVector(features);
-    // multiply with the hidden state prior
-    probabilities = probabilities.multiply(hiddenPriorProbability);
+    double max = probabilities.max();
+    for (int state = 0; state < probabilities.getDimension(); state++) {
+      probabilities.set(state, FastMath.exp(probabilities.get(state) - max)
+          * hiddenPriorProbability.get(state));
+    }
     // normalize again
     return probabilities.divide(probabilities.sum());
   }
 
   public DoubleVector predict(DoubleVector features,
       DoubleVector previousOutcome) {
-    // predict and take the transition probability into account
+    // clamp the features to the visible units, calculate the joint
+    // probability for each hidden state and put it into the vector
     DoubleVector probabilities = emissionProbabilityMatrix
         .multiplyVector(features);
-    DoubleVector transitionProbabilities = transitionProbabilityMatrix
-        .multiplyVector(previousOutcome);
-    // multiply the given transition probability of the previous outcome
-    probabilities = probabilities.multiply(transitionProbabilities);
-    // multiply with the hidden state prior
-    probabilities = probabilities.multiply(hiddenPriorProbability);
+    // we can add here, both are logarithms
+    probabilities.add(transitionProbabilityMatrix
+        .multiplyVector(previousOutcome));
+    double max = probabilities.max();
+    for (int state = 0; state < probabilities.getDimension(); state++) {
+      probabilities.set(state, FastMath.exp(probabilities.get(state) - max)
+          * hiddenPriorProbability.get(state));
+    }
     // normalize again
     return probabilities.divide(probabilities.sum());
   }

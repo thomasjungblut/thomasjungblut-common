@@ -46,16 +46,16 @@ public class HMMTest extends TestCase {
     assertEquals(hmm.getHiddenPriorProbability().get(1), 0.98, 0.01);
     assertEquals(hmm.getEmissionProbabilitiyMatrix().getRowCount(), 2);
     assertEquals(hmm.getEmissionProbabilitiyMatrix().getColumnCount(), 2);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 0), 0.76, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 1), 0.23, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 0), 0.45, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 1), 0.54, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 0), 0.76, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 1), 0.23, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 0), 0.45, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 1), 0.54, 0.01);
     assertEquals(hmm.getTransitionProbabilityMatrix().getRowCount(), 2);
     assertEquals(hmm.getTransitionProbabilityMatrix().getColumnCount(), 2);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(0, 0), 0.79, 0.01);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(0, 1), 0.20, 0.01);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(1, 0), 0.64, 0.01);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(1, 1), 0.35, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(0, 0), 0.79, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(0, 1), 0.20, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(1, 0), 0.64, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(1, 1), 0.35, 0.01);
   }
 
   @Test
@@ -69,19 +69,19 @@ public class HMMTest extends TestCase {
 
     assertEquals(hmm.getTransitionProbabilityMatrix().getRowCount(), 2);
     assertEquals(hmm.getTransitionProbabilityMatrix().getColumnCount(), 2);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(0, 0), 0.71, 0.01);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(0, 1), 0.28, 0.01);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(1, 0), 0.72, 0.01);
-    assertEquals(hmm.getTransitionProbabilityMatrix().get(1, 1), 0.28, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(0, 0), 0.71, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(0, 1), 0.28, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(1, 0), 0.72, 0.01);
+    assertLogEquals(hmm.getTransitionProbabilityMatrix().get(1, 1), 0.28, 0.01);
 
     // the emission probability must look quite extreme as we only add 10% noise
     // and otherwise observe the same like the observation
     assertEquals(hmm.getEmissionProbabilitiyMatrix().getRowCount(), 2);
     assertEquals(hmm.getEmissionProbabilitiyMatrix().getColumnCount(), 2);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 0), 0.96, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 1), 0.03, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 0), 0.003, 0.01);
-    assertEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 1), 0.99, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 0), 0.96, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(0, 1), 0.03, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 0), 0.003, 0.01);
+    assertLogEquals(hmm.getEmissionProbabilitiyMatrix().get(1, 1), 0.99, 0.01);
 
     // observe an umbrella
     DoubleVector predict = hmm.predict(new DenseDoubleVector(new double[] { 0d,
@@ -97,6 +97,10 @@ public class HMMTest extends TestCase {
     assertEquals(0, predict.maxIndex());
     assertEquals(0.99, predict.get(0), 0.01);
     assertEquals(0.001, predict.get(1), 0.01);
+  }
+
+  private void assertLogEquals(double d, double e, double f) {
+    assertEquals(e, Math.exp(d), f);
   }
 
 }
