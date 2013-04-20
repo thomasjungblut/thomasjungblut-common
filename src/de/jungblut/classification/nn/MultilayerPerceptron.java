@@ -295,13 +295,9 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return activations;
   }
 
+  // could be simplified now due to a "copy" constructor
   private static DoubleVector addBias(DoubleVector activations) {
-    DenseDoubleVector v = new DenseDoubleVector(activations.getLength() + 1);
-    v.set(0, 1.0d); // bias unit is always at index zero
-    for (int i = 0; i < activations.getLength(); i++) {
-      v.set(i + 1, activations.get(i));
-    }
-    return v;
+    return new DenseDoubleVector(1d, activations.toArray());
   }
 
   @Override

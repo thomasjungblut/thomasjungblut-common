@@ -14,6 +14,10 @@ public final class WeightMatrix {
 
   private DenseDoubleMatrix weights;
 
+  /**
+   * Creates a unitsRightLayer x (unitsLeftLayer+1) matrix of weights and seed
+   * the values using the famous uniform distribution formula of LeCun.
+   */
   public WeightMatrix(int unitsLeftLayer, int unitsRightLayer) {
     // extra row of weights for the bias unit, also random initialize them
     this.weights = new DenseDoubleMatrix(unitsRightLayer, unitsLeftLayer + 1);
