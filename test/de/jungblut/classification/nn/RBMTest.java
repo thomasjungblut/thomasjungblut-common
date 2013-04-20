@@ -51,5 +51,10 @@ public class RBMTest extends TestCase {
     assertEquals(1, (int) predict.get(0));
     assertEquals(0, (int) predict.get(1));
 
+    predict = single.predict(new DenseDoubleVector(new double[] { 1, 1, 0, 0,
+        0, 0 }));
+    assertEquals(0.9962, predict.get(0), 1e-4);
+    assertEquals(0.008, predict.get(1), 1e-4);
+
   }
 }

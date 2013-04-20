@@ -99,7 +99,8 @@ public final class RBM {
   public DoubleVector predict(DoubleVector input) {
     DoubleVector lastOutput = input;
     for (int i = 0; i < layerSizes.length; i++) {
-      lastOutput = computeHiddenActivations(lastOutput, weights[i], false);
+      lastOutput = computeHiddenActivations(lastOutput, weights[i],
+          !(i + 1 == layerSizes.length));
     }
     return lastOutput;
   }
