@@ -1,5 +1,9 @@
 package de.jungblut.classification.nn;
 
+import java.io.DataInputStream;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
@@ -7,6 +11,7 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.GradientDescent;
+import de.jungblut.writable.MatrixWritable;
 
 /**
  * Class for training/stacking RBMs.
@@ -116,6 +121,38 @@ public final class RBM {
       RBMCostFunction.binarize(hiddenProbability);
     }
     return hiddenProbability;
+  }
+
+  /**
+   * Serializes this RBM model into the given output stream.
+   */
+  public static void serialize(RBM model, DataOutput out) throws IOException {
+    out.writeInt(model.layerSizes.length);
+    for (int layer : model.layerSizes) {
+      out.writeInt(layer);
+    }
+
+    for (DenseDoubleMatrix mat : model.weights) {
+      MatrixWritable.write(mat, out);
+    }
+
+  }
+
+  /**
+   * Deserializes the RBM back from the binary stream input.
+   */
+  public static RBM deserialize(DataInputStream in) throws IOException {
+    int layers = in.readInt();
+    int[] sizes = new int[layers];
+    for (int i = 0; i < layers; i++) {
+      sizes[i] = in.readInt();
+    }
+
+    RBM model = stacked(sizes);
+    for (int i = 0; i < layers; i++) {
+      model.weights[i] = (DenseDoubleMatrix) MatrixWritable.read(in);
+    }
+    return model;
   }
 
   /**
