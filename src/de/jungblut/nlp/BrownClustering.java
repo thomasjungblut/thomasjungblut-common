@@ -2,6 +2,7 @@ package de.jungblut.nlp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -16,26 +17,37 @@ public final class BrownClustering {
 
     HashMultiset<String> tokenCount = countToken(documents);
     String[] dictionary = createDictionary(tokenCount);
+
     SparseDoubleColumnMatrix transitionMatrix = computeTransitionMatrix(
         documents, dictionary);
     // now do the real clustering
-    int id = 0;
     List<BrownClusterNode> clusters = new ArrayList<>();
     ArrayList<Entry<String>> mostFrequentItems = VectorizerUtils
         .getMostFrequentItems(tokenCount);
+
+    List<Set<String>> clusterAssignments = new ArrayList<>();
+
     for (int i = 0; i < m; i++) {
-      clusters.add(new BrownClusterNode(id++, mostFrequentItems.get(i)
-          .getElement()));
+      addCluster(mostFrequentItems.get(i).getElement(), clusterAssignments);
     }
     for (int i = m; i < dictionary.length; i++) {
       // add a new item
-      clusters.add(new BrownClusterNode(id++, mostFrequentItems.get(i)
-          .getElement()));
+      addCluster(mostFrequentItems.get(i).getElement(), clusterAssignments);
       // merge two items that have maximum amount of quality afterwards
-      
-      
+      merge(clusterAssignments, transitionMatrix, tokenCount);
     }
 
+  }
+
+  private void merge(List<Set<String>> clusterAssignments,
+      SparseDoubleColumnMatrix transitionMatrix, HashMultiset<String> tokenCount) {
+    // TODO Auto-generated method stub
+  }
+
+  private void addCluster(String item, List<Set<String>> clusterAssignments) {
+    HashSet<String> set = new HashSet<>();
+    set.add(item);
+    clusterAssignments.add(set);
   }
 
   private SparseDoubleColumnMatrix computeTransitionMatrix(
@@ -77,15 +89,6 @@ public final class BrownClustering {
 
     private BrownClusterNode left;
     private BrownClusterNode right;
-
-    private String value;
-    private int clusterId;
-    private double quality;
-
-    public BrownClusterNode(int id, String value) {
-      this.clusterId = id;
-      this.value = value;
-    }
 
   }
 
