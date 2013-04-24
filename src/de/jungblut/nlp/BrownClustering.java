@@ -15,9 +15,10 @@ import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
 
 /**
- * Implementation of the brown clustering algorithm. This is work in progress,
- * as the hierarchy must be created to generate bit strings. Also
- * performance-wise there are several improvements to make it more faster.
+ * Implementation of the brown clustering algorithm. This is work in progress
+ * (currently super slow, but doesn't need excessive amounts of memory), as the
+ * hierarchy must be created to generate bit strings. Also performance-wise
+ * there are several improvements to make it more faster.
  * 
  * @author thomas.jungblut
  * 
