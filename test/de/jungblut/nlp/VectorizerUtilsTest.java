@@ -2,6 +2,7 @@ package de.jungblut.nlp;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,7 +141,41 @@ public class VectorizerUtilsTest extends TestCase {
 
   @Test
   public void testPointwiseMutualInformationVectorize() {
-    // TODO
+    String[] tokens = new String[] { "the", "cat", "eats", "the", "dog" };
+    List<String[]> docs = Collections.singletonList(tokens);
+    String[] dict = Arrays.copyOf(tokens, tokens.length);
+    Arrays.sort(dict);
+    List<DoubleVector> vectors = VectorizerUtils
+        .pointwiseMutualInformationVectorize(docs, dict, 1);
+
+    // NamedDoubleVector [name=the, vector={0=0.22314355131420976}]
+    DoubleVector v1 = new SparseDoubleVector(13);
+    v1.set(0, 0.22314355131420976);
+    // NamedDoubleVector [name=cat, vector={3=0.5108256237659906,
+    // 2=0.9162907318741551}]
+    DoubleVector v2 = new SparseDoubleVector(13);
+    v2.set(2, 0.9162907318741551);
+    v2.set(3, 0.5108256237659906);
+    // NamedDoubleVector [name=eats, vector={3=0.5108256237659906,
+    // 0=0.9162907318741551}]
+    DoubleVector v3 = new SparseDoubleVector(13);
+    v3.set(0, 0.9162907318741551);
+    v3.set(3, 0.5108256237659906);
+    // NamedDoubleVector [name=the, vector={2=0.22314355131420976,
+    // 1=0.9162907318741551}]
+    DoubleVector v4 = new SparseDoubleVector(13);
+    v4.set(1, 0.9162907318741551);
+    v4.set(2, 0.22314355131420976);
+    // NamedDoubleVector [name=dog, vector={3=0.5108256237659906}]]
+    DoubleVector v5 = new SparseDoubleVector(13);
+    v5.set(3, 0.5108256237659906);
+
+    List<DoubleVector> result = Arrays.asList(v1, v2, v3, v4, v5);
+    assertEquals(5, vectors.size());
+
+    for (int i = 0; i < 5; i++) {
+      assertEquals(0d, vectors.get(i).subtract(result.get(i)).sum(), 1e-5);
+    }
   }
 
   @Test

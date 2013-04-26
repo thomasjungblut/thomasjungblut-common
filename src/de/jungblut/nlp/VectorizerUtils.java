@@ -18,7 +18,10 @@ import com.google.common.collect.Multiset.Entry;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.named.NamedDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
+import de.jungblut.nlp.model.Pair;
+import de.jungblut.nlp.model.ReferencedContext;
 
 /**
  * Vectorizing utility for basic tf-idf and wordcount vectorizing of
@@ -295,8 +298,57 @@ public final class VectorizerUtils {
    */
   public static List<DoubleVector> pointwiseMutualInformationVectorize(
       List<String[]> tokenizedDocuments, String[] dictionary, int contextWindow) {
-    // TODO
-    return null;
+    List<ReferencedContext<String, String>> mappingList = new ArrayList<>();
+    // tokenize into context and references
+    for (String[] tokens : tokenizedDocuments) {
+      for (int i = 0; i < tokens.length; i++) {
+        ArrayList<String> ctx = new ArrayList<>();
+        for (int cx = 1; cx <= contextWindow; cx++) {
+          int forwardIndex = i + cx;
+          int backwardIndex = i - cx;
+          if (forwardIndex >= 0 && forwardIndex < tokens.length) {
+            ctx.add(tokens[forwardIndex]);
+          }
+          if (backwardIndex >= 0 && backwardIndex < tokens.length) {
+            ctx.add(tokens[backwardIndex]);
+          }
+        }
+        ctx.trimToSize();
+        mappingList.add(new ReferencedContext<>(tokens[i], ctx));
+      }
+    }
+    // the pairwise counts of phrase and features
+    HashMultiset<Pair<String, String>> pairCounter = HashMultiset.create();
+    // the probability of a feature
+    HashMultiset<String> featureCounter = HashMultiset.create();
+    // the probability of a phrase
+    HashMultiset<String> phraseCounter = HashMultiset.create();
+    for (ReferencedContext<String, String> ref : mappingList) {
+      for (String s : ref.getContext()) {
+        pairCounter.add(new Pair<>(ref.getReference(), s));
+        featureCounter.add(s);
+      }
+      phraseCounter.add(ref.getReference());
+    }
+
+    List<DoubleVector> vectors = new ArrayList<>(mappingList.size());
+    for (ReferencedContext<String, String> ref : mappingList) {
+      SparseDoubleVector vector = new SparseDoubleVector(dictionary.length);
+      double pPhrase = phraseCounter.count(ref.getReference())
+          / (double) phraseCounter.size();
+      for (String feature : ref.getContext()) {
+        double pFeature = featureCounter.count(feature)
+            / (double) featureCounter.size();
+        double conditional = pairCounter.count(new Pair<>(ref.getReference(),
+            feature)) / (double) pairCounter.size();
+        int index = Arrays.binarySearch(dictionary, feature);
+        double value = Math.log((conditional / pFeature) / pPhrase);
+        vector.set(index, value);
+      }
+      vectors.add(new NamedDoubleVector(ref.getReference(), vector));
+    }
+
+    return vectors;
   }
 
   /**
