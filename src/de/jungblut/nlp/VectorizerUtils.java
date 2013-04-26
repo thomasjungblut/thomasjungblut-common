@@ -259,7 +259,6 @@ public final class VectorizerUtils {
       for (String token : document) {
         int index = Arrays.binarySearch(dictionary, token);
         if (index >= 0) {
-          // TODO scale logarithmic?
           double tfIdf = termFrequencySet.count(token)
               * Math.log(numDocuments / (double) termDocumentCount[index]);
           vector.set(index, tfIdf);
@@ -270,6 +269,34 @@ public final class VectorizerUtils {
     }
 
     return list;
+  }
+
+  /**
+   * Vectorizes the given terms in the documents by their context. The values to
+   * the corresponding variables is the Pointwise Mutual Information. This is
+   * derived by:
+   * 
+   * <pre>
+   * PMI(phrase, feature) = log(p(phrase | feature) / p(phrase))
+   * </pre>
+   * 
+   * where phrase is the referenced token in the document and a feature is the
+   * token in the near context of that phrase.
+   * 
+   * @param tokenizedDocuments the already tokenized documents. Usually start
+   *          and end tags should be added.
+   * @param dictionary the dictionary that is allowed.
+   * @param contextWindow the context window size, meaning how many tokens
+   *          before and afterwards should be used to create the context vector.
+   * @return a list of context vectors, where a single vector encodes a token
+   *         (phrase) and the values in that vector is a sparse encoding of
+   *         their context. To find the phrase again, the vectors are named with
+   *         the token (just a reference to the dictionary's entry).
+   */
+  public static List<DoubleVector> pointwiseMutualInformationVectorize(
+      List<String[]> tokenizedDocuments, String[] dictionary, int contextWindow) {
+    // TODO
+    return null;
   }
 
   /**

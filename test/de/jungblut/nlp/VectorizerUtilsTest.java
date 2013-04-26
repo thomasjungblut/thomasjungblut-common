@@ -17,6 +17,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset.Entry;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.sparse.SparseDoubleVector;
 
 public class VectorizerUtilsTest extends TestCase {
 
@@ -88,25 +89,58 @@ public class VectorizerUtilsTest extends TestCase {
   public void testTfIdfVectorize() {
 
     String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
+    assertEquals(13, dict.length);
     int[] docCount = VectorizerUtils.buildInvertedIndexDocumentCount(
         tokenizedDocuments, dict);
 
     List<DoubleVector> tfIdfVectorize = VectorizerUtils.tfIdfVectorize(
         tokenizedDocuments, dict, docCount);
 
-    // [{10=0.6931471805599453, 7=0.28768207245178085, 3=0.28768207245178085,
-    // 0=1.3862943611198906},
-    // {10=0.6931471805599453, 3=0.28768207245178085, 1=1.3862943611198906},
+    // {10=0.6931471805599453, 7=0.28768207245178085, 3=0.28768207245178085,
+    // 0=1.3862943611198906}
+    DoubleVector v1 = new SparseDoubleVector(13);
+    v1.set(10, 0.6931471805599453);
+    v1.set(7, 0.28768207245178085);
+    v1.set(3, 0.28768207245178085);
+    v1.set(0, 1.3862943611198906);
+    // {10=0.6931471805599453, 3=0.28768207245178085, 1=1.3862943611198906}
+    DoubleVector v2 = new SparseDoubleVector(13);
+    v2.set(10, 0.6931471805599453);
+    v2.set(3, 0.28768207245178085);
+    v2.set(1, 1.3862943611198906);
     // {12=1.3862943611198906, 11=1.3862943611198906, 8=0.6931471805599453,
-    // 7=0.28768207245178085, 3=0.28768207245178085},
+    // 7=0.28768207245178085, 3=0.28768207245178085}
+    DoubleVector v3 = new SparseDoubleVector(13);
+    v3.set(12, 1.3862943611198906);
+    v3.set(11, 1.3862943611198906);
+    v3.set(8, 0.6931471805599453);
+    v3.set(7, 0.28768207245178085);
+    v3.set(3, 0.28768207245178085);
+
     // {9=1.3862943611198906, 8=0.6931471805599453, 7=0.28768207245178085,
     // 6=1.3862943611198906, 5=1.3862943611198906, 4=1.3862943611198906,
-    // 2=1.3862943611198906}]
-
-    // TODO check the result
+    // 2=1.3862943611198906}
+    DoubleVector v4 = new SparseDoubleVector(13);
+    v4.set(9, 1.3862943611198906);
+    v4.set(8, 0.6931471805599453);
+    v4.set(7, 0.28768207245178085);
+    v4.set(6, 1.3862943611198906);
+    v4.set(5, 1.3862943611198906);
+    v4.set(4, 1.3862943611198906);
+    v4.set(2, 1.3862943611198906);
 
     assertEquals(4, tfIdfVectorize.size());
 
+    assertEquals(0d, tfIdfVectorize.get(0).subtract(v1).sum(), 1e-5);
+    assertEquals(0d, tfIdfVectorize.get(1).subtract(v2).sum(), 1e-5);
+    assertEquals(0d, tfIdfVectorize.get(2).subtract(v3).sum(), 1e-5);
+    assertEquals(0d, tfIdfVectorize.get(3).subtract(v4).sum(), 1e-5);
+
+  }
+
+  @Test
+  public void testPointwiseMutualInformationVectorize() {
+    // TODO
   }
 
   @Test
