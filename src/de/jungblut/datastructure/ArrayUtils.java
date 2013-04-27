@@ -1400,4 +1400,60 @@ public final class ArrayUtils {
     }
     System.arraycopy(toReturn, 0, numbers, startIndexA, toReturn.length);
   }
+
+  /**
+   * @return true if the given index is inside the array range between 0 and
+   *         array.length (exclusive).
+   */
+  public static boolean isValidIndex(int[] array, int index) {
+    return index >= 0 && index < array.length;
+  }
+
+  /**
+   * @return true if the given index is inside the array range between 0 and
+   *         array.length (exclusive).
+   */
+  public static boolean isValidIndex(double[] array, int index) {
+    return index >= 0 && index < array.length;
+  }
+
+  /**
+   * @return true if the given index is inside the array range between 0 and
+   *         array.length (exclusive).
+   */
+  public static boolean isValidIndex(float[] array, int index) {
+    return index >= 0 && index < array.length;
+  }
+
+  /**
+   * @return true if the given index is inside the array range between 0 and
+   *         array.length (exclusive).
+   */
+  public static boolean isValidIndex(long[] array, int index) {
+    return index >= 0 && index < array.length;
+  }
+
+  /**
+   * @return true if the given index is inside the array range between 0 and
+   *         array.length (exclusive).
+   */
+  public static boolean isValidIndex(boolean[] array, int index) {
+    return index >= 0 && index < array.length;
+  }
+
+  /**
+   * @return true if the given index is inside the array range between 0 and
+   *         array.length (exclusive).
+   */
+  public static boolean isValidIndex(byte[] array, int index) {
+    return index >= 0 && index < array.length;
+  }
+
+  /**
+   * @return true if the given index is inside the array range between 0 and
+   *         array.length (exclusive).
+   */
+  public static <T> boolean isValidIndex(T[] array, int index) {
+    return index >= 0 && index < array.length;
+  }
 }

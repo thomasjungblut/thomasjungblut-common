@@ -7,6 +7,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.math3.util.FastMath;
+
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
 import com.google.common.collect.HashMultimap;
@@ -306,10 +308,10 @@ public final class VectorizerUtils {
         for (int cx = 1; cx <= contextWindow; cx++) {
           int forwardIndex = i + cx;
           int backwardIndex = i - cx;
-          if (forwardIndex >= 0 && forwardIndex < tokens.length) {
+          if (ArrayUtils.isValidIndex(tokens, forwardIndex)) {
             ctx.add(tokens[forwardIndex]);
           }
-          if (backwardIndex >= 0 && backwardIndex < tokens.length) {
+          if (ArrayUtils.isValidIndex(tokens, backwardIndex)) {
             ctx.add(tokens[backwardIndex]);
           }
         }
@@ -334,16 +336,22 @@ public final class VectorizerUtils {
     List<DoubleVector> vectors = new ArrayList<>(mappingList.size());
     for (ReferencedContext<String, String> ref : mappingList) {
       SparseDoubleVector vector = new SparseDoubleVector(dictionary.length);
-      double pPhrase = phraseCounter.count(ref.getReference())
+      final double pPhrase = phraseCounter.count(ref.getReference())
           / (double) phraseCounter.size();
       for (String feature : ref.getContext()) {
-        double pFeature = featureCounter.count(feature)
-            / (double) featureCounter.size();
-        double conditional = pairCounter.count(new Pair<>(ref.getReference(),
-            feature)) / (double) pairCounter.size();
-        int index = Arrays.binarySearch(dictionary, feature);
-        double value = Math.log((conditional / pFeature) / pPhrase);
-        vector.set(index, value);
+        final int index = Arrays.binarySearch(dictionary, feature);
+        // ignore features we don't want to know
+        if (index >= 0) {
+          double pFeature = featureCounter.count(feature)
+              / (double) featureCounter.size();
+          double conditional = pairCounter.count(new Pair<>(ref.getReference(),
+              feature)) / (double) pairCounter.size();
+          double p = (conditional / pFeature) / pPhrase;
+          double value = FastMath.log(p);
+          if (!Double.isNaN(value) && !Double.isInfinite(value)) {
+            vector.set(index, value);
+          }
+        }
       }
       vectors.add(new NamedDoubleVector(ref.getReference(), vector));
     }

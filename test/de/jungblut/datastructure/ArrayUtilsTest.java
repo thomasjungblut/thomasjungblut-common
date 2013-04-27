@@ -283,6 +283,16 @@ public class ArrayUtilsTest extends TestCase {
 
   }
 
+  @Test
+  public void testIsValidIndex() {
+    int[] dummy = new int[3];
+    assertTrue(ArrayUtils.isValidIndex(dummy, 0));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 1));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 2));
+    assertFalse(ArrayUtils.isValidIndex(dummy, -1));
+    assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
   static int[] getRandomInput(int n, int k) {
     Random r = new Random();
     int[] arr = new int[n];

@@ -2,8 +2,8 @@ package de.jungblut.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.math.DoubleVector;
@@ -45,11 +45,10 @@ public final class KMeansClustering {
     this.vectors = vectors;
     this.centers = new DoubleVector[k];
     if (random) {
-      randomInit();
-    } else {
-      for (int i = 0; i < k; i++) {
-        centers[i] = vectors.get(i);
-      }
+      Collections.shuffle(vectors);
+    }
+    for (int i = 0; i < k; i++) {
+      centers[i] = vectors.get(i);
     }
   }
 
@@ -143,17 +142,6 @@ public final class KMeansClustering {
    */
   public DoubleVector[] getCenters() {
     return this.centers;
-  }
-
-  /**
-   * Random inits the centers.
-   */
-  private void randomInit() {
-    Random rnd = new Random();
-    int n = vectors.size();
-    for (int i = 0; i < k; i++) {
-      centers[i] = vectors.get(rnd.nextInt(n));
-    }
   }
 
 }
