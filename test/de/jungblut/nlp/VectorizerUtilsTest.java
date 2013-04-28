@@ -146,7 +146,7 @@ public class VectorizerUtilsTest extends TestCase {
     String[] dict = Arrays.copyOf(tokens, tokens.length);
     Arrays.sort(dict);
     List<DoubleVector> vectors = VectorizerUtils
-        .pointwiseMutualInformationVectorize(docs, dict, 1);
+        .pointwiseMutualInformationVectorize(docs, dict, 1, false);
 
     // NamedDoubleVector [name=the, vector={0=0.22314355131420976}]
     DoubleVector v1 = new SparseDoubleVector(13);
@@ -174,6 +174,42 @@ public class VectorizerUtilsTest extends TestCase {
     assertEquals(5, vectors.size());
 
     for (int i = 0; i < 5; i++) {
+      assertEquals(0d, vectors.get(i).subtract(result.get(i)).sum(), 1e-5);
+    }
+  }
+
+  @Test
+  public void testPointwiseMutualInformationVectorizeUnique() {
+    String[] tokens = new String[] { "the", "cat", "eats", "the", "dog" };
+    List<String[]> docs = Collections.singletonList(tokens);
+    String[] dict = Arrays.copyOf(tokens, tokens.length);
+    Arrays.sort(dict);
+    List<DoubleVector> vectors = VectorizerUtils
+        .pointwiseMutualInformationVectorize(docs, dict, 1, true);
+
+    // NamedDoubleVector [name=the, vector={2=0.6931471805599453,
+    // 1=1.3862943611198906, 0=0.6931471805599453}]
+    DoubleVector v1 = new SparseDoubleVector(13);
+    v1.set(0, 0.6931471805599453);
+    v1.set(1, 1.3862943611198906);
+    v1.set(2, 0.6931471805599453);
+    // NamedDoubleVector [name=cat, vector={3=0.28768207245178085,
+    // 2=0.6931471805599453}]
+    DoubleVector v2 = new SparseDoubleVector(13);
+    v2.set(2, 0.6931471805599453);
+    v2.set(3, 0.28768207245178085);
+    // NamedDoubleVector [name=eats, vector={3=0.28768207245178085,
+    // 0=0.6931471805599453}]
+    DoubleVector v3 = new SparseDoubleVector(13);
+    v3.set(0, 0.6931471805599453);
+    v3.set(3, 0.28768207245178085);
+    // NamedDoubleVector [name=dog, vector={3=0.28768207245178085}]
+    DoubleVector v5 = new SparseDoubleVector(13);
+    v5.set(3, 0.28768207245178085);
+
+    List<DoubleVector> result = Arrays.asList(v1, v2, v3, v5);
+    assertEquals(4, vectors.size());
+    for (int i = 0; i < 4; i++) {
       assertEquals(0d, vectors.get(i).subtract(result.get(i)).sum(), 1e-5);
     }
   }

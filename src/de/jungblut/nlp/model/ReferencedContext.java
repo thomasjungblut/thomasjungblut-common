@@ -1,7 +1,7 @@
 package de.jungblut.nlp.model;
 
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Reference and its context. Which is a one-to-many mapping, hashcode and
@@ -13,14 +13,14 @@ import java.util.List;
 public final class ReferencedContext<REF_TYPE, CONTEXT_TYPE> {
 
   private final REF_TYPE reference;
-  private final List<CONTEXT_TYPE> context;
+  private final Collection<CONTEXT_TYPE> context;
 
   @SafeVarargs
   public ReferencedContext(REF_TYPE reference, CONTEXT_TYPE... context) {
     this(reference, Arrays.asList(context));
   }
 
-  public ReferencedContext(REF_TYPE reference, List<CONTEXT_TYPE> context) {
+  public ReferencedContext(REF_TYPE reference, Collection<CONTEXT_TYPE> context) {
     this.reference = reference;
     this.context = context;
   }
@@ -29,7 +29,7 @@ public final class ReferencedContext<REF_TYPE, CONTEXT_TYPE> {
     return this.reference;
   }
 
-  public List<CONTEXT_TYPE> getContext() {
+  public Collection<CONTEXT_TYPE> getContext() {
     return this.context;
   }
 

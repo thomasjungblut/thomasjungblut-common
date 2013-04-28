@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -15,6 +17,7 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
 
@@ -293,13 +296,19 @@ public final class VectorizerUtils {
    * @param dictionary the dictionary that is allowed.
    * @param contextWindow the context window size, meaning how many tokens
    *          before and afterwards should be used to create the context vector.
+   * @param compressContext if true, the phrase will only occur once in the list
+   *          of vectors, but all the context features will be grouped on this
+   *          single phrase vector.
    * @return a list of context vectors, where a single vector encodes a token
    *         (phrase) and the values in that vector is a sparse encoding of
    *         their context. To find the phrase again, the vectors are named with
    *         the token (just a reference to the dictionary's entry).
    */
   public static List<DoubleVector> pointwiseMutualInformationVectorize(
-      List<String[]> tokenizedDocuments, String[] dictionary, int contextWindow) {
+      List<String[]> tokenizedDocuments, String[] dictionary,
+      int contextWindow, boolean compressContext) {
+    HashMap<String, ReferencedContext<String, String>> compressedMap = Maps
+        .newHashMap();
     List<ReferencedContext<String, String>> mappingList = new ArrayList<>();
     // tokenize into context and references
     for (String[] tokens : tokenizedDocuments) {
@@ -315,8 +324,20 @@ public final class VectorizerUtils {
             ctx.add(tokens[backwardIndex]);
           }
         }
-        ctx.trimToSize();
-        mappingList.add(new ReferencedContext<>(tokens[i], ctx));
+        if (compressContext) {
+          ReferencedContext<String, String> refCtx = compressedMap
+              .get(tokens[i]);
+          if (refCtx == null) {
+            refCtx = new ReferencedContext<>(tokens[i], new HashSet<>(ctx));
+            mappingList.add(refCtx);
+            compressedMap.put(tokens[i], refCtx);
+          } else {
+            refCtx.getContext().addAll(ctx);
+          }
+        } else {
+          ctx.trimToSize();
+          mappingList.add(new ReferencedContext<>(tokens[i], ctx));
+        }
       }
     }
     // the pairwise counts of phrase and features
