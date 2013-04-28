@@ -71,7 +71,7 @@ public final class LimitedPriorityQueue<T> {
     return queue.size() == 0;
   }
 
-  public int getSize() {
+  public int size() {
     return queue.size();
   }
 
@@ -85,7 +85,7 @@ public final class LimitedPriorityQueue<T> {
   }
 
   public List<T> toList() {
-    List<T> list = new ArrayList<>(getSize());
+    List<T> list = new ArrayList<>(size());
     for (Entry<T> entry : queue) {
       list.add(entry.data);
     }
