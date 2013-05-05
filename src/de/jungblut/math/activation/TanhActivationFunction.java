@@ -18,7 +18,7 @@ public final class TanhActivationFunction extends AbstractActivationFunction {
   @Override
   public double gradient(double input) {
     final double tanhX = FastMath.tanh(input);
-    return 1 - tanhX * tanhX;
+    return 1d - tanhX * tanhX;
   }
 
 }
