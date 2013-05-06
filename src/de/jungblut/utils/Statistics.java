@@ -9,6 +9,8 @@ import java.util.Arrays;
 
 import org.apache.hadoop.io.Writable;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Small statistics utility to describe data based on its
  * min/max/mean/median/deviation.
@@ -18,6 +20,8 @@ import org.apache.hadoop.io.Writable;
  */
 public final class Statistics implements Writable {
 
+  private boolean finalized = false;
+
   private TDoubleArrayList data = new TDoubleArrayList();
   private double min = Double.MAX_VALUE;
   private double max = -Double.MAX_VALUE;
@@ -26,6 +30,12 @@ public final class Statistics implements Writable {
   private double standardDeviation;
   private double sum;
   private int count;
+
+  // some other metrics
+  private double signalToNoise;
+  private double coefficientOfVariation;
+  private double dispersionIndex;
+  private double variance;
 
   /**
    * Adds a new data item into the current statistics object.
@@ -51,57 +61,102 @@ public final class Statistics implements Writable {
         double diff = (f - mean);
         standardDeviation += diff * diff;
       }
-      standardDeviation = Math.sqrt(standardDeviation / count);
+      variance = standardDeviation / count;
+      standardDeviation = Math.sqrt(variance);
+      // signal to noise mean/stddev
+      signalToNoise = mean / standardDeviation;
+      // coefficient of variation stddev/mean
+      coefficientOfVariation = standardDeviation / mean;
+      // dispersion index variance/mean
+      dispersionIndex = variance / mean;
     }
     double[] array = data.toArray();
     Arrays.sort(array);
     median = array[count / 2];
     data = null;
+    finalized = true;
   }
 
   @Override
   public void write(DataOutput out) throws IOException {
+    out.writeBoolean(finalized);
     out.writeDouble(min);
     out.writeDouble(max);
     out.writeDouble(median);
     out.writeDouble(mean);
     out.writeDouble(standardDeviation);
+    out.writeDouble(variance);
+    out.writeDouble(signalToNoise);
+    out.writeDouble(coefficientOfVariation);
+    out.writeDouble(dispersionIndex);
   }
 
   @Override
   public void readFields(DataInput in) throws IOException {
+    finalized = in.readBoolean();
     min = in.readDouble();
     max = in.readDouble();
     median = in.readDouble();
     mean = in.readDouble();
     standardDeviation = in.readDouble();
+    variance = in.readDouble();
+    signalToNoise = in.readDouble();
+    coefficientOfVariation = in.readDouble();
+    dispersionIndex = in.readDouble();
   }
 
   public double getMin() {
+    Preconditions.checkState(finalized);
     return this.min;
   }
 
   public double getMax() {
+    Preconditions.checkState(finalized);
     return this.max;
   }
 
   public double getMedian() {
+    Preconditions.checkState(finalized);
     return this.median;
   }
 
   public double getMean() {
+    Preconditions.checkState(finalized);
     return this.mean;
   }
 
   public double getStandardDeviation() {
+    Preconditions.checkState(finalized);
     return this.standardDeviation;
   }
 
+  public double getVariance() {
+    Preconditions.checkState(finalized);
+    return this.variance;
+  }
+
+  public double getSignalToNoise() {
+    Preconditions.checkState(finalized);
+    return this.signalToNoise;
+  }
+
+  public double getDispersionIndex() {
+    Preconditions.checkState(finalized);
+    return this.dispersionIndex;
+  }
+
+  public double getCoefficientOfVariation() {
+    Preconditions.checkState(finalized);
+    return this.coefficientOfVariation;
+  }
+
   public double getSum() {
+    Preconditions.checkState(finalized);
     return this.sum;
   }
 
   public int getCount() {
+    Preconditions.checkState(finalized);
     return this.count;
   }
 
