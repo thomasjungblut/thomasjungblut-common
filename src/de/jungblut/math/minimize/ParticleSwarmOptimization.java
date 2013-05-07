@@ -28,7 +28,7 @@ import de.jungblut.partition.Boundaries.Range;
  * @author thomas.jungblut
  * 
  */
-public final class ParticleSwarmOptimization implements Minimizer {
+public final class ParticleSwarmOptimization extends AbstractMinimizer {
 
   private final int numParticles;
   private final double alpha;
@@ -105,6 +105,7 @@ public final class ParticleSwarmOptimization implements Minimizer {
       if (verbose) {
         System.out.print("Iteration " + iteration + " | Cost: " + globalCost
             + "\r");
+        onIterationFinished(iteration, globalCost, globalBestPosition);
       }
     }
 

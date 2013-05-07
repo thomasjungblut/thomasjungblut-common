@@ -11,7 +11,7 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public final class GradientDescent implements Minimizer {
+public final class GradientDescent extends AbstractMinimizer {
 
   private final double alpha;
   private final double limit;
@@ -48,6 +48,7 @@ public final class GradientDescent implements Minimizer {
       DoubleVector gradient = evaluateCost.getSecond();
       // basically subtract the gradient multiplied with the learning rate
       theta = theta.subtract(gradient.multiply(alpha));
+      onIterationFinished(iteration, evaluateCost.getFirst(), theta);
     }
 
     return theta;

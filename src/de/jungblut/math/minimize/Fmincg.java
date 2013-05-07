@@ -56,7 +56,7 @@ import de.jungblut.math.tuple.Tuple;
  * 2) added an interface to exchange minimizers more easily <br/>
  * BTW "fmincg" stands for Function minimize nonlinear conjugate gradient
  */
-public final class Fmincg implements Minimizer {
+public final class Fmincg extends AbstractMinimizer {
 
   // extrapolate maximum 3 times the current bracket.
   // this can be set higher for bigger extrapolations
@@ -80,15 +80,21 @@ public final class Fmincg implements Minimizer {
    * for more information.
    * 
    * @param f the cost function to minimize.
-   * @param pInput the input vector, also called starting point
-   * @param length the number of iterations to make
+   * @param theta the input vector, also called starting point
+   * @param maxIterations the number of iterations to make
    * @param verbose output the progress to STDOUT
    * @return a vector containing the optimized input
    */
   public static DoubleVector minimizeFunction(CostFunction f,
-      DoubleVector pInput, int length, boolean verbose) {
+      DoubleVector theta, int maxIterations, boolean verbose) {
+    return new Fmincg().minimize(f, theta, maxIterations, verbose);
+  }
 
-    DoubleVector input = pInput;
+  @Override
+  public final DoubleVector minimize(CostFunction f, DoubleVector theta,
+      int length, boolean verbose) {
+
+    DoubleVector input = theta;
     int M = 0;
     int i = 0; // zero the run length counter
     int red = 1; // starting point
@@ -222,8 +228,10 @@ public final class Fmincg implements Minimizer {
       if (success == 1) { // if line search succeeded
         f1 = f2;
         fX = new DenseDoubleVector(fX.toArray(), f1);
-        if (verbose)
+        if (verbose) {
           System.out.print("Iteration " + i + " | Cost: " + f1 + "\r");
+          onIterationFinished(i, f1, input);
+        }
         // Polack-Ribiere direction: s =
         // (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
         final double numerator = (df2.dot(df2) - df1.dot(df2)) / df1.dot(df1);
@@ -261,12 +269,6 @@ public final class Fmincg implements Minimizer {
     }
 
     return input;
-  }
-
-  @Override
-  public final DoubleVector minimize(CostFunction f, DoubleVector theta,
-      int maxIterations, boolean verbose) {
-    return minimizeFunction(f, theta, maxIterations, verbose);
   }
 
 }

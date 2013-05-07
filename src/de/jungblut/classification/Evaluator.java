@@ -34,7 +34,6 @@ public final class Evaluator {
   public static class EvaluationResult {
     int numLabels, correct, trainSize, testSize, truePositive, falsePositive,
         trueNegative, falseNegative;
-    double logLossSum;
 
     public double getPrecision() {
       return ((double) truePositive) / (truePositive + falsePositive);
@@ -91,7 +90,6 @@ public final class Evaluator {
       falsePositive += res.falsePositive;
       trueNegative += res.trueNegative;
       falseNegative += res.falseNegative;
-      logLossSum += res.logLossSum;
     }
 
     public void average(int pn) {
@@ -104,16 +102,6 @@ public final class Evaluator {
       falsePositive /= n;
       trueNegative /= n;
       falseNegative /= n;
-      logLossSum /= n;
-    }
-
-    public double getLogLoss() {
-      if (isBinary()) {
-        return this.logLossSum * -1d
-            / (truePositive + trueNegative + falsePositive + falseNegative);
-      } else {
-        return (this.logLossSum) * -1d / testSize;
-      }
     }
 
     public int getTruePositive() {
@@ -138,7 +126,6 @@ public final class Evaluator {
       System.out.println("Testset size: " + getTestSize());
       System.out.println("Correctly classified: " + getCorrect());
       System.out.println("Accuracy: " + getAccuracy());
-      System.out.println("LogLoss: " + getLogLoss());
       if (isBinary()) {
         System.out.println("TP: " + truePositive);
         System.out.println("FP: " + falsePositive);
@@ -231,13 +218,32 @@ public final class Evaluator {
       int numLabels, Double threshold, DoubleVector[] trainFeatures,
       DenseDoubleVector[] trainOutcome, DoubleVector[] testFeatures,
       DenseDoubleVector[] testOutcome) {
-    EvaluationResult result = new EvaluationResult();
-    result.numLabels = numLabels;
-    result.testSize = testOutcome.length;
-    result.trainSize = trainOutcome.length;
 
     classifier.train(trainFeatures, trainOutcome);
 
+    return testClassifier(classifier, numLabels, threshold,
+        trainOutcome.length, testFeatures, testOutcome);
+  }
+
+  /**
+   * Tests the given classifier without actually training it.
+   * 
+   * @param classifier the classifier to evaluate on the test split.
+   * @param numLabels the number of labels that can be classified.
+   * @param threshold the threshold for predicting a specific class by
+   *          probability (if not provided = null).
+   * @param trainingSetSize the size of the training set (just for reference).
+   * @param testFeatures the features to test with.
+   * @param testOutcome the outcome to test with.
+   * @return a fresh evalation result filled with the evaluated metrics.
+   */
+  public static EvaluationResult testClassifier(Classifier classifier,
+      int numLabels, Double threshold, int trainingSetSize,
+      DoubleVector[] testFeatures, DenseDoubleVector[] testOutcome) {
+    EvaluationResult result = new EvaluationResult();
+    result.numLabels = numLabels;
+    result.testSize = testOutcome.length;
+    result.trainSize = trainingSetSize;
     // check the binary case to calculate special metrics
     if (numLabels == 2) {
       for (int i = 0; i < testFeatures.length; i++) {
@@ -254,20 +260,19 @@ public final class Evaluator {
           if (prediction == 1) {
             result.truePositive++; // "Correct result"
           } else {
+            // System.out.println("False Negative: " +
+            // testFeatures[i].getName());
             result.falseNegative++; // "Missing the correct result"
           }
         } else if (outcomeClass == 0) {
           if (prediction == 0) {
             result.trueNegative++; // "Correct absence of result"
           } else {
+            // System.out.println("False Positive: " +
+            // testFeatures[i].getName());
             result.falsePositive++; // "Unexpected result"
           }
         }
-
-        DoubleVector multiply = testOutcome[i].subtractFrom(1d).multiply(
-            log(predictedVector.subtractFrom(1d)));
-        result.logLossSum += testOutcome[i].multiply(log(predictedVector))
-            .add(multiply).sum();
       }
     } else {
       for (int i = 0; i < testFeatures.length; i++) {
@@ -423,26 +428,6 @@ public final class Evaluator {
       int numThreads, boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
         numLabels, 10, threshold, numThreads, verbose);
-  }
-
-  /*
-   * Some helper functions.
-   */
-
-  private static DoubleVector log(DoubleVector v) {
-    DoubleVector vx = new DenseDoubleVector(v.getLength());
-    for (int i = 0; i < v.getLength(); i++) {
-      double d = v.get(i);
-      if (Double.isNaN(d) || Double.isInfinite(d)) {
-        d = 0d;
-      } else if (d <= 0d || d <= -0d) {
-        d = -10d;
-      } else {
-        d = Math.log(d);
-      }
-      vx.set(i, d);
-    }
-    return vx;
   }
 
   private static class CallableEvaluation implements Callable<EvaluationResult> {
