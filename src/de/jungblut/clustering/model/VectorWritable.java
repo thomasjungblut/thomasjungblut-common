@@ -3,17 +3,14 @@ package de.jungblut.clustering.model;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
-import java.util.Iterator;
 
 import org.apache.hadoop.io.WritableComparable;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.sparse.SparseDoubleVector;
 
 /**
- * Writable and comparable wrapper for sparse and dense vectors. <br/>
+ * Writable and comparable wrapper for dense vectors. <br/>
  * 
  * @author thomas.jungblut
  * @deprecated use de.jungblut.writable.VectorWritable instead, but it is not
@@ -33,7 +30,7 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
     this.vector = v.getVector();
   }
 
-  public VectorWritable(DoubleVector v) {
+  public VectorWritable(DenseDoubleVector v) {
     this.vector = v;
   }
 
@@ -107,40 +104,17 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
 
   public static void writeVector(DoubleVector vector, DataOutput out)
       throws IOException {
-    out.writeBoolean(vector.isSparse());
     out.writeInt(vector.getLength());
-    if (vector.isSparse()) {
-      out.writeInt(vector.getDimension());
-      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
-      while (iterateNonZero.hasNext()) {
-        DoubleVectorElement next = iterateNonZero.next();
-        out.writeInt(next.getIndex());
-        out.writeDouble(next.getValue());
-      }
-    } else {
-      for (int i = 0; i < vector.getDimension(); i++) {
-        out.writeDouble(vector.get(i));
-      }
+    for (int i = 0; i < vector.getDimension(); i++) {
+      out.writeDouble(vector.get(i));
     }
   }
 
   public static DoubleVector readVector(DataInput in) throws IOException {
-    boolean sparse = in.readBoolean();
-    int length = in.readInt();
-    DoubleVector vector = null;
-    if (sparse) {
-      int dim = in.readInt();
-      vector = new SparseDoubleVector(dim);
-      for (int i = 0; i < length; i++) {
-        int index = in.readInt();
-        double value = in.readDouble();
-        vector.set(index, value);
-      }
-    } else {
-      vector = new DenseDoubleVector(length);
-      for (int i = 0; i < length; i++) {
-        vector.set(i, in.readDouble());
-      }
+    final int length = in.readInt();
+    DoubleVector vector = new DenseDoubleVector(length);
+    for (int i = 0; i < length; i++) {
+      vector.set(i, in.readDouble());
     }
     return vector;
   }
@@ -154,7 +128,7 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
     return (int) subtract.sum();
   }
 
-  public static VectorWritable wrap(DoubleVector a) {
+  public static VectorWritable wrap(DenseDoubleVector a) {
     return new VectorWritable(a);
   }
 
