@@ -50,7 +50,7 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
   }
 
   public VectorWritable(double[] arr) {
-    this.vector = new SparseDoubleVector(arr);
+    this.vector = new DenseDoubleVector(arr);
   }
 
   @Override
