@@ -1,5 +1,6 @@
 package de.jungblut.nlp.mr;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 import junit.framework.TestCase;
@@ -40,7 +41,7 @@ public class WordCountJobTest extends TestCase {
   }
 
   @Test
-  public void testMapper() {
+  public void testMapper() throws IOException {
     mapDriver.withInput(new LongWritable(), new Text(toDedup));
 
     for (Entry<String> entry : tokenFrequency.entrySet()) {
@@ -51,8 +52,9 @@ public class WordCountJobTest extends TestCase {
     mapDriver.runTest();
   }
 
+  @SuppressWarnings("deprecation")
   @Test
-  public void testReducer() {
+  public void testReducer() throws IOException {
 
     reduceDriver.setInputKey(new Text("this"));
     reduceDriver.setInputValues(Arrays.asList(new LongWritable(2l),

@@ -21,6 +21,7 @@ public class TfIdfCalculatorJobTest extends TestCase {
 
   ReduceDriver<Text, TextIntIntIntWritable, Text, VectorWritable> reduceDriver;
 
+  @SuppressWarnings("deprecation")
   @Override
   @Before
   public void setUp() {
@@ -32,6 +33,7 @@ public class TfIdfCalculatorJobTest extends TestCase {
     reduceDriver.withConfiguration(conf);
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void testReducer() throws IOException {
 

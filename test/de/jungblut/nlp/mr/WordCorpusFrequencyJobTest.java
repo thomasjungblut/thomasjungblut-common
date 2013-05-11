@@ -1,5 +1,6 @@
 package de.jungblut.nlp.mr;
 
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -47,7 +48,7 @@ public class WordCorpusFrequencyJobTest extends TestCase {
   }
 
   @Test
-  public void testMapper() {
+  public void testMapper() throws IOException {
     mapDriver.withInput(new LongWritable(), new Text(toDedup));
 
     for (Entry<String> entry : tokenFrequency.entrySet()) {
@@ -60,6 +61,7 @@ public class WordCorpusFrequencyJobTest extends TestCase {
     mapDriver.runTest();
   }
 
+  @SuppressWarnings("deprecation")
   @Test
   public void testReducer() throws Exception {
     String p = "/tmp/dict.txt";

@@ -44,4 +44,4 @@ Note that there may be an issue to retrieve MRUnit-0.9.0-incubating, therefore y
 
 E.G. like this: 
 
-> mvn install:install-file -DgroupId=org.apache.mrunit -DartifactId=mrunit -Dversion=0.9.0-incubating -Dpackaging=jar -Dfile=<Path to MRUnit>/mrunit-0.9.0-incubating-hadoop1.jar
+> mvn install:install-file -DgroupId=org.apache.mrunit -DartifactId=mrunit -Dversion=1.0.0 -Dpackaging=jar -Dfile=~/Downloads/mrunit-1.0.0-hadoop1.jar
