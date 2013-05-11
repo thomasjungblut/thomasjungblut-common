@@ -52,12 +52,10 @@ public class WordCountJobTest extends TestCase {
     mapDriver.runTest();
   }
 
-  @SuppressWarnings("deprecation")
   @Test
   public void testReducer() throws IOException {
 
-    reduceDriver.setInputKey(new Text("this"));
-    reduceDriver.setInputValues(Arrays.asList(new LongWritable(2l),
+    reduceDriver.setInput(new Text("this"), Arrays.asList(new LongWritable(2l),
         new LongWritable(4l), new LongWritable(1l), new LongWritable(25l)));
 
     reduceDriver.addOutput(new Text("this"), new LongWritable(32l));

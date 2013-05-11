@@ -61,16 +61,14 @@ public class WordCorpusFrequencyJobTest extends TestCase {
     mapDriver.runTest();
   }
 
-  @SuppressWarnings("deprecation")
   @Test
   public void testReducer() throws Exception {
     String p = "/tmp/dict.txt";
     reduceDriver.getConfiguration().set(
         WordCorpusFrequencyJob.DICT_OUT_PATH_KEY, p);
-    reduceDriver.setInputKey(new Text("this"));
-
-    reduceDriver.setInputValues(Arrays.asList(new TextIntPairWritable(new Text(
-        "ID123"), new IntWritable(4))));
+    reduceDriver
+        .setInput(new Text("this"), Arrays.asList(new TextIntPairWritable(
+            new Text("ID123"), new IntWritable(4))));
 
     reduceDriver.addOutput(new Text("ID123"), new TextIntIntIntWritable(
         new Text("this"), new IntWritable(1), new IntWritable(4),

@@ -43,6 +43,7 @@ public final class Statistics implements Writable {
    * @param item a normal double value.
    */
   public void add(double item) {
+    Preconditions.checkState(!finalized);
     sum += item;
     count++;
     min = Math.min(min, item);

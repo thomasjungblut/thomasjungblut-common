@@ -6,7 +6,6 @@ import java.util.List;
 
 import junit.framework.TestCase;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
@@ -21,27 +20,23 @@ public class TfIdfCalculatorJobTest extends TestCase {
 
   ReduceDriver<Text, TextIntIntIntWritable, Text, VectorWritable> reduceDriver;
 
-  @SuppressWarnings("deprecation")
   @Override
   @Before
   public void setUp() {
     DocumentVectorizerReducer reducer = new DocumentVectorizerReducer();
     reduceDriver = ReduceDriver.newReduceDriver(reducer);
-    Configuration conf = new Configuration();
-    conf.setInt(TfIdfCalculatorJob.NUMBER_OF_DOCUMENTS_KEY, 20);
-    conf.setInt(TfIdfCalculatorJob.NUMBER_OF_TOKENS_KEY, 3);
-    reduceDriver.withConfiguration(conf);
+    reduceDriver.getConfiguration().setInt(
+        TfIdfCalculatorJob.NUMBER_OF_DOCUMENTS_KEY, 20);
+    reduceDriver.getConfiguration().setInt(
+        TfIdfCalculatorJob.NUMBER_OF_TOKENS_KEY, 3);
   }
 
-  @SuppressWarnings("deprecation")
   @Test
   public void testReducer() throws IOException {
 
-    reduceDriver.setInputKey(new Text("ID2012"));
-    // (token, document frequency, term frequency, token index)
-    reduceDriver.setInputValues(Arrays.asList(new TextIntIntIntWritable(
-        new Text("this"), new IntWritable(4), new IntWritable(2),
-        new IntWritable(1))));
+    reduceDriver.setInput(new Text("ID2012"), Arrays
+        .asList(new TextIntIntIntWritable(new Text("this"), new IntWritable(4),
+            new IntWritable(2), new IntWritable(1))));
 
     List<Pair<Text, VectorWritable>> res = reduceDriver.run();
     assertEquals(1, res.size());
