@@ -7,10 +7,11 @@ import java.util.Random;
 
 import com.google.common.base.Optional;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 
 /**
  * Markov chain, that can "learn" the state transition probabilities by a given
@@ -24,17 +25,20 @@ public final class MarkovChain {
   /*
    * log normalized, so we can sum the probabilities instead of multiplying and
    * running into numerical problems. the probability from state i to j can be
-   * retrieved by matrix.get(j,i) because it is transposed.
+   * retrieved by matrix.get(i,j).
    */
-  private final SparseDoubleColumnMatrix transitionProbabilities;
+  private final DoubleMatrix transitionProbabilities;
   private final int numStates;
 
   private MarkovChain(int numStates) {
-    this(numStates, new SparseDoubleColumnMatrix(numStates, numStates));
+    this(numStates, new SparseDoubleRowMatrix(numStates, numStates));
   }
 
-  private MarkovChain(int numStates, SparseDoubleColumnMatrix mat) {
+  private MarkovChain(int numStates, DoubleMatrix mat) {
     this.numStates = numStates;
+    if (mat instanceof SparseDoubleRowMatrix) {
+      mat = new SparseDoubleRowMatrix(mat);
+    }
     this.transitionProbabilities = mat;
   }
 
@@ -53,28 +57,22 @@ public final class MarkovChain {
     // transition probability matrix
     for (int[] array : states) {
       for (int i = 0; i < array.length - 1; i++) {
-        // the matrix is transposed, so state n will be in the column, the
-        // transition will be in the n+1th row of state n.
-        // that's majorly because the sum over columns is much faster than rows
-        int count = (int) transitionProbabilities.get(array[i + 1], array[i]);
-        transitionProbabilities.set(array[i + 1], array[i], ++count);
+        int count = (int) transitionProbabilities.get(array[i], array[i + 1]);
+        transitionProbabilities.set(array[i], array[i + 1], ++count);
       }
     }
 
-    final int[] columnIndices = transitionProbabilities.columnIndices();
-
-    for (int columnIndex : columnIndices) {
-      DoubleVector columnVector = transitionProbabilities
-          .getColumnVector(columnIndex);
-      double sum = columnVector.sum();
-      Iterator<DoubleVectorElement> iterateNonZero = columnVector
-          .iterateNonZero();
+    final int[] rowEntries = transitionProbabilities.rowIndices();
+    for (int rowIndex : rowEntries) {
+      DoubleVector rowVector = transitionProbabilities.getRowVector(rowIndex);
+      double sum = rowVector.sum();
+      Iterator<DoubleVectorElement> iterateNonZero = rowVector.iterateNonZero();
       // loop over all counts and take the log of the probability
       while (iterateNonZero.hasNext()) {
-        DoubleVectorElement next = iterateNonZero.next();
-        int row = next.getIndex();
-        double probability = Math.log(next.getValue() / sum);
-        transitionProbabilities.set(row, columnIndex, probability);
+        DoubleVectorElement columnElement = iterateNonZero.next();
+        int columnIndex = columnElement.getIndex();
+        double probability = Math.log(columnElement.getValue() / sum);
+        transitionProbabilities.set(rowIndex, columnIndex, probability);
       }
     }
 
@@ -109,7 +107,7 @@ public final class MarkovChain {
         stateSequence.length - 1);
     for (int i = 0; i < distribution.getDimension(); i++) {
       distribution.set(i,
-          transitionProbabilities.get(stateSequence[i + 1], stateSequence[i]));
+          transitionProbabilities.get(stateSequence[i], stateSequence[i + 1]));
     }
     return distribution;
   }
@@ -131,9 +129,10 @@ public final class MarkovChain {
         if (index + 1 < stateSequence.length) {
           if (optionalRandom.isPresent()) {
             stateSequence[index] = chooseState(optionalRandom.get(),
-                transitionProbabilities.getRowVector(stateSequence[index + 1]));
+                transitionProbabilities
+                    .getColumnVector(stateSequence[index + 1]));
           } else {
-            stateSequence[index] = transitionProbabilities.getRowVector(
+            stateSequence[index] = transitionProbabilities.getColumnVector(
                 stateSequence[index + 1]).maxIndex();
           }
         } else {
@@ -143,9 +142,9 @@ public final class MarkovChain {
       } else {
         if (optionalRandom.isPresent()) {
           stateSequence[index] = chooseState(optionalRandom.get(),
-              transitionProbabilities.getColumnVector(stateSequence[index - 1]));
+              transitionProbabilities.getRowVector(stateSequence[index - 1]));
         } else {
-          stateSequence[index] = transitionProbabilities.getColumnVector(
+          stateSequence[index] = transitionProbabilities.getRowVector(
               stateSequence[index - 1]).maxIndex();
         }
       }
@@ -177,7 +176,7 @@ public final class MarkovChain {
   /**
    * @return the state transition probability matrix to export/serialize.
    */
-  public SparseDoubleColumnMatrix getTransitionProbabilities() {
+  public DoubleMatrix getTransitionProbabilities() {
     return transitionProbabilities;
   }
 
@@ -199,7 +198,7 @@ public final class MarkovChain {
    * Creates a new markov chain with the supplied number of states and its
    * predefined transition matrix.
    */
-  public static MarkovChain create(int numStates, SparseDoubleColumnMatrix mat) {
+  public static MarkovChain create(int numStates, DoubleMatrix mat) {
     return new MarkovChain(numStates, mat);
   }
 

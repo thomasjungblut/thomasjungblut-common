@@ -10,8 +10,6 @@ import org.junit.Test;
 
 import com.google.common.base.Optional;
 
-import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
-
 public class MarkovChainTest extends TestCase {
 
   static List<int[]> trainingSet = new ArrayList<>();
@@ -20,27 +18,6 @@ public class MarkovChainTest extends TestCase {
     trainingSet.add(new int[] { 2, 3, 4, 1 });
     trainingSet.add(new int[] { 1, 2, 0 });
     trainingSet.add(new int[] { 1, 2, 4, 1 });
-  }
-
-  static double[][] result = new double[][] { { 0, 0, 0, 0, 0 },
-      { 0, 0, 3, 0, 0 },
-      { -1.0986122886681098, 0, 0, -1.0986122886681098, -1.0986122886681098 },
-      { 0, 0, 0, 0, 1 }, { 0, 2, 0, 0, 0 } };
-
-  @Test
-  public void testProbabilityMatrix() {
-
-    MarkovChain chain = MarkovChain.create(5);
-    chain.train(trainingSet);
-
-    SparseDoubleColumnMatrix mat = chain.getTransitionProbabilities();
-
-    for (int i = 0; i < 5; i++) {
-      for (int j = 0; j < 5; j++) {
-        // note that this is inverted here
-        assertEquals(result[i][j], mat.get(j, i));
-      }
-    }
   }
 
   @Test
@@ -52,10 +29,15 @@ public class MarkovChainTest extends TestCase {
     double p = chain.getProbabilityForSequence(new int[] { 1, 2, 1 });
     // this sequence is not very probable, because we have never seen the
     // transition 2-1, even if 1-2 is very probable
-    assertTrue(0.03 < p && p < 0.05);
+    assertTrue(0.01 < p);
     p = chain.getProbabilityForSequence(new int[] { 1, 2 });
     assertEquals(1d, p);
-
+    p = chain.getProbabilityForSequence(new int[] { 3, 4 });
+    assertEquals(1d, p);
+    p = chain.getProbabilityForSequence(new int[] { 2, 3 });
+    assertEquals(1d, p);
+    p = chain.getProbabilityForSequence(new int[] { 2, 3, 3 });
+    assertEquals(0.333d, p, 1e-3);
   }
 
   @Test
