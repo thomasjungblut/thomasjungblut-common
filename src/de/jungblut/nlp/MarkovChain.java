@@ -169,8 +169,8 @@ public final class MarkovChain {
         return next.getIndex();
       }
     }
-    // return the last if we haven't escaped yet
-    return next.getIndex();
+    // return the max if we haven't escaped yet
+    return probabilities.maxIndex();
   }
 
   /**
