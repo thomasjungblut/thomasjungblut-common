@@ -72,6 +72,33 @@ public final class SparseFeatureExtractorHelper<K> {
   }
 
   /**
+   * Vectorizes the given word.
+   * 
+   * @return the feature for the given word.
+   */
+  public DoubleVector vectorize(K word) {
+    return vectorize(word, null);
+  }
+
+  /**
+   * Vectorizes the given word with the previous outcome.
+   * 
+   * @return the feature for the given word.
+   */
+  public DoubleVector vectorize(K word, Integer lastLabel) {
+    List<String> computedFeatures = extractor.computeFeatures(
+        Arrays.asList(word), lastLabel == null ? 0 : lastLabel, 0);
+    DoubleVector feature = new SparseDoubleVector(dicts.length);
+    for (String feat : computedFeatures) {
+      int index = Arrays.binarySearch(dicts, feat);
+      if (index >= 0) {
+        feature.set(index, 1d);
+      }
+    }
+    return feature;
+  }
+
+  /**
    * Vectorizes the given data. Internally uses a dictionary that was created by
    * {@link #vectorize()} or creates one on this data.
    * 
