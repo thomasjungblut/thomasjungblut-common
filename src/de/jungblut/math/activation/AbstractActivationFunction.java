@@ -7,7 +7,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
 /**
@@ -101,12 +101,10 @@ public abstract class AbstractActivationFunction implements ActivationFunction {
 
   protected DoubleMatrix newInstance(DoubleMatrix mat) {
     if (mat.isSparse()) {
-      return new SparseDoubleColumnMatrix(mat.getRowCount(),
-          mat.getColumnCount());
+      return new SparseDoubleRowMatrix(mat.getRowCount(), mat.getColumnCount());
     } else {
       return new DenseDoubleMatrix(mat.getRowCount(), mat.getColumnCount());
     }
-
   }
 
   protected DoubleVector newInstance(DoubleVector v) {

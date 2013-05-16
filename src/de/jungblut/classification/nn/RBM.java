@@ -133,7 +133,7 @@ public final class RBM {
     }
 
     for (DenseDoubleMatrix mat : model.weights) {
-      MatrixWritable.write(mat, out);
+      MatrixWritable.writeDenseMatrix(mat, out);
     }
 
   }
@@ -150,7 +150,7 @@ public final class RBM {
 
     RBM model = stacked(sizes);
     for (int i = 0; i < layers; i++) {
-      model.weights[i] = (DenseDoubleMatrix) MatrixWritable.read(in);
+      model.weights[i] = MatrixWritable.readDenseMatrix(in);
     }
     return model;
   }

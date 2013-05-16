@@ -11,7 +11,7 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.Minimizer;
-import de.jungblut.math.sparse.SparseDoubleColumnMatrix;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.tuple.Tuple;
 
 /**
@@ -38,8 +38,8 @@ public final class LogisticRegressionCostFunction implements CostFunction {
       // add a column of ones to handle the intercept term
       this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(y.getLength()), x);
     } else {
-      this.x = new SparseDoubleColumnMatrix(DenseDoubleVector.ones(y
-          .getLength()), x);
+      this.x = new SparseDoubleRowMatrix(DenseDoubleVector.ones(y.getLength()),
+          x);
     }
     this.y = new DenseDoubleMatrix(Collections.singletonList(y));
     this.lambda = lambda;

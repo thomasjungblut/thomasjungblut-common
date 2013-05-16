@@ -11,22 +11,42 @@ import org.junit.Test;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 
 public class MatrixWritableTest extends TestCase {
 
   @Test
-  public void testSerDe() throws Exception {
+  public void testDenseSerDe() throws Exception {
     DenseDoubleMatrix mat = new DenseDoubleMatrix(new double[][] { { 1, 2, 3 },
         { 4, 5, 6 } });
 
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     DataOutputStream out = new DataOutputStream(baos);
 
-    MatrixWritable.write(mat, out);
+    MatrixWritable.writeDenseMatrix(mat, out);
 
     ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
     DataInputStream in = new DataInputStream(bais);
-    DoubleMatrix readMat = MatrixWritable.read(in);
+    DoubleMatrix readMat = MatrixWritable.readDenseMatrix(in);
+
+    assertEquals(0.0d, mat.subtract(readMat).sum());
+
+  }
+
+  @Test
+  public void testSparseSerDe() throws Exception {
+    SparseDoubleRowMatrix mat = new SparseDoubleRowMatrix(
+        new DenseDoubleMatrix(new double[][] { { 1, 0, 3 }, { 0, 0, 0 },
+            { 1, 0, 0 } }));
+
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DataOutputStream out = new DataOutputStream(baos);
+
+    MatrixWritable.writeSparseMatrix(mat, out);
+
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    DataInputStream in = new DataInputStream(bais);
+    DoubleMatrix readMat = MatrixWritable.readSparseMatrix(in);
 
     assertEquals(0.0d, mat.subtract(readMat).sum());
 

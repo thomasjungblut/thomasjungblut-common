@@ -523,8 +523,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
     WeightMatrix[] weights = new WeightMatrix[numLayers - 1];
     for (int i = 0; i < weights.length; i++) {
-      DenseDoubleMatrix weightMatrix = (DenseDoubleMatrix) MatrixWritable
-          .read(in);
+      DenseDoubleMatrix weightMatrix = MatrixWritable.readDenseMatrix(in);
       weights[i] = new WeightMatrix(weightMatrix);
     }
 
@@ -556,7 +555,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     // write the weight matrices
     for (WeightMatrix mat : model.weights) {
       DenseDoubleMatrix weights = mat.getWeights();
-      MatrixWritable.write(weights, out);
+      MatrixWritable.writeDenseMatrix(weights, out);
     }
     // then write the activation classes
     for (ActivationFunction func : model.activations) {

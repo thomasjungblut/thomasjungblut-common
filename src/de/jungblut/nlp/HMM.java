@@ -516,8 +516,10 @@ public final class HMM extends AbstractClassifier implements Writable {
     out.writeInt(numVisibleStates);
     out.writeInt(numHiddenStates);
     VectorWritable.writeVector(hiddenPriorProbability, out);
-    MatrixWritable.write(transitionProbabilityMatrix, out);
-    MatrixWritable.write(emissionProbabilityMatrix, out);
+    MatrixWritable.writeDenseMatrix(
+        (DenseDoubleMatrix) transitionProbabilityMatrix, out);
+    MatrixWritable.writeDenseMatrix(
+        (DenseDoubleMatrix) emissionProbabilityMatrix, out);
   }
 
   @Override
@@ -525,8 +527,8 @@ public final class HMM extends AbstractClassifier implements Writable {
     numVisibleStates = in.readInt();
     numHiddenStates = in.readInt();
     hiddenPriorProbability = VectorWritable.readVector(in);
-    transitionProbabilityMatrix = MatrixWritable.read(in);
-    emissionProbabilityMatrix = MatrixWritable.read(in);
+    transitionProbabilityMatrix = MatrixWritable.readDenseMatrix(in);
+    emissionProbabilityMatrix = MatrixWritable.readDenseMatrix(in);
   }
 
 }
