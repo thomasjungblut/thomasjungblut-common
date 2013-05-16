@@ -7,9 +7,6 @@ import java.util.Map;
  * Normal LRU cache based on LinkedHashMap.
  * 
  * @author thomas.jungblut
- * 
- * @param <K>
- * @param <V>
  */
 public class LRUCache<K, V> {
 
