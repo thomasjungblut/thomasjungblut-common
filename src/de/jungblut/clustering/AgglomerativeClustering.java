@@ -10,7 +10,29 @@ import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.math.DoubleVector;
 
 /**
- * "Bottom Up" clustering (agglomerative) using average linkage clustering.
+ * "Bottom Up" clustering (agglomerative) using average single linkage
+ * clustering. This average is paired up with the so called "centroid" method. <br/>
+ * Means in normal language: If we merge two points in space with each other, we
+ * look for the nearest neighbour (single linkage, defined by the given distance
+ * measurer). If we found the nearest neighbour, we merge both together by
+ * averaging their coordinates (average single linkage with centroid method). So
+ * if point (1,2) is now nearest neighbour to (5,1) we average and receive (3,
+ * 1.5) for the next clustering level. If we are now in the next clustering
+ * level and say we found another cluster (10, 14) which is the nearest
+ * neighbour to (3, 1.5), we now merge both again to the next level: ( (10+3)/2,
+ * (14+1.5)/2) = (6,5, 7,75). This goes until we have just have a single cluster
+ * which forms the root of the resulting cluster binary tree. <br/>
+ * Two more details about the algorithm: <br/>
+ * <li>Nearest neighbour search is greedy, which means that even far away merges
+ * are taking into account of there is no nearest neighbour available anymore.
+ * Therefore one may want to add a distance threshold, and just add those
+ * unrelated clusters to the next level until they find a good clustering.</li> <br/>
+ * <li>Nearest neighbours are found using exhaustive search: for every
+ * unclustered node in the level, we look through the whole list of clusters to
+ * find the nearest to merge.</li><br/>
+ * <li>If nearest neighbour search was unsucessful, meaning there wasn't any
+ * item to cluster anymore, the point/vector is added to the next level
+ * directly.</li>
  * 
  * @author thomas.jungblut
  * 
@@ -29,6 +51,27 @@ public final class AgglomerativeClustering {
    */
   public static List<List<ClusterNode>> cluster(List<DoubleVector> points,
       DistanceMeasurer distanceMeasurer, boolean verbose) {
+    return cluster(points, distanceMeasurer, Double.MAX_VALUE, verbose);
+  }
+
+  /**
+   * Starts the clustering process.
+   * 
+   * @param points the points to cluster on
+   * @param distanceMeasurer the distance measurement to use.
+   * @param distanceThreshold the threshold to not use a nearest neighbour
+   *          anymore and just add it to the next stage. (note that this is
+   *          experimental and may lead to infinite loops as this may not
+   *          converge to a single root item -> therefore this method is
+   *          protected until I find a good solution to detect these stales).
+   * @param verbose if true, costs in each iteration will be printed.
+   * @return a list of lists that contains cluster nodes for each level, where
+   *         the zeroth index is the top of the tree and thus only contains a
+   *         single clusternode.
+   */
+  static List<List<ClusterNode>> cluster(List<DoubleVector> points,
+      DistanceMeasurer distanceMeasurer, double distanceThreshold,
+      boolean verbose) {
     List<List<ClusterNode>> levels = new ArrayList<>();
     List<ClusterNode> currentLevel = new ArrayList<>();
     // start by translating the bottom to the internal tree linkage structure
@@ -49,8 +92,7 @@ public final class AgglomerativeClustering {
         excludeIndex.add(i);
         ClusterNode ci = currentLevel.get(i);
         // find the nearest, this is greedy and doesn't always find the best
-        // clustering. TODO a distance threshold for bad linkages that are added
-        // to the next level should be employed.
+        // clustering, but is faster then the normal groupwise average linkage.
         int nearest = -1;
         double nearestDistance = Double.MAX_VALUE;
         for (int j = 0; j < currentLevel.size(); j++) {
@@ -58,7 +100,7 @@ public final class AgglomerativeClustering {
             ClusterNode cj = currentLevel.get(j);
             double dist = distanceMeasurer.measureDistance(ci.getMean(),
                 cj.getMean());
-            if (dist < nearestDistance) {
+            if (dist < nearestDistance && dist < distanceThreshold) {
               nearest = j;
               nearestDistance = dist;
             }
