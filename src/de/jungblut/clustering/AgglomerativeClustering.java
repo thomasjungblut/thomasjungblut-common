@@ -18,11 +18,11 @@ import de.jungblut.math.DoubleVector;
  * averaging their coordinates (average single linkage with centroid method). So
  * if point (1,2) is now nearest neighbour to (5,1) we average and receive (3,
  * 1.5) for the next clustering level. If we are now in the next clustering
- * level and say we found another cluster (10, 14) which is the nearest
- * neighbour to (3, 1.5), we now merge both again to the next level: ( (10+3)/2,
+ * level and say, we found another cluster (10, 14) which is the nearest
+ * neighbour to (3, 1.5). We now merge both again to the next level: ( (10+3)/2,
  * (14+1.5)/2) = (6,5, 7,75). This goes until we have just have a single cluster
  * which forms the root of the resulting cluster binary tree. <br/>
- * Two more details about the algorithm: <br/>
+ * Few more details about the algorithm: <br/>
  * <li>Nearest neighbour search is greedy, which means that even far away merges
  * are taking into account of there is no nearest neighbour available anymore.
  * Therefore one may want to add a distance threshold, and just add those
