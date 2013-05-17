@@ -51,7 +51,6 @@ public class AgglomerativeClusteringTest extends TestCase {
     assertEquals(3, clusters.get(2).size());
     assertEquals(6, clusters.get(3).size());
 
-    System.out.println();
     ClusterNode clusterNode = clusters.get(0).get(0);
     traverse(clusterNode, 0, result);
 

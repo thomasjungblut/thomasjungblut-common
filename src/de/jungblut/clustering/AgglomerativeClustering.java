@@ -48,7 +48,9 @@ public final class AgglomerativeClustering {
         }
         excludeIndex.add(i);
         ClusterNode ci = currentLevel.get(i);
-        // find the nearest
+        // find the nearest, this is greedy and doesn't always find the best
+        // clustering. TODO a distance threshold for bad linkages that are added
+        // to the next level should be employed.
         int nearest = -1;
         double nearestDistance = Double.MAX_VALUE;
         for (int j = 0; j < currentLevel.size(); j++) {
