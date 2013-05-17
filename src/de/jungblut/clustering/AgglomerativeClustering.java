@@ -24,15 +24,15 @@ import de.jungblut.math.DoubleVector;
  * which forms the root of the resulting cluster binary tree. <br/>
  * Few more details about the algorithm: <br/>
  * <li>Nearest neighbour search is greedy, which means that even far away merges
- * are taking into account of there is no nearest neighbour available anymore.
+ * are taken into account, if there is no nearest neighbour available anymore.
  * Therefore one may want to add a distance threshold, and just add those
- * unrelated clusters to the next level until they find a good clustering.</li> <br/>
+ * unrelated clusters to the next level until they find a good clustering or
+ * just ignore them.</li> <br/>
  * <li>Nearest neighbours are found using exhaustive search: for every
  * unclustered node in the level, we look through the whole list of clusters to
  * find the nearest to merge.</li><br/>
- * <li>If nearest neighbour search was unsucessful, meaning there wasn't any
- * item to cluster anymore, the point/vector is added to the next level
- * directly.</li>
+ * <li>If nearest neighbour search was unsuccessful (there was no item to
+ * cluster anymore), the point/vector is added to the next level directly.</li>
  * 
  * @author thomas.jungblut
  * 
