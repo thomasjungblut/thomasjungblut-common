@@ -107,4 +107,12 @@ public final class MatrixDimension {
     return transposeB;
   }
 
+  @Override
+  public String toString() {
+    return "MatrixDimension [m=" + this.m + ", n=" + this.n + ", k=" + this.k
+        + ", ldA=" + this.ldA + ", ldB=" + this.ldB + ", ldC=" + this.ldC
+        + ", transposeA=" + this.transposeA + ", transposeB=" + this.transposeB
+        + "]";
+  }
+
 }

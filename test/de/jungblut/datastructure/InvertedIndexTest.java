@@ -11,9 +11,8 @@ import org.junit.Test;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 
+import de.jungblut.datastructure.InvertedIndex.DocumentDistanceMeasurer;
 import de.jungblut.datastructure.InvertedIndex.DocumentMapper;
-import de.jungblut.datastructure.InvertedIndex.DocumentSimilarityMeasurer;
-import de.jungblut.datastructure.InvertedIndex.IndexResult;
 import de.jungblut.distance.CosineDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
@@ -21,54 +20,36 @@ import de.jungblut.nlp.TokenizerUtils;
 
 public class InvertedIndexTest extends TestCase {
 
+  private static final List<String> phrases = Arrays.asList("I eat the dog",
+      "You like the dog", "this is the best I have ever seen");
+
   @Test
   public void testInvertedIndex() {
 
-    // create a white space tokenizing index that measures the jaccard
-    // similarity.
-    InvertedIndex<String, String> invIndex = InvertedIndex.create(
-        new DocumentMapper<String, String>() {
-          @Override
-          public Set<String> mapDocument(String doc) {
-            return Sets.newHashSet(TokenizerUtils.whiteSpaceTokenize(doc));
-          }
-        }, new DocumentSimilarityMeasurer<String, String>() {
-          @Override
-          public double measure(String reference, Set<String> referenceKeys,
-              String doc, Set<String> docKeys) {
-            SetView<String> union = Sets.union(referenceKeys, docKeys);
-            SetView<String> intersection = Sets.intersection(referenceKeys,
-                docKeys);
-            return intersection.size() / (double) union.size();
-          }
-        });
+    InvertedIndex<String, String> invIndex = getBuiltIndex();
 
-    List<String> phrases = Arrays.asList("I eat the dog", "You like the dog",
-        "this is the best I have ever seen");
+    List<DistanceResult<String>> res = invIndex
+        .query("something with the dog I like");
+    assertEquals(3, res.size());
+    assertEquals(phrases.get(1), res.get(0).get());
+    assertEquals(phrases.get(0), res.get(1).get());
+    assertEquals(phrases.get(2), res.get(2).get());
 
-    invIndex.build(phrases);
+    res = invIndex.query("something with the dog I like", 0.8d);
+    assertEquals(2, res.size());
+    assertEquals(phrases.get(1), res.get(0).get());
+    assertEquals(phrases.get(0), res.get(1).get());
 
-    IndexResult<String>[] res = invIndex.query("something with the dog I like");
-    assertEquals(3, res.length);
-    assertEquals(phrases.get(1), res[0].getDocument());
-    assertEquals(phrases.get(0), res[1].getDocument());
-    assertEquals(phrases.get(2), res[2].getDocument());
+    res = invIndex.query("something with the dog I like", 1, 0.8d);
+    assertEquals(1, res.size());
+    assertEquals(phrases.get(1), res.get(0).get());
 
-    res = invIndex.query("something with the dog I like", 0.2d);
-    assertEquals(2, res.length);
-    assertEquals(phrases.get(1), res[0].getDocument());
-    assertEquals(phrases.get(0), res[1].getDocument());
-
-    res = invIndex.query("something with the dog I like", 1, 0.2d);
-    assertEquals(1, res.length);
-    assertEquals(phrases.get(1), res[0].getDocument());
-
-    res = invIndex.query("something with the dog I like", 1, 0.2d);
-    assertEquals(1, res.length);
-    assertEquals(phrases.get(1), res[0].getDocument());
+    res = invIndex.query("something with the dog I like", 1, 0.8d);
+    assertEquals(1, res.size());
+    assertEquals(phrases.get(1), res.get(0).get());
 
     res = invIndex.query("something with the dog I like", 1, 0.5d);
-    assertEquals(0, res.length);
+    assertEquals(0, res.size());
   }
 
   @Test
@@ -88,10 +69,34 @@ public class InvertedIndexTest extends TestCase {
     DoubleVector v3 = new SparseDoubleVector(4);
     v3.set(3, 0.2);
     v3.set(1, 1);
-    IndexResult<DoubleVector>[] res = invIndex.query(v3);
-    assertEquals(2, res.length);
-    assertEquals(v2, res[0].getDocument());
-    assertEquals(v1, res[1].getDocument());
+    List<DistanceResult<DoubleVector>> res = invIndex.query(v3);
+    assertEquals(2, res.size());
+    assertEquals(v2, res.get(0).get());
+    assertEquals(v1, res.get(1).get());
 
+  }
+
+  public static InvertedIndex<String, String> getBuiltIndex() {
+    // create a white space tokenizing index that measures the jaccard
+    // distance.
+    InvertedIndex<String, String> invIndex = InvertedIndex.create(
+        new DocumentMapper<String, String>() {
+          @Override
+          public Set<String> mapDocument(String doc) {
+            return Sets.newHashSet(TokenizerUtils.whiteSpaceTokenize(doc));
+          }
+        }, new DocumentDistanceMeasurer<String, String>() {
+          @Override
+          public double measure(String reference, Set<String> referenceKeys,
+              String doc, Set<String> docKeys) {
+            SetView<String> union = Sets.union(referenceKeys, docKeys);
+            SetView<String> intersection = Sets.intersection(referenceKeys,
+                docKeys);
+            return 1d - (intersection.size() / (double) union.size());
+          }
+        });
+
+    invIndex.build(phrases);
+    return invIndex;
   }
 }

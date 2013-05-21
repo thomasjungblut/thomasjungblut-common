@@ -4,11 +4,9 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
-import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
 
 /**
  * K nearest neighbour classification algorithm that is seeded with a "database"
@@ -17,11 +15,9 @@ import de.jungblut.math.dense.DenseDoubleVector;
  * the distance metric is restricted to the EuclidianDistance.
  * 
  */
-public final class KNearestNeighbours extends AbstractClassifier {
+public final class KNearestNeighbours extends AbstractKNearestNeighbours {
 
-  private final KDTree<DenseDoubleVector> tree;
-  private final int numOutcomes;
-  private final int k;
+  private final KDTree<DoubleVector> tree;
 
   /**
    * Constructs a new knn classifier.
@@ -31,13 +27,12 @@ public final class KNearestNeighbours extends AbstractClassifier {
    *          so by majority voting).
    */
   public KNearestNeighbours(int numOutcomes, int k) {
-    this.numOutcomes = numOutcomes;
-    this.k = k;
+    super(numOutcomes, k);
     this.tree = new KDTree<>();
   }
 
   @Override
-  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+  public void train(DoubleVector[] features, DoubleVector[] outcome) {
     Preconditions.checkArgument(features.length == outcome.length,
         "Features and outcome length didn't match: " + features.length + "!="
             + outcome.length);
@@ -50,25 +45,8 @@ public final class KNearestNeighbours extends AbstractClassifier {
   }
 
   @Override
-  public DoubleVector predict(DoubleVector features) {
-    List<VectorDistanceTuple<DenseDoubleVector>> nearestNeighbours = tree
-        .getNearestNeighbours(features, k);
-
-    DenseDoubleVector outcomeHistogram = new DenseDoubleVector(numOutcomes);
-    for (VectorDistanceTuple<DenseDoubleVector> tuple : nearestNeighbours) {
-      int classIndex = 0;
-      if (numOutcomes == 2) {
-        classIndex = (int) tuple.getValue().get(0);
-      } else {
-        classIndex = tuple.getValue().maxIndex();
-      }
-
-      outcomeHistogram.set(classIndex, outcomeHistogram.get(classIndex) + 1);
-    }
-    if (numOutcomes == 2) {
-      return new DenseDoubleVector(new double[] { outcomeHistogram.maxIndex() });
-    } else {
-      return outcomeHistogram;
-    }
+  protected List<VectorDistanceTuple<DoubleVector>> getNearestNeighbours(
+      DoubleVector feature, int k) {
+    return tree.getNearestNeighbours(feature, k);
   }
 }

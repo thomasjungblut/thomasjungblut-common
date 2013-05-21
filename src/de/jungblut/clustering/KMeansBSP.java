@@ -1,7 +1,5 @@
 package de.jungblut.clustering;
 
-import gnu.trove.map.hash.TIntObjectHashMap;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +8,6 @@ import java.util.Random;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -31,8 +28,6 @@ import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.dense.DenseIntVector;
-import de.jungblut.visualize.GnuPlot;
 import de.jungblut.writable.VectorWritable;
 
 /**
@@ -335,53 +330,6 @@ public final class KMeansBSP
 
     // just submit the job
     job.waitForCompletion(true);
-
-    // reads the output and plots it with gnuplot
-    // readOutput(conf, out, centerOut, fs);
-  }
-
-  /**
-   * Reads the outputs and plots it with gnuplot. Normally deactivated, can be
-   * used to do some fancy plots. It will hang until you send enter to the
-   * console.
-   */
-  @SuppressWarnings("unused")
-  private static void readOutput(Configuration conf, Path out, Path centerPath,
-      FileSystem fs) throws IOException {
-    FileStatus[] stati = fs.listStatus(out);
-    TIntObjectHashMap<DoubleVector> centerMap = new TIntObjectHashMap<>();
-    try (SequenceFile.Reader centerReader = new SequenceFile.Reader(fs,
-        centerPath, conf)) {
-      int index = 0;
-      VectorWritable center = new VectorWritable();
-      while (centerReader.next(center, NullWritable.get())) {
-        centerMap.put(index++, center.getVector());
-      }
-    }
-    TIntObjectHashMap<List<DoubleVector>> map = new TIntObjectHashMap<>();
-    for (FileStatus status : stati) {
-      if (!status.isDir()) {
-        Path path = status.getPath();
-        LOG.info("Found output file: " + path.toString());
-        try (SequenceFile.Reader reader = new SequenceFile.Reader(fs, path,
-            conf)) {
-          IntWritable key = new IntWritable();
-          VectorWritable v = new VectorWritable();
-          while (reader.next(key, v)) {
-            List<DoubleVector> list = map.get(key.get());
-            if (list == null) {
-              list = new ArrayList<>();
-              map.put(key.get(), list);
-            }
-            list.add(v.getVector());
-          }
-        }
-      }
-    }
-    // add the centers as an individual part of the map to be distinctly plotted
-    map.put(new DenseIntVector(centerMap.keys()).getMaxValue() + 1,
-        new ArrayList<>(centerMap.valueCollection()));
-    GnuPlot.drawPoints(map);
   }
 
   /**

@@ -12,6 +12,8 @@ import de.jungblut.reader.MushroomReader;
 
 public class KNearestNeighboursTest extends TestCase {
 
+  private static final int TEST_SET_SIZE = 100;
+
   @Test
   public void testKNN() throws Exception {
     Tuple<DoubleVector[], DenseDoubleVector[]> mushroom = MushroomReader
@@ -20,16 +22,16 @@ public class KNearestNeighboursTest extends TestCase {
     DenseDoubleVector[] fullOutcome = mushroom.getSecond();
 
     DoubleVector[] testFeatures = ArrayUtils.subArray(fullFeatures,
-        fullFeatures.length - 100, fullFeatures.length - 1);
+        fullFeatures.length - TEST_SET_SIZE, fullFeatures.length - 1);
 
     DoubleVector[] testOutcome = ArrayUtils.subArray(fullOutcome,
-        fullOutcome.length - 100, fullOutcome.length - 1);
+        fullOutcome.length - TEST_SET_SIZE, fullOutcome.length - 1);
 
     DoubleVector[] trainFeatures = ArrayUtils.subArray(fullFeatures,
-        fullFeatures.length - 100);
+        fullFeatures.length - TEST_SET_SIZE);
 
     DenseDoubleVector[] trainOutcome = ArrayUtils.subArray(fullOutcome,
-        fullOutcome.length - 100);
+        fullOutcome.length - TEST_SET_SIZE);
 
     KNearestNeighbours knn = new KNearestNeighbours(2, 10);
     knn.train(trainFeatures, trainOutcome);

@@ -1,6 +1,5 @@
 package de.jungblut.datastructure;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -11,15 +10,27 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.HashMultimap;
 
 import de.jungblut.distance.DistanceMeasurer;
-import de.jungblut.distance.VectorDocumentSimilarityMeasurer;
+import de.jungblut.distance.VectorDocumentDistanceMeasurer;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.nlp.SparseVectorDocumentMapper;
 
+/**
+ * Inverted Index, mainly developed for sparse vectors to speedup dimension
+ * lookups for fast distance measurement and search space reduction. But of
+ * course it can also be used to behave like a fulltext index to find relevant
+ * documents by their textual representation.
+ * 
+ * @author thomas.jungblut
+ * 
+ * @param <DOCUMENT_TYPE> the type of document one wants to retrieve.
+ * @param <KEY_TYPE> the type of key that is going to be extracted out of
+ *          documents and is searchable (needs hashCode&equals implementations).
+ */
 public final class InvertedIndex<DOCUMENT_TYPE, KEY_TYPE> {
 
   private final HashMultimap<KEY_TYPE, Integer> index = HashMultimap.create();
   private final DocumentMapper<DOCUMENT_TYPE, KEY_TYPE> docMapper;
-  private final DocumentSimilarityMeasurer<DOCUMENT_TYPE, KEY_TYPE> docMeasurer;
+  private final DocumentDistanceMeasurer<DOCUMENT_TYPE, KEY_TYPE> docMeasurer;
 
   private List<DOCUMENT_TYPE> documents;
   private List<Set<KEY_TYPE>> keys;
@@ -29,7 +40,7 @@ public final class InvertedIndex<DOCUMENT_TYPE, KEY_TYPE> {
    *          key set that can be searched on.
    */
   private InvertedIndex(DocumentMapper<DOCUMENT_TYPE, KEY_TYPE> mapper,
-      DocumentSimilarityMeasurer<DOCUMENT_TYPE, KEY_TYPE> measurer) {
+      DocumentDistanceMeasurer<DOCUMENT_TYPE, KEY_TYPE> measurer) {
     this.docMapper = mapper;
     this.docMeasurer = measurer;
   }
@@ -66,45 +77,47 @@ public final class InvertedIndex<DOCUMENT_TYPE, KEY_TYPE> {
    * @return an array of results descending sorted, so the best matching item
    *         resides on the first index.
    */
-  public IndexResult<DOCUMENT_TYPE>[] query(DOCUMENT_TYPE document) {
-    return query(document, Integer.MAX_VALUE, 0d);
+  public List<DistanceResult<DOCUMENT_TYPE>> query(DOCUMENT_TYPE document) {
+    return query(document, Integer.MAX_VALUE, Double.MAX_VALUE);
   }
 
   /**
    * Queries this invertex index. This is not bounding the result, so you'll get
-   * all items that have at least minSimilarity.
+   * all items that have at least minDistance.
    * 
    * @param document the document to query with
-   * @param minSimilarity the minimum (greater than: >=) similarity the items
-   *          should have.
+   * @param minDistance the minimum (lower than: <=) distance the items should
+   *          have.
    * @return an array of results descending sorted, so the best matching item
    *         resides on the first index.
    */
-  public IndexResult<DOCUMENT_TYPE>[] query(DOCUMENT_TYPE document,
-      double minSimilarity) {
-    return query(document, Integer.MAX_VALUE, minSimilarity);
+  public List<DistanceResult<DOCUMENT_TYPE>> query(DOCUMENT_TYPE document,
+      double minDistance) {
+    return query(document, Integer.MAX_VALUE, minDistance);
   }
 
   /**
-   * Queries this invertex index.
+   * Queries this inverted index.
    * 
    * @param document the document to query with-
    * @param maxResults the maximum number of results to obtain.
-   * @param minSimilarity the minimum (greater than: >=) similarity the items
-   *          should have.
-   * @return an array of results descending sorted, so the best matching item
-   *         resides on the first index.
+   * @param minDistance the minimum (lower than: <=) distance the items should
+   *          have.
+   * @return an array list of results descending sorted, so the best matching
+   *         item resides on the first index.
    */
-  public IndexResult<DOCUMENT_TYPE>[] query(DOCUMENT_TYPE document,
-      int maxResults, double minSimilarity) {
+  public List<DistanceResult<DOCUMENT_TYPE>> query(DOCUMENT_TYPE document,
+      int maxResults, double minDistance) {
     // basic sanity checks
     Preconditions.checkNotNull(document, "Document should not be NULL!");
     Preconditions.checkArgument(maxResults > 0,
         "Maximum number of results must be positive and greater than zero! Given: "
             + maxResults);
-    Preconditions.checkArgument(minSimilarity >= 0 && minSimilarity <= 1d,
-        "Similarity must be between 0d and 1d (both inclusive). Given: "
-            + minSimilarity);
+    Preconditions
+        .checkArgument(
+            minDistance >= 0 && minDistance <= Double.MAX_VALUE,
+            "Minimum Distance must be between 0d and Double.MAX_VALUE (both inclusive). Given: "
+                + minDistance);
 
     Set<KEY_TYPE> keys = docMapper.mapDocument(document);
     Set<Integer> allSet = new HashSet<>();
@@ -115,76 +128,48 @@ public final class InvertedIndex<DOCUMENT_TYPE, KEY_TYPE> {
         allSet.addAll(set);
       }
     }
-    LimitedPriorityQueue<IndexResult<DOCUMENT_TYPE>> queue = new LimitedPriorityQueue<>(
+    LimitedPriorityQueue<DistanceResult<DOCUMENT_TYPE>> queue = new LimitedPriorityQueue<>(
         maxResults);
-    // now measure similarities and apply the filters
+    // now measure distances and apply the filters
     for (Integer docIndex : allSet) {
       DOCUMENT_TYPE candidateDoc = documents.get(docIndex);
       Set<KEY_TYPE> candidateKeys = this.keys.get(docIndex);
-      double similarity = docMeasurer.measure(document, keys, candidateDoc,
+      double distance = docMeasurer.measure(document, keys, candidateDoc,
           candidateKeys);
-      if (similarity >= minSimilarity) {
-        // invert our similarity score, so the queue drops off the most "costly"
-        // items: cost = 1 - similarity = distance.
-        queue.add(new IndexResult<>(similarity, candidateDoc), 1d - similarity);
+      if (distance <= minDistance) {
+        queue.add(new DistanceResult<>(distance, candidateDoc), distance);
       }
     }
 
-    @SuppressWarnings("unchecked")
-    IndexResult<DOCUMENT_TYPE>[] res = (IndexResult<DOCUMENT_TYPE>[]) Array
-        .newInstance(IndexResult.class, queue.size());
-
-    // the prio queue polls from worst matching to best, so start at the end of
-    // the array
-    for (int i = res.length - 1; i >= 0; i--) {
-      res[i] = queue.poll();
+    List<DistanceResult<DOCUMENT_TYPE>> res = new ArrayList<>(queue.size());
+    // the prio queue polls from worst matching to best
+    DistanceResult<DOCUMENT_TYPE> distRes = null;
+    while ((distRes = queue.poll()) != null) {
+      res.add(distRes);
     }
+    // so we need to reverse the list afterwards
+    Collections.reverse(res);
 
     return res;
   }
 
-  public static class IndexResult<DOCUMENT_TYPE> {
-
-    private final double similarity;
-    private final DOCUMENT_TYPE document;
-
-    IndexResult(double similarity, DOCUMENT_TYPE document) {
-      this.similarity = similarity;
-      this.document = document;
-    }
-
-    public double getSimilarity() {
-      return this.similarity;
-    }
-
-    public DOCUMENT_TYPE getDocument() {
-      return this.document;
-    }
-
-    @Override
-    public String toString() {
-      return document + " | " + similarity;
-    }
-
-  }
-
   /**
-   * Measurer that measures similarity of two documents.
+   * Measurer that measures distance of two documents.
    * 
    * @param <DOCUMENT_TYPE> the type of the documents to index.
    * @param <KEY_TYPE> the look-up-able part of the document.
    */
-  public static interface DocumentSimilarityMeasurer<DOCUMENT_TYPE, KEY_TYPE> {
+  public static interface DocumentDistanceMeasurer<DOCUMENT_TYPE, KEY_TYPE> {
 
     /**
-     * Measures the similarity (value between 0.0 and 1.0) between a reference
+     * Measures the distance (value between 0.0 and 1.0) between a reference
      * document and a candidate document.
      * 
      * @param reference the reference document.
      * @param referenceKeys the reference document key parts.
      * @param doc the candidate document.
      * @param docKeys the candidate document key parts.
-     * @return a value between 0d and 1d where 1d is most similar.
+     * @return a value between 0d and 1d where 0d is most similar.
      */
     public double measure(DOCUMENT_TYPE reference, Set<KEY_TYPE> referenceKeys,
         DOCUMENT_TYPE doc, Set<KEY_TYPE> docKeys);
@@ -212,16 +197,16 @@ public final class InvertedIndex<DOCUMENT_TYPE, KEY_TYPE> {
 
   /**
    * Create an inverted index out of two mapping interfaces: a mapper that maps
-   * documents to its key parts and a similarity measurer that measures
-   * similarity between two documents.
+   * documents to its key parts and a distance measurer that measures distance
+   * between two documents.
    * 
    * @param mapper the {@link DocumentMapper}.
-   * @param measurer the {@link DocumentSimilarityMeasurer}.
+   * @param measurer the {@link DocumentDistanceMeasurer}.
    * @return a brand new inverted index.
    */
   public static <KEY_TYPE, DOCUMENT_TYPE> InvertedIndex<DOCUMENT_TYPE, KEY_TYPE> create(
       DocumentMapper<DOCUMENT_TYPE, KEY_TYPE> mapper,
-      DocumentSimilarityMeasurer<DOCUMENT_TYPE, KEY_TYPE> measurer) {
+      DocumentDistanceMeasurer<DOCUMENT_TYPE, KEY_TYPE> measurer) {
     return new InvertedIndex<>(mapper, measurer);
   }
 
@@ -235,7 +220,7 @@ public final class InvertedIndex<DOCUMENT_TYPE, KEY_TYPE> {
   public static InvertedIndex<DoubleVector, Integer> createVectorIndex(
       DistanceMeasurer measurer) {
     DocumentMapper<DoubleVector, Integer> mapper = new SparseVectorDocumentMapper();
-    DocumentSimilarityMeasurer<DoubleVector, Integer> meas = VectorDocumentSimilarityMeasurer
+    DocumentDistanceMeasurer<DoubleVector, Integer> meas = VectorDocumentDistanceMeasurer
         .<Integer> with(measurer);
     return new InvertedIndex<>(mapper, meas);
   }

@@ -59,7 +59,7 @@ public final class LogisticRegression extends AbstractClassifier {
   }
 
   @Override
-  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+  public void train(DoubleVector[] features, DoubleVector[] outcome) {
     DenseDoubleMatrix x = new DenseDoubleMatrix(features);
     DenseDoubleVector y = new DenseDoubleVector(outcome.length);
     for (int i = 0; i < outcome.length; i++) {

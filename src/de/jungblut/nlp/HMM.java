@@ -376,8 +376,7 @@ public final class HMM extends AbstractClassifier implements Writable {
    *          that in the multi-class case just a single state can be turned on,
    *          so the classes are mutual exclusive.
    */
-  public void trainSupervised(DoubleVector[] features,
-      DenseDoubleVector[] outcome) {
+  public void trainSupervised(DoubleVector[] features, DoubleVector[] outcome) {
     // first check both have the same length, then sanity check with the
     // parameters
     checkArgument(features.length == outcome.length,
@@ -411,7 +410,7 @@ public final class HMM extends AbstractClassifier implements Writable {
 
     for (int i = 0; i < features.length; i++) {
       DoubleVector feat = features[i];
-      DenseDoubleVector out = outcome[i];
+      DoubleVector out = outcome[i];
 
       int index = getOutcomeState(out);
       hiddenPriorProbability.set(index, hiddenPriorProbability.get(index) + 1);
@@ -426,7 +425,7 @@ public final class HMM extends AbstractClassifier implements Writable {
       // now handle the feature by counting the transitions between the hidden
       // states with the next feature
       if (i + 1 < features.length) {
-        DenseDoubleVector nextOut = outcome[i + 1];
+        DoubleVector nextOut = outcome[i + 1];
         int nextIndex = getOutcomeState(nextOut);
         transitionProbabilityMatrix.set(index, nextIndex,
             transitionProbabilityMatrix.get(index, nextIndex) + 1);
@@ -439,7 +438,7 @@ public final class HMM extends AbstractClassifier implements Writable {
   }
 
   @Override
-  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+  public void train(DoubleVector[] features, DoubleVector[] outcome) {
     trainSupervised(features, outcome);
   }
 
@@ -499,7 +498,7 @@ public final class HMM extends AbstractClassifier implements Writable {
   /**
    * @return the outcome state as integer that can be treated as index.
    */
-  private int getOutcomeState(DenseDoubleVector out) {
+  private int getOutcomeState(DoubleVector out) {
     int index;
     if (out.getDimension() == 2) {
       index = (int) out.get(0); // simple cast is enough here

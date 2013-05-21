@@ -1,7 +1,6 @@
 package de.jungblut.classification;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
 
 /**
  * Classifier interface for predicting categorial variables.
@@ -19,7 +18,7 @@ public interface Classifier {
    *          and 1d. In higher dimensional cases you have each of these single
    *          elements mapped to a dimension.
    */
-  public void train(DoubleVector[] features, DenseDoubleVector[] outcome);
+  public void train(DoubleVector[] features, DoubleVector[] outcome);
 
   /**
    * Classifies the given features.

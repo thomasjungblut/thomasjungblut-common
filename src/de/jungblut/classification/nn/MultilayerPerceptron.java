@@ -301,7 +301,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   }
 
   @Override
-  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+  public void train(DoubleVector[] features, DoubleVector[] outcome) {
     if (type == TrainingType.CPU) {
       train(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
           minimizer, maxIterations, lambda, verbose);

@@ -1,5 +1,7 @@
 package de.jungblut.partition;
 
+import com.google.common.base.Preconditions;
+
 /**
  * This partitioner partitions connected ranges from 0 to numberOfRows into
  * sizeOfCluster buckets.
@@ -11,8 +13,8 @@ public class BlockPartitioner implements Partitioner {
 
   @Override
   public Boundaries partition(int sizeOfCluster, int numberOfRows) {
-    if (sizeOfCluster == 0)
-      throw new IllegalStateException("Size of Cluster should not be 0!");
+    Preconditions.checkArgument(sizeOfCluster != 0,
+        "Size of Cluster should not be 0! Given: " + sizeOfCluster);
     Boundaries bounds = new Boundaries();
 
     int avg = Math.round(numberOfRows / sizeOfCluster);

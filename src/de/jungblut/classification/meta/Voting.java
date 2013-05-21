@@ -59,7 +59,7 @@ public final class Voting extends AbstractClassifier {
   }
 
   @Override
-  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+  public void train(DoubleVector[] features, DoubleVector[] outcome) {
     ExecutorService pool = Executors.newFixedThreadPool(threads);
     ExecutorCompletionService<Boolean> completionService = new ExecutorCompletionService<>(
         pool);
@@ -151,10 +151,10 @@ public final class Voting extends AbstractClassifier {
 
     private final Classifier cls;
     private final DoubleVector[] features;
-    private final DenseDoubleVector[] outcome;
+    private final DoubleVector[] outcome;
 
     TrainingWorker(Classifier classifier, DoubleVector[] features,
-        DenseDoubleVector[] outcome) {
+        DoubleVector[] outcome) {
       cls = classifier;
       this.features = features;
       this.outcome = outcome;

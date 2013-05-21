@@ -43,7 +43,7 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
   }
 
   @Override
-  public void train(DoubleVector[] features, DenseDoubleVector[] outcome) {
+  public void train(DoubleVector[] features, DoubleVector[] outcome) {
     int[] classes = new int[outcome.length];
     for (int i = 0; i < outcome.length; i++) {
       if (outcome[i].getDimension() == 1) {
