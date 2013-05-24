@@ -97,7 +97,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
 
     // start forward propagation
     // we compute the aX activations for all layers
-    DenseDoubleMatrix[] ax = new DenseDoubleMatrix[layerSizes.length];
+    DoubleMatrix[] ax = new DoubleMatrix[layerSizes.length];
     // for zX we constantly null the zero index, since it has no use
     DoubleMatrix[] zx = new DoubleMatrix[layerSizes.length];
 
@@ -105,7 +105,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
     if (visibleDropoutProbability > 0d) {
       // compute dropout for ax[0], copy X to not alter internal
       // representation
-      ax[0] = DenseDoubleMatrix.copy(x);
+      ax[0] = x.deepCopy();
       dropout(ax[0], visibleDropoutProbability);
     } else {
       ax[0] = x;
@@ -121,7 +121,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
         }
       } else {
         // the output doesn't need a bias
-        ax[i] = (DenseDoubleMatrix) activations[i].apply(zx[i]);
+        ax[i] = activations[i].apply(zx[i]);
       }
     }
 
@@ -183,7 +183,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
    * @param activations activations of units per record on each column.
    * @param p dropout probability.
    */
-  private void dropout(DenseDoubleMatrix activations, double p) {
+  private void dropout(DoubleMatrix activations, double p) {
     for (int row = 0; row < activations.getRowCount(); row++) {
       for (int col = 0; col < activations.getColumnCount(); col++) {
         if (rnd.nextDouble() <= p) {
