@@ -81,6 +81,8 @@ public final class Statistics implements Writable {
   @Override
   public void write(DataOutput out) throws IOException {
     out.writeBoolean(finalized);
+    out.writeInt(count);
+    out.writeDouble(sum);
     out.writeDouble(min);
     out.writeDouble(max);
     out.writeDouble(median);
@@ -95,6 +97,8 @@ public final class Statistics implements Writable {
   @Override
   public void readFields(DataInput in) throws IOException {
     finalized = in.readBoolean();
+    count = in.readInt();
+    sum = in.readDouble();
     min = in.readDouble();
     max = in.readDouble();
     median = in.readDouble();
@@ -163,10 +167,13 @@ public final class Statistics implements Writable {
 
   @Override
   public String toString() {
-    return "Statistics [min=" + this.min + ", max=" + this.max + ", median="
-        + this.median + ", mean=" + this.mean + ", deviation="
-        + this.standardDeviation + ", sum=" + this.sum + ", count="
-        + this.count + "]";
+    return "Statistics [Min=" + this.getMin() + ", Max=" + this.getMax()
+        + ", Median=" + this.getMedian() + ", Mean=" + this.getMean()
+        + ", StandardDeviation=" + this.getStandardDeviation() + ", Variance="
+        + this.getVariance() + ", SignalToNoise=" + this.getSignalToNoise()
+        + ", DispersionIndex=" + this.getDispersionIndex()
+        + ", CoefficientOfVariation=" + this.getCoefficientOfVariation()
+        + ", Sum=" + this.getSum() + ", Count=" + this.getCount() + "]";
   }
 
 }
