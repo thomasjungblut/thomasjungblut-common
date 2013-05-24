@@ -14,6 +14,8 @@ import de.jungblut.math.tuple.Tuple3;
  */
 public final class MathUtils {
 
+  private static final double EPS = Math.sqrt(2.2E-16);
+
   private MathUtils() {
     throw new IllegalAccessError();
   }
@@ -122,10 +124,8 @@ public final class MathUtils {
       CostFunction f) {
     DoubleVector gradient = new DenseDoubleVector(vector.getLength());
     DoubleVector tmp = vector.deepCopy();
-    double stepSize = 0.00001;
-    double eps = Math.sqrt(2.2E-16);
     for (int i = 0; i < vector.getLength(); i++) {
-      stepSize = eps * (Math.abs(vector.get(i)) + 1d);
+      double stepSize = EPS * (Math.abs(vector.get(i)) + 1d);
       tmp.set(i, vector.get(i) + stepSize);
       double add = f.evaluateCost(tmp).getFirst().doubleValue();
       tmp.set(i, vector.get(i) - stepSize);
