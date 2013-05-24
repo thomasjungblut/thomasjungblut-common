@@ -1,5 +1,7 @@
 package de.jungblut.reader;
 
+import gnu.trove.list.array.TDoubleArrayList;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -9,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import de.jungblut.datastructure.StringPool;
-import de.jungblut.math.dense.DenseIntVector;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple3;
 import de.jungblut.nlp.TokenizerUtils;
 
@@ -32,13 +34,13 @@ public final class TwentyNewsgroupReader {
    * 
    * @return in tuple3 order: docs, prediction, name mapping for prediction
    */
-  public static Tuple3<List<String[]>, DenseIntVector, String[]> readTwentyNewsgroups(
+  public static Tuple3<List<String[]>, DenseDoubleVector, String[]> readTwentyNewsgroups(
       File directory) {
     final StringPool pool = StringPool.getPool();
     String[] classList = directory.list();
     Arrays.sort(classList);
     List<String[]> docList = new ArrayList<>();
-    List<Integer> prediction = new ArrayList<>();
+    TDoubleArrayList prediction = new TDoubleArrayList();
     String[] nameMapping = new String[classList.length];
     int classIndex = 0;
     for (String classDirString : classList) {
@@ -68,6 +70,7 @@ public final class TwentyNewsgroupReader {
       nameMapping[classIndex++] = classDirString;
     }
 
-    return new Tuple3<>(docList, new DenseIntVector(prediction), nameMapping);
+    return new Tuple3<>(docList, new DenseDoubleVector(prediction.toArray()),
+        nameMapping);
   }
 }

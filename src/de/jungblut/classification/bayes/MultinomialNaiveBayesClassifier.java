@@ -1,5 +1,7 @@
 package de.jungblut.classification.bayes;
 
+import gnu.trove.set.hash.TIntHashSet;
+
 import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
@@ -9,7 +11,6 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.dense.DenseIntVector;
 
 /**
  * Simple multinomial naive bayes classifier.
@@ -44,6 +45,11 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
 
   @Override
   public void train(DoubleVector[] features, DoubleVector[] outcome) {
+    Preconditions.checkArgument(features.length > 0,
+        "Features must contain at least a single item!");
+    Preconditions.checkArgument(features.length == outcome.length,
+        "There must be an equal amount of features and prediction outcomes!");
+    TIntHashSet distinctClasses = new TIntHashSet();
     int[] classes = new int[outcome.length];
     for (int i = 0; i < outcome.length; i++) {
       if (outcome[i].getDimension() == 1) {
@@ -51,20 +57,10 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
       } else {
         classes[i] = outcome[i].maxIndex();
       }
+      distinctClasses.add(classes[i]);
     }
-    trainInternal(features, new DenseIntVector(classes));
-  }
-
-  /**
-   * Trains this classifier by the given word counts and the prediction.
-   */
-  private void trainInternal(DoubleVector[] features, DenseIntVector prediction) {
-    Preconditions.checkArgument(features.length > 0,
-        "Features must contain at least a single item!");
-    Preconditions.checkArgument(features.length == prediction.getLength(),
-        "There must be an equal amount of features and prediction outcomes!");
-
-    final int numDistinctClasses = prediction.getNumberOfDistinctElements();
+    final int numDistinctClasses = distinctClasses.size();
+    // add-one smooth
     probabilityMatrix = new DenseDoubleMatrix(numDistinctClasses,
         features[0].getDimension(), 1.0d);
 
@@ -74,7 +70,7 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
     // init the probability with the document length = word count for each token
     for (int columnIndex = 0; columnIndex < features.length; columnIndex++) {
       final DoubleVector document = features[columnIndex];
-      final int predictedClass = prediction.get(columnIndex);
+      final int predictedClass = classes[columnIndex];
       tokenPerClass[predictedClass] += document.getLength();
       numDocumentsPerClass[predictedClass]++;
 
