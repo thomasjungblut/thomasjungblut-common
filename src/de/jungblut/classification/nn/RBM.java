@@ -114,8 +114,8 @@ public final class RBM {
       DenseDoubleMatrix theta, boolean binarize) {
     // add the bias to the input
     DoubleVector biased = new DenseDoubleVector(1d, input.toArray());
-    DoubleVector hiddenProbability = SIGMOID
-        .apply(theta.multiplyVector(biased));
+    DoubleVector hiddenProbability = SIGMOID.apply(theta
+        .multiplyVectorRow(biased));
     // now binarize with the contained probability
     if (binarize) {
       RBMCostFunction.binarize(hiddenProbability);

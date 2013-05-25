@@ -96,7 +96,7 @@ public final class LogisticRegression extends AbstractClassifier {
    */
   public DoubleVector predict(DenseDoubleMatrix input, double threshold) {
     DoubleVector vec = new DenseDoubleMatrix(DenseDoubleVector.ones(input
-        .getRowCount()), input).multiplyVector(theta);
+        .getRowCount()), input).multiplyVectorRow(theta);
     for (int i = 0; i < vec.getLength(); i++) {
       vec.set(i, SIGMOID.get().apply(vec.get(i)) > threshold ? 1.0d : 0.0d);
     }

@@ -272,7 +272,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     final int len = layers.length - 1;
     for (int i = 1; i <= len; i++) {
       activationVector = activations[i].apply(weights[i - 1].getWeights()
-          .multiplyVector(activationVector));
+          .multiplyVectorRow(activationVector));
       // only add the bias if we are not in the last layer
       if (i != len) {
         activationVector = addBias(activationVector);

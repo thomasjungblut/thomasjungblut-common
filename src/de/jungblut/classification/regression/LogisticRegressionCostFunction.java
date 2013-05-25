@@ -54,13 +54,14 @@ public final class LogisticRegressionCostFunction implements CostFunction {
     double reg = input.slice(1, input.getLength()).pow(2).sum() * lambda
         / (2.0d * m);
     DenseDoubleMatrix hypo = new DenseDoubleMatrix(
-        Collections.singletonList(SIGMOID.get().apply(x.multiplyVector(input))));
+        Collections.singletonList(SIGMOID.get().apply(
+            x.multiplyVectorRow(input))));
     double sum = ERROR_FUNCTION.getError(y, hypo);
     double j = (1.0d / m) * sum + reg;
 
-    DoubleVector regGradient = eye.multiply(lambda).multiplyVector(input);
+    DoubleVector regGradient = eye.multiply(lambda).multiplyVectorRow(input);
     DoubleVector gradient = x.transpose()
-        .multiplyVector(hypo.subtract(y).getRowVector(0)).add(regGradient)
+        .multiplyVectorRow(hypo.subtract(y).getRowVector(0)).add(regGradient)
         .divide(m);
 
     return new Tuple<>(j, gradient);

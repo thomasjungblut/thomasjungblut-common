@@ -16,6 +16,12 @@
 	</properties>
 
 	<dependencies>
+		<!-- my math library -->
+		<dependency>
+			<groupId>de.jungblut.math</groupId>
+			<artifactId>tjungblut-math</artifactId>
+			<version>1.1</version>
+		</dependency>
 		<!-- JCUDA is locally in the jcuda dir -->
 		<dependency>
 			<groupId>jcuda</groupId>
@@ -92,11 +98,6 @@
 			<groupId>org.twitter4j</groupId>
 			<artifactId>twitter4j-stream</artifactId>
 			<version>3.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>de.jungblut.math</groupId>
-			<artifactId>tjungblut-math</artifactId>
-			<version>1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.nekohtml</groupId>

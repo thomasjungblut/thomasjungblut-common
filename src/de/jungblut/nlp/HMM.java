@@ -447,7 +447,7 @@ public final class HMM extends AbstractClassifier implements Writable {
     // clamp the features to the visible units, calculate the joint
     // probability for each hidden state and put it into the vector
     DoubleVector probabilities = emissionProbabilityMatrix
-        .multiplyVector(features);
+        .multiplyVectorRow(features);
     double max = probabilities.max();
     for (int state = 0; state < probabilities.getDimension(); state++) {
       probabilities.set(state, FastMath.exp(probabilities.get(state) - max)
@@ -462,10 +462,10 @@ public final class HMM extends AbstractClassifier implements Writable {
     // clamp the features to the visible units, calculate the joint
     // probability for each hidden state and put it into the vector
     DoubleVector probabilities = emissionProbabilityMatrix
-        .multiplyVector(features);
+        .multiplyVectorRow(features);
     // we can add here, both are logarithms
     probabilities.add(transitionProbabilityMatrix
-        .multiplyVector(previousOutcome));
+        .multiplyVectorRow(previousOutcome));
     double max = probabilities.max();
     for (int state = 0; state < probabilities.getDimension(); state++) {
       probabilities.set(state, FastMath.exp(probabilities.get(state) - max)
