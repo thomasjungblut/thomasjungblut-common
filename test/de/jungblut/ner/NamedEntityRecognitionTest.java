@@ -16,7 +16,6 @@ import de.jungblut.classification.Evaluator;
 import de.jungblut.classification.Evaluator.EvaluationResult;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.tuple.Tuple;
@@ -59,14 +58,14 @@ public class NamedEntityRecognitionTest extends TestCase {
 
     SparseFeatureExtractorHelper<String> fact = new SparseFeatureExtractorHelper<>(
         words, labels, new BasicFeatureExtractor());
-    Tuple<DoubleVector[], DenseDoubleVector[]> vectorize = fact.vectorize();
+    Tuple<DoubleVector[], DoubleVector[]> vectorize = fact.vectorize();
     DoubleVector[] features = vectorize.getFirst();
-    DenseDoubleVector[] outcome = vectorize.getSecond();
+    DoubleVector[] outcome = vectorize.getSecond();
 
-    Tuple<DoubleVector[], DenseDoubleVector[]> vectorizeAdditionals = fact
+    Tuple<DoubleVector[], DoubleVector[]> vectorizeAdditionals = fact
         .vectorizeAdditionals(testWords, testLabels);
     DoubleVector[] testFeatures = vectorizeAdditionals.getFirst();
-    DenseDoubleVector[] testOutcome = vectorizeAdditionals.getSecond();
+    DoubleVector[] testOutcome = vectorizeAdditionals.getSecond();
 
     MaxEntMarkovModel model = new MaxEntMarkovModel(new Fmincg(), 100, false);
     DoubleVector[] vectorizeEachLabel = fact.vectorizeEachLabel(testWords);

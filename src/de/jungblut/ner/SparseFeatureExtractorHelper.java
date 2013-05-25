@@ -67,7 +67,7 @@ public final class SparseFeatureExtractorHelper<K> {
    * @return a {@link Tuple} with the features in the first dimension, and on
    *         the second the outcome.
    */
-  public Tuple<DoubleVector[], DenseDoubleVector[]> vectorize() {
+  public Tuple<DoubleVector[], DoubleVector[]> vectorize() {
     return extractInternal(words, labels);
   }
 
@@ -105,7 +105,19 @@ public final class SparseFeatureExtractorHelper<K> {
    * @return a {@link Tuple} with the features in the first dimension, and on
    *         the second the outcome.
    */
-  public Tuple<DoubleVector[], DenseDoubleVector[]> vectorizeAdditionals(
+  public Tuple<DoubleVector[], DoubleVector[]> vectorize(List<K> words,
+      List<Integer> labels) {
+    return vectorizeAdditionals(words, labels);
+  }
+
+  /**
+   * Vectorizes the given data. Internally uses a dictionary that was created by
+   * {@link #vectorize()} or creates one on this data.
+   * 
+   * @return a {@link Tuple} with the features in the first dimension, and on
+   *         the second the outcome.
+   */
+  public Tuple<DoubleVector[], DoubleVector[]> vectorizeAdditionals(
       List<K> words, List<Integer> labels) {
     return extractInternal(words, labels);
   }
@@ -151,8 +163,8 @@ public final class SparseFeatureExtractorHelper<K> {
   /**
    * Generates the feature vectors and the dictionary.
    */
-  private Tuple<DoubleVector[], DenseDoubleVector[]> extractInternal(
-      List<K> words, List<Integer> labels) {
+  private Tuple<DoubleVector[], DoubleVector[]> extractInternal(List<K> words,
+      List<Integer> labels) {
     List<List<String>> stringFeatures = new ArrayList<>();
     for (int i = 0; i < words.size(); i++) {
       stringFeatures.add(extractor.computeFeatures(words,
@@ -160,7 +172,7 @@ public final class SparseFeatureExtractorHelper<K> {
     }
 
     DoubleVector[] features = new DoubleVector[stringFeatures.size()];
-    DenseDoubleVector[] outcome = new DenseDoubleVector[stringFeatures.size()];
+    DoubleVector[] outcome = new DoubleVector[stringFeatures.size()];
     // skip if we already have a dictionary
     if (dicts == null) {
       // now build the feature space out of the strings, sort the features, so

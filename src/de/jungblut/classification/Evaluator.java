@@ -14,7 +14,6 @@ import com.google.common.base.Preconditions;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.partition.BlockPartitioner;
 import de.jungblut.partition.Boundaries.Range;
 
@@ -153,7 +152,7 @@ public final class Evaluator {
    * @return a new {@link EvaluationResult}.
    */
   public static EvaluationResult evaluateClassifier(Classifier classifier,
-      DoubleVector[] features, DenseDoubleVector[] outcome, int numLabels,
+      DoubleVector[] features, DoubleVector[] outcome, int numLabels,
       float splitPercentage, boolean random) {
     return evaluateClassifier(classifier, features, outcome, numLabels,
         splitPercentage, random, null);
@@ -177,7 +176,7 @@ public final class Evaluator {
    * @return a new {@link EvaluationResult}.
    */
   public static EvaluationResult evaluateClassifier(Classifier classifier,
-      DoubleVector[] features, DenseDoubleVector[] outcome, int numLabels,
+      DoubleVector[] features, DoubleVector[] outcome, int numLabels,
       float splitPercentage, boolean random, Double threshold) {
 
     Preconditions.checkArgument(numLabels > 1,
@@ -191,11 +190,11 @@ public final class Evaluator {
 
     final int splitIndex = (int) (features.length * splitPercentage);
     DoubleVector[] trainFeatures = ArrayUtils.subArray(features, splitIndex);
-    DenseDoubleVector[] trainOutcome = ArrayUtils.subArray(outcome, splitIndex);
+    DoubleVector[] trainOutcome = ArrayUtils.subArray(outcome, splitIndex);
     DoubleVector[] testFeatures = ArrayUtils.subArray(features, splitIndex + 1,
         features.length - 1);
-    DenseDoubleVector[] testOutcome = ArrayUtils.subArray(outcome,
-        splitIndex + 1, outcome.length - 1);
+    DoubleVector[] testOutcome = ArrayUtils.subArray(outcome, splitIndex + 1,
+        outcome.length - 1);
 
     return evaluateSplit(classifier, numLabels, threshold, trainFeatures,
         trainOutcome, testFeatures, testOutcome);
@@ -216,8 +215,8 @@ public final class Evaluator {
    */
   public static EvaluationResult evaluateSplit(Classifier classifier,
       int numLabels, Double threshold, DoubleVector[] trainFeatures,
-      DenseDoubleVector[] trainOutcome, DoubleVector[] testFeatures,
-      DenseDoubleVector[] testOutcome) {
+      DoubleVector[] trainOutcome, DoubleVector[] testFeatures,
+      DoubleVector[] testOutcome) {
 
     classifier.train(trainFeatures, trainOutcome);
 
@@ -239,7 +238,7 @@ public final class Evaluator {
    */
   public static EvaluationResult testClassifier(Classifier classifier,
       int numLabels, Double threshold, int trainingSetSize,
-      DoubleVector[] testFeatures, DenseDoubleVector[] testOutcome) {
+      DoubleVector[] testFeatures, DoubleVector[] testOutcome) {
     EvaluationResult result = new EvaluationResult();
     result.numLabels = numLabels;
     result.testSize = testOutcome.length;
@@ -304,7 +303,7 @@ public final class Evaluator {
    */
   public static EvaluationResult crossValidateClassifier(
       ClassifierFactory classifierFactory, DoubleVector[] features,
-      DenseDoubleVector[] outcome, int numLabels, int folds, Double threshold,
+      DoubleVector[] outcome, int numLabels, int folds, Double threshold,
       boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
         numLabels, folds, threshold, 1, verbose);
@@ -328,7 +327,7 @@ public final class Evaluator {
    */
   public static EvaluationResult crossValidateClassifier(
       ClassifierFactory classifierFactory, DoubleVector[] features,
-      DenseDoubleVector[] outcome, int numLabels, int folds, Double threshold,
+      DoubleVector[] outcome, int numLabels, int folds, Double threshold,
       int numThreads, boolean verbose) {
     // train on k-1 folds, test on 1 fold, results are averaged
     final int numFolds = folds + 1;
@@ -403,8 +402,7 @@ public final class Evaluator {
    */
   public static EvaluationResult tenFoldCrossValidation(
       ClassifierFactory classifierFactory, DoubleVector[] features,
-      DenseDoubleVector[] outcome, int numLabels, Double threshold,
-      boolean verbose) {
+      DoubleVector[] outcome, int numLabels, Double threshold, boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
         numLabels, 10, threshold, verbose);
   }
@@ -424,8 +422,8 @@ public final class Evaluator {
    */
   public static EvaluationResult tenFoldCrossValidation(
       ClassifierFactory classifierFactory, DoubleVector[] features,
-      DenseDoubleVector[] outcome, int numLabels, Double threshold,
-      int numThreads, boolean verbose) {
+      DoubleVector[] outcome, int numLabels, Double threshold, int numThreads,
+      boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
         numLabels, 10, threshold, numThreads, verbose);
   }
@@ -436,14 +434,14 @@ public final class Evaluator {
     private final int[] splitRanges;
     private final int m;
     private final DoubleVector[] features;
-    private final DenseDoubleVector[] outcome;
+    private final DoubleVector[] outcome;
     private final ClassifierFactory classifierFactory;
     private final int numLabels;
     private final Double threshold;
 
     public CallableEvaluation(int fold, int[] splitRanges, int m,
         ClassifierFactory classifierFactory, DoubleVector[] features,
-        DenseDoubleVector[] outcome, int numLabels, int folds, Double threshold) {
+        DoubleVector[] outcome, int numLabels, int folds, Double threshold) {
       this.fold = fold;
       this.splitRanges = splitRanges;
       this.m = m;
@@ -458,11 +456,10 @@ public final class Evaluator {
     public EvaluationResult call() throws Exception {
       DoubleVector[] featureTest = ArrayUtils.subArray(features,
           splitRanges[fold], splitRanges[fold + 1]);
-      DenseDoubleVector[] outcomeTest = ArrayUtils.subArray(outcome,
+      DoubleVector[] outcomeTest = ArrayUtils.subArray(outcome,
           splitRanges[fold], splitRanges[fold + 1]);
       DoubleVector[] featureTrain = new DoubleVector[m - featureTest.length];
-      DenseDoubleVector[] outcomeTrain = new DenseDoubleVector[m
-          - featureTest.length];
+      DoubleVector[] outcomeTrain = new DoubleVector[m - featureTest.length];
       int index = 0;
       for (int i = 0; i < m; i++) {
         if (i < splitRanges[fold] || i > splitRanges[fold + 1]) {
