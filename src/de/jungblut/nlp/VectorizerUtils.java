@@ -156,7 +156,7 @@ public final class VectorizerUtils {
   /**
    * Builds an inverted index document count based on the given dictionary, so
    * at each dimension of the returned array, there is a count of how many
-   * documents contained that document.
+   * documents contained that token.
    * 
    * @param tokenizedDocuments the documents to index, already tokenized.
    * @param dictionary the dictionary of words that should be used to build this
