@@ -256,27 +256,43 @@ public final class VectorizerUtils {
       int[] termDocumentCount) {
 
     final int numDocuments = tokenizedDocuments.size();
-    final int numTokens = dictionary.length;
     List<DoubleVector> list = new ArrayList<>(numDocuments);
 
     for (String[] document : tokenizedDocuments) {
-      DoubleVector vector = new SparseDoubleVector(numTokens);
-      HashMultiset<String> termFrequencySet = HashMultiset.create(Arrays
-          .asList(document));
-
-      for (String token : document) {
-        int index = Arrays.binarySearch(dictionary, token);
-        if (index >= 0) {
-          double tfIdf = termFrequencySet.count(token)
-              * Math.log(numDocuments / (double) termDocumentCount[index]);
-          vector.set(index, tfIdf);
-        }
-      }
-
-      list.add(vector);
+      list.add(tfIdfVectorize(numDocuments, document, dictionary,
+          termDocumentCount));
     }
 
     return list;
+  }
+
+  /**
+   * Vectorizes the given single document by the TF-IDF weighting.
+   * 
+   * @param numDocuments the number of documents used in the corpus.
+   * @param document the document to vectorize.
+   * @param dictionary the dictionary extracted.
+   * @param termDocumentCount the document count per token.
+   * @return a sparse tf-idf weighted vectors.
+   */
+  public static DoubleVector tfIdfVectorize(int numDocuments,
+      String[] document, String[] dictionary, int[] termDocumentCount) {
+
+    final int numTokens = dictionary.length;
+    DoubleVector vector = new SparseDoubleVector(numTokens);
+    HashMultiset<String> termFrequencySet = HashMultiset.create(Arrays
+        .asList(document));
+
+    for (String token : document) {
+      int index = Arrays.binarySearch(dictionary, token);
+      if (index >= 0) {
+        double tfIdf = termFrequencySet.count(token)
+            * Math.log(numDocuments / (double) termDocumentCount[index]);
+        vector.set(index, tfIdf);
+      }
+
+    }
+    return vector;
   }
 
   /**
