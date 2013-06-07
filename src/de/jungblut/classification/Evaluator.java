@@ -11,6 +11,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.google.common.base.Preconditions;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
@@ -352,7 +353,8 @@ public final class Evaluator {
       System.out.println("Computed split ranges: "
           + Arrays.toString(splitRanges) + "\n");
     }
-    final ExecutorService pool = Executors.newFixedThreadPool(numThreads);
+    final ExecutorService pool = Executors.newFixedThreadPool(numThreads,
+        new ThreadFactoryBuilder().setDaemon(true).build());
     final ExecutorCompletionService<EvaluationResult> completionService = new ExecutorCompletionService<>(
         pool);
 
