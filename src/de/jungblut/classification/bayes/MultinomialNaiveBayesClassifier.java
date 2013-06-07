@@ -1,7 +1,5 @@
 package de.jungblut.classification.bayes;
 
-import gnu.trove.set.hash.TIntHashSet;
-
 import java.util.Iterator;
 
 import com.google.common.base.Preconditions;
@@ -49,17 +47,9 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
         "Features must contain at least a single item!");
     Preconditions.checkArgument(features.length == outcome.length,
         "There must be an equal amount of features and prediction outcomes!");
-    TIntHashSet distinctClasses = new TIntHashSet();
-    int[] classes = new int[outcome.length];
-    for (int i = 0; i < outcome.length; i++) {
-      if (outcome[i].getDimension() == 1) {
-        classes[i] = (int) outcome[i].get(0);
-      } else {
-        classes[i] = outcome[i].maxIndex();
-      }
-      distinctClasses.add(classes[i]);
-    }
-    final int numDistinctClasses = distinctClasses.size();
+    int numDistinctClasses = outcome[0].getDimension();
+    // respect the binary case
+    numDistinctClasses = numDistinctClasses == 1 ? 2 : numDistinctClasses;
     // add-one smooth
     probabilityMatrix = new DenseDoubleMatrix(numDistinctClasses,
         features[0].getDimension(), 1.0d);
@@ -70,7 +60,10 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
     // init the probability with the document length = word count for each token
     for (int columnIndex = 0; columnIndex < features.length; columnIndex++) {
       final DoubleVector document = features[columnIndex];
-      final int predictedClass = classes[columnIndex];
+      int predictedClass = outcome[columnIndex].maxIndex();
+      if (numDistinctClasses == 2) {
+        predictedClass = (int) outcome[columnIndex].get(0);
+      }
       tokenPerClass[predictedClass] += document.getLength();
       numDocumentsPerClass[predictedClass]++;
 
