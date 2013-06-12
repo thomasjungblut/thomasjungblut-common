@@ -21,14 +21,14 @@ import de.jungblut.writable.MatrixWritable;
  */
 public final class RBM {
 
-  private static final ActivationFunction SIGMOID = ActivationFunctionSelector.SIGMOID
-      .get();
-
   private final int[] layerSizes;
   private final DenseDoubleMatrix[] weights;
+  private ActivationFunction activationFunction;
 
-  private RBM(int[] stackedHiddenLayerSizes) {
+  private RBM(int[] stackedHiddenLayerSizes,
+      ActivationFunction activationFunction) {
     this.layerSizes = stackedHiddenLayerSizes;
+    this.activationFunction = activationFunction;
     this.weights = new DenseDoubleMatrix[layerSizes.length];
   }
 
@@ -57,7 +57,8 @@ public final class RBM {
       DenseDoubleVector folded = DenseMatrixFolder.foldMatrices(unfolded
           .getWeights());
       // now do the real training
-      RBMCostFunction fnc = new RBMCostFunction(mat, layerSizes[i]);
+      RBMCostFunction fnc = new RBMCostFunction(mat, layerSizes[i],
+          activationFunction);
       DoubleVector theta = GradientDescent.minimizeFunction(fnc, folded,
           learningRate, 0d, numIterations, verbose);
       // get back our weights as a matrix
@@ -114,7 +115,7 @@ public final class RBM {
       DenseDoubleMatrix theta, boolean binarize) {
     // add the bias to the input
     DoubleVector biased = new DenseDoubleVector(1d, input.toArray());
-    DoubleVector hiddenProbability = SIGMOID.apply(theta
+    DoubleVector hiddenProbability = activationFunction.apply(theta
         .multiplyVectorRow(biased));
     // now binarize with the contained probability
     if (binarize) {
@@ -136,6 +137,8 @@ public final class RBM {
       MatrixWritable.writeDenseMatrix(mat, out);
     }
 
+    out.writeUTF(model.activationFunction.getClass().getName());
+
   }
 
   /**
@@ -152,6 +155,13 @@ public final class RBM {
     for (int i = 0; i < layers; i++) {
       model.weights[i] = MatrixWritable.readDenseMatrix(in);
     }
+    try {
+      model.activationFunction = (ActivationFunction) Class.forName(
+          in.readUTF()).newInstance();
+    } catch (InstantiationException | IllegalAccessException
+        | ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
     return model;
   }
 
@@ -159,8 +169,29 @@ public final class RBM {
    * @return a single RBM which isn't stacked and emits to the given number of
    *         hidden nodes.
    */
+  public static RBM single(int numHiddenNodes, ActivationFunction func) {
+    return new RBM(new int[] { numHiddenNodes }, func);
+  }
+
+  /**
+   * Creates a new stacked RBM with the given number of hidden nodes in each
+   * stacked layer. For example: 4,3,2 will create the first RBM with 4 hidden
+   * nodes, the second layer will operate on the 4 hidden node outputs of the
+   * RBM before and emit to 3 hidden nodes. Similarly the last layer will
+   * receive three inputs and emit 2 output's, which state you receive in the
+   * predict method.
+   */
+  public static RBM stacked(ActivationFunction func, int... numHiddenNodes) {
+    return new RBM(numHiddenNodes, func);
+  }
+
+  /**
+   * @return a single RBM which isn't stacked and emits to the given number of
+   *         hidden nodes.
+   */
   public static RBM single(int numHiddenNodes) {
-    return new RBM(new int[] { numHiddenNodes });
+    return new RBM(new int[] { numHiddenNodes },
+        ActivationFunctionSelector.SIGMOID.get());
   }
 
   /**
@@ -172,7 +203,7 @@ public final class RBM {
    * predict method.
    */
   public static RBM stacked(int... numHiddenNodes) {
-    return new RBM(numHiddenNodes);
+    return new RBM(numHiddenNodes, ActivationFunctionSelector.SIGMOID.get());
   }
 
 }

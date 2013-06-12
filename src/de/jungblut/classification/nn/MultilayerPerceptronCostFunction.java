@@ -10,6 +10,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.StochasticCostFunction;
+import de.jungblut.math.squashing.ErrorFunction;
 import de.jungblut.math.tuple.Tuple;
 
 /**
@@ -165,8 +166,8 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
       }
     }
 
-    // calculate our cost function (error in the last layer)
-    double j = (1.0d / m) * error.getError(y, ax[layerSizes.length - 1])
+    // calculate our cost (error in the last layer)
+    double j = (1.0d / m) * error.calculateError(y, ax[layerSizes.length - 1])
         + regularization;
 
     return new Tuple<Double, DoubleVector>(j,

@@ -5,6 +5,7 @@ import junit.framework.TestCase;
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.activation.SigmoidActivationFunction;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
@@ -33,7 +34,8 @@ public class RBMCostFunctionTest extends TestCase {
     int hiddenUnits = 2;
     DenseDoubleMatrix mat = new DenseDoubleMatrix(test);
     WeightMatrix pInput = new WeightMatrix(mat.getColumnCount(), hiddenUnits);
-    RBMCostFunction fnc = new RBMCostFunction(mat, hiddenUnits);
+    RBMCostFunction fnc = new RBMCostFunction(mat, hiddenUnits,
+        new SigmoidActivationFunction());
     DoubleVector theta = GradientDescent.minimizeFunction(fnc,
         DenseMatrixFolder.foldMatrices(pInput.getWeights()), 0.01, 1e-5, 5000,
         false);

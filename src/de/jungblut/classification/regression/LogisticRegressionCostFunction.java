@@ -4,7 +4,6 @@ import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
 
 import java.util.Collections;
 
-import de.jungblut.classification.nn.ErrorFunction;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
@@ -12,6 +11,8 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.math.sparse.SparseDoubleRowMatrix;
+import de.jungblut.math.squashing.ErrorFunction;
+import de.jungblut.math.squashing.LogisticErrorFunction;
 import de.jungblut.math.tuple.Tuple;
 
 /**
@@ -23,7 +24,7 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class LogisticRegressionCostFunction implements CostFunction {
 
-  private static final ErrorFunction ERROR_FUNCTION = ErrorFunction.SIGMOID_ERROR;
+  private static final ErrorFunction ERROR_FUNCTION = new LogisticErrorFunction();
 
   private final DoubleMatrix x;
   private final DenseDoubleMatrix y;
@@ -56,7 +57,7 @@ public final class LogisticRegressionCostFunction implements CostFunction {
     DenseDoubleMatrix hypo = new DenseDoubleMatrix(
         Collections.singletonList(SIGMOID.get().apply(
             x.multiplyVectorRow(input))));
-    double sum = ERROR_FUNCTION.getError(y, hypo);
+    double sum = ERROR_FUNCTION.calculateError(y, hypo);
     double j = (1.0d / m) * sum + reg;
 
     DoubleVector regGradient = eye.multiply(lambda).multiplyVectorRow(input);

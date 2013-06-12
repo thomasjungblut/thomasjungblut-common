@@ -27,6 +27,9 @@ import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
 import de.jungblut.math.minimize.ParticleSwarmOptimization;
 import de.jungblut.math.minimize.StochasticGradientDescent;
+import de.jungblut.math.squashing.CrossEntropyErrorFunction;
+import de.jungblut.math.squashing.LogisticErrorFunction;
+import de.jungblut.math.squashing.SquaredMeanErrorFunction;
 import de.jungblut.math.tuple.Tuple;
 
 public class MultiLayerPerceptronTest extends TestCase {
@@ -42,7 +45,8 @@ public class MultiLayerPerceptronTest extends TestCase {
         .newConfiguration(
             new int[] { 2, 2, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                LINEAR.get() }, new Fmincg(), 1000).verbose(false).build();
+                LINEAR.get() }, new SquaredMeanErrorFunction(), new Fmincg(),
+            1000).verbose(false).build();
 
     // sample a parable of points
     Tuple<DoubleVector[], DenseDoubleVector[]> sample = sampleParable();
@@ -62,7 +66,8 @@ public class MultiLayerPerceptronTest extends TestCase {
     MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
         .newConfiguration(new int[] { 2, 1 },
             new ActivationFunction[] { LINEAR.get(), LINEAR.get() },
-            new GradientDescent(1e-8, 6e-5), 10000).verbose(false).build();
+            new SquaredMeanErrorFunction(), new GradientDescent(1e-8, 6e-5),
+            10000).verbose(false).build();
 
     // sample a line of points
     Tuple<DoubleVector[], DenseDoubleVector[]> sample = sampleLinear();
@@ -78,7 +83,8 @@ public class MultiLayerPerceptronTest extends TestCase {
         .newConfiguration(
             new int[] { 2, 4, 2 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                SOFTMAX.get() }, new Fmincg(), 100).build();
+                SOFTMAX.get() }, new CrossEntropyErrorFunction(), new Fmincg(),
+            100).build();
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXORSoftMax();
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
         new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
@@ -99,8 +105,8 @@ public class MultiLayerPerceptronTest extends TestCase {
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(),
                 ActivationFunctionSelector.ELLIOT.get(),
-                ActivationFunctionSelector.ELLIOT.get() }, new Fmincg(), 100)
-        .build();
+                ActivationFunctionSelector.ELLIOT.get() },
+            new LogisticErrorFunction(), new Fmincg(), 100).build();
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
         new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
@@ -121,7 +127,8 @@ public class MultiLayerPerceptronTest extends TestCase {
         .newConfiguration(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                SIGMOID.get() }, new Fmincg(), 100).build();
+                SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(), 100)
+        .build();
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
         new DenseDoubleMatrix(sampleXOR.getSecond()), new Fmincg(), 100, 0.0d,
@@ -141,7 +148,8 @@ public class MultiLayerPerceptronTest extends TestCase {
         .newConfiguration(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                SIGMOID.get() }, new Fmincg(), 100).build();
+                SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(), 100)
+        .build();
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),
         new DenseDoubleMatrix(sampleXOR.getSecond()),
@@ -162,7 +170,7 @@ public class MultiLayerPerceptronTest extends TestCase {
         .newConfiguration(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                SIGMOID.get() },
+                SIGMOID.get() }, new LogisticErrorFunction(),
             new StochasticGradientDescent(streamXORInput(), 0.1, 1e-45), 10000)
         .build();
     mlp.trainStochastic();
@@ -188,7 +196,8 @@ public class MultiLayerPerceptronTest extends TestCase {
           .newConfiguration(
               new int[] { 2, 4, 1 },
               new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                  SIGMOID.get() }, new Fmincg(), 100).build();
+                  SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(),
+              100).build();
     }
     Tuple<DoubleVector[], DenseDoubleVector[]> sampleXOR = sampleXOR();
     double error = mlp.train(new DenseDoubleMatrix(sampleXOR.getFirst()),

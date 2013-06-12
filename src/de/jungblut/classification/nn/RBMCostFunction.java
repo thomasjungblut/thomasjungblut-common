@@ -5,7 +5,6 @@ import java.util.Random;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
-import de.jungblut.math.activation.ActivationFunctionSelector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -30,17 +29,17 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class RBMCostFunction implements CostFunction {
 
-  private static final ActivationFunction SIGMOID = ActivationFunctionSelector.SIGMOID
-      .get();
-
   // test seed
   static long SEED = System.currentTimeMillis();
 
   private final DenseDoubleMatrix x;
+  private final ActivationFunction activationFunction;
   private int[][] unfoldParameters;
   private DenseDoubleVector ones;
 
-  public RBMCostFunction(DenseDoubleMatrix x, int numHiddenUnits) {
+  public RBMCostFunction(DenseDoubleMatrix x, int numHiddenUnits,
+      ActivationFunction activationFunction) {
+    this.activationFunction = activationFunction;
     this.ones = DenseDoubleVector.ones(x.getRowCount());
     this.x = new DenseDoubleMatrix(ones, x);
     this.unfoldParameters = MultilayerPerceptronCostFunction
@@ -55,17 +54,19 @@ public final class RBMCostFunction implements CostFunction {
     DenseDoubleMatrix thetaTransposed = thetas[0].transpose();
     DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
 
-    DoubleMatrix hiddenActivations = SIGMOID.apply(x.multiply(thetaTransposed));
+    DoubleMatrix hiddenActivations = activationFunction.apply(x
+        .multiply(thetaTransposed));
     DoubleMatrix positiveAssociations = x.transpose().multiply(
         hiddenActivations);
     // binarize to 1 or 0
     binarize(hiddenActivations);
 
     // start reconstructing the input
-    DoubleMatrix fantasy = SIGMOID.apply(hiddenActivations.multiply(thetas[0]));
+    DoubleMatrix fantasy = activationFunction.apply(hiddenActivations
+        .multiply(thetas[0]));
     // set out fantasy bias back to 1
     fantasy.setColumnVector(0, ones);
-    DoubleMatrix hiddenFantasyActivations = SIGMOID.apply(fantasy
+    DoubleMatrix hiddenFantasyActivations = activationFunction.apply(fantasy
         .multiply(thetaTransposed));
     DoubleMatrix negativeAssociations = fantasy.transpose().multiply(
         hiddenFantasyActivations);

@@ -134,4 +134,28 @@ public final class MathUtils {
     }
     return gradient;
   }
+
+  /**
+   * @return a log'd matrix that was guarded against edge cases of the
+   *         logarithm.
+   */
+  public static DoubleMatrix logMatrix(DoubleMatrix input) {
+    DenseDoubleMatrix log = new DenseDoubleMatrix(input.getRowCount(),
+        input.getColumnCount());
+    for (int row = 0; row < log.getRowCount(); row++) {
+      for (int col = 0; col < log.getColumnCount(); col++) {
+        double d = input.get(row, col);
+        // guard the logarithm
+        if (Double.isNaN(d) || Double.isInfinite(d)) {
+          log.set(row, col, 0d);
+        } else if (d <= 0d || d <= -0d) {
+          // assume a quite low value of log(1e-5) ~= -11.51
+          log.set(row, col, -10d);
+        } else {
+          log.set(row, col, Math.log(d));
+        }
+      }
+    }
+    return log;
+  }
 }

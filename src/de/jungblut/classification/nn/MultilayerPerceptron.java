@@ -12,13 +12,13 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.LinearActivationFunction;
 import de.jungblut.math.activation.SigmoidActivationFunction;
-import de.jungblut.math.activation.SoftMaxActivationFunction;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.math.minimize.StochasticMinimizer;
+import de.jungblut.math.squashing.ErrorFunction;
 import de.jungblut.writable.MatrixWritable;
 
 /**
@@ -52,6 +52,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     final int maxIterations;
     final int[] layer;
     final ActivationFunction[] activationFunctions;
+    final ErrorFunction error;
 
     TrainingType type = TrainingType.CPU;
     double lambda = 0d;
@@ -61,9 +62,11 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     WeightMatrix[] weights;
 
     private MultilayerPerceptronConfiguration(int[] layer,
-        ActivationFunction[] activations, Minimizer minimizer, int maxIterations) {
+        ActivationFunction[] activations, Minimizer minimizer,
+        int maxIterations, ErrorFunction error) {
       this.layer = layer;
       this.minimizer = minimizer;
+      this.error = error;
       this.stochasticMinimizer = null;
       this.maxIterations = maxIterations;
       this.activationFunctions = activations;
@@ -71,8 +74,9 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
     private MultilayerPerceptronConfiguration(int[] layer,
         ActivationFunction[] activations, StochasticMinimizer minimizer,
-        int maxIterations) {
+        int maxIterations, ErrorFunction error) {
       this.layer = layer;
+      this.error = error;
       this.minimizer = null;
       this.stochasticMinimizer = minimizer;
       this.maxIterations = maxIterations;
@@ -153,15 +157,16 @@ public final class MultilayerPerceptron extends AbstractClassifier {
      *          layer.
      * @param activations the activation functions to be used, each index
      *          denotes a layer.
+     * @param errorFunction the error function on the last layer.
      * @param minimizer the minimizer to be used.
      * @param maxIterations how many iterations (epochs) to run.
      * @return a brand new training configuration with the given parameters set.
      */
     public static MultilayerPerceptronConfiguration newConfiguration(
-        int[] layer, ActivationFunction[] activations, Minimizer minimizer,
-        int maxIteration) {
+        int[] layer, ActivationFunction[] activations,
+        ErrorFunction errorFunction, Minimizer minimizer, int maxIteration) {
       return new MultilayerPerceptronConfiguration(layer, activations,
-          minimizer, maxIteration);
+          minimizer, maxIteration, errorFunction);
     }
 
     /**
@@ -173,15 +178,17 @@ public final class MultilayerPerceptron extends AbstractClassifier {
      *          layer.
      * @param activations the activation functions to be used, each index
      *          denotes a layer.
+     * @param errorFunction the error function on the last layer.
      * @param minimizer the stochastic minimizer to be used.
      * @param maxIterations how many iterations (epochs) to run.
      * @return a brand new training configuration with the given parameters set.
      */
     public static MultilayerPerceptronConfiguration newConfiguration(
         int[] layer, ActivationFunction[] activations,
-        StochasticMinimizer minimizer, int maxIteration) {
+        ErrorFunction errorFunction, StochasticMinimizer minimizer,
+        int maxIteration) {
       return new MultilayerPerceptronConfiguration(layer, activations,
-          minimizer, maxIteration);
+          minimizer, maxIteration, errorFunction);
     }
 
   }
@@ -198,7 +205,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   private double visibleDropoutProbability;
   private TrainingType type;
   private boolean verbose;
-  private ErrorFunction error = ErrorFunction.SIGMOID_ERROR;
+  private ErrorFunction error;
 
   private MultilayerPerceptron(MultilayerPerceptronConfiguration conf) {
 
@@ -211,6 +218,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.hiddenDropoutProbability = conf.hiddenDropoutProbability;
     this.visibleDropoutProbability = conf.visibleDropoutProbability;
     this.verbose = conf.verbose;
+    this.error = conf.error;
 
     // if the activations are not supplied, we are using standard linear-sigmoid
     // functions
@@ -234,19 +242,6 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     } else {
       this.weights = conf.weights;
     }
-
-    // choose the error function based on the output layer
-
-    ActivationFunction function = activations[layers.length - 1];
-    if (function instanceof SigmoidActivationFunction) {
-      error = ErrorFunction.SIGMOID_ERROR;
-    } else if (function instanceof LinearActivationFunction) {
-      error = ErrorFunction.SQUARED_MEAN_ERROR;
-    } else if (function instanceof SoftMaxActivationFunction) {
-      error = ErrorFunction.SOFTMAX_ERROR;
-    } else {
-      error = ErrorFunction.SIGMOID_ERROR;
-    }
   }
 
   /**
@@ -254,10 +249,11 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * to query the network after a training session.
    */
   private MultilayerPerceptron(int[] layers, WeightMatrix[] weights,
-      ActivationFunction[] activations) {
+      ActivationFunction[] activations, ErrorFunction error) {
     this.layers = layers;
     this.weights = weights;
     this.activations = activations;
+    this.error = error;
     this.minimizer = null;
     this.stochasticMinimizer = null;
     this.maxIterations = -1;
@@ -537,8 +533,15 @@ public final class MultilayerPerceptron extends AbstractClassifier {
         throw new RuntimeException(e);
       }
     }
+    ErrorFunction error = null;
+    try {
+      error = (ErrorFunction) Class.forName(in.readUTF()).newInstance();
+    } catch (InstantiationException | IllegalAccessException
+        | ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
 
-    return new MultilayerPerceptron(layers, weights, funcs);
+    return new MultilayerPerceptron(layers, weights, funcs, error);
   }
 
   /**
@@ -561,6 +564,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     for (ActivationFunction func : model.activations) {
       out.writeUTF(func.getClass().getName());
     }
+    out.writeUTF(model.error.getClass().getName());
   }
 
 }

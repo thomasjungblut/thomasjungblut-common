@@ -29,6 +29,21 @@ public class MathUtilsTest extends TestCase {
   }
 
   @Test
+  public void testLogMatrix() {
+    DoubleMatrix y = new DenseDoubleMatrix(
+        new double[][] { { 0d, 1d, 0.5d, Double.NaN, 0.2d,
+            Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY } });
+    DoubleMatrix mat = MathUtils.logMatrix(y);
+    assertEquals(-10d, mat.get(0, 0));
+    assertEquals(0d, mat.get(0, 1));
+    assertEquals(-0.6931471805599453, mat.get(0, 2));
+    assertEquals(0d, mat.get(0, 3));
+    assertEquals(-1.6094379124341003, mat.get(0, 4));
+    assertEquals(0d, mat.get(0, 5));
+    assertEquals(0d, mat.get(0, 6));
+  }
+
+  @Test
   public void testFeatureNormalize() {
     DoubleMatrix mat = new DenseDoubleMatrix(new double[][] { { 2, 5 },
         { 5, 1 }, { 7, 25 } });
