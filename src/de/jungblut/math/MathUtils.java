@@ -1,5 +1,7 @@
 package de.jungblut.math;
 
+import org.apache.commons.math3.util.FastMath;
+
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -14,7 +16,7 @@ import de.jungblut.math.tuple.Tuple3;
  */
 public final class MathUtils {
 
-  private static final double EPS = Math.sqrt(2.2E-16);
+  public static final double EPS = Math.sqrt(2.2E-16);
 
   private MathUtils() {
     throw new IllegalAccessError();
@@ -145,17 +147,24 @@ public final class MathUtils {
     for (int row = 0; row < log.getRowCount(); row++) {
       for (int col = 0; col < log.getColumnCount(); col++) {
         double d = input.get(row, col);
-        // guard the logarithm
-        if (Double.isNaN(d) || Double.isInfinite(d)) {
-          log.set(row, col, 0d);
-        } else if (d <= 0d || d <= -0d) {
-          // assume a quite low value of log(1e-5) ~= -11.51
-          log.set(row, col, -10d);
-        } else {
-          log.set(row, col, Math.log(d));
-        }
+        log.set(row, col, guardLogarithm(d));
       }
     }
     return log;
   }
+
+  /**
+   * @return a log'd value of the input that is guarded.
+   */
+  public static double guardLogarithm(double input) {
+    if (Double.isNaN(input) || Double.isInfinite(input)) {
+      return 0d;
+    } else if (input <= 0d || input <= -0d) {
+      // assume a quite low value of log(1e-5) ~= -11.51
+      return -10d;
+    } else {
+      return FastMath.log(input);
+    }
+  }
+
 }
