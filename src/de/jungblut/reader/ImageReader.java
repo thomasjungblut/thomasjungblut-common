@@ -20,6 +20,30 @@ public final class ImageReader {
   }
 
   /**
+   * Returns the given image as a vector, where each dimension is mapped to a
+   * given pixel in the image. The value of each dimension is the greyscaled
+   * value that was calculated by averaging the RGB information at each pixel
+   * and thus guaranteed to be between 0 and 255.
+   * 
+   * @param img a buffered image.
+   * @return height*width dimensional vector.
+   */
+  public static DoubleVector readImageAsGreyScale(BufferedImage img) {
+    final int h = img.getHeight();
+    final int w = img.getWidth();
+
+    DoubleVector vector = new DenseDoubleVector(h * w);
+    int[] rgb = img.getRGB(0, 0, w, h, null, 0, w);
+    for (int i = 0; i < rgb.length; i++) {
+      int red = (rgb[i] >> 16) & 0xFF;
+      int green = (rgb[i] >> 8) & 0xFF;
+      int blue = (rgb[i] >> 0) & 0xFF;
+      vector.set(i, (red + green + blue) / 3d);
+    }
+    return vector;
+  }
+
+  /**
    * Returns the given image as a list of points in space, where each point is
    * encoded by its RGB values.
    * 

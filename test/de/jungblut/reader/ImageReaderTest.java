@@ -15,6 +15,19 @@ public class ImageReaderTest extends TestCase {
   private static final String LENNA_PATH = "files/img/lenna.png";
 
   @Test
+  public void testGreyScaleReader() throws Exception {
+
+    DoubleVector vect = ImageReader.readImageAsGreyScale(ImageIO.read(new File(
+        LENNA_PATH)));
+    assertEquals(512 * 512, vect.getDimension());
+    for (int i = 0; i < vect.getLength(); i++) {
+      assertTrue(vect.get(i) >= 0);
+      assertTrue(vect.get(i) <= 255);
+    }
+
+  }
+
+  @Test
   public void testLUVReader() throws Exception {
 
     DoubleVector[] luvVectors = ImageReader.readImageAsLUV(ImageIO
