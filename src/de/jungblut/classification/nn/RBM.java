@@ -24,12 +24,14 @@ public final class RBM {
   private final int[] layerSizes;
   private final DenseDoubleMatrix[] weights;
   private ActivationFunction activationFunction;
+  private TrainingType type = TrainingType.CPU;
 
   private RBM(int[] stackedHiddenLayerSizes,
-      ActivationFunction activationFunction) {
+      ActivationFunction activationFunction, TrainingType type) {
     this.layerSizes = stackedHiddenLayerSizes;
     this.activationFunction = activationFunction;
     this.weights = new DenseDoubleMatrix[layerSizes.length];
+    this.type = type;
   }
 
   /**
@@ -58,7 +60,7 @@ public final class RBM {
           .getWeights());
       // now do the real training
       RBMCostFunction fnc = new RBMCostFunction(mat, layerSizes[i],
-          activationFunction);
+          activationFunction, type);
       DoubleVector theta = GradientDescent.minimizeFunction(fnc, folded,
           learningRate, 0d, numIterations, verbose);
       // get back our weights as a matrix
@@ -170,40 +172,61 @@ public final class RBM {
    *         hidden nodes.
    */
   public static RBM single(int numHiddenNodes, ActivationFunction func) {
-    return new RBM(new int[] { numHiddenNodes }, func);
+    return new RBM(new int[] { numHiddenNodes }, func, TrainingType.CPU);
   }
 
   /**
-   * Creates a new stacked RBM with the given number of hidden nodes in each
-   * stacked layer. For example: 4,3,2 will create the first RBM with 4 hidden
-   * nodes, the second layer will operate on the 4 hidden node outputs of the
-   * RBM before and emit to 3 hidden nodes. Similarly the last layer will
-   * receive three inputs and emit 2 output's, which state you receive in the
-   * predict method.
+   * Creates a new stacked RBM with sigmoid activation and with the given number
+   * of hidden nodes in each stacked layer. For example: 4,3,2 will create the
+   * first RBM with 4 hidden nodes, the second layer will operate on the 4
+   * hidden node outputs of the RBM before and emit to 3 hidden nodes. Similarly
+   * the last layer will receive three inputs and emit 2 output's, which state
+   * you receive in the predict method.
    */
   public static RBM stacked(ActivationFunction func, int... numHiddenNodes) {
-    return new RBM(numHiddenNodes, func);
+    return new RBM(numHiddenNodes, func, TrainingType.CPU);
+  }
+
+  /**
+   * @return a single RBM with sigmoid activation which isn't stacked and emits
+   *         to the given number of hidden nodes.
+   */
+  public static RBM single(int numHiddenNodes) {
+    return new RBM(new int[] { numHiddenNodes },
+        ActivationFunctionSelector.SIGMOID.get(), TrainingType.CPU);
+  }
+
+  /**
+   * Creates a new stacked RBM with sigmoid activation and with the given number
+   * of hidden nodes in each stacked layer. For example: 4,3,2 will create the
+   * first RBM with 4 hidden nodes, the second layer will operate on the 4
+   * hidden node outputs of the RBM before and emit to 3 hidden nodes. Similarly
+   * the last layer will receive three inputs and emit 2 output's, which state
+   * you receive in the predict method.
+   */
+  public static RBM stacked(int... numHiddenNodes) {
+    return new RBM(numHiddenNodes, ActivationFunctionSelector.SIGMOID.get(),
+        TrainingType.CPU);
   }
 
   /**
    * @return a single RBM which isn't stacked and emits to the given number of
    *         hidden nodes.
    */
-  public static RBM single(int numHiddenNodes) {
-    return new RBM(new int[] { numHiddenNodes },
-        ActivationFunctionSelector.SIGMOID.get());
+  public static RBM singleGPU(int numHiddenNodes, ActivationFunction func) {
+    return new RBM(new int[] { numHiddenNodes }, func, TrainingType.GPU);
   }
 
   /**
-   * Creates a new stacked RBM with the given number of hidden nodes in each
-   * stacked layer. For example: 4,3,2 will create the first RBM with 4 hidden
-   * nodes, the second layer will operate on the 4 hidden node outputs of the
-   * RBM before and emit to 3 hidden nodes. Similarly the last layer will
-   * receive three inputs and emit 2 output's, which state you receive in the
-   * predict method.
+   * Creates a new stacked RBM with sigmoid activation and with the given number
+   * of hidden nodes in each stacked layer. For example: 4,3,2 will create the
+   * first RBM with 4 hidden nodes, the second layer will operate on the 4
+   * hidden node outputs of the RBM before and emit to 3 hidden nodes. Similarly
+   * the last layer will receive three inputs and emit 2 output's, which state
+   * you receive in the predict method.
    */
-  public static RBM stacked(int... numHiddenNodes) {
-    return new RBM(numHiddenNodes, ActivationFunctionSelector.SIGMOID.get());
+  public static RBM stackedGPU(ActivationFunction func, int... numHiddenNodes) {
+    return new RBM(numHiddenNodes, func, TrainingType.GPU);
   }
 
 }

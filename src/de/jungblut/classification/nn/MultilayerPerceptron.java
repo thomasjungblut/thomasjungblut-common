@@ -33,13 +33,6 @@ import de.jungblut.writable.MatrixWritable;
  */
 public final class MultilayerPerceptron extends AbstractClassifier {
 
-  /**
-   * Train normally on the CPU or on the GPU via CUDA?
-   */
-  public static enum TrainingType {
-    CPU, GPU
-  }
-
   public static long SEED = System.currentTimeMillis();
 
   /**
