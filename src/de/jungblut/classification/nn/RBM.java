@@ -9,7 +9,9 @@ import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.minimize.AbstractMinimizer;
 import de.jungblut.math.minimize.DenseMatrixFolder;
+import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
 import de.jungblut.writable.MatrixWritable;
 
@@ -38,13 +40,30 @@ public final class RBM {
    * Trains the RBM on the given training set.
    * 
    * @param trainingSet the training set to train on.
-   * @param learningRate the learning rate to use.
+   * @param alpha the learning rate for gradient descent.
    * @param numIterations how many iterations of training have to be done. (if
    *          converged before, it will stop training)
    * @param verbose if true, output to STDOUT containing progress and iteration
    *          costs.
    */
-  public void train(DoubleVector[] trainingSet, double learningRate,
+  public void train(DoubleVector[] trainingSet, double alpha,
+      int numIterations, boolean verbose) {
+    train(trainingSet, new GradientDescent(alpha, 0d), numIterations, verbose);
+  }
+
+  /**
+   * Trains the RBM on the given training set.
+   * 
+   * @param trainingSet the training set to train on.
+   * @param minimizer the minimizer to use. Note that the costfunction's
+   *          gradient isn't the real gradient and thus can't be optimized by
+   *          line searching minimizers like {@link Fmincg}.
+   * @param numIterations how many iterations of training have to be done. (if
+   *          converged before, it will stop training)
+   * @param verbose if true, output to STDOUT containing progress and iteration
+   *          costs.
+   */
+  public void train(DoubleVector[] trainingSet, AbstractMinimizer minimizer,
       int numIterations, boolean verbose) {
     DoubleVector[] tmpTrainingSet = null;
     for (int i = 0; i < layerSizes.length; i++) {
@@ -61,8 +80,8 @@ public final class RBM {
       // now do the real training
       RBMCostFunction fnc = new RBMCostFunction(mat, layerSizes[i],
           activationFunction, type);
-      DoubleVector theta = GradientDescent.minimizeFunction(fnc, folded,
-          learningRate, 0d, numIterations, verbose);
+      DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
+          verbose);
       // get back our weights as a matrix
       DenseDoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta,
           fnc.getUnfoldParameters())[0];
