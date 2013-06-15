@@ -113,6 +113,13 @@ public final class RBM {
     return lastOutput;
   }
 
+  /**
+   * @return the weight matrices.
+   */
+  public DenseDoubleMatrix[] getWeights() {
+    return this.weights;
+  }
+
   private DoubleVector computeHiddenActivations(DoubleVector input,
       DenseDoubleMatrix theta, boolean binarize) {
     // add the bias to the input
