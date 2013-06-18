@@ -2,6 +2,8 @@ package de.jungblut.reader;
 
 import java.awt.color.ColorSpace;
 import java.awt.image.BufferedImage;
+import java.util.ArrayList;
+import java.util.List;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -17,6 +19,33 @@ public final class ImageReader {
 
   private ImageReader() {
     throw new IllegalAccessError();
+  }
+
+  /**
+   * Calculates subimage windows with the sliding window algorithm.
+   * 
+   * @param source the source image to chunk.
+   * @param windowWidth the window width.
+   * @param windowHeight the window height.
+   * @param verticalStride the vertical stride between image offsets.
+   * @param horizontalStride the horizontal stride between image offsets.
+   * @return a list of subimages containing the windows, internally pointing to
+   *         the source image.
+   */
+  public static List<BufferedImage> getSlidingWindowPatches(
+      BufferedImage source, int windowWidth, int windowHeight,
+      int verticalStride, int horizontalStride) {
+    List<BufferedImage> list = new ArrayList<>();
+
+    for (int height = 0; height < (source.getHeight() - windowHeight); height += verticalStride) {
+      for (int width = 0; width < (source.getWidth() - windowWidth); width += horizontalStride) {
+        BufferedImage subimage = source.getSubimage(width, height, windowWidth,
+            windowHeight);
+        list.add(subimage);
+      }
+    }
+
+    return list;
   }
 
   /**

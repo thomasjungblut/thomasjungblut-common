@@ -1,6 +1,8 @@
 package de.jungblut.reader;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
 
 import javax.imageio.ImageIO;
 
@@ -25,6 +27,19 @@ public class ImageReaderTest extends TestCase {
       assertTrue(vect.get(i) <= 255);
     }
 
+  }
+
+  @Test
+  public void testSlidingWindow() throws Exception {
+
+    BufferedImage source = ImageIO.read(new File(LENNA_PATH));
+    List<BufferedImage> subImages = ImageReader.getSlidingWindowPatches(source,
+        32, 32, 32, 32);
+    assertEquals(225, subImages.size());
+    for (BufferedImage img : subImages) {
+      assertEquals(32, img.getHeight());
+      assertEquals(32, img.getWidth());
+    }
   }
 
   @Test
