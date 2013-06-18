@@ -6,7 +6,10 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
 /**
- * Simple gradient descent.
+ * Gradient descent implementation with some neat features like momentum,
+ * divergence detection, delta breaks and maybe later on adaptive learning
+ * rates. For more sophisticated configuration use the
+ * {@link GradientDescentBuilder}.
  * 
  * @author thomas.jungblut
  * 
@@ -14,15 +17,86 @@ import de.jungblut.math.tuple.Tuple;
 public final class GradientDescent extends AbstractMinimizer {
 
   private final double alpha;
-  private final double limit;
+  private final boolean breakOnDivergence;
+  private final double breakDifference;
+  private final double momentum;
+
+  public static class GradientDescentBuilder {
+
+    private final double alpha;
+    private double breakDifference;
+    private double momentum;
+    private boolean breakOnDivergence;
+
+    private GradientDescentBuilder(double alpha) {
+      this.alpha = alpha;
+    }
+
+    public GradientDescent build() {
+      return new GradientDescent(alpha, breakDifference, momentum,
+          breakOnDivergence);
+    }
+
+    /**
+     * Add momentum to this gradient descent minimizer.
+     * 
+     * @param momentum the momentum to use.
+     * @return the builder again.
+     */
+    public GradientDescentBuilder momentum(double momentum) {
+      this.momentum = momentum;
+      return this;
+    }
+
+    /**
+     * If called, this breaks when the gradient descent minimizer starts to
+     * diverge (costs are growing).
+     * 
+     * @return the builder again.
+     */
+    public GradientDescentBuilder breakOnDivergence() {
+      this.breakOnDivergence = true;
+      return this;
+    }
+
+    /**
+     * Breaks minimization process when the given delta in costs have been
+     * archieved. Usually a quite low value of 1e-4 to 1e-8.
+     * 
+     * @param delta the delta to break in difference between two costs.
+     * @return the builder again.
+     */
+    public GradientDescentBuilder breakOnDifference(double delta) {
+      this.breakDifference = delta;
+      return this;
+    }
+
+    /**
+     * Creates a new builder.
+     * 
+     * @param alpha the learning rate to set.
+     * @return a new builder.
+     */
+    public static GradientDescentBuilder create(double alpha) {
+      return new GradientDescentBuilder(alpha);
+    }
+
+  }
+
+  private GradientDescent(double alpha, double diff, double momentum,
+      boolean breakOnDivergence) {
+    this.alpha = alpha;
+    this.breakDifference = diff;
+    this.momentum = momentum;
+    this.breakOnDivergence = breakOnDivergence;
+  }
 
   /**
    * @param alpha the learning rate.
-   * @param limit the cost to archieve to break the iterations.
+   * @param limit the delta in cost to archieve to break the iterations.
    */
   public GradientDescent(double alpha, double limit) {
-    this.alpha = alpha;
-    this.limit = limit;
+    this(alpha, limit, 0d, false);
   }
 
   @Override
@@ -32,6 +106,7 @@ public final class GradientDescent extends AbstractMinimizer {
     double[] lastCosts = new double[3];
     Arrays.fill(lastCosts, Double.MAX_VALUE);
     final int lastIndex = lastCosts.length - 1;
+    DoubleVector lastTheta = null;
     DoubleVector theta = pInput;
     for (int iteration = 0; iteration < maxIterations; iteration++) {
       Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta);
@@ -42,12 +117,23 @@ public final class GradientDescent extends AbstractMinimizer {
       shiftLeft(lastCosts);
       lastCosts[lastIndex] = evaluateCost.getFirst();
       // break if we converged below the limit
-      if (converged(lastCosts, limit)) {
+      if (converged(lastCosts, breakDifference)) {
         break;
       }
+      // break if we are going in the wrong direction
+      if (breakOnDivergence && ascending(lastCosts)) {
+        break;
+      }
+
       DoubleVector gradient = evaluateCost.getSecond();
       // basically subtract the gradient multiplied with the learning rate
+      lastTheta = theta;
       theta = theta.subtract(gradient.multiply(alpha));
+      if (lastTheta != null && momentum != 0d) {
+        // we add momentum as the parameter "m" multiplied by the difference of
+        // both theta vectors
+        theta = theta.add((lastTheta.subtract(theta)).multiply(momentum));
+      }
       onIterationFinished(iteration, evaluateCost.getFirst(), theta);
     }
 

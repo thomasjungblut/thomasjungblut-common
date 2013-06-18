@@ -107,7 +107,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
       // compute dropout for ax[0], copy X to not alter internal
       // representation
       ax[0] = x.deepCopy();
-      dropout(ax[0], visibleDropoutProbability);
+      dropout(rnd, ax[0], visibleDropoutProbability);
     } else {
       ax[0] = x;
     }
@@ -118,7 +118,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
         ax[i] = new DenseDoubleMatrix(ones, activations[i].apply(zx[i]));
         if (hiddenDropoutProbability > 0d) {
           // compute dropout for ax[i]
-          dropout(ax[i], hiddenDropoutProbability);
+          dropout(rnd, ax[i], hiddenDropoutProbability);
         }
       } else {
         // the output doesn't need a bias
@@ -175,26 +175,6 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
   }
 
   /**
-   * Computes dropout for the activations matrix. Each element for each row has
-   * the similar probability p to be "dropped out" (set to 0) of the
-   * computation. This way, the network does learn to not rely on other units
-   * thus learning to detect more general features than drastically overfitting
-   * the dataset.
-   * 
-   * @param activations activations of units per record on each column.
-   * @param p dropout probability.
-   */
-  private void dropout(DoubleMatrix activations, double p) {
-    for (int row = 0; row < activations.getRowCount(); row++) {
-      for (int col = 0; col < activations.getColumnCount(); col++) {
-        if (rnd.nextDouble() <= p) {
-          activations.set(row, col, 0d);
-        }
-      }
-    }
-  }
-
-  /**
    * General matrix multiplication of two matrices
    * 
    * @param ax the activation matrix.
@@ -230,6 +210,27 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
       unfoldParameters[i] = new int[] { layerSizes[i + 1], layerSizes[i] + 1 };
     }
     return unfoldParameters;
+  }
+
+  /**
+   * Computes dropout for the activations matrix. Each element for each row has
+   * the similar probability p to be "dropped out" (set to 0) of the
+   * computation. This way, the network does learn to not rely on other units
+   * thus learning to detect more general features than drastically overfitting
+   * the dataset.
+   * 
+   * @param rnd the random number generator to consult.
+   * @param activations activations of units per record on each column.
+   * @param p dropout probability.
+   */
+  public static void dropout(Random rnd, DoubleMatrix activations, double p) {
+    for (int row = 0; row < activations.getRowCount(); row++) {
+      for (int col = 0; col < activations.getColumnCount(); col++) {
+        if (rnd.nextDouble() <= p) {
+          activations.set(row, col, 0d);
+        }
+      }
+    }
   }
 
 }

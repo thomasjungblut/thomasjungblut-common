@@ -41,8 +41,8 @@ public class MultiLayerPerceptronTest extends TestCase {
   @Test
   public void testParableRegression() {
     // sample a parable of points and use one hidden layer
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-        .newConfiguration(
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(
             new int[] { 2, 2, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
                 LINEAR.get() }, new SquaredMeanErrorFunction(), new Fmincg(),
@@ -63,8 +63,8 @@ public class MultiLayerPerceptronTest extends TestCase {
   public void testRegression() {
     // test the linear regression case
     // use a gradient descent with very small learning rate
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-        .newConfiguration(new int[] { 2, 1 },
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(new int[] { 2, 1 },
             new ActivationFunction[] { LINEAR.get(), LINEAR.get() },
             new SquaredMeanErrorFunction(), new GradientDescent(1e-8, 6e-5),
             10000).verbose(false).build();
@@ -79,8 +79,8 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORSoftMaxFminCG() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-        .newConfiguration(
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(
             new int[] { 2, 4, 2 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
                 SOFTMAX.get() }, new CrossEntropyErrorFunction(), new Fmincg(),
@@ -100,8 +100,8 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORElliotFminCG() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-        .newConfiguration(
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(),
                 ActivationFunctionSelector.ELLIOT.get(),
@@ -123,8 +123,8 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORFminCG() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-        .newConfiguration(
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
                 SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(), 100)
@@ -144,8 +144,8 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORPSO() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-        .newConfiguration(
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
                 SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(), 100)
@@ -166,8 +166,8 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   @Test
   public void testXORStochastic() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-        .newConfiguration(
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(
             new int[] { 2, 4, 1 },
             new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
                 SIGMOID.get() }, new LogisticErrorFunction(),
@@ -192,8 +192,8 @@ public class MultiLayerPerceptronTest extends TestCase {
 
   private MultilayerPerceptron testXorSigmoidNetwork(MultilayerPerceptron mlp) {
     if (mlp == null) {
-      mlp = MultilayerPerceptron.MultilayerPerceptronConfiguration
-          .newConfiguration(
+      mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+          .create(
               new int[] { 2, 4, 1 },
               new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
                   SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(),

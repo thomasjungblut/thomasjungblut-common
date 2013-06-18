@@ -30,20 +30,24 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class RBMCostFunction implements CostFunction {
 
-  // test seed
-  static long SEED = System.currentTimeMillis();
-
   private final DenseDoubleMatrix x;
   private final ActivationFunction activationFunction;
-  private int[][] unfoldParameters;
-  private DenseDoubleVector ones;
+  private final int[][] unfoldParameters;
+  private final DenseDoubleVector ones;
 
-  private TrainingType type;
+  private final TrainingType type;
+  private final double lambda;
+  private final double visibleDropoutProbability;
+  private final double hiddenDropoutProbability;
 
   public RBMCostFunction(DenseDoubleMatrix x, int numHiddenUnits,
-      ActivationFunction activationFunction, TrainingType type) {
+      ActivationFunction activationFunction, TrainingType type, double lambda,
+      double visibleDropoutProbability, double hiddenDropoutProbability) {
     this.activationFunction = activationFunction;
     this.type = type;
+    this.lambda = lambda;
+    this.visibleDropoutProbability = visibleDropoutProbability;
+    this.hiddenDropoutProbability = hiddenDropoutProbability;
     this.ones = DenseDoubleVector.ones(x.getRowCount());
     this.x = new DenseDoubleMatrix(ones, x);
     this.unfoldParameters = MultilayerPerceptronCostFunction
@@ -52,6 +56,7 @@ public final class RBMCostFunction implements CostFunction {
 
   @Override
   public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+    final Random rnd = new Random(RBM.SEED);
     // input contains the weights between the visible and the hidden units
     DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters);
@@ -59,10 +64,15 @@ public final class RBMCostFunction implements CostFunction {
 
     DoubleMatrix hiddenActivations = activationFunction.apply(multiply(x,
         thetas[0], false, true));
+    if (visibleDropoutProbability != 0d) {
+      // compute dropout on the visible layer
+      MultilayerPerceptronCostFunction.dropout(rnd, hiddenActivations,
+          visibleDropoutProbability);
+    }
     DoubleMatrix positiveAssociations = multiply(x, hiddenActivations, true,
         false);
     // binarize to 1 or 0
-    binarize(hiddenActivations);
+    binarize(rnd, hiddenActivations);
 
     // start reconstructing the input
     DoubleMatrix fantasy = activationFunction.apply(multiply(hiddenActivations,
@@ -71,10 +81,16 @@ public final class RBMCostFunction implements CostFunction {
     fantasy.setColumnVector(0, ones);
     DoubleMatrix hiddenFantasyActivations = activationFunction.apply(multiply(
         fantasy, thetas[0], false, true));
+    if (hiddenDropoutProbability != 0d) {
+      // compute dropout on the hidden layer
+      MultilayerPerceptronCostFunction.dropout(rnd, hiddenFantasyActivations,
+          hiddenDropoutProbability);
+    }
 
     DoubleMatrix negativeAssociations = fantasy.transpose().multiply(
         hiddenFantasyActivations);
 
+    // measure a very simple reconstruction error
     double j = x.subtract(fantasy).pow(2).sum();
 
     // calculate the approx. gradient and make it negative, so it works with
@@ -82,6 +98,16 @@ public final class RBMCostFunction implements CostFunction {
     thetaGradients[0] = (DenseDoubleMatrix) positiveAssociations
         .subtract(negativeAssociations).transpose().divide(x.getRowCount())
         .multiply(-1d);
+
+    // calculate the weight decay and apply it (but not on the bias unit!)
+    if (lambda != 0d) {
+      thetaGradients[0] = (DenseDoubleMatrix) thetaGradients[0].add((thetas[0]
+          .multiply(lambda / x.getRowCount())));
+      // subtract the regularized bias
+      DoubleVector regBias = thetas[0].slice(0, thetas[0].getRowCount(), 0, 1)
+          .multiply(lambda / x.getRowCount()).getColumnVector(0);
+      thetaGradients[0].setColumnVector(0, regBias);
+    }
 
     return new Tuple<Double, DoubleVector>(j,
         DenseMatrixFolder.foldMatrices(thetaGradients));
@@ -118,8 +144,7 @@ public final class RBMCostFunction implements CostFunction {
     return this.unfoldParameters;
   }
 
-  static void binarize(DoubleMatrix hiddenActivations) {
-    final Random r = new Random(SEED);
+  static void binarize(Random r, DoubleMatrix hiddenActivations) {
     for (int i = 0; i < hiddenActivations.getRowCount(); i++) {
       for (int j = 0; j < hiddenActivations.getColumnCount(); j++) {
         hiddenActivations.set(i, j,
@@ -128,8 +153,7 @@ public final class RBMCostFunction implements CostFunction {
     }
   }
 
-  static void binarize(DoubleVector v) {
-    final Random r = new Random(SEED);
+  static void binarize(Random r, DoubleVector v) {
     for (int j = 0; j < v.getDimension(); j++) {
       v.set(j, v.get(j) > r.nextDouble() ? 1d : 0d);
     }

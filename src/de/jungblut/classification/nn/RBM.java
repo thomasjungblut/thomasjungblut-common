@@ -3,37 +3,143 @@ package de.jungblut.classification.nn;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Random;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.minimize.AbstractMinimizer;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
+import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.writable.MatrixWritable;
 
 /**
- * Class for training/stacking RBMs.
+ * Class for training/stacking RBMs. Create new instances with the
+ * {@link RBMBuilder}.
  * 
  * @author thomas.jungblut
  * 
  */
 public final class RBM {
 
+  // test seed
+  static long SEED = System.currentTimeMillis();
+
   private final int[] layerSizes;
   private final DenseDoubleMatrix[] weights;
-  private ActivationFunction activationFunction;
-  private TrainingType type = TrainingType.CPU;
+  private final ActivationFunction activationFunction;
+  private final Random random;
 
+  private TrainingType type = TrainingType.CPU;
+  private double lambda;
+  private double hiddenDropoutProbability;
+  private double visibleDropoutProbability;
+  private boolean verbose = false;
+
+  public static class RBMBuilder {
+
+    private final int[] layerSizes;
+    private final ActivationFunction function;
+
+    private TrainingType type = TrainingType.CPU;
+    private double lambda;
+    private double hiddenDropoutProbability;
+    private double visibleDropoutProbability;
+    private boolean verbose = false;
+
+    private RBMBuilder(int[] layer, ActivationFunction activation) {
+      this.layerSizes = layer;
+      this.function = activation;
+    }
+
+    /**
+     * Sets the training type, it defaults to CPU- so only use if you want to
+     * use the GPU.
+     */
+    public RBMBuilder trainingType(TrainingType type) {
+      this.type = type;
+      return this;
+    }
+
+    /**
+     * Sets the regularization parameter lambda, defaults to 0 if not set.
+     */
+    public RBMBuilder lambda(double lambda) {
+      this.lambda = lambda;
+      return this;
+    }
+
+    /**
+     * Sets verbose to true. Progress indicators will be printed to STDOUT.
+     */
+    public RBMBuilder verbose() {
+      return verbose(true);
+    }
+
+    /**
+     * If verbose is true, progress indicators will be printed to STDOUT.
+     */
+    public RBMBuilder verbose(boolean verbose) {
+      this.verbose = verbose;
+      return this;
+    }
+
+    /**
+     * Sets the hidden layer dropout probability.
+     */
+    public RBMBuilder hiddenLayerDropout(double d) {
+      this.hiddenDropoutProbability = d;
+      return this;
+    }
+
+    /**
+     * Sets the input layer dropout probability.
+     */
+    public RBMBuilder inputLayerDropout(double d) {
+      this.visibleDropoutProbability = d;
+      return this;
+    }
+
+    /**
+     * Creates a new {@link RBMBuilder} from an activation function and
+     * layersizes.
+     * 
+     * @param activation the activation function.
+     * @param layer an array of hidden layer sizes.
+     * @return a new RBM builder.
+     */
+    public static RBMBuilder create(ActivationFunction activation, int... layer) {
+      return new RBMBuilder(layer, activation);
+    }
+
+    /**
+     * @return a new {@link RBM} with the given configuration.
+     */
+    public RBM build() {
+      return new RBM(this);
+    }
+
+  }
+
+  // serialization constructor
   private RBM(int[] stackedHiddenLayerSizes,
       ActivationFunction activationFunction, TrainingType type) {
     this.layerSizes = stackedHiddenLayerSizes;
     this.activationFunction = activationFunction;
     this.weights = new DenseDoubleMatrix[layerSizes.length];
     this.type = type;
+    random = new Random(SEED);
+  }
+
+  private RBM(RBMBuilder rbmBuilder) {
+    this(rbmBuilder.layerSizes, rbmBuilder.function, rbmBuilder.type);
+    this.lambda = rbmBuilder.lambda;
+    this.hiddenDropoutProbability = rbmBuilder.hiddenDropoutProbability;
+    this.visibleDropoutProbability = rbmBuilder.visibleDropoutProbability;
+    this.verbose = rbmBuilder.verbose;
   }
 
   /**
@@ -43,12 +149,9 @@ public final class RBM {
    * @param alpha the learning rate for gradient descent.
    * @param numIterations how many iterations of training have to be done. (if
    *          converged before, it will stop training)
-   * @param verbose if true, output to STDOUT containing progress and iteration
-   *          costs.
    */
-  public void train(DoubleVector[] trainingSet, double alpha,
-      int numIterations, boolean verbose) {
-    train(trainingSet, new GradientDescent(alpha, 0d), numIterations, verbose);
+  public void train(DoubleVector[] trainingSet, double alpha, int numIterations) {
+    train(trainingSet, new GradientDescent(alpha, 0d), numIterations);
   }
 
   /**
@@ -60,11 +163,9 @@ public final class RBM {
    *          line searching minimizers like {@link Fmincg}.
    * @param numIterations how many iterations of training have to be done. (if
    *          converged before, it will stop training)
-   * @param verbose if true, output to STDOUT containing progress and iteration
-   *          costs.
    */
-  public void train(DoubleVector[] trainingSet, AbstractMinimizer minimizer,
-      int numIterations, boolean verbose) {
+  public void train(DoubleVector[] trainingSet, Minimizer minimizer,
+      int numIterations) {
     DoubleVector[] tmpTrainingSet = null;
     for (int i = 0; i < layerSizes.length; i++) {
       if (verbose) {
@@ -79,7 +180,8 @@ public final class RBM {
           .getWeights());
       // now do the real training
       RBMCostFunction fnc = new RBMCostFunction(mat, layerSizes[i],
-          activationFunction, type);
+          activationFunction, type, lambda, visibleDropoutProbability,
+          hiddenDropoutProbability);
       DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
           verbose);
       // get back our weights as a matrix
@@ -147,7 +249,7 @@ public final class RBM {
         .multiplyVectorRow(biased));
     // now binarize with the contained probability
     if (binarize) {
-      RBMCostFunction.binarize(hiddenProbability);
+      RBMCostFunction.binarize(random, hiddenProbability);
     }
     return hiddenProbability;
   }
@@ -179,19 +281,27 @@ public final class RBM {
       sizes[i] = in.readInt();
     }
 
-    RBM model = stacked(sizes);
+    DenseDoubleMatrix[] array = new DenseDoubleMatrix[layers];
     for (int i = 0; i < layers; i++) {
-      model.weights[i] = MatrixWritable.readDenseMatrix(in);
+      array[i] = MatrixWritable.readDenseMatrix(in);
     }
+    ActivationFunction func = null;
     try {
-      model.activationFunction = (ActivationFunction) Class.forName(
-          in.readUTF()).newInstance();
+      func = (ActivationFunction) Class.forName(in.readUTF()).newInstance();
     } catch (InstantiationException | IllegalAccessException
         | ClassNotFoundException e) {
       throw new RuntimeException(e);
     }
+    RBM model = new RBM(sizes, func, TrainingType.CPU);
+    for (int i = 0; i < layers; i++) {
+      model.weights[i] = array[i];
+    }
     return model;
   }
+
+  /*
+   * some helper static factories other than the builder pattern.
+   */
 
   /**
    * @return a single RBM which isn't stacked and emits to the given number of

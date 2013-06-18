@@ -25,7 +25,7 @@ public class RBMCostFunctionTest extends TestCase {
 
   @Override
   protected void setUp() throws Exception {
-    RBMCostFunction.SEED = 0L;
+    RBM.SEED = 0L;
     MultilayerPerceptron.SEED = 0L;
   }
 
@@ -35,7 +35,7 @@ public class RBMCostFunctionTest extends TestCase {
     DenseDoubleMatrix mat = new DenseDoubleMatrix(test);
     WeightMatrix pInput = new WeightMatrix(mat.getColumnCount(), hiddenUnits);
     RBMCostFunction fnc = new RBMCostFunction(mat, hiddenUnits,
-        new SigmoidActivationFunction(), TrainingType.CPU);
+        new SigmoidActivationFunction(), TrainingType.CPU, 0d, 0d, 0d);
     DoubleVector theta = GradientDescent.minimizeFunction(fnc,
         DenseMatrixFolder.foldMatrices(pInput.getWeights()), 0.01, 1e-5, 5000,
         false);
