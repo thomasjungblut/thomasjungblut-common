@@ -15,7 +15,7 @@ public final class RectifiedLinearActivationFunction extends
 
   @Override
   public double apply(double input) {
-    return MathUtils.guardLogarithm(FastMath.log(1 + FastMath.exp(input)));
+    return MathUtils.guardLogarithm(1 + FastMath.exp(input));
   }
 
   @Override
