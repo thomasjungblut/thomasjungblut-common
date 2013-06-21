@@ -29,6 +29,29 @@ public class MathUtilsTest extends TestCase {
   }
 
   @Test
+  public void testMinMaxScale() {
+    // just testing the core functionality
+    double value = 25;
+    double result = MathUtils.minMaxScale(value, 0, 100, 0, 1);
+    assertEquals(0.25, result, 1e-5);
+
+    DoubleVector in = new DenseDoubleVector(new double[] { 40, 60 });
+    DoubleVector res = new DenseDoubleVector(new double[] { 0.4, 0.6 });
+
+    DoubleVector minMaxScale = MathUtils.minMaxScale(in, 0, 100, 0, 1);
+    assertSmallDiff(res, minMaxScale);
+
+    DoubleMatrix mat = new DenseDoubleMatrix(new double[][] { { 40, 60 },
+        { 2, 25 } });
+    DoubleMatrix resMat = new DenseDoubleMatrix(new double[][] { { 0.4, 0.6 },
+        { 0.02, 0.25 } });
+
+    DoubleMatrix minMaxScaleMat = MathUtils.minMaxScale(mat, 0, 100, 0, 1);
+    assertSmallDiff(resMat, minMaxScaleMat);
+
+  }
+
+  @Test
   public void testLogMatrix() {
     DoubleMatrix y = new DenseDoubleMatrix(
         new double[][] { { 0d, 1d, 0.5d, Double.NaN, 0.2d,
@@ -108,6 +131,17 @@ public class MathUtilsTest extends TestCase {
     for (int i = 0; i < v2.getLength(); i++) {
       double d1 = v2.get(i);
       assertEquals(v1.get(i), d1, 1E-5);
+    }
+  }
+
+  private void assertSmallDiff(DoubleMatrix v1, DoubleMatrix v2) {
+    assertEquals(v1.getColumnCount(), v2.getColumnCount());
+    assertEquals(v1.getRowCount(), v2.getRowCount());
+    for (int row = 0; row < v1.getRowCount(); row++) {
+      for (int col = 0; col < v1.getColumnCount(); col++) {
+        double d1 = v2.get(row, col);
+        assertEquals(v1.get(row, col), d1, 1E-5);
+      }
     }
   }
 }

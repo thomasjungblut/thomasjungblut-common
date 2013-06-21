@@ -154,6 +154,65 @@ public final class MathUtils {
   }
 
   /**
+   * Scales a matrix into the interval given by min and max.
+   * 
+   * @param input the input value.
+   * @param fromMin the lower bound of the input interval.
+   * @param fromMax the upper bound of the input interval.
+   * @param toMin the lower bound of the target interval.
+   * @param toMax the upper bound of the target interval.
+   * @return the new matrix with scaled values.
+   */
+  public static DoubleMatrix minMaxScale(DoubleMatrix input, double fromMin,
+      double fromMax, double toMin, double toMax) {
+    DoubleMatrix newOne = new DenseDoubleMatrix(input.getRowCount(),
+        input.getColumnCount());
+    double[][] array = input.toArray();
+    for (int row = 0; row < newOne.getRowCount(); row++) {
+      for (int col = 0; col < newOne.getColumnCount(); col++) {
+        newOne.set(row, col,
+            minMaxScale(array[row][col], fromMin, fromMax, toMin, toMax));
+      }
+    }
+    return newOne;
+  }
+
+  /**
+   * Scales a vector into the interval given by min and max.
+   * 
+   * @param input the input vector.
+   * @param fromMin the lower bound of the input interval.
+   * @param fromMax the upper bound of the input interval.
+   * @param toMin the lower bound of the target interval.
+   * @param toMax the upper bound of the target interval.
+   * @return the new vector with scaled values.
+   */
+  public static DoubleVector minMaxScale(DoubleVector input, double fromMin,
+      double fromMax, double toMin, double toMax) {
+    DoubleVector newOne = new DenseDoubleVector(input.getDimension());
+    double[] array = input.toArray();
+    for (int i = 0; i < array.length; i++) {
+      newOne.set(i, minMaxScale(array[i], fromMin, fromMax, toMin, toMax));
+    }
+    return newOne;
+  }
+
+  /**
+   * Scales a single input into the interval given by min and max.
+   * 
+   * @param x the input value.
+   * @param fromMin the lower bound of the input interval.
+   * @param fromMax the upper bound of the input interval.
+   * @param toMin the lower bound of the target interval.
+   * @param toMax the upper bound of the target interval.
+   * @return the bounded value.
+   */
+  public static double minMaxScale(double x, double fromMin, double fromMax,
+      double toMin, double toMax) {
+    return (x - fromMin) * (toMax - toMin) / (fromMax - fromMin) + toMin;
+  }
+
+  /**
    * @return a log'd value of the input that is guarded.
    */
   public static double guardLogarithm(double input) {
