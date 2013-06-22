@@ -2,24 +2,22 @@ package de.jungblut.math.minimize;
 
 import java.util.Arrays;
 
+import com.google.common.base.Preconditions;
+
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
 /**
  * Gradient descent implementation with some neat features like momentum,
- * divergence detection, delta breaks and maybe later on adaptive learning
- * rates. For more sophisticated configuration use the
- * {@link GradientDescentBuilder}.
+ * divergence detection, delta breaks and bold driver adaptive learning rates.
+ * For more sophisticated configuration use the {@link GradientDescentBuilder}.
  * 
  * @author thomas.jungblut
  * 
  */
 public final class GradientDescent extends AbstractMinimizer {
 
-  private final double alpha;
-  private final boolean breakOnDivergence;
-  private final double breakDifference;
-  private final double momentum;
+  private static final int COST_HISTORY = 3;
 
   public static class GradientDescentBuilder {
 
@@ -27,6 +25,9 @@ public final class GradientDescent extends AbstractMinimizer {
     private double breakDifference;
     private double momentum;
     private boolean breakOnDivergence;
+    private boolean boldDriver;
+    private double boldIncreasePercentage;
+    private double boldDecreasePercentage;
 
     private GradientDescentBuilder(double alpha) {
       this.alpha = alpha;
@@ -34,17 +35,57 @@ public final class GradientDescent extends AbstractMinimizer {
 
     public GradientDescent build() {
       return new GradientDescent(alpha, breakDifference, momentum,
-          breakOnDivergence);
+          breakOnDivergence, boldDriver, boldIncreasePercentage,
+          boldDecreasePercentage);
     }
 
     /**
      * Add momentum to this gradient descent minimizer.
      * 
-     * @param momentum the momentum to use.
+     * @param momentum the momentum to use. Between 0 and 1.
      * @return the builder again.
      */
     public GradientDescentBuilder momentum(double momentum) {
+      Preconditions.checkArgument(momentum >= 0d && momentum <= 1d,
+          "Momentum must be between 0 and 1.");
       this.momentum = momentum;
+      return this;
+    }
+
+    /**
+     * BoldDriver will change the learning rate over time by observing the cost
+     * of the costfunction. If the cost decreases, it will increase the learning
+     * rate by 5%. If the cost increases it will cut the learning rate in half.
+     * 
+     * @return the builder again.
+     */
+    public GradientDescentBuilder boldDriver() {
+      return boldDriver(0.5, 0.05);
+    }
+
+    /**
+     * BoldDriver will change the learning rate over time by observing the cost
+     * of the costfunction. If the cost decreases, it will increase the learning
+     * rate (typically by 5%). If the cost increases it will (typically) cut the
+     * learning rate in half.
+     * 
+     * @param increasedCostPercentage the percentage of the learning rate that
+     *          will be used when cost increases.
+     * @param decreasedCostPercentage the percentage of the learning rate that
+     *          will be used when cost decreases.
+     * @return the builder again.
+     */
+    public GradientDescentBuilder boldDriver(double increasedCostPercentage,
+        double decreasedCostPercentage) {
+      Preconditions.checkArgument(increasedCostPercentage >= 0d
+          && increasedCostPercentage <= 1d,
+          "increasedCostPercentage must be between 0 and 1.");
+      Preconditions.checkArgument(decreasedCostPercentage >= 0d
+          && decreasedCostPercentage <= 1d,
+          "decreasedCostPercentage must be between 0 and 1.");
+      this.boldDriver = true;
+      this.boldIncreasePercentage = increasedCostPercentage;
+      this.boldDecreasePercentage = decreasedCostPercentage;
       return this;
     }
 
@@ -83,12 +124,25 @@ public final class GradientDescent extends AbstractMinimizer {
 
   }
 
+  private final boolean breakOnDivergence;
+  private final double breakDifference;
+  private final double momentum;
+
+  private double alpha;
+  private boolean boldDriver;
+  private double boldIncreasePercentage;
+  private double boldDecreasePercentage;
+
   private GradientDescent(double alpha, double diff, double momentum,
-      boolean breakOnDivergence) {
+      boolean breakOnDivergence, boolean boldDriver,
+      double boldIncreasePercentage, double boldDecreasePercentage) {
     this.alpha = alpha;
     this.breakDifference = diff;
     this.momentum = momentum;
     this.breakOnDivergence = breakOnDivergence;
+    this.boldDriver = boldDriver;
+    this.boldIncreasePercentage = boldIncreasePercentage;
+    this.boldDecreasePercentage = boldDecreasePercentage;
   }
 
   /**
@@ -96,17 +150,18 @@ public final class GradientDescent extends AbstractMinimizer {
    * @param limit the delta in cost to archieve to break the iterations.
    */
   public GradientDescent(double alpha, double limit) {
-    this(alpha, limit, 0d, false);
+    this(alpha, limit, 0d, false, false, 0d, 0d);
   }
 
   @Override
   public final DoubleVector minimize(CostFunction f, DoubleVector pInput,
       final int maxIterations, boolean verbose) {
 
-    double[] lastCosts = new double[3];
+    double[] lastCosts = new double[COST_HISTORY];
     Arrays.fill(lastCosts, Double.MAX_VALUE);
     final int lastIndex = lastCosts.length - 1;
     DoubleVector lastTheta = null;
+    DoubleVector lastGradient = null;
     DoubleVector theta = pInput;
     for (int iteration = 0; iteration < maxIterations; iteration++) {
       Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta);
@@ -126,8 +181,30 @@ public final class GradientDescent extends AbstractMinimizer {
       }
 
       DoubleVector gradient = evaluateCost.getSecond();
-      // basically subtract the gradient multiplied with the learning rate
+      // check the bold driver
+      if (boldDriver) {
+        if (lastGradient != null) {
+          double costDifference = getCostDifference(lastCosts);
+          if (costDifference < 0) {
+            // we can increase, because cost decreased
+            alpha += (alpha * boldDecreasePercentage);
+          } else {
+            // we decrease, because cost increased
+            // we undo the last theta change
+            theta = lastTheta;
+            gradient = lastGradient;
+            alpha -= (alpha * boldIncreasePercentage);
+          }
+          if (verbose) {
+            System.out.print("Iteration " + iteration + " | Alpha: " + alpha
+                + "\n");
+          }
+        }
+        lastGradient = gradient;
+      }
+      // save our last parameter
       lastTheta = theta;
+      // basically subtract the gradient multiplied with the learning rate
       theta = theta.subtract(gradient.multiply(alpha));
       if (lastTheta != null && momentum != 0d) {
         // we add momentum as the parameter "m" multiplied by the difference of
@@ -172,8 +249,7 @@ public final class GradientDescent extends AbstractMinimizer {
   }
 
   static boolean converged(double[] lastCosts, double limit) {
-    return Math.abs(lastCosts[lastCosts.length - 1]
-        - lastCosts[lastCosts.length - 2]) < limit;
+    return Math.abs(getCostDifference(lastCosts)) < limit;
   }
 
   static boolean ascending(double[] lastCosts) {
@@ -184,6 +260,10 @@ public final class GradientDescent extends AbstractMinimizer {
       last = lastCosts[i];
     }
     return ascending;
+  }
+
+  private static double getCostDifference(double[] lastCosts) {
+    return lastCosts[lastCosts.length - 1] - lastCosts[lastCosts.length - 2];
   }
 
 }

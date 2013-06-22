@@ -26,6 +26,20 @@ public class GradientDescentTest extends TestCase {
   }
 
   @Test
+  public void testBoldDriver() {
+    DoubleVector start = new DenseDoubleVector(new double[] { 2, -1 });
+
+    CostFunction inlineFunction = getCostFunction();
+    GradientDescent gd = GradientDescentBuilder.create(0.8d)
+        .breakOnDifference(1e-20).boldDriver().build();
+    DoubleVector minimizeFunction = gd.minimize(inlineFunction, start, 1000,
+        false);
+    // 1E-5 is close enough to zero for the test to pass
+    assertEquals(minimizeFunction.get(0), 0, 1E-5);
+    assertEquals(minimizeFunction.get(1), 0, 1E-5);
+  }
+
+  @Test
   public void testMomentumGradientDescent() {
 
     DoubleVector start = new DenseDoubleVector(new double[] { 2, -1 });
