@@ -8,7 +8,7 @@ import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.minimize.CostFunction;
+import de.jungblut.math.minimize.AbstractMiniBatchCostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
@@ -28,34 +28,34 @@ import de.jungblut.math.tuple.Tuple;
  * @author thomas.jungblut
  * 
  */
-public final class RBMCostFunction implements CostFunction {
+public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
 
-  private final DenseDoubleMatrix x;
   private final ActivationFunction activationFunction;
   private final int[][] unfoldParameters;
-  private final DenseDoubleVector ones;
 
   private final TrainingType type;
   private final double lambda;
   private final double visibleDropoutProbability;
   private final double hiddenDropoutProbability;
 
-  public RBMCostFunction(DenseDoubleMatrix x, int numHiddenUnits,
+  public RBMCostFunction(DoubleVector[] currentTrainingSet, int batchSize,
+      int numThreads, int numHiddenUnits,
       ActivationFunction activationFunction, TrainingType type, double lambda,
       double visibleDropoutProbability, double hiddenDropoutProbability) {
+    super(currentTrainingSet, batchSize, numThreads);
     this.activationFunction = activationFunction;
     this.type = type;
     this.lambda = lambda;
     this.visibleDropoutProbability = visibleDropoutProbability;
     this.hiddenDropoutProbability = hiddenDropoutProbability;
-    this.ones = DenseDoubleVector.ones(x.getRowCount());
-    this.x = new DenseDoubleMatrix(ones, x);
     this.unfoldParameters = MultilayerPerceptronCostFunction
-        .computeUnfoldParameters(new int[] { x.getColumnCount(), numHiddenUnits });
+        .computeUnfoldParameters(new int[] {
+            currentTrainingSet[0].getDimension(), numHiddenUnits });
   }
 
   @Override
-  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+  protected Tuple<Double, DoubleVector> evaluateBatch(DoubleVector input,
+      DoubleMatrix x) {
     final Random rnd = new Random(RBM.SEED);
     // input contains the weights between the visible and the hidden units
     DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
@@ -78,7 +78,7 @@ public final class RBMCostFunction implements CostFunction {
     DoubleMatrix fantasy = activationFunction.apply(multiply(hiddenActivations,
         thetas[0], false, false));
     // set out fantasy bias back to 1
-    fantasy.setColumnVector(0, ones);
+    fantasy.setColumnVector(0, DenseDoubleVector.ones(fantasy.getRowCount()));
     DoubleMatrix hiddenFantasyActivations = activationFunction.apply(multiply(
         fantasy, thetas[0], false, true));
     if (hiddenDropoutProbability != 0d) {
@@ -158,4 +158,5 @@ public final class RBMCostFunction implements CostFunction {
       v.set(j, v.get(j) > r.nextDouble() ? 1d : 0d);
     }
   }
+
 }

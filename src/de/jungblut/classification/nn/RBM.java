@@ -28,17 +28,6 @@ public final class RBM {
   // test seed
   static long SEED = System.currentTimeMillis();
 
-  private final int[] layerSizes;
-  private final DenseDoubleMatrix[] weights;
-  private final ActivationFunction activationFunction;
-  private final Random random;
-
-  private TrainingType type = TrainingType.CPU;
-  private double lambda;
-  private double hiddenDropoutProbability;
-  private double visibleDropoutProbability;
-  private boolean verbose = false;
-
   public static class RBMBuilder {
 
     private final int[] layerSizes;
@@ -49,6 +38,8 @@ public final class RBM {
     private double hiddenDropoutProbability;
     private double visibleDropoutProbability;
     private boolean verbose = false;
+    private int miniBatchSize;
+    private int batchParallelism = Runtime.getRuntime().availableProcessors();
 
     private RBMBuilder(int[] layer, ActivationFunction activation) {
       this.layerSizes = layer;
@@ -69,6 +60,25 @@ public final class RBM {
      */
     public RBMBuilder lambda(double lambda) {
       this.lambda = lambda;
+      return this;
+    }
+
+    /**
+     * @param size the minibatch size to use. Batches are calculated in parallel
+     *          on every cpu core if not overridden by
+     *          {@link #batchParallelism(int)}.
+     */
+    public RBMBuilder miniBatchSize(int size) {
+      this.miniBatchSize = size;
+      return this;
+    }
+
+    /**
+     * @param numThreads set the number of threads where batches should be
+     *          calculated in parallel.
+     */
+    public RBMBuilder batchParallelism(int numThreads) {
+      this.batchParallelism = numThreads;
       return this;
     }
 
@@ -124,6 +134,21 @@ public final class RBM {
 
   }
 
+  private final int[] layerSizes;
+  private final DenseDoubleMatrix[] weights;
+  private final ActivationFunction activationFunction;
+  private final Random random;
+
+  private TrainingType type = TrainingType.CPU;
+  private double lambda;
+  private double hiddenDropoutProbability;
+  private double visibleDropoutProbability;
+  private boolean verbose = false;
+  // if zero, the complete batch learning will be used
+  private int miniBatchSize = 0;
+  // default is a single thread
+  private int batchParallelism = 1;
+
   // serialization constructor
   private RBM(int[] stackedHiddenLayerSizes,
       ActivationFunction activationFunction, TrainingType type) {
@@ -140,6 +165,8 @@ public final class RBM {
     this.hiddenDropoutProbability = rbmBuilder.hiddenDropoutProbability;
     this.visibleDropoutProbability = rbmBuilder.visibleDropoutProbability;
     this.verbose = rbmBuilder.verbose;
+    this.miniBatchSize = rbmBuilder.miniBatchSize;
+    this.batchParallelism = rbmBuilder.batchParallelism;
   }
 
   /**
@@ -172,16 +199,15 @@ public final class RBM {
         System.out.println("Training stack at height: " + i);
       }
       DoubleVector[] currentTrainingSet = i == 0 ? trainingSet : tmpTrainingSet;
-      DenseDoubleMatrix mat = new DenseDoubleMatrix(currentTrainingSet);
       // unfolded contains the bias
-      WeightMatrix unfolded = new WeightMatrix(mat.getColumnCount(),
-          layerSizes[i]);
+      WeightMatrix unfolded = new WeightMatrix(
+          currentTrainingSet[0].getDimension(), layerSizes[i]);
       DenseDoubleVector folded = DenseMatrixFolder.foldMatrices(unfolded
           .getWeights());
       // now do the real training
-      RBMCostFunction fnc = new RBMCostFunction(mat, layerSizes[i],
-          activationFunction, type, lambda, visibleDropoutProbability,
-          hiddenDropoutProbability);
+      RBMCostFunction fnc = new RBMCostFunction(currentTrainingSet,
+          miniBatchSize, batchParallelism, layerSizes[i], activationFunction,
+          type, lambda, visibleDropoutProbability, hiddenDropoutProbability);
       DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
           verbose);
       // get back our weights as a matrix

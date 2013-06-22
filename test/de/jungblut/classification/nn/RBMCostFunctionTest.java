@@ -32,15 +32,15 @@ public class RBMCostFunctionTest extends TestCase {
   @Test
   public void testCostFunction() {
     int hiddenUnits = 2;
-    DenseDoubleMatrix mat = new DenseDoubleMatrix(test);
-    WeightMatrix pInput = new WeightMatrix(mat.getColumnCount(), hiddenUnits);
-    RBMCostFunction fnc = new RBMCostFunction(mat, hiddenUnits,
+    WeightMatrix pInput = new WeightMatrix(test[0].getDimension(), hiddenUnits);
+    RBMCostFunction fnc = new RBMCostFunction(test, 0, 1, hiddenUnits,
         new SigmoidActivationFunction(), TrainingType.CPU, 0d, 0d, 0d);
     DoubleVector theta = GradientDescent.minimizeFunction(fnc,
         DenseMatrixFolder.foldMatrices(pInput.getWeights()), 0.01, 1e-5, 5000,
         false);
     int[][] pms = MultilayerPerceptronCostFunction
-        .computeUnfoldParameters(new int[] { mat.getColumnCount(), hiddenUnits });
+        .computeUnfoldParameters(new int[] { test[0].getDimension(),
+            hiddenUnits });
     DenseDoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta, pms)[0]
         .transpose();
 
