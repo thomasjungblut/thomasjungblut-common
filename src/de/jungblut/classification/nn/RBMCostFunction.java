@@ -59,63 +59,76 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
 
   @Override
   protected Tuple<Double, DoubleVector> evaluateBatch(DoubleVector input,
-      DoubleMatrix x) {
+      DoubleMatrix data) {
     // input contains the weights between the visible and the hidden units
-    DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
-        unfoldParameters);
-    DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
-    DoubleMatrix hiddenActivations = activationFunction.apply(multiply(x,
-        thetas[0], false, true));
+    DenseDoubleMatrix theta = DenseMatrixFolder.unfoldMatrices(input,
+        unfoldParameters)[0].transpose();
+
+    // dropout the input if defined
     if (visibleDropoutProbability != 0d) {
+      data = data.deepCopy();
       // compute dropout on the visible layer
-      MultilayerPerceptronCostFunction.dropout(random, hiddenActivations,
+      MultilayerPerceptronCostFunction.dropout(random, data,
           visibleDropoutProbability);
     }
-    // set out hidden bias back to 1
-    hiddenActivations.setColumnVector(0,
-        DenseDoubleVector.ones(hiddenActivations.getRowCount()));
-    DoubleMatrix positiveAssociations = multiply(x, hiddenActivations, true,
-        false);
-    // binarize to 1 or 0
-    binarize(random, hiddenActivations);
 
-    // start reconstructing the input
-    DoubleMatrix fantasy = activationFunction.apply(multiply(hiddenActivations,
-        thetas[0], false, false));
-    // set out fantasy bias back to 1
-    fantasy.setColumnVector(0, DenseDoubleVector.ones(fantasy.getRowCount()));
-    DoubleMatrix hiddenFantasyActivations = activationFunction.apply(multiply(
-        fantasy, thetas[0], false, true));
+    /*
+     * POSITIVE PHASE
+     */
+    DoubleMatrix positiveHiddenProbs = activationFunction.apply(multiply(data,
+        theta, false, false));
+    // set out hidden bias back to 1
+    positiveHiddenProbs.setColumnVector(0,
+        DenseDoubleVector.ones(positiveHiddenProbs.getRowCount()));
+    DoubleMatrix positiveAssociations = multiply(data, positiveHiddenProbs,
+        true, false);
+    /*
+     * END OF POSITIVE PHASE
+     */
+    binarize(random, positiveHiddenProbs);
     if (hiddenDropoutProbability != 0d) {
       // compute dropout on the hidden layer
-      MultilayerPerceptronCostFunction.dropout(random,
-          hiddenFantasyActivations, hiddenDropoutProbability);
+      MultilayerPerceptronCostFunction.dropout(random, positiveHiddenProbs,
+          hiddenDropoutProbability);
     }
-
-    DoubleMatrix negativeAssociations = fantasy.transpose().multiply(
-        hiddenFantasyActivations);
+    /*
+     * START NEGATIVE PHASE
+     */
+    DoubleMatrix negativeData = activationFunction.apply(multiply(
+        positiveHiddenProbs, theta, false, true));
+    negativeData.setColumnVector(0,
+        DenseDoubleVector.ones(negativeData.getRowCount()));
+    DoubleMatrix negativeHiddenProbs = activationFunction.apply(multiply(
+        negativeData, theta, false, false));
+    negativeHiddenProbs.setColumnVector(0,
+        DenseDoubleVector.ones(negativeHiddenProbs.getRowCount()));
+    DoubleMatrix negativeAssociations = multiply(negativeData,
+        negativeHiddenProbs, true, false);
+    /*
+     * END OF NEGATIVE PHASE
+     */
 
     // measure a very simple reconstruction error
-    double j = x.subtract(fantasy).pow(2).sum();
+    double j = data.subtract(negativeData).pow(2).sum();
 
-    // calculate the approx. gradient and make it negative, so it works with
-    // gradient descent
-    thetaGradients[0] = (DenseDoubleMatrix) positiveAssociations
-        .subtract(negativeAssociations).transpose().divide(x.getRowCount())
-        .multiply(-1d);
+    // calculate the approx. gradient and make it negative.
+    // also transpose, because we transposed theta at the top.
+    DoubleMatrix thetaGradient = positiveAssociations
+        .subtract(negativeAssociations).divide(data.getRowCount()).multiply(-1)
+        .transpose();
 
     // calculate the weight decay and apply it (but not on the bias unit!)
     if (lambda != 0d) {
-      thetaGradients[0] = (DenseDoubleMatrix) thetaGradients[0].add((thetas[0]
-          .multiply(lambda / x.getRowCount())));
+      thetaGradient = thetaGradient.add((theta.multiply(lambda
+          / data.getRowCount())));
       // subtract the regularized bias
-      DoubleVector regBias = thetas[0].slice(0, thetas[0].getRowCount(), 0, 1)
-          .multiply(lambda / x.getRowCount()).getColumnVector(0);
-      thetaGradients[0].setColumnVector(0, regBias);
+      DoubleVector regBias = theta.slice(0, theta.getRowCount(), 0, 1)
+          .multiply(lambda / data.getRowCount()).getColumnVector(0);
+      thetaGradient.setColumnVector(0, regBias);
     }
 
     return new Tuple<Double, DoubleVector>(j,
-        DenseMatrixFolder.foldMatrices(thetaGradients));
+        DenseMatrixFolder.foldMatrices((DenseDoubleMatrix) thetaGradient));
   }
 
   // this is a test design opposed to the inheritance design of the multilayer

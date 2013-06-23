@@ -70,12 +70,12 @@ public class RBMTest extends TestCase {
     predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
         -1, -1, -1, -1 }));
     assertEquals(1, (int) predict.get(0));
-    assertEquals(0, (int) predict.get(1));
+    assertEquals(1, (int) predict.get(1));
 
     predict = single.predict(new DenseDoubleVector(new double[] { 1, 1, -1, -1,
         -1, -1 }));
-    assertEquals(0.98024, predict.get(0), 1e-4);
-    assertEquals(0.01041, predict.get(1), 1e-4);
+    assertEquals(0.97586, predict.get(0), 1e-4);
+    assertEquals(0.93701, predict.get(1), 1e-4);
 
   }
 }
