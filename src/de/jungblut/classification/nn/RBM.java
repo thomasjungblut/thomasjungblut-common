@@ -199,15 +199,20 @@ public final class RBM {
         System.out.println("Training stack at height: " + i);
       }
       DoubleVector[] currentTrainingSet = i == 0 ? trainingSet : tmpTrainingSet;
-      // unfolded contains the bias
-      WeightMatrix unfolded = new WeightMatrix(
-          currentTrainingSet[0].getDimension(), layerSizes[i]);
-      DenseDoubleVector folded = DenseMatrixFolder.foldMatrices(unfolded
-          .getWeights());
+      // render the activation and binarize
+      for (int v = 0; v < trainingSet.length; v++) {
+        trainingSet[v] = activationFunction.apply(trainingSet[v]);
+      }
+      RBMCostFunction.binarize(random, currentTrainingSet);
+      // add the bias to hidden and visible layer, random init with 0.1*randn
+      DenseDoubleMatrix start = new DenseDoubleMatrix(layerSizes[i] + 1,
+          currentTrainingSet[0].getDimension() + 1, random).multiply(0.1d);
+      DenseDoubleVector folded = DenseMatrixFolder.foldMatrices(start);
       // now do the real training
       RBMCostFunction fnc = new RBMCostFunction(currentTrainingSet,
           miniBatchSize, batchParallelism, layerSizes[i], activationFunction,
-          type, lambda, visibleDropoutProbability, hiddenDropoutProbability);
+          type, lambda, visibleDropoutProbability, hiddenDropoutProbability,
+          random);
       DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
           verbose);
       // get back our weights as a matrix
@@ -220,9 +225,12 @@ public final class RBM {
           tmpTrainingSet = new DoubleVector[trainingSet.length];
         }
         for (int row = 0; row < currentTrainingSet.length; row++) {
-          // we binarize between the layers
+          // we dont binarize between here, as it will happen before minimizing
           tmpTrainingSet[row] = computeHiddenActivations(
-              currentTrainingSet[row], weights[i], true);
+              currentTrainingSet[row], weights[i], false);
+          // slice the old bias off
+          tmpTrainingSet[row] = tmpTrainingSet[row].slice(1,
+              tmpTrainingSet[row].getDimension());
         }
 
       }
@@ -237,11 +245,14 @@ public final class RBM {
    *         activations on the last layer.
    */
   public DoubleVector predictBinary(DoubleVector input) {
+    input = activationFunction.apply(input);
+    RBMCostFunction.binarize(random, input);
     DoubleVector lastOutput = input;
     for (int i = 0; i < layerSizes.length; i++) {
       lastOutput = computeHiddenActivations(lastOutput, weights[i], true);
     }
-    return lastOutput;
+    // slice the hidden bias away
+    return lastOutput.slice(1, lastOutput.getDimension());
   }
 
   /**
@@ -252,12 +263,15 @@ public final class RBM {
    *         last layer.
    */
   public DoubleVector predict(DoubleVector input) {
+    input = activationFunction.apply(input);
+    RBMCostFunction.binarize(random, input);
     DoubleVector lastOutput = input;
     for (int i = 0; i < layerSizes.length; i++) {
       lastOutput = computeHiddenActivations(lastOutput, weights[i],
           !(i + 1 == layerSizes.length));
     }
-    return lastOutput;
+    // slice the hidden bias away
+    return lastOutput.slice(1, lastOutput.getDimension());
   }
 
   /**

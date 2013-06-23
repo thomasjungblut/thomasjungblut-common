@@ -37,42 +37,47 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
   private final double lambda;
   private final double visibleDropoutProbability;
   private final double hiddenDropoutProbability;
+  private final Random random;
 
+  // the trainingset should be activated and binarized already
   public RBMCostFunction(DoubleVector[] currentTrainingSet, int batchSize,
       int numThreads, int numHiddenUnits,
       ActivationFunction activationFunction, TrainingType type, double lambda,
-      double visibleDropoutProbability, double hiddenDropoutProbability) {
+      double visibleDropoutProbability, double hiddenDropoutProbability,
+      Random random) {
     super(currentTrainingSet, batchSize, numThreads);
     this.activationFunction = activationFunction;
     this.type = type;
     this.lambda = lambda;
     this.visibleDropoutProbability = visibleDropoutProbability;
     this.hiddenDropoutProbability = hiddenDropoutProbability;
+    this.random = random;
     this.unfoldParameters = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(new int[] {
-            currentTrainingSet[0].getDimension(), numHiddenUnits });
+            currentTrainingSet[0].getDimension(), numHiddenUnits + 1 });
   }
 
   @Override
   protected Tuple<Double, DoubleVector> evaluateBatch(DoubleVector input,
       DoubleMatrix x) {
-    final Random rnd = new Random(RBM.SEED);
     // input contains the weights between the visible and the hidden units
     DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters);
     DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
-
     DoubleMatrix hiddenActivations = activationFunction.apply(multiply(x,
         thetas[0], false, true));
     if (visibleDropoutProbability != 0d) {
       // compute dropout on the visible layer
-      MultilayerPerceptronCostFunction.dropout(rnd, hiddenActivations,
+      MultilayerPerceptronCostFunction.dropout(random, hiddenActivations,
           visibleDropoutProbability);
     }
+    // set out hidden bias back to 1
+    hiddenActivations.setColumnVector(0,
+        DenseDoubleVector.ones(hiddenActivations.getRowCount()));
     DoubleMatrix positiveAssociations = multiply(x, hiddenActivations, true,
         false);
     // binarize to 1 or 0
-    binarize(rnd, hiddenActivations);
+    binarize(random, hiddenActivations);
 
     // start reconstructing the input
     DoubleMatrix fantasy = activationFunction.apply(multiply(hiddenActivations,
@@ -83,8 +88,8 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
         fantasy, thetas[0], false, true));
     if (hiddenDropoutProbability != 0d) {
       // compute dropout on the hidden layer
-      MultilayerPerceptronCostFunction.dropout(rnd, hiddenFantasyActivations,
-          hiddenDropoutProbability);
+      MultilayerPerceptronCostFunction.dropout(random,
+          hiddenFantasyActivations, hiddenDropoutProbability);
     }
 
     DoubleMatrix negativeAssociations = fantasy.transpose().multiply(
@@ -144,19 +149,28 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
     return this.unfoldParameters;
   }
 
-  static void binarize(Random r, DoubleMatrix hiddenActivations) {
+  static DoubleVector[] binarize(Random r, DoubleVector[] hiddenActivations) {
+    for (int i = 0; i < hiddenActivations.length; i++) {
+      binarize(r, hiddenActivations[i]);
+    }
+    return hiddenActivations;
+  }
+
+  static DoubleMatrix binarize(Random r, DoubleMatrix hiddenActivations) {
     for (int i = 0; i < hiddenActivations.getRowCount(); i++) {
       for (int j = 0; j < hiddenActivations.getColumnCount(); j++) {
         hiddenActivations.set(i, j,
             hiddenActivations.get(i, j) > r.nextDouble() ? 1d : 0d);
       }
     }
+    return hiddenActivations;
   }
 
-  static void binarize(Random r, DoubleVector v) {
+  static DoubleVector binarize(Random r, DoubleVector v) {
     for (int j = 0; j < v.getDimension(); j++) {
       v.set(j, v.get(j) > r.nextDouble() ? 1d : 0d);
     }
+    return v;
   }
 
 }

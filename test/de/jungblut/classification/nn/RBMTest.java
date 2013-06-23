@@ -25,58 +25,57 @@ public class RBMTest extends TestCase {
     single.train(RBMCostFunctionTest.test, 0.01, 5000);
 
     DoubleVector predict = single.predictBinary(new DenseDoubleVector(
-        new double[] { 0, 0, 0, 1, 1, 0 }));
-
-    assertEquals(0, (int) predict.get(0));
-    assertEquals(1, (int) predict.get(1));
-
-    predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
-        0, 0, 0, 0 }));
+        new double[] { -1, -1, -1, 1, 1, -1 }));
     assertEquals(1, (int) predict.get(0));
     assertEquals(0, (int) predict.get(1));
+
+    predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
+        -1, -1, -1, -1 }));
+    assertEquals(0, (int) predict.get(0));
+    assertEquals(1, (int) predict.get(1));
 
   }
 
   @Test
   public void testSingleRBM() throws Exception {
-    RBM single = RBM.single(2);
+    RBM single = RBMBuilder.create(new SigmoidActivationFunction(), 2)
+        .miniBatchSize(0).build();
 
-    single.train(RBMCostFunctionTest.test, 0.01, 5000);
+    single.train(RBMCostFunctionTest.test, 0.1, 5000);
 
     DoubleVector predict = single.predictBinary(new DenseDoubleVector(
-        new double[] { 0, 0, 0, 1, 1, 0 }));
-
-    assertEquals(0, (int) predict.get(0));
-    assertEquals(1, (int) predict.get(1));
-
-    predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
-        0, 0, 0, 0 }));
+        new double[] { -1, -1, -1, 1, 1, -1 }));
     assertEquals(1, (int) predict.get(0));
     assertEquals(0, (int) predict.get(1));
+
+    predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
+        -1, -1, -1, -1 }));
+    assertEquals(0, (int) predict.get(0));
+    assertEquals(1, (int) predict.get(1));
 
   }
 
   @Test
   public void testStackedRBM() throws Exception {
-    RBM single = RBM.stacked(4, 3, 2);
+    RBM single = RBMBuilder.create(new SigmoidActivationFunction(), 4, 3, 2)
+        .miniBatchSize(0).build();
 
-    single.train(RBMCostFunctionTest.test, 0.01, 5000);
+    single.train(RBMCostFunctionTest.test, 0.1, 5000);
 
     DoubleVector predict = single.predictBinary(new DenseDoubleVector(
-        new double[] { 0, 0, 0, 1, 1, 0 }));
-
-    assertEquals(1, (int) predict.get(0));
-    assertEquals(0, (int) predict.get(1));
-
-    predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
-        0, 0, 0, 0 }));
+        new double[] { -1, -1, -1, 1, 1, -1 }));
     assertEquals(0, (int) predict.get(0));
     assertEquals(1, (int) predict.get(1));
 
-    predict = single.predict(new DenseDoubleVector(new double[] { 1, 1, 0, 0,
-        0, 0 }));
-    assertEquals(0.45572, predict.get(0), 1e-4);
-    assertEquals(0.8714, predict.get(1), 1e-4);
+    predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
+        -1, -1, -1, -1 }));
+    assertEquals(1, (int) predict.get(0));
+    assertEquals(0, (int) predict.get(1));
+
+    predict = single.predict(new DenseDoubleVector(new double[] { 1, 1, -1, -1,
+        -1, -1 }));
+    assertEquals(0.98024, predict.get(0), 1e-4);
+    assertEquals(0.01041, predict.get(1), 1e-4);
 
   }
 }
