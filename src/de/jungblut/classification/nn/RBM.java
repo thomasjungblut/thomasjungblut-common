@@ -200,8 +200,8 @@ public final class RBM {
       }
       DoubleVector[] currentTrainingSet = i == 0 ? trainingSet : tmpTrainingSet;
       // render the activation and binarize
-      for (int v = 0; v < trainingSet.length; v++) {
-        trainingSet[v] = activationFunction.apply(trainingSet[v]);
+      for (int v = 0; v < currentTrainingSet.length; v++) {
+        currentTrainingSet[v] = activationFunction.apply(currentTrainingSet[v]);
       }
       RBMCostFunction.binarize(random, currentTrainingSet);
       // add the bias to hidden and visible layer, random init with 0.1*randn
@@ -222,7 +222,7 @@ public final class RBM {
       // now we can get our new training set for the next stack
       if (i + 1 != layerSizes.length) {
         if (tmpTrainingSet == null) {
-          tmpTrainingSet = new DoubleVector[trainingSet.length];
+          tmpTrainingSet = new DoubleVector[currentTrainingSet.length];
         }
         for (int row = 0; row < currentTrainingSet.length; row++) {
           // we dont binarize between here, as it will happen before minimizing
