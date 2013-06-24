@@ -57,25 +57,25 @@ public class RBMTest extends TestCase {
 
   @Test
   public void testStackedRBM() throws Exception {
-    RBM single = RBMBuilder.create(new SigmoidActivationFunction(), 4, 3, 2)
+    RBM single = RBMBuilder.create(new SigmoidActivationFunction(), 4, 2)
         .miniBatchSize(0).build();
 
     single.train(RBMCostFunctionTest.test, 0.1, 5000);
 
     DoubleVector predict = single.predictBinary(new DenseDoubleVector(
-        new double[] { -1, -1, -1, 1, 1, -1 }));
+        new double[] { 1, 1, 1, 1, 1, 1 }));
     assertEquals(0, (int) predict.get(0));
     assertEquals(1, (int) predict.get(1));
 
     predict = single.predictBinary(new DenseDoubleVector(new double[] { 1, 1,
         -1, -1, -1, -1 }));
-    assertEquals(1, (int) predict.get(0));
-    assertEquals(1, (int) predict.get(1));
+    assertEquals(0, (int) predict.get(0));
+    assertEquals(0, (int) predict.get(1));
 
     predict = single.predict(new DenseDoubleVector(new double[] { 1, 1, -1, -1,
         -1, -1 }));
-    assertEquals(0.97586, predict.get(0), 1e-4);
-    assertEquals(0.93701, predict.get(1), 1e-4);
+    assertEquals(0.98915, predict.get(0), 1e-4);
+    assertEquals(0.01694, predict.get(1), 1e-4);
 
   }
 }

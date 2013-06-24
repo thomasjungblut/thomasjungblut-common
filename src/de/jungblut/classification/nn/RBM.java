@@ -184,21 +184,21 @@ public final class RBM {
   /**
    * Trains the RBM on the given training set.
    * 
-   * @param trainingSet the training set to train on.
+   * @param currentTrainingSet the training set to train on. This trainingset
+   *          will be mutated and changed during the training, so make sure you
+   *          make a defensive copy if you need the examples later on.
    * @param minimizer the minimizer to use. Note that the costfunction's
    *          gradient isn't the real gradient and thus can't be optimized by
    *          line searching minimizers like {@link Fmincg}.
    * @param numIterations how many iterations of training have to be done. (if
    *          converged before, it will stop training)
    */
-  public void train(DoubleVector[] trainingSet, Minimizer minimizer,
+  public void train(DoubleVector[] currentTrainingSet, Minimizer minimizer,
       int numIterations) {
-    DoubleVector[] tmpTrainingSet = null;
     for (int i = 0; i < layerSizes.length; i++) {
       if (verbose) {
         System.out.println("Training stack at height: " + i);
       }
-      DoubleVector[] currentTrainingSet = i == 0 ? trainingSet : tmpTrainingSet;
       // render the activation and binarize
       for (int v = 0; v < currentTrainingSet.length; v++) {
         currentTrainingSet[v] = activationFunction.apply(currentTrainingSet[v]);
@@ -221,16 +221,13 @@ public final class RBM {
       weights[i] = thetaMat;
       // now we can get our new training set for the next stack
       if (i + 1 != layerSizes.length) {
-        if (tmpTrainingSet == null) {
-          tmpTrainingSet = new DoubleVector[currentTrainingSet.length];
-        }
         for (int row = 0; row < currentTrainingSet.length; row++) {
           // we dont binarize between here, as it will happen before minimizing
-          tmpTrainingSet[row] = computeHiddenActivations(
+          currentTrainingSet[row] = computeHiddenActivations(
               currentTrainingSet[row], weights[i], false);
           // slice the old bias off
-          tmpTrainingSet[row] = tmpTrainingSet[row].slice(1,
-              tmpTrainingSet[row].getDimension());
+          currentTrainingSet[row] = currentTrainingSet[row].slice(1,
+              currentTrainingSet[row].getDimension());
         }
 
       }
