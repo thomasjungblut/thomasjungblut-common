@@ -116,24 +116,23 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
     double j = data.subtract(negativeData).pow(2).sum();
 
     // calculate the approx. gradient and make it negative.
-    // also transpose, because we transposed theta at the top.
     DoubleMatrix thetaGradient = positiveAssociations
-        .subtract(negativeAssociations).divide(data.getRowCount()).multiply(-1)
-        .transpose();
+        .subtract(negativeAssociations).divide(data.getRowCount()).multiply(-1);
 
     // calculate the weight decay and apply it (but not on the bias unit!)
     if (lambda != 0d) {
-      DenseDoubleMatrix trans = theta.transpose();
-      thetaGradient = thetaGradient.add((trans.multiply(lambda
-          / data.getRowCount())));
+      thetaGradient = thetaGradient.add(theta.multiply(lambda
+          / data.getRowCount()));
       // subtract the regularized bias
-      DoubleVector regBias = trans.slice(0, trans.getRowCount(), 0, 1)
+      DoubleVector regBias = theta.slice(0, theta.getRowCount(), 0, 1)
           .multiply(lambda / data.getRowCount()).getColumnVector(0);
       thetaGradient.setColumnVector(0, regBias);
     }
 
+    // transpose the gradient, because we transposed theta at the top.
     return new Tuple<Double, DoubleVector>(j,
-        DenseMatrixFolder.foldMatrices((DenseDoubleMatrix) thetaGradient));
+        DenseMatrixFolder.foldMatrices((DenseDoubleMatrix) thetaGradient
+            .transpose()));
   }
 
   // this is a test design opposed to the inheritance design of the multilayer
