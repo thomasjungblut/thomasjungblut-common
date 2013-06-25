@@ -25,9 +25,6 @@ import de.jungblut.writable.MatrixWritable;
  */
 public final class RBM {
 
-  // test seed
-  static long SEED = System.currentTimeMillis();
-
   public static class RBMBuilder {
 
     private final int[] layerSizes;
@@ -156,7 +153,7 @@ public final class RBM {
     this.activationFunction = activationFunction;
     this.weights = new DenseDoubleMatrix[layerSizes.length];
     this.type = type;
-    random = new Random(SEED);
+    random = new Random();
   }
 
   private RBM(RBMBuilder rbmBuilder) {
@@ -213,7 +210,7 @@ public final class RBM {
       RBMCostFunction fnc = new RBMCostFunction(currentTrainingSet,
           miniBatchSize, batchParallelism, layerSizes[i], activationFunction,
           type, lambda, visibleDropoutProbability, hiddenDropoutProbability,
-          random);
+          System.currentTimeMillis());
       DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
           verbose);
       // get back our weights as a matrix

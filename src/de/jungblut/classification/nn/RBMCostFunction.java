@@ -44,14 +44,14 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
       int numThreads, int numHiddenUnits,
       ActivationFunction activationFunction, TrainingType type, double lambda,
       double visibleDropoutProbability, double hiddenDropoutProbability,
-      Random random) {
+      long seed) {
     super(currentTrainingSet, batchSize, numThreads);
     this.activationFunction = activationFunction;
     this.type = type;
     this.lambda = lambda;
     this.visibleDropoutProbability = visibleDropoutProbability;
     this.hiddenDropoutProbability = hiddenDropoutProbability;
-    this.random = random;
+    this.random = new Random(seed);
     this.unfoldParameters = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(new int[] {
             currentTrainingSet[0].getDimension(), numHiddenUnits + 1 });
@@ -60,6 +60,10 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
   @Override
   protected Tuple<Double, DoubleVector> evaluateBatch(DoubleVector input,
       DoubleMatrix data) {
+    // TODO unrolling is a problem when training in parallel, because the
+    // matrices need to be unrolled in every thread- thus consume a multitude of
+    // memory than really needed.
+
     // input contains the weights between the visible and the hidden units
     DenseDoubleMatrix theta = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters)[0].transpose();
