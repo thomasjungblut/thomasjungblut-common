@@ -119,14 +119,10 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
     DoubleMatrix thetaGradient = positiveAssociations
         .subtract(negativeAssociations).divide(data.getRowCount()).multiply(-1);
 
-    // calculate the weight decay and apply it (but not on the bias unit!)
+    // calculate the weight decay and apply it
     if (lambda != 0d) {
-      thetaGradient = thetaGradient.add(theta.multiply(lambda
+      thetaGradient = thetaGradient.add(thetaGradient.multiply(lambda
           / data.getRowCount()));
-      // subtract the regularized bias
-      DoubleVector regBias = theta.slice(0, theta.getRowCount(), 0, 1)
-          .multiply(lambda / data.getRowCount()).getColumnVector(0);
-      thetaGradient.setColumnVector(0, regBias);
     }
 
     // transpose the gradient, because we transposed theta at the top.
