@@ -208,6 +208,7 @@ public final class RBM {
       DenseDoubleMatrix start = new DenseDoubleMatrix(layerSizes[i] + 1,
           currentTrainingSet[0].getDimension() + 1, random).multiply(0.1d);
       DenseDoubleVector folded = DenseMatrixFolder.foldMatrices(start);
+      start = null;
       // now do the real training
       RBMCostFunction fnc = new RBMCostFunction(currentTrainingSet,
           miniBatchSize, batchParallelism, layerSizes[i], activationFunction,
