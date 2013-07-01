@@ -35,6 +35,7 @@ public final class RBM {
     private double hiddenDropoutProbability;
     private double visibleDropoutProbability;
     private boolean verbose = false;
+    private boolean stochastic = false;
     private int miniBatchSize;
     private int batchParallelism = Runtime.getRuntime().availableProcessors();
 
@@ -84,6 +85,21 @@ public final class RBM {
      */
     public RBMBuilder verbose() {
       return verbose(true);
+    }
+
+    /**
+     * Sets the training mode to stochastic.
+     */
+    public RBMBuilder stochastic() {
+      return stochastic(true);
+    }
+
+    /**
+     * If verbose is true, stochastic training will be used.
+     */
+    public RBMBuilder stochastic(boolean stochastic) {
+      this.stochastic = stochastic;
+      return this;
     }
 
     /**
@@ -140,7 +156,8 @@ public final class RBM {
   private double lambda;
   private double hiddenDropoutProbability;
   private double visibleDropoutProbability;
-  private boolean verbose = false;
+  private boolean stochastic;
+  private boolean verbose;
   // if zero, the complete batch learning will be used
   private int miniBatchSize = 0;
   // default is a single thread
@@ -164,6 +181,7 @@ public final class RBM {
     this.verbose = rbmBuilder.verbose;
     this.miniBatchSize = rbmBuilder.miniBatchSize;
     this.batchParallelism = rbmBuilder.batchParallelism;
+    this.stochastic = rbmBuilder.stochastic;
   }
 
   /**
@@ -210,7 +228,7 @@ public final class RBM {
       RBMCostFunction fnc = new RBMCostFunction(currentTrainingSet,
           miniBatchSize, batchParallelism, layerSizes[i], activationFunction,
           type, lambda, visibleDropoutProbability, hiddenDropoutProbability,
-          System.currentTimeMillis());
+          System.currentTimeMillis(), stochastic);
       DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
           verbose);
       // get back our weights as a matrix

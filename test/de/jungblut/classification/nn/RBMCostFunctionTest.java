@@ -39,7 +39,8 @@ public class RBMCostFunctionTest extends TestCase {
     WeightMatrix pInput = new WeightMatrix(test[0].getDimension(),
         hiddenUnits + 1);
     RBMCostFunction fnc = new RBMCostFunction(test, 0, 1, hiddenUnits,
-        new SigmoidActivationFunction(), TrainingType.CPU, 0d, 0d, 0d, 0l);
+        new SigmoidActivationFunction(), TrainingType.CPU, 0d, 0d, 0d, 0l,
+        false);
     DoubleVector theta = GradientDescent.minimizeFunction(fnc,
         DenseMatrixFolder.foldMatrices(pInput.getWeights()), 0.01, 1e-5, 5000,
         false);

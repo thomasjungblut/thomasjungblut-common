@@ -44,8 +44,8 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
       int numThreads, int numHiddenUnits,
       ActivationFunction activationFunction, TrainingType type, double lambda,
       double visibleDropoutProbability, double hiddenDropoutProbability,
-      long seed) {
-    super(currentTrainingSet, batchSize, numThreads);
+      long seed, boolean stochastic) {
+    super(currentTrainingSet, batchSize, numThreads, stochastic);
     this.activationFunction = activationFunction;
     this.type = type;
     this.lambda = lambda;
