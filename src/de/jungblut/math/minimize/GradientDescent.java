@@ -9,8 +9,9 @@ import de.jungblut.math.tuple.Tuple;
 
 /**
  * Gradient descent implementation with some neat features like momentum,
- * divergence detection, delta breaks and bold driver adaptive learning rates.
- * For more sophisticated configuration use the {@link GradientDescentBuilder}.
+ * divergence detection, delta breaks and bold driver and scheduled annealing
+ * adaptive learning rates. For more sophisticated configuration use the
+ * {@link GradientDescentBuilder}.
  * 
  * @author thomas.jungblut
  * 
@@ -28,15 +29,14 @@ public final class GradientDescent extends AbstractMinimizer {
     private boolean boldDriver;
     private double boldIncreasePercentage;
     private double boldDecreasePercentage;
+    private int annealingIteration = -1;
 
     private GradientDescentBuilder(double alpha) {
       this.alpha = alpha;
     }
 
     public GradientDescent build() {
-      return new GradientDescent(alpha, breakDifference, momentum,
-          breakOnDivergence, boldDriver, boldIncreasePercentage,
-          boldDecreasePercentage);
+      return new GradientDescent(this);
     }
 
     /**
@@ -113,6 +113,22 @@ public final class GradientDescent extends AbstractMinimizer {
     }
 
     /**
+     * Sets a simple annealing (alpha / (1+current_iteration / phi)) where phi
+     * is the given parameter here. This will gradually lower the global
+     * learning rate after the given amount of iterations.
+     * 
+     * @param iteration the iteration to start annealing.
+     * @return the builder again.
+     */
+    public GradientDescentBuilder annealingAfter(int iteration) {
+      Preconditions.checkArgument(iteration > 0,
+          "Annealing can only kick in after the first iteration! Given: "
+              + iteration);
+      this.annealingIteration = iteration;
+      return this;
+    }
+
+    /**
      * Creates a new builder.
      * 
      * @param alpha the learning rate to set.
@@ -127,22 +143,21 @@ public final class GradientDescent extends AbstractMinimizer {
   private final boolean breakOnDivergence;
   private final double breakDifference;
   private final double momentum;
+  private final double alpha;
+  private final boolean boldDriver;
+  private final double boldIncreasePercentage;
+  private final double boldDecreasePercentage;
+  private final int annealingIteration;
 
-  private double alpha;
-  private boolean boldDriver;
-  private double boldIncreasePercentage;
-  private double boldDecreasePercentage;
-
-  private GradientDescent(double alpha, double diff, double momentum,
-      boolean breakOnDivergence, boolean boldDriver,
-      double boldIncreasePercentage, double boldDecreasePercentage) {
-    this.alpha = alpha;
-    this.breakDifference = diff;
-    this.momentum = momentum;
-    this.breakOnDivergence = breakOnDivergence;
-    this.boldDriver = boldDriver;
-    this.boldIncreasePercentage = boldIncreasePercentage;
-    this.boldDecreasePercentage = boldDecreasePercentage;
+  private GradientDescent(GradientDescentBuilder builder) {
+    this.alpha = builder.alpha;
+    this.breakDifference = builder.breakDifference;
+    this.momentum = builder.momentum;
+    this.breakOnDivergence = builder.breakOnDivergence;
+    this.boldDriver = builder.boldDriver;
+    this.boldIncreasePercentage = builder.boldIncreasePercentage;
+    this.boldDecreasePercentage = builder.boldDecreasePercentage;
+    this.annealingIteration = builder.annealingIteration;
   }
 
   /**
@@ -150,7 +165,7 @@ public final class GradientDescent extends AbstractMinimizer {
    * @param limit the delta in cost to archieve to break the iterations.
    */
   public GradientDescent(double alpha, double limit) {
-    this(alpha, limit, 0d, false, false, 0d, 0d);
+    this(GradientDescentBuilder.create(alpha).breakOnDifference(limit));
   }
 
   @Override
@@ -163,6 +178,7 @@ public final class GradientDescent extends AbstractMinimizer {
     DoubleVector lastTheta = null;
     DoubleVector lastGradient = null;
     DoubleVector theta = pInput;
+    double alpha = this.alpha;
     for (int iteration = 0; iteration < maxIterations; iteration++) {
       Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta);
       if (verbose) {
@@ -201,6 +217,11 @@ public final class GradientDescent extends AbstractMinimizer {
           }
         }
         lastGradient = gradient;
+      }
+      // check annealing
+      if (annealingIteration > 0) {
+        // always pick the initial learning rate
+        alpha = this.alpha / (1d + iteration / annealingIteration);
       }
       // save our last parameter
       lastTheta = theta;
