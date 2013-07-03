@@ -258,14 +258,7 @@ public final class RBM {
    *         activations on the last layer.
    */
   public DoubleVector predictBinary(DoubleVector input) {
-    input = activationFunction.apply(input);
-    RBMCostFunction.binarize(random, input);
-    DoubleVector lastOutput = input;
-    for (int i = 0; i < layerSizes.length; i++) {
-      lastOutput = computeHiddenActivations(lastOutput, weights[i], true);
-    }
-    // slice the hidden bias away
-    return lastOutput.slice(1, lastOutput.getDimension());
+    return predictInternal(input, true);
   }
 
   /**
@@ -276,12 +269,50 @@ public final class RBM {
    *         last layer.
    */
   public DoubleVector predict(DoubleVector input) {
+    return predictInternal(input, false);
+  }
+
+  private DoubleVector predictInternal(DoubleVector input, boolean binarize) {
     input = activationFunction.apply(input);
     RBMCostFunction.binarize(random, input);
     DoubleVector lastOutput = input;
     for (int i = 0; i < layerSizes.length; i++) {
-      lastOutput = computeHiddenActivations(lastOutput, weights[i],
-          !(i + 1 == layerSizes.length));
+      lastOutput = computeHiddenActivations(lastOutput, weights[i], binarize);
+    }
+    // slice the hidden bias away
+    return lastOutput.slice(1, lastOutput.getDimension());
+  }
+
+  /**
+   * Creates a binary reconstruction of the given hidden activations. (That,
+   * what is returned by #predict and maybe does a complete pass throughout the
+   * deep belief net).
+   * 
+   * @param hiddenActivations the activations of the predict method.
+   * @return the reconstructed binarized input vector.
+   */
+  public DoubleVector reconstructBinary(DoubleVector hiddenActivations) {
+    return reconstructInternal(hiddenActivations, true);
+  }
+
+  /**
+   * Creates a reconstruction of the given hidden activations. (That, what is
+   * returned by #predict and maybe does a complete pass throughout the deep
+   * belief net).
+   * 
+   * @param hiddenActivations the activations of the predict method.
+   * @return the reconstructed input vector.
+   */
+  public DoubleVector reconstruct(DoubleVector hiddenActivations) {
+    return reconstructInternal(hiddenActivations, false);
+  }
+
+  private DoubleVector reconstructInternal(DoubleVector hiddenActivations,
+      boolean binarize) {
+    DoubleVector lastOutput = hiddenActivations;
+    for (int i = weights.length - 1; i >= 0; i--) {
+      lastOutput = computeHiddenActivations(lastOutput, weights[i].transpose(),
+          binarize);
     }
     // slice the hidden bias away
     return lastOutput.slice(1, lastOutput.getDimension());
