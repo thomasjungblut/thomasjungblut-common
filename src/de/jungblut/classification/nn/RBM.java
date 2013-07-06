@@ -150,7 +150,6 @@ public final class RBM {
   private final int[] layerSizes;
   private final DenseDoubleMatrix[] weights;
   private final ActivationFunction activationFunction;
-  private final Random random;
 
   private TrainingType type = TrainingType.CPU;
   private double lambda;
@@ -162,6 +161,8 @@ public final class RBM {
   private int miniBatchSize = 0;
   // default is a single thread
   private int batchParallelism = 1;
+
+  private Random random;
 
   // serialization constructor
   private RBM(int[] stackedHiddenLayerSizes,
@@ -323,6 +324,13 @@ public final class RBM {
    */
   public DenseDoubleMatrix[] getWeights() {
     return this.weights;
+  }
+
+  /**
+   * Sets the internally used random.
+   */
+  public void setRandom(Random random) {
+    this.random = random;
   }
 
   private DoubleVector computeHiddenActivations(DoubleVector input,
