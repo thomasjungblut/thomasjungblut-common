@@ -17,10 +17,11 @@ import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.writable.MatrixWritable;
 
 /**
- * Class for training/stacking RBMs. Stacked RBMs are called DBM (deep belief
- * net). Usually every layer of a deep belief net is training greedily with the
- * contrastive divergence algorithm implemented in {@link RBMCostFunction}.
- * Create new instances with the {@link RBMBuilder}.
+ * Class for training and stacking Restricted Boltzmann Machines (RBMs). Stacked
+ * RBMs are called DBN (deep belief net). Usually every layer of a deep belief
+ * net is training greedily with the contrastive divergence algorithm
+ * implemented in {@link RBMCostFunction}. Create new instances with the
+ * {@link RBMBuilder} or with the static factory methods.
  * 
  * @author thomas.jungblut
  * 
@@ -155,8 +156,13 @@ public final class RBM {
 
   private TrainingType type = TrainingType.CPU;
   private double lambda;
+
+  // TODO discriminative fine tuning with backprop and dropout
+  @SuppressWarnings("unused")
   private double hiddenDropoutProbability;
+  @SuppressWarnings("unused")
   private double visibleDropoutProbability;
+
   private boolean stochastic;
   private boolean verbose;
   // if zero, the complete batch learning will be used
@@ -218,10 +224,6 @@ public final class RBM {
       if (verbose) {
         System.out.println("Training stack at height: " + i);
       }
-      // render the activation
-      for (int v = 0; v < currentTrainingSet.length; v++) {
-        currentTrainingSet[v] = activationFunction.apply(currentTrainingSet[v]);
-      }
       // add the bias to hidden and visible layer, random init with 0.1*randn
       DenseDoubleMatrix start = new DenseDoubleMatrix(layerSizes[i] + 1,
           currentTrainingSet[0].getDimension() + 1, new Random(seed))
@@ -248,7 +250,6 @@ public final class RBM {
               currentTrainingSet[row].getDimension());
         }
       }
-      // TODO discriminative fine tuning with backprop and dropout
     }
   }
 
@@ -260,7 +261,6 @@ public final class RBM {
    *         last layer.
    */
   public DoubleVector predict(DoubleVector input) {
-    input = activationFunction.apply(input);
     DoubleVector lastOutput = input;
     for (int i = 0; i < layerSizes.length; i++) {
       lastOutput = computeHiddenActivations(lastOutput, weights[i]);
@@ -270,14 +270,13 @@ public final class RBM {
   }
 
   /**
-   * Creates a reconstruction of the given hidden activations. (That, what is
-   * returned by #predict and maybe does a complete pass throughout the deep
-   * belief net).
+   * Creates a reconstruction of the input using the given hidden activations.
+   * (That, what is returned by {@link #predict(DoubleVector)}).
    * 
    * @param hiddenActivations the activations of the predict method.
    * @return the reconstructed input vector.
    */
-  public DoubleVector reconstruct(DoubleVector hiddenActivations) {
+  public DoubleVector reconstructInput(DoubleVector hiddenActivations) {
     DoubleVector lastOutput = hiddenActivations;
     for (int i = weights.length - 1; i >= 0; i--) {
       lastOutput = computeHiddenActivations(lastOutput, weights[i].transpose());
@@ -304,9 +303,7 @@ public final class RBM {
       DenseDoubleMatrix theta) {
     // add the bias to the input
     DoubleVector biased = new DenseDoubleVector(1d, input.toArray());
-    DoubleVector hiddenProbability = activationFunction.apply(theta
-        .multiplyVectorRow(biased));
-    return hiddenProbability;
+    return activationFunction.apply(theta.multiplyVectorRow(biased));
   }
 
   /**

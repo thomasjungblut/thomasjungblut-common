@@ -5,11 +5,11 @@ import java.util.Random;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
+import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
-import de.jungblut.math.minimize.StochasticCostFunction;
 import de.jungblut.math.squashing.ErrorFunction;
 import de.jungblut.math.tuple.Tuple;
 
@@ -18,8 +18,7 @@ import de.jungblut.math.tuple.Tuple;
  * 
  * @author thomas.jungblut
  */
-public class MultilayerPerceptronCostFunction implements CostFunction,
-    StochasticCostFunction {
+public final class MultilayerPerceptronCostFunction implements CostFunction {
 
   private final DenseDoubleMatrix x;
   private final DenseDoubleMatrix y;
@@ -33,6 +32,7 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
   private final ErrorFunction error;
 
   private final DenseDoubleVector ones;
+  private final TrainingType trainingType;
 
   private final double visibleDropoutProbability;
   private final double hiddenDropoutProbability;
@@ -48,27 +48,11 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
     this.layerSizes = network.getLayers();
     this.unfoldParameters = computeUnfoldParameters(layerSizes);
     this.activations = network.getActivations();
-    this.error = network.getError();
+    this.error = network.getErrorFunction();
+    this.trainingType = network.getTrainingType();
     this.visibleDropoutProbability = network.getVisibleDropoutProbability();
     this.hiddenDropoutProbability = network.getHiddenDropoutProbability();
     this.rnd = new Random();
-  }
-
-  /**
-   * Stochastic learning function for neural networks.
-   */
-  @Override
-  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input,
-      DoubleVector x, DenseDoubleVector y) {
-    DenseDoubleMatrix tmpX = new DenseDoubleMatrix(1, x.getLength() + 1);
-    // add bias
-    tmpX.set(0, 0, 1d);
-    // copy the rest into the matrix
-    for (int i = 1; i < tmpX.getColumnCount(); i++) {
-      tmpX.set(0, i, x.get(i - 1));
-    }
-    return backpropagate(input, tmpX,
-        new DenseDoubleMatrix(y.toArray(), 1, y.getDimension()));
   }
 
   /**
@@ -174,21 +158,29 @@ public class MultilayerPerceptronCostFunction implements CostFunction,
         DenseMatrixFolder.foldMatrices(thetaGradients));
   }
 
-  /**
-   * General matrix multiplication of two matrices
-   * 
-   * @param ax the activation matrix.
-   * @param theta the weight matrix.
-   * @param axTranspose
-   * @param thetaTranspose
-   * @return the matrix that contains the result of the multiplication of both
-   *         parameters.
-   */
-  protected DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,
+  private DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,
+      boolean a1Transpose, boolean a2Transpose) {
+    switch (trainingType) {
+      case CPU:
+        return multiplyCPU(a1, a2, a1Transpose, a2Transpose);
+      case GPU:
+        return multiplyGPU(a1, a2, a1Transpose, a2Transpose);
+    }
+    throw new IllegalArgumentException(
+        "Trainingtype couldn't be anticipated by switch.");
+  }
+
+  private static DoubleMatrix multiplyCPU(DoubleMatrix a1, DoubleMatrix a2,
       boolean a1Transpose, boolean a2Transpose) {
     a2 = a2Transpose ? a2.transpose() : a2;
     a1 = a1Transpose ? a1.transpose() : a1;
     return a1.multiply(a2);
+  }
+
+  private static DoubleMatrix multiplyGPU(DoubleMatrix a1, DoubleMatrix a2,
+      boolean a1Transpose, boolean a2Transpose) {
+    return JCUDAMatrixUtils.multiply((DenseDoubleMatrix) a1,
+        (DenseDoubleMatrix) a2, a1Transpose, a2Transpose);
   }
 
   /**

@@ -37,7 +37,6 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
   private final double lambda;
   private final Random random;
 
-  // the trainingset should be activated and binarized already
   public RBMCostFunction(DoubleVector[] currentTrainingSet, int batchSize,
       int numThreads, int numHiddenUnits,
       ActivationFunction activationFunction, TrainingType type, double lambda,
@@ -55,10 +54,6 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
   @Override
   protected Tuple<Double, DoubleVector> evaluateBatch(DoubleVector input,
       DoubleMatrix data) {
-    // TODO unrolling is a problem when training in parallel, because the
-    // matrices need to be unrolled in every thread- thus consume a multitude of
-    // memory than really needed.
-
     // input contains the weights between the visible and the hidden units
     DenseDoubleMatrix theta = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters)[0].transpose();
@@ -97,9 +92,9 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
     // measure a very simple reconstruction error
     double j = data.subtract(negativeData).pow(2).sum();
 
-    // calculate the approx. gradient and make it negative.
-    DoubleMatrix thetaGradient = positiveAssociations
-        .subtract(negativeAssociations).divide(data.getRowCount()).multiply(-1);
+    // calculate the approx. gradient
+    DoubleMatrix thetaGradient = positiveAssociations.subtract(
+        negativeAssociations).divide(data.getRowCount());
 
     // calculate the weight decay and apply it
     if (lambda != 0d) {
@@ -109,14 +104,13 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
       thetaGradient.setColumnVector(0, bias);
     }
 
-    // transpose the gradient, because we transposed theta at the top.
+    // transpose the gradient and negate it, because we transposed theta at the
+    // top and our gradient descent subtracts instead of addition.
     return new Tuple<Double, DoubleVector>(j,
         DenseMatrixFolder.foldMatrices((DenseDoubleMatrix) thetaGradient
-            .transpose()));
+            .multiply(-1).transpose()));
   }
 
-  // this is a test design opposed to the inheritance design of the multilayer
-  // perceptron costfunction.
   private DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,
       boolean a1Transpose, boolean a2Transpose) {
     switch (type) {

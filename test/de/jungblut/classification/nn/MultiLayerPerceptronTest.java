@@ -26,7 +26,6 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
 import de.jungblut.math.minimize.ParticleSwarmOptimization;
-import de.jungblut.math.minimize.StochasticGradientDescent;
 import de.jungblut.math.squashing.CrossEntropyErrorFunction;
 import de.jungblut.math.squashing.LogisticErrorFunction;
 import de.jungblut.math.squashing.SquaredMeanErrorFunction;
@@ -162,19 +161,6 @@ public class MultiLayerPerceptronTest extends TestCase {
     } else {
       throw new RuntimeException("Test seems flaky..");
     }
-  }
-
-  @Test
-  public void testXORStochastic() {
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
-        .create(
-            new int[] { 2, 4, 1 },
-            new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                SIGMOID.get() }, new LogisticErrorFunction(),
-            new StochasticGradientDescent(streamXORInput(), 0.1, 1e-45), 10000)
-        .build();
-    mlp.trainStochastic();
-    testPredictions(sampleXOR(), mlp);
   }
 
   @SuppressWarnings("resource")

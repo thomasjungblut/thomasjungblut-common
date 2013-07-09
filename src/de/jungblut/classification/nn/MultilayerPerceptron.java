@@ -17,14 +17,13 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Minimizer;
-import de.jungblut.math.minimize.StochasticMinimizer;
 import de.jungblut.math.squashing.ErrorFunction;
 import de.jungblut.writable.MatrixWritable;
 
 /**
  * Multilayer perceptron implementation that works on GPU via JCuda and CPU. It
- * features l1 regularization and dropout as well as a variety of activation
- * functions and error functions that can be configured. You can set this
+ * features l0/1 regularization (lambda) and dropout. A wide variety of
+ * activation functions and error functions can be configured. You can set this
  * network up by using the builder given by {@link MultilayerPerceptron}.
  * {@link MultilayerPerceptronBuilder}.
  * 
@@ -41,7 +40,6 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    */
   public static final class MultilayerPerceptronBuilder {
     final Minimizer minimizer;
-    final StochasticMinimizer stochasticMinimizer;
     final int maxIterations;
     final int[] layer;
     final ActivationFunction[] activationFunctions;
@@ -60,18 +58,6 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       this.layer = layer;
       this.minimizer = minimizer;
       this.error = error;
-      this.stochasticMinimizer = null;
-      this.maxIterations = maxIterations;
-      this.activationFunctions = activations;
-    }
-
-    private MultilayerPerceptronBuilder(int[] layer,
-        ActivationFunction[] activations, StochasticMinimizer minimizer,
-        int maxIterations, ErrorFunction error) {
-      this.layer = layer;
-      this.error = error;
-      this.minimizer = null;
-      this.stochasticMinimizer = minimizer;
       this.maxIterations = maxIterations;
       this.activationFunctions = activations;
     }
@@ -161,32 +147,10 @@ public final class MultilayerPerceptron extends AbstractClassifier {
           maxIteration, errorFunction);
     }
 
-    /**
-     * Creates a new TrainingConfiguration with the mandatory configurations of
-     * the activation functions, the to be used minimizer and the maximum
-     * iterations.
-     * 
-     * @param layer the number of neurons for each layer, each index denotes a
-     *          layer.
-     * @param activations the activation functions to be used, each index
-     *          denotes a layer.
-     * @param errorFunction the error function on the last layer.
-     * @param minimizer the stochastic minimizer to be used.
-     * @param maxIterations how many iterations (epochs) to run.
-     * @return a brand new training configuration with the given parameters set.
-     */
-    public static MultilayerPerceptronBuilder create(int[] layer,
-        ActivationFunction[] activations, ErrorFunction errorFunction,
-        StochasticMinimizer minimizer, int maxIteration) {
-      return new MultilayerPerceptronBuilder(layer, activations, minimizer,
-          maxIteration, errorFunction);
-    }
-
   }
 
   private final WeightMatrix[] weights;
   private final Minimizer minimizer;
-  private final StochasticMinimizer stochasticMinimizer;
   private final int maxIterations;
   private final int[] layers;
   private final ActivationFunction[] activations;
@@ -194,7 +158,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   private double lambda;
   private double hiddenDropoutProbability;
   private double visibleDropoutProbability;
-  private TrainingType type;
+  private TrainingType type = TrainingType.CPU;
   private boolean verbose;
   private ErrorFunction error;
 
@@ -203,7 +167,6 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.layers = conf.layer;
     this.maxIterations = conf.maxIterations;
     this.minimizer = conf.minimizer;
-    this.stochasticMinimizer = conf.stochasticMinimizer;
     this.lambda = conf.lambda;
     this.type = conf.type;
     this.hiddenDropoutProbability = conf.hiddenDropoutProbability;
@@ -246,7 +209,6 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.activations = activations;
     this.error = error;
     this.minimizer = null;
-    this.stochasticMinimizer = null;
     this.maxIterations = -1;
   }
 
@@ -289,45 +251,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   @Override
   public void train(DoubleVector[] features, DoubleVector[] outcome) {
-    if (type == TrainingType.CPU) {
-      train(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
-          minimizer, maxIterations, lambda, verbose);
-    } else {
-      trainGPU(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
-          minimizer, maxIterations, lambda, verbose);
-    }
-  }
-
-  /**
-   * Stochastically train the neural network, the data will be supplied to the
-   * {@link StochasticMinimizer} implementation.
-   */
-  public final void trainStochastic() {
-    Preconditions.checkNotNull(stochasticMinimizer,
-        "Stochastic Minimizer must be supplied!");
-
-    DenseDoubleVector foldedTheta = getFoldedThetaVector();
-    trainStochastic(foldedTheta);
-  }
-
-  /**
-   * Stochastically train the neural network, the data will be supplied to the
-   * {@link StochasticMinimizer} implementation.
-   * 
-   * @param theta predefined theta parameters.
-   */
-  public final void trainStochastic(DoubleVector theta) {
-    MultilayerPerceptronCostFunction costFunction = new MultilayerPerceptronCostFunction(
-        this, new DenseDoubleMatrix(1, 0), null, lambda);
-    theta = stochasticMinimizer.minimize(costFunction, theta, maxIterations,
-        verbose);
-    int[][] unfoldParameters = MultilayerPerceptronCostFunction
-        .computeUnfoldParameters(layers);
-    DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
-        theta, unfoldParameters);
-    for (int i = 0; i < unfoldMatrices.length; i++) {
-      getWeights()[i].setWeights(unfoldMatrices[i]);
-    }
+    train(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
+        minimizer, maxIterations, lambda, verbose);
   }
 
   /**
@@ -378,56 +303,6 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     CostFunction costFunction = new MultilayerPerceptronCostFunction(this, x,
         y, lambda);
     return trainInternal(minimizer, maxIterations, verbose, costFunction, theta);
-  }
-
-  /**
-   * Full backpropagation training method on the GPU. It performs weight finding
-   * by using a minimizer. Note that it only guarantees to find a global minimum
-   * solution in case of linear or convex problems (zero / one hidden layer), of
-   * course this is also dependend on the concrete minimizer implementation. If
-   * you have more than a single hidden layer, then it will usually trap into a
-   * local minimum. It supplies a vector so training can be resumed from a good
-   * starting point.
-   * 
-   * @param x the training examples.
-   * @param y the outcomes for the training examples.
-   * @param minimizer the minimizer to use to train the neural network.
-   * @param maxIterations the number of maximum iterations to train.
-   * @param lambda the given regularization parameter.
-   * @param verbose output to console with the last given errors.
-   * @param theta initial spot to start the minimizations.
-   * @return the cost of the training.
-   */
-  public final double trainGPU(DenseDoubleMatrix x, DenseDoubleMatrix y,
-      Minimizer minimizer, int maxIterations, double lambda, boolean verbose,
-      DenseDoubleVector theta) {
-    CostFunction costFunction = new GPUMultilayerPerceptronCostFunction(this,
-        x, y, lambda);
-    return trainInternal(minimizer, maxIterations, verbose, costFunction, theta);
-  }
-
-  /**
-   * Full backpropagation training method on the GPU. It performs weight finding
-   * by using a minimizer. Note that it only guarantees to find a global minimum
-   * solution in case of linear or convex problems (zero / one hidden layer), of
-   * course this is also dependend on the concrete minimizer implementation. If
-   * you have more than a single hidden layer, then it will usually trap into a
-   * local minimum.
-   * 
-   * @param x the training examples.
-   * @param y the outcomes for the training examples.
-   * @param minimizer the minimizer to use to train the neural network.
-   * @param maxIterations the number of maximum iterations to train.
-   * @param lambda the given regularization parameter.
-   * @param verbose output to console with the last given errors.
-   * @return the cost of the training.
-   */
-  public final double trainGPU(DenseDoubleMatrix x, DenseDoubleMatrix y,
-      Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
-    CostFunction costFunction = new GPUMultilayerPerceptronCostFunction(this,
-        x, y, lambda);
-    return trainInternal(minimizer, maxIterations, verbose, costFunction,
-        getFoldedThetaVector());
   }
 
   /**
@@ -492,8 +367,12 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return this.visibleDropoutProbability;
   }
 
-  ErrorFunction getError() {
+  ErrorFunction getErrorFunction() {
     return this.error;
+  }
+
+  TrainingType getTrainingType() {
+    return this.type;
   }
 
   /**
