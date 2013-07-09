@@ -99,7 +99,7 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
     // calculate the weight decay and apply it
     if (lambda != 0d) {
       DoubleVector bias = thetaGradient.getColumnVector(0);
-      thetaGradient = thetaGradient.add(thetaGradient.multiply(lambda
+      thetaGradient = thetaGradient.subtract(thetaGradient.multiply(lambda
           / data.getRowCount()));
       thetaGradient.setColumnVector(0, bias);
     }
