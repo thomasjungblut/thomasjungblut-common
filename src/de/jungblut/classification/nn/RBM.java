@@ -17,8 +17,10 @@ import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.writable.MatrixWritable;
 
 /**
- * Class for training/stacking RBMs. Create new instances with the
- * {@link RBMBuilder}.
+ * Class for training/stacking RBMs. Stacked RBMs are called DBM (deep belief
+ * net). Usually every layer of a deep belief net is training greedily with the
+ * contrastive divergence algorithm implemented in {@link RBMCostFunction}.
+ * Create new instances with the {@link RBMBuilder}.
  * 
  * @author thomas.jungblut
  * 
@@ -162,7 +164,7 @@ public final class RBM {
   // default is a single thread
   private int batchParallelism = 1;
 
-  private Random random;
+  private long seed;
 
   // serialization constructor
   private RBM(int[] stackedHiddenLayerSizes,
@@ -171,7 +173,7 @@ public final class RBM {
     this.activationFunction = activationFunction;
     this.weights = new DenseDoubleMatrix[layerSizes.length];
     this.type = type;
-    random = new Random();
+    seed = System.currentTimeMillis();
   }
 
   private RBM(RBMBuilder rbmBuilder) {
@@ -211,25 +213,25 @@ public final class RBM {
    */
   public void train(DoubleVector[] currentTrainingSet, Minimizer minimizer,
       int numIterations) {
+    // start with greedy layerwise training
     for (int i = 0; i < layerSizes.length; i++) {
       if (verbose) {
         System.out.println("Training stack at height: " + i);
       }
-      // render the activation and binarize
+      // render the activation
       for (int v = 0; v < currentTrainingSet.length; v++) {
         currentTrainingSet[v] = activationFunction.apply(currentTrainingSet[v]);
       }
-      RBMCostFunction.binarize(random, currentTrainingSet);
       // add the bias to hidden and visible layer, random init with 0.1*randn
       DenseDoubleMatrix start = new DenseDoubleMatrix(layerSizes[i] + 1,
-          currentTrainingSet[0].getDimension() + 1, random).multiply(0.1d);
+          currentTrainingSet[0].getDimension() + 1, new Random(seed))
+          .multiply(0.1d);
       DenseDoubleVector folded = DenseMatrixFolder.foldMatrices(start);
       start = null;
       // now do the real training
       RBMCostFunction fnc = new RBMCostFunction(currentTrainingSet,
           miniBatchSize, batchParallelism, layerSizes[i], activationFunction,
-          type, lambda, visibleDropoutProbability, hiddenDropoutProbability,
-          System.currentTimeMillis(), stochastic);
+          type, lambda, seed, stochastic);
       DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
           verbose);
       // get back our weights as a matrix
@@ -239,27 +241,15 @@ public final class RBM {
       // now we can get our new training set for the next stack
       if (i + 1 != layerSizes.length) {
         for (int row = 0; row < currentTrainingSet.length; row++) {
-          // we dont binarize between here, as it will happen before minimizing
           currentTrainingSet[row] = computeHiddenActivations(
-              currentTrainingSet[row], weights[i], false);
+              currentTrainingSet[row], weights[i]);
           // slice the old bias off
           currentTrainingSet[row] = currentTrainingSet[row].slice(1,
               currentTrainingSet[row].getDimension());
         }
-
       }
+      // TODO discriminative fine tuning with backprop and dropout
     }
-  }
-
-  /**
-   * Returns the hidden activations of the last RBM.
-   * 
-   * @param input the input of the first RBM.
-   * @return a vector that contains the values (0 or 1) of the hidden
-   *         activations on the last layer.
-   */
-  public DoubleVector predictBinary(DoubleVector input) {
-    return predictInternal(input, true);
   }
 
   /**
@@ -270,30 +260,13 @@ public final class RBM {
    *         last layer.
    */
   public DoubleVector predict(DoubleVector input) {
-    return predictInternal(input, false);
-  }
-
-  private DoubleVector predictInternal(DoubleVector input, boolean binarize) {
     input = activationFunction.apply(input);
-    RBMCostFunction.binarize(random, input);
     DoubleVector lastOutput = input;
     for (int i = 0; i < layerSizes.length; i++) {
-      lastOutput = computeHiddenActivations(lastOutput, weights[i], binarize);
+      lastOutput = computeHiddenActivations(lastOutput, weights[i]);
     }
     // slice the hidden bias away
     return lastOutput.slice(1, lastOutput.getDimension());
-  }
-
-  /**
-   * Creates a binary reconstruction of the given hidden activations. (That,
-   * what is returned by #predict and maybe does a complete pass throughout the
-   * deep belief net).
-   * 
-   * @param hiddenActivations the activations of the predict method.
-   * @return the reconstructed binarized input vector.
-   */
-  public DoubleVector reconstructBinary(DoubleVector hiddenActivations) {
-    return reconstructInternal(hiddenActivations, true);
   }
 
   /**
@@ -305,15 +278,9 @@ public final class RBM {
    * @return the reconstructed input vector.
    */
   public DoubleVector reconstruct(DoubleVector hiddenActivations) {
-    return reconstructInternal(hiddenActivations, false);
-  }
-
-  private DoubleVector reconstructInternal(DoubleVector hiddenActivations,
-      boolean binarize) {
     DoubleVector lastOutput = hiddenActivations;
     for (int i = weights.length - 1; i >= 0; i--) {
-      lastOutput = computeHiddenActivations(lastOutput, weights[i].transpose(),
-          binarize);
+      lastOutput = computeHiddenActivations(lastOutput, weights[i].transpose());
     }
     // slice the hidden bias away
     return lastOutput.slice(1, lastOutput.getDimension());
@@ -327,22 +294,18 @@ public final class RBM {
   }
 
   /**
-   * Sets the internally used random.
+   * Sets the internally used rng seed.
    */
-  public void setRandom(Random random) {
-    this.random = random;
+  public void setSeed(long seed) {
+    this.seed = seed;
   }
 
   private DoubleVector computeHiddenActivations(DoubleVector input,
-      DenseDoubleMatrix theta, boolean binarize) {
+      DenseDoubleMatrix theta) {
     // add the bias to the input
     DoubleVector biased = new DenseDoubleVector(1d, input.toArray());
     DoubleVector hiddenProbability = activationFunction.apply(theta
         .multiplyVectorRow(biased));
-    // now binarize with the contained probability
-    if (binarize) {
-      RBMCostFunction.binarize(random, hiddenProbability);
-    }
     return hiddenProbability;
   }
 

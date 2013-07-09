@@ -35,22 +35,17 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
 
   private final TrainingType type;
   private final double lambda;
-  private final double visibleDropoutProbability;
-  private final double hiddenDropoutProbability;
   private final Random random;
 
   // the trainingset should be activated and binarized already
   public RBMCostFunction(DoubleVector[] currentTrainingSet, int batchSize,
       int numThreads, int numHiddenUnits,
       ActivationFunction activationFunction, TrainingType type, double lambda,
-      double visibleDropoutProbability, double hiddenDropoutProbability,
       long seed, boolean stochastic) {
     super(currentTrainingSet, batchSize, numThreads, stochastic);
     this.activationFunction = activationFunction;
     this.type = type;
     this.lambda = lambda;
-    this.visibleDropoutProbability = visibleDropoutProbability;
-    this.hiddenDropoutProbability = hiddenDropoutProbability;
     this.random = new Random(seed);
     this.unfoldParameters = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(new int[] {
@@ -68,14 +63,6 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
     DenseDoubleMatrix theta = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters)[0].transpose();
 
-    // dropout the input if defined
-    if (visibleDropoutProbability != 0d) {
-      data = data.deepCopy();
-      // compute dropout on the visible layer
-      MultilayerPerceptronCostFunction.dropout(random, data,
-          visibleDropoutProbability);
-    }
-
     /*
      * POSITIVE PHASE
      */
@@ -90,11 +77,6 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
      * END OF POSITIVE PHASE
      */
     binarize(random, positiveHiddenProbs);
-    if (hiddenDropoutProbability != 0d) {
-      // compute dropout on the hidden layer
-      MultilayerPerceptronCostFunction.dropout(random, positiveHiddenProbs,
-          hiddenDropoutProbability);
-    }
     /*
      * START NEGATIVE PHASE
      */
