@@ -1,17 +1,17 @@
 package de.jungblut.clustering;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
 import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 
-public class CanopyClusteringTest extends TestCase {
+public class CanopyClusteringTest {
 
   @Test
   public void testCanopyClustering() {

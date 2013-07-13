@@ -1,13 +1,13 @@
 package de.jungblut.math.squashing;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 
-public class CrossEntropyErrorFunctionTest extends TestCase {
+public class CrossEntropyErrorFunctionTest {
   @Test
   public void testSoftmaxError() {
     DoubleMatrix y = new DenseDoubleMatrix(new double[][] {
@@ -16,7 +16,7 @@ public class CrossEntropyErrorFunctionTest extends TestCase {
         { 0d, 0d, 0d, 1d, 0d }, { 1d, 1d, 1d, 0d, 0d } });
     double error = new CrossEntropyErrorFunction()
         .calculateError(y, hypothesis);
-    assertEquals(25d, error);
+    assertEquals(25d, error, 1e-4);
   }
 
 }

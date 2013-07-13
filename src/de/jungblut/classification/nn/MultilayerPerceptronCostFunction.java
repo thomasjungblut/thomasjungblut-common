@@ -9,9 +9,9 @@ import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
+import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.squashing.ErrorFunction;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Neural network costfunction for a multilayer perceptron.
@@ -62,8 +62,8 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
    * layers.
    */
   @Override
-  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
-    return backpropagate(input, x, y);
+  public CostGradientTuple evaluateCost(DoubleVector input) {
+    return compute(input, x, y);
   }
 
   /**
@@ -74,8 +74,8 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
    * @param y the outcome.
    * @return a tuple of cost and gradient.
    */
-  private Tuple<Double, DoubleVector> backpropagate(DoubleVector input,
-      DenseDoubleMatrix x, DenseDoubleMatrix y) {
+  private CostGradientTuple compute(DoubleVector input, DenseDoubleMatrix x,
+      DenseDoubleMatrix y) {
     DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters);
     DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
@@ -83,18 +83,30 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
     // start forward propagation
     // we compute the aX activations for all layers
     DoubleMatrix[] ax = new DoubleMatrix[layerSizes.length];
-    // for zX we constantly null the zero index, since it has no use
+    // for zX we constantly null the zero index, since it has no use.
+    // zX are the values before activation
     DoubleMatrix[] zx = new DoubleMatrix[layerSizes.length];
 
-    // for the first weights, we don't need to compute Z
-    if (visibleDropoutProbability > 0d) {
-      // compute dropout for ax[0], copy X to not alter internal
-      // representation
-      ax[0] = x.deepCopy();
-      dropout(rnd, ax[0], visibleDropoutProbability);
-    } else {
-      ax[0] = x;
-    }
+    dropoutVisibleLayer(x, ax);
+
+    forwardPropagate(thetas, ax, zx);
+
+    double regularization = calculateRegularization(thetas);
+
+    DoubleMatrix[] deltaX = backwardPropagate(y, thetas, ax, zx);
+
+    calculateGradients(thetas, thetaGradients, ax, deltaX);
+
+    // calculate our cost (error in the last layer)
+    double j = (1.0d / m) * error.calculateError(y, ax[layerSizes.length - 1])
+        + regularization;
+
+    return new CostGradientTuple(j,
+        DenseMatrixFolder.foldMatrices(thetaGradients));
+  }
+
+  public void forwardPropagate(DenseDoubleMatrix[] thetas, DoubleMatrix[] ax,
+      DoubleMatrix[] zx) {
     for (int i = 1; i < layerSizes.length; i++) {
       zx[i] = multiply(ax[i - 1], thetas[i - 1], false, true);
 
@@ -109,17 +121,10 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
         ax[i] = activations[i].apply(zx[i]);
       }
     }
+  }
 
-    // only calculate the regularization term if lambda is not 0
-    double regularization = 0.0d;
-    if (lambda != 0d) {
-      for (DenseDoubleMatrix theta : thetas) {
-        regularization += (theta.slice(0, theta.getRowCount(), 1,
-            theta.getColumnCount())).pow(2).sum();
-      }
-      regularization = (lambda / (2.0d * m)) * regularization;
-    }
-
+  public DoubleMatrix[] backwardPropagate(DenseDoubleMatrix y,
+      DenseDoubleMatrix[] thetas, DoubleMatrix[] ax, DoubleMatrix[] zx) {
     // now backpropagate the error backwards by calculating the deltas.
     // also here we are following the math equations and nulling out the 0th
     // entry.
@@ -134,7 +139,12 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
       // apply the gradient of the activations
       deltaX[i] = deltaX[i].multiplyElementWise(activations[i].gradient(zx[i]));
     }
+    return deltaX;
+  }
 
+  public void calculateGradients(DenseDoubleMatrix[] thetas,
+      DenseDoubleMatrix[] thetaGradients, DoubleMatrix[] ax,
+      DoubleMatrix[] deltaX) {
     // calculate the gradients of the weights
     for (int i = 0; i < thetaGradients.length; i++) {
       DoubleMatrix gradDXA = multiply(deltaX[i + 1], ax[i], true, false);
@@ -149,13 +159,31 @@ public final class MultilayerPerceptronCostFunction implements CostFunction {
         thetaGradients[i].setColumnVector(0, regBias);
       }
     }
+  }
 
-    // calculate our cost (error in the last layer)
-    double j = (1.0d / m) * error.calculateError(y, ax[layerSizes.length - 1])
-        + regularization;
+  public double calculateRegularization(DenseDoubleMatrix[] thetas) {
+    double regularization = 0d;
+    // only calculate the regularization term if lambda is not 0
+    if (lambda != 0d) {
+      for (DenseDoubleMatrix theta : thetas) {
+        regularization += (theta.slice(0, theta.getRowCount(), 1,
+            theta.getColumnCount())).pow(2).sum();
+      }
+      regularization = (lambda / (2.0d * m)) * regularization;
+    }
+    return regularization;
+  }
 
-    return new Tuple<Double, DoubleVector>(j,
-        DenseMatrixFolder.foldMatrices(thetaGradients));
+  public void dropoutVisibleLayer(DenseDoubleMatrix x, DoubleMatrix[] ax) {
+    // for the first weights, we don't need to compute Z
+    if (visibleDropoutProbability > 0d) {
+      // compute dropout for ax[0], copy X to not alter internal
+      // representation
+      ax[0] = x.deepCopy();
+      dropout(rnd, ax[0], visibleDropoutProbability);
+    } else {
+      ax[0] = x;
+    }
   }
 
   private DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,

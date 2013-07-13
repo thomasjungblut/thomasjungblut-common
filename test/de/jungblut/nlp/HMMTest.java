@@ -1,21 +1,22 @@
 package de.jungblut.nlp;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Random;
 
-import junit.framework.TestCase;
-
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class HMMTest extends TestCase {
+public class HMMTest {
 
-  DoubleVector[] features = new DenseDoubleVector[1000];
-  DenseDoubleVector[] outcome = new DenseDoubleVector[1000];
+  static DoubleVector[] features = new DenseDoubleVector[1000];
+  static DenseDoubleVector[] outcome = new DenseDoubleVector[1000];
 
-  @Override
-  protected void setUp() throws Exception {
+  @BeforeClass
+  public static void setUp() throws Exception {
     // we have 70% chance of observing an umbrella
     Random r = new Random(0L);
     for (int i = 0; i < features.length; i++) {

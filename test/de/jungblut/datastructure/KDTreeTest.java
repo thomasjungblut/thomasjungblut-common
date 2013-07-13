@@ -1,10 +1,11 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -14,7 +15,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
-public class KDTreeTest extends TestCase {
+public class KDTreeTest {
 
   @Test
   public void testBalanceByFix() throws Exception {

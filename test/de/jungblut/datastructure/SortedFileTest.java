@@ -1,10 +1,11 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.DataInputStream;
 import java.io.FileInputStream;
 import java.util.Arrays;
-
-import junit.framework.TestCase;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -15,17 +16,17 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.WritableUtils;
 import org.junit.Test;
 
-public class SortedFileTest extends TestCase {
+public class SortedFileTest {
 
-  private static final String TMP_SORTED_FILES = "/tmp/sorted_files/";
   private static final String TMP_FINAL_FILE = "/tmp/final_file.bin";
 
   @Test
   public void testMergedFile() throws Exception {
+    String tmpSortedFiles = "/tmp/sorted_files/";
     FileSystem fs = FileSystem.get(new Configuration());
-    fs.mkdirs(new Path(TMP_SORTED_FILES));
+    fs.mkdirs(new Path(tmpSortedFiles));
     try {
-      try (SortedFile<IntWritable> file = new SortedFile<>(TMP_SORTED_FILES,
+      try (SortedFile<IntWritable> file = new SortedFile<>(tmpSortedFiles,
           TMP_FINAL_FILE, 89, IntWritable.class)) {
         // add data descending
         for (int i = 289; i >= 0; i--) {
@@ -45,19 +46,20 @@ public class SortedFileTest extends TestCase {
       }
 
     } finally {
-      fs.delete(new Path(TMP_SORTED_FILES), true);
+      fs.delete(new Path(tmpSortedFiles), true);
       fs.delete(new Path(TMP_FINAL_FILE), true);
     }
   }
 
   @Test
   public void testSortedFile() throws Exception {
+    String tmpSortedFiles = "/tmp/sorted_files2/";
     FileSystem fs = FileSystem.get(new Configuration());
-    fs.mkdirs(new Path(TMP_SORTED_FILES));
+    fs.mkdirs(new Path(tmpSortedFiles));
     try {
       int[] result = new int[290];
       Arrays.fill(result, 1);
-      try (SortedFile<IntWritable> file = new SortedFile<>(TMP_SORTED_FILES,
+      try (SortedFile<IntWritable> file = new SortedFile<>(tmpSortedFiles,
           TMP_FINAL_FILE, 89, IntWritable.class, false, false)) {
         // add data descending
         for (int i = 289; i >= 0; i--) {
@@ -65,7 +67,7 @@ public class SortedFileTest extends TestCase {
         }
       }
       // now check the segments
-      FileStatus[] status = fs.globStatus(new Path(TMP_SORTED_FILES + "*.bin"));
+      FileStatus[] status = fs.globStatus(new Path(tmpSortedFiles + "*.bin"));
       assertEquals(14, status.length);
 
       IntWritable iw = new IntWritable();
@@ -94,7 +96,7 @@ public class SortedFileTest extends TestCase {
       }
 
     } finally {
-      fs.delete(new Path(TMP_SORTED_FILES), true);
+      fs.delete(new Path(tmpSortedFiles), true);
       fs.delete(new Path(TMP_FINAL_FILE), true);
     }
   }

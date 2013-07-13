@@ -1,16 +1,16 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
-public class AsyncBufferedOutputStreamTest extends TestCase {
+public class AsyncBufferedOutputStreamTest {
 
   @Test
   public void testHugeWrites() throws Exception {

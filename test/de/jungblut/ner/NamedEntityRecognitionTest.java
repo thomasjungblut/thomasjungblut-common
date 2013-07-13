@@ -1,5 +1,8 @@
 package de.jungblut.ner;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -8,19 +11,17 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
-import de.jungblut.classification.Evaluator;
-import de.jungblut.classification.Evaluator.EvaluationResult;
+import de.jungblut.classification.eval.Evaluator;
+import de.jungblut.classification.eval.Evaluator.EvaluationResult;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.tuple.Tuple;
 
-public class NamedEntityRecognitionTest extends TestCase {
+public class NamedEntityRecognitionTest {
 
   @Test
   public void testEndToEnd() throws Exception {

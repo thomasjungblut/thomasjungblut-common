@@ -1,10 +1,10 @@
 package de.jungblut.nlp;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class TokenizerUtilsTest extends TestCase {
+public class TokenizerUtilsTest {
 
   @Test
   public void testRemoveMatchingRegex() {

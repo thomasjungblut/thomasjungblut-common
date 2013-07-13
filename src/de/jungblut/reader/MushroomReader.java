@@ -13,7 +13,6 @@ import com.google.common.collect.HashMultimap;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Dataset vectorizer for the mushroom dataset. Parses the nominal values into
@@ -30,8 +29,7 @@ public final class MushroomReader {
    * @return a tuple, on first dimension are the features, on the second are the
    *         outcomes (0 or 1 in the first element of a vector)
    */
-  public static Tuple<DoubleVector[], DenseDoubleVector[]> readMushroomDataset(
-      String path) {
+  public static Dataset readMushroomDataset(String path) {
     List<DoubleVector> list = new ArrayList<>();
     List<String[]> buffer = new ArrayList<>();
     HashMultimap<Integer, String> multiMap = HashMultimap.create();
@@ -91,6 +89,6 @@ public final class MushroomReader {
           doubleVector.getLength() - 1, doubleVector.getLength());
     }
 
-    return new Tuple<>(features, outcome);
+    return new Dataset(features, outcome);
   }
 }

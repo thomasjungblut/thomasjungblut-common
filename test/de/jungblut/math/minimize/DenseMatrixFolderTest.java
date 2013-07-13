@@ -1,13 +1,13 @@
 package de.jungblut.math.minimize;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class DenseMatrixFolderTest extends TestCase {
+public class DenseMatrixFolderTest {
 
   @Test
   public void testFoldAndUnfold() {
@@ -20,13 +20,13 @@ public class DenseMatrixFolderTest extends TestCase {
 
     DenseDoubleVector foldMatrices = DenseMatrixFolder.foldMatrices(mat1, mat2);
     assertEquals(12, foldMatrices.getLength());
-    assertEquals(0.0d, referenceFold.subtract(foldMatrices).sum());
+    assertEquals(0.0d, referenceFold.subtract(foldMatrices).sum(), 1e-5);
 
     DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
         foldMatrices, new int[][] { { 2, 3 }, { 2, 3 } });
 
-    assertEquals(0.0d, unfoldMatrices[0].subtract(mat1).sum());
-    assertEquals(0.0d, unfoldMatrices[1].subtract(mat2).sum());
+    assertEquals(0.0d, unfoldMatrices[0].subtract(mat1).sum(), 1e-5);
+    assertEquals(0.0d, unfoldMatrices[1].subtract(mat2).sum(), 1e-5);
 
   }
 }

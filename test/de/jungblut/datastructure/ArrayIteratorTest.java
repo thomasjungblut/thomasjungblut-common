@@ -1,10 +1,11 @@
 package de.jungblut.datastructure;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 import org.junit.Test;
 
-public class ArrayIteratorTest extends TestCase {
+public class ArrayIteratorTest {
 
   @Test
   public void testArrayIterator() {

@@ -1,12 +1,12 @@
 package de.jungblut.datastructure;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
 
-import junit.framework.TestCase;
+import java.util.ArrayList;
 
 import org.junit.Test;
 
-public class IterablesTest extends TestCase {
+public class IterablesTest {
 
   @Test
   public void testFrom() {

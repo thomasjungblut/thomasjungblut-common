@@ -1,10 +1,10 @@
 package de.jungblut.partition;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Iterator;
 import java.util.Set;
 import java.util.TreeSet;
-
-import junit.framework.TestCase;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -15,7 +15,7 @@ import org.junit.runners.JUnit4;
 import de.jungblut.partition.Boundaries.Range;
 
 @RunWith(JUnit4.class)
-public class BlockPartitionerTest extends TestCase {
+public class BlockPartitionerTest {
 
   @Rule
   public ExpectedException exception = ExpectedException.none();

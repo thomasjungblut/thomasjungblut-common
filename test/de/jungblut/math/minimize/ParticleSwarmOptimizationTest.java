@@ -1,14 +1,13 @@
 package de.jungblut.math.minimize;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
-public class ParticleSwarmOptimizationTest extends TestCase {
+public class ParticleSwarmOptimizationTest {
 
   @Test
   public void testParticleSwarmOptimization() {
@@ -18,11 +17,11 @@ public class ParticleSwarmOptimizationTest extends TestCase {
     // our function is f(x,y) = x^2+y^2
     CostFunction inlineFunction = new CostFunction() {
       @Override
-      public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+      public CostGradientTuple evaluateCost(DoubleVector input) {
 
         double cost = Math.pow(input.get(0), 2) + Math.pow(input.get(1), 2);
 
-        return new Tuple<>(cost, null);
+        return new CostGradientTuple(cost, null);
       }
     };
 
@@ -40,13 +39,13 @@ public class ParticleSwarmOptimizationTest extends TestCase {
 
     CostFunction inlineFunction = new CostFunction() {
       @Override
-      public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+      public CostGradientTuple evaluateCost(DoubleVector input) {
         double x = input.get(0);
         double y = input.get(1);
         // that's the rosenbrock function
         double cost = Math.pow((1 - x), 2) + 100 * Math.pow((y - x * x), 2);
 
-        return new Tuple<>(cost, null);
+        return new CostGradientTuple(cost, null);
       }
     };
 

@@ -3,6 +3,8 @@ package de.jungblut.classification.nn;
 import static de.jungblut.math.activation.ActivationFunctionSelector.LINEAR;
 import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
 import static de.jungblut.math.activation.ActivationFunctionSelector.SOFTMAX;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -11,8 +13,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -31,7 +31,7 @@ import de.jungblut.math.squashing.LogisticErrorFunction;
 import de.jungblut.math.squashing.SquaredMeanErrorFunction;
 import de.jungblut.math.tuple.Tuple;
 
-public class MultiLayerPerceptronTest extends TestCase {
+public class MultiLayerPerceptronTest {
 
   static {
     MultilayerPerceptron.SEED = 0L;
@@ -208,7 +208,7 @@ public class MultiLayerPerceptronTest extends TestCase {
 
     for (int i = 0; i < train.length; i++) {
       DenseDoubleVector predict = mlp.predict(train[i]);
-      assertEquals(outcome[i].get(0), Math.rint(predict.get(0)));
+      assertEquals(outcome[i].get(0), Math.rint(predict.get(0)), 1e-4);
     }
   }
 
@@ -302,7 +302,7 @@ public class MultiLayerPerceptronTest extends TestCase {
 
     for (int i = 0; i < train.length; i++) {
       DenseDoubleVector predict = mlp.predict(train[i]);
-      assertEquals(outcome[i].get(0), Math.rint(predict.get(0)));
+      assertEquals(outcome[i].get(0), Math.rint(predict.get(0)), 1e-4);
     }
   }
 

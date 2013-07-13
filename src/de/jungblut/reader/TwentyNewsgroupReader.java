@@ -10,10 +10,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import de.jungblut.datastructure.StringPool;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple3;
-import de.jungblut.nlp.TokenizerUtils;
 
 /**
  * Reads the "20news-bydate" dataset into a vector space model as well as
@@ -32,14 +30,14 @@ public final class TwentyNewsgroupReader {
    * Needs the "20news-bydate" directory that has test and train subdirectories
    * given.
    * 
-   * @return in tuple3 order: docs, prediction, name mapping for prediction
+   * @return in tuple3 order: document as string, prediction, name mapping for
+   *         prediction
    */
-  public static Tuple3<List<String[]>, DenseDoubleVector, String[]> readTwentyNewsgroups(
+  public static Tuple3<List<String>, DenseDoubleVector, String[]> readTwentyNewsgroups(
       File directory) {
-    final StringPool pool = StringPool.getPool();
     String[] classList = directory.list();
     Arrays.sort(classList);
-    List<String[]> docList = new ArrayList<>();
+    List<String> docList = new ArrayList<>();
     TDoubleArrayList prediction = new TDoubleArrayList();
     String[] nameMapping = new String[classList.length];
     int classIndex = 0;
@@ -54,14 +52,7 @@ public final class TwentyNewsgroupReader {
           while ((l = br.readLine()) != null) {
             document.append(l);
           }
-          String[] whiteSpaceTokens = TokenizerUtils
-              .whiteSpaceTokenize(document.toString());
-          whiteSpaceTokens = TokenizerUtils.removeEmpty(whiteSpaceTokens);
-          whiteSpaceTokens = TokenizerUtils.buildNGramms(whiteSpaceTokens, 2);
-          for (int i = 0; i < whiteSpaceTokens.length; i++) {
-            whiteSpaceTokens[i] = pool.pool(whiteSpaceTokens[i]);
-          }
-          docList.add(whiteSpaceTokens);
+          docList.add(document.toString());
           prediction.add(classIndex);
         } catch (IOException e) {
           e.printStackTrace();

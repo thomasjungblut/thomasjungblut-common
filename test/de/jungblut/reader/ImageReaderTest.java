@@ -1,18 +1,19 @@
 package de.jungblut.reader;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.List;
 
 import javax.imageio.ImageIO;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
 
-public class ImageReaderTest extends TestCase {
+public class ImageReaderTest {
 
   private static final String LENNA_PATH = "files/img/lenna.png";
 

@@ -1,12 +1,13 @@
 package de.jungblut.writable;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.named.NamedDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
-public class VectorWritableTest extends TestCase {
+public class VectorWritableTest {
 
   @Test
   public void testDenseSerDe() throws Exception {
@@ -50,7 +51,7 @@ public class VectorWritableTest extends TestCase {
 
     DoubleVector readVec = VectorWritable.readVector(in);
 
-    assertEquals(0.0d, vec.subtract(readVec).sum());
+    assertEquals(0.0d, vec.subtract(readVec).sum(), 1e-5);
     return readVec;
   }
 

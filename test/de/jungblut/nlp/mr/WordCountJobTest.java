@@ -3,14 +3,12 @@ package de.jungblut.nlp.mr;
 import java.io.IOException;
 import java.util.Arrays;
 
-import junit.framework.TestCase;
-
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.HashMultiset;
@@ -20,19 +18,18 @@ import de.jungblut.nlp.StandardTokenizer;
 import de.jungblut.nlp.mr.WordCountJob.WordFrequencyMapper;
 import de.jungblut.nlp.mr.WordCountJob.WordFrequencyReducer;
 
-public class WordCountJobTest extends TestCase {
+public class WordCountJobTest {
 
-  MapDriver<LongWritable, Text, Text, LongWritable> mapDriver;
-  ReduceDriver<Text, LongWritable, Text, LongWritable> reduceDriver;
-  MapReduceDriver<LongWritable, Text, Text, LongWritable, Text, LongWritable> mapReduceDriver;
+  static MapDriver<LongWritable, Text, Text, LongWritable> mapDriver;
+  static ReduceDriver<Text, LongWritable, Text, LongWritable> reduceDriver;
+  static MapReduceDriver<LongWritable, Text, Text, LongWritable, Text, LongWritable> mapReduceDriver;
 
-  String toDedup = "this this is a text about how i used lower case and and duplicate words words";
-  HashMultiset<String> tokenFrequency = HashMultiset.create(Arrays
+  static String toDedup = "this this is a text about how i used lower case and and duplicate words words";
+  static HashMultiset<String> tokenFrequency = HashMultiset.create(Arrays
       .asList(new StandardTokenizer().tokenize(toDedup)));
 
-  @Override
-  @Before
-  public void setUp() {
+  @BeforeClass
+  public static void setUp() {
     WordFrequencyMapper mapper = new WordFrequencyMapper();
     WordFrequencyReducer reducer = new WordFrequencyReducer();
     mapDriver = MapDriver.newMapDriver(mapper);

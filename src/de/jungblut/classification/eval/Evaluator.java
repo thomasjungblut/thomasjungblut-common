@@ -1,4 +1,4 @@
-package de.jungblut.classification;
+package de.jungblut.classification.eval;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -13,6 +13,8 @@ import java.util.concurrent.Future;
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import de.jungblut.classification.Classifier;
+import de.jungblut.classification.ClassifierFactory;
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.partition.BlockPartitioner;
@@ -146,17 +148,17 @@ public final class Evaluator {
    * @param outcome the outcome to split.
    * @param numLabels the number of labels that are used. (e.G. 2 in binary
    *          classification).
-   * @param splitPercentage a value between 0f and 1f that sets the size of the
-   *          trainingset. With 1k items, a splitPercentage of 0.9f will result
-   *          in 900 items to train and 100 to evaluate.
+   * @param splitFraction a value between 0f and 1f that sets the size of the
+   *          trainingset. With 1k items, a splitFraction of 0.9f will result in
+   *          900 items to train and 100 to evaluate.
    * @param random true if you want to perform shuffling on the data beforehand.
    * @return a new {@link EvaluationResult}.
    */
   public static EvaluationResult evaluateClassifier(Classifier classifier,
       DoubleVector[] features, DoubleVector[] outcome, int numLabels,
-      float splitPercentage, boolean random) {
+      float splitFraction, boolean random) {
     return evaluateClassifier(classifier, features, outcome, numLabels,
-        splitPercentage, random, null);
+        splitFraction, random, null);
   }
 
   /**
@@ -167,9 +169,9 @@ public final class Evaluator {
    * @param outcome the outcome to split.
    * @param numLabels the number of labels that are used. (e.G. 2 in binary
    *          classification).
-   * @param splitPercentage a value between 0f and 1f that sets the size of the
-   *          trainingset. With 1k items, a splitPercentage of 0.9f will result
-   *          in 900 items to train and 100 to evaluate.
+   * @param splitFraction a value between 0f and 1f that sets the size of the
+   *          trainingset. With 1k items, a splitFraction of 0.9f will result in
+   *          900 items to train and 100 to evaluate.
    * @param random true if you want to perform shuffling on the data beforehand.
    * @param threshold in case of binary predictions, threshold is used to call
    *          in {@link Classifier#getPredictedClass(DoubleVector, double)}. Can
@@ -178,27 +180,33 @@ public final class Evaluator {
    */
   public static EvaluationResult evaluateClassifier(Classifier classifier,
       DoubleVector[] features, DoubleVector[] outcome, int numLabels,
-      float splitPercentage, boolean random, Double threshold) {
+      float splitFraction, boolean random, Double threshold) {
 
     Preconditions.checkArgument(numLabels > 1,
         "The number of labels should be greater than 1!");
-    Preconditions.checkArgument(features.length == outcome.length,
-        "Feature vector and outcome vector must match in length!");
 
-    if (random) {
-      ArrayUtils.multiShuffle(features, outcome);
-    }
+    EvaluationSplit split = EvaluationSplit.create(features, outcome,
+        splitFraction, random);
 
-    final int splitIndex = (int) (features.length * splitPercentage);
-    DoubleVector[] trainFeatures = ArrayUtils.subArray(features, splitIndex);
-    DoubleVector[] trainOutcome = ArrayUtils.subArray(outcome, splitIndex);
-    DoubleVector[] testFeatures = ArrayUtils.subArray(features, splitIndex + 1,
-        features.length - 1);
-    DoubleVector[] testOutcome = ArrayUtils.subArray(outcome, splitIndex + 1,
-        outcome.length - 1);
+    return evaluateSplit(classifier, numLabels, threshold, split);
+  }
 
-    return evaluateSplit(classifier, numLabels, threshold, trainFeatures,
-        trainOutcome, testFeatures, testOutcome);
+  /**
+   * Evaluates a given train/test split with the given classifier.
+   * 
+   * @param classifier the classifier to train on the train split.
+   * @param numLabels the number of labels that can be classified.
+   * @param threshold the threshold for predicting a specific class by
+   *          probability (if not provided = null).
+   * @param split the {@link EvaluationSplit} that contains the test and train
+   *          data.
+   * @return a fresh evalation result filled with the evaluated metrics.
+   */
+  public static EvaluationResult evaluateSplit(Classifier classifier,
+      int numLabels, Double threshold, EvaluationSplit split) {
+    return evaluateSplit(classifier, numLabels, threshold,
+        split.getTrainFeatures(), split.getTrainOutcome(),
+        split.getTestFeatures(), split.getTestOutcome());
   }
 
   /**
@@ -302,8 +310,8 @@ public final class Evaluator {
    * @param verbose true if partial fold results should be printed.
    * @return a averaged evaluation result over all k folds.
    */
-  public static EvaluationResult crossValidateClassifier(
-      ClassifierFactory classifierFactory, DoubleVector[] features,
+  public static <A extends Classifier> EvaluationResult crossValidateClassifier(
+      ClassifierFactory<A> classifierFactory, DoubleVector[] features,
       DoubleVector[] outcome, int numLabels, int folds, Double threshold,
       boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
@@ -326,8 +334,8 @@ public final class Evaluator {
    * @param verbose true if partial fold results should be printed.
    * @return a averaged evaluation result over all k folds.
    */
-  public static EvaluationResult crossValidateClassifier(
-      ClassifierFactory classifierFactory, DoubleVector[] features,
+  public static <A extends Classifier> EvaluationResult crossValidateClassifier(
+      ClassifierFactory<A> classifierFactory, DoubleVector[] features,
       DoubleVector[] outcome, int numLabels, int folds, Double threshold,
       int numThreads, boolean verbose) {
     // train on k-1 folds, test on 1 fold, results are averaged
@@ -360,7 +368,7 @@ public final class Evaluator {
 
     // build the models fold for fold
     for (int fold = 0; fold < folds; fold++) {
-      completionService.submit(new CallableEvaluation(fold, splitRanges, m,
+      completionService.submit(new CallableEvaluation<>(fold, splitRanges, m,
           classifierFactory, features, outcome, numLabels, folds, threshold));
     }
 
@@ -402,8 +410,8 @@ public final class Evaluator {
    * @param verbose true if partial fold results should be printed.
    * @return a averaged evaluation result over all 10 folds.
    */
-  public static EvaluationResult tenFoldCrossValidation(
-      ClassifierFactory classifierFactory, DoubleVector[] features,
+  public static <A extends Classifier> EvaluationResult tenFoldCrossValidation(
+      ClassifierFactory<A> classifierFactory, DoubleVector[] features,
       DoubleVector[] outcome, int numLabels, Double threshold, boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
         numLabels, 10, threshold, verbose);
@@ -422,27 +430,28 @@ public final class Evaluator {
    * @param verbose true if partial fold results should be printed.
    * @return a averaged evaluation result over all 10 folds.
    */
-  public static EvaluationResult tenFoldCrossValidation(
-      ClassifierFactory classifierFactory, DoubleVector[] features,
+  public static <A extends Classifier> EvaluationResult tenFoldCrossValidation(
+      ClassifierFactory<A> classifierFactory, DoubleVector[] features,
       DoubleVector[] outcome, int numLabels, Double threshold, int numThreads,
       boolean verbose) {
     return crossValidateClassifier(classifierFactory, features, outcome,
         numLabels, 10, threshold, numThreads, verbose);
   }
 
-  private static class CallableEvaluation implements Callable<EvaluationResult> {
+  private static class CallableEvaluation<A extends Classifier> implements
+      Callable<EvaluationResult> {
 
     private final int fold;
     private final int[] splitRanges;
     private final int m;
     private final DoubleVector[] features;
     private final DoubleVector[] outcome;
-    private final ClassifierFactory classifierFactory;
+    private final ClassifierFactory<A> classifierFactory;
     private final int numLabels;
     private final Double threshold;
 
     public CallableEvaluation(int fold, int[] splitRanges, int m,
-        ClassifierFactory classifierFactory, DoubleVector[] features,
+        ClassifierFactory<A> classifierFactory, DoubleVector[] features,
         DoubleVector[] outcome, int numLabels, int folds, Double threshold) {
       this.fold = fold;
       this.splitRanges = splitRanges;

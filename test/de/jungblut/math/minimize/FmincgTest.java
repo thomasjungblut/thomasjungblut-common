@@ -1,14 +1,13 @@
 package de.jungblut.math.minimize;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
-public class FmincgTest extends TestCase {
+public class FmincgTest {
 
   @Test
   public void testSimpleParable() {
@@ -20,19 +19,19 @@ public class FmincgTest extends TestCase {
     // the derivative is f'(x) = 2x-8
     CostFunction inlineFunction = new CostFunction() {
       @Override
-      public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+      public CostGradientTuple evaluateCost(DoubleVector input) {
 
         double cost = Math.pow(4 - input.get(0), 2) + 10;
         DenseDoubleVector gradient = new DenseDoubleVector(
             new double[] { 2 * input.get(0) - 8 });
 
-        return new Tuple<Double, DoubleVector>(cost, gradient);
+        return new CostGradientTuple(cost, gradient);
       }
     };
 
     DoubleVector minimizeFunction = Fmincg.minimizeFunction(inlineFunction,
         start, 100, false);
-    assertEquals(4.0d, minimizeFunction.get(0));
+    assertEquals(4.0d, minimizeFunction.get(0), 1e-5);
   }
 
 }

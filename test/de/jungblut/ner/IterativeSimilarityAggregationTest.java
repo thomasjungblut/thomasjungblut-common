@@ -1,8 +1,9 @@
 package de.jungblut.ner;
 
-import java.util.Arrays;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import junit.framework.TestCase;
+import java.util.Arrays;
 
 import org.junit.Test;
 
@@ -11,7 +12,7 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
-public final class IterativeSimilarityAggregationTest extends TestCase {
+public final class IterativeSimilarityAggregationTest {
 
   String[] terms = new String[] { "A", "B", "C", "D", "E", "F" };
   String[] seedStringSet = new String[] { "A", "B" };

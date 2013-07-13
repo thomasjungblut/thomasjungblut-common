@@ -1,25 +1,39 @@
 package de.jungblut.classification.bayes;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Iterator;
+
+import org.apache.commons.math3.util.FastMath;
 
 import com.google.common.base.Preconditions;
 
 import de.jungblut.classification.AbstractClassifier;
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
-import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
+import de.jungblut.writable.MatrixWritable;
+import de.jungblut.writable.VectorWritable;
 
 /**
- * Simple multinomial naive bayes classifier.
+ * Multinomial naive bayes classifier. This class now contains a sparse internal
+ * representations of the "feature given class" probabilities. So this can be
+ * scaled to very large text corpora and large numbers of classes easily.
+ * Serialization and deserialization happens through the like-named static
+ * methods.
  * 
  * @author thomas.jungblut
  * 
  */
 public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
 
-  private DenseDoubleMatrix probabilityMatrix;
-  private DenseDoubleVector classProbability;
+  private static final double LOW_PROBABILITY = FastMath.log(1e-8);
+
+  private DoubleMatrix probabilityMatrix;
+  private DoubleVector classProbability;
 
   /**
    * Default constructor to construct this classifier.
@@ -34,8 +48,8 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
    * @param probabilityMatrix the probability matrix.
    * @param classProbability the prior class probabilities.
    */
-  public MultinomialNaiveBayesClassifier(DenseDoubleMatrix probabilityMatrix,
-      DenseDoubleVector classProbability) {
+  private MultinomialNaiveBayesClassifier(DoubleMatrix probabilityMatrix,
+      DoubleVector classProbability) {
     super();
     this.probabilityMatrix = probabilityMatrix;
     this.classProbability = classProbability;
@@ -50,9 +64,10 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
     int numDistinctClasses = outcome[0].getDimension();
     // respect the binary case
     numDistinctClasses = numDistinctClasses == 1 ? 2 : numDistinctClasses;
-    // add-one smooth
-    probabilityMatrix = new DenseDoubleMatrix(numDistinctClasses,
-        features[0].getDimension(), 1.0d);
+    // sparse row representations, so every class has the features as a hashset
+    // of values. This gives good compression for many class problems.
+    probabilityMatrix = new SparseDoubleRowMatrix(numDistinctClasses,
+        features[0].getDimension());
 
     int[] tokenPerClass = new int[numDistinctClasses];
     int[] numDocumentsPerClass = new int[numDistinctClasses];
@@ -83,9 +98,13 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
       for (int tokenColumn = 0; tokenColumn < probabilityMatrix
           .getColumnCount(); tokenColumn++) {
         double currentWordCount = probabilityMatrix.get(row, tokenColumn);
-        double logLikelyhood = Math.log(currentWordCount
-            / (tokenPerClass[row] + probabilityMatrix.getColumnCount() - 1));
-        probabilityMatrix.set(row, tokenColumn, logLikelyhood);
+        // don't care about not occuring words, we honor them with a very small
+        // probability later on.
+        if (currentWordCount != 0) {
+          double logProbability = Math.log(currentWordCount
+              / (tokenPerClass[row] + probabilityMatrix.getColumnCount() - 1));
+          probabilityMatrix.set(row, tokenColumn, logProbability);
+        }
       }
     }
 
@@ -116,6 +135,9 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
       double wordCount = next.getValue();
       double probabilityOfToken = probabilityMatrix.get(classIndex,
           next.getIndex());
+      if (probabilityOfToken == 0d) {
+        probabilityOfToken = LOW_PROBABILITY;
+      }
       probabilitySum += (wordCount * probabilityOfToken);
     }
     return probabilitySum;
@@ -151,15 +173,35 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
   /**
    * @return the internal prior class probability.
    */
-  public DenseDoubleVector getClassProbability() {
+  DoubleVector getClassProbability() {
     return this.classProbability;
   }
 
   /**
    * @return the internal probability matrix.
    */
-  public DenseDoubleMatrix getProbabilityMatrix() {
+  DoubleMatrix getProbabilityMatrix() {
     return this.probabilityMatrix;
+  }
+
+  /**
+   * Deserializes a new MultinomialNaiveBayesClassifier from the given input
+   * stream. Note that "in" will not be closed by this method.
+   */
+  public static MultinomialNaiveBayesClassifier deserialize(DataInput in)
+      throws IOException {
+    MatrixWritable matrixWritable = new MatrixWritable();
+    matrixWritable.readFields(in);
+    DoubleVector classProbability = VectorWritable.readVector(in);
+
+    return new MultinomialNaiveBayesClassifier(matrixWritable.getMatrix(),
+        classProbability);
+  }
+
+  public static void serialize(MultinomialNaiveBayesClassifier model,
+      DataOutput out) throws IOException {
+    new MatrixWritable(model.probabilityMatrix).write(out);
+    VectorWritable.writeVector(model.classProbability, out);
   }
 
 }

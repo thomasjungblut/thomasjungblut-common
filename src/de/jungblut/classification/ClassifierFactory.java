@@ -7,11 +7,11 @@ package de.jungblut.classification;
  * @author thomas.jungblut
  * 
  */
-public interface ClassifierFactory {
+public interface ClassifierFactory<A extends Classifier> {
 
   /**
    * @return a new instance of a classifier.
    */
-  public Classifier newInstance();
+  public A newInstance();
 
 }

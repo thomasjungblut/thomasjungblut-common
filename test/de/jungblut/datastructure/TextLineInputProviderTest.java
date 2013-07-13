@@ -1,17 +1,17 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
 import com.google.common.base.Joiner;
 
-public class TextLineInputProviderTest extends TestCase {
+public class TextLineInputProviderTest {
 
   @Test
   public void testTextLineInputProvider() throws Exception {

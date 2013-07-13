@@ -23,7 +23,7 @@ import de.jungblut.partition.Boundaries.Range;
  * @author thomas.jungblut
  * 
  */
-public final class Voting extends AbstractClassifier {
+public final class Voting<A extends Classifier> extends AbstractClassifier {
 
   public static enum CombiningType {
     MAJORITY, AVERAGE
@@ -34,7 +34,7 @@ public final class Voting extends AbstractClassifier {
   private final int threads;
   private final boolean verbose;
 
-  public Voting(CombiningType type, ClassifierFactory factory, int models,
+  public Voting(CombiningType type, ClassifierFactory<A> factory, int models,
       int threads, boolean verbose) {
     this.threads = threads;
     this.verbose = verbose;
@@ -45,7 +45,7 @@ public final class Voting extends AbstractClassifier {
     }
   }
 
-  public Voting(CombiningType type, ClassifierFactory factory, int models,
+  public Voting(CombiningType type, ClassifierFactory<A> factory, int models,
       boolean verbose) {
     this(type, factory, models, Runtime.getRuntime().availableProcessors(),
         verbose);

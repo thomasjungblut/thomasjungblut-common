@@ -1,13 +1,14 @@
 package de.jungblut.datastructure;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 import de.jungblut.datastructure.BinaryHeap.HeapSort;
 import de.jungblut.datastructure.BinaryHeap.HeapType;
 
-public class BinaryHeapTest extends TestCase {
+public class BinaryHeapTest {
 
   @Test
   public void testHeapInsert() {

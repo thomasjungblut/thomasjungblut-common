@@ -1,5 +1,7 @@
 package de.jungblut.nlp.mr;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
@@ -8,15 +10,13 @@ import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.google.common.collect.HashMultiset;
@@ -26,19 +26,18 @@ import de.jungblut.nlp.StandardTokenizer;
 import de.jungblut.nlp.mr.WordCorpusFrequencyJob.DocumentSumReducer;
 import de.jungblut.nlp.mr.WordCorpusFrequencyJob.TokenMapper;
 
-public class WordCorpusFrequencyJobTest extends TestCase {
+public class WordCorpusFrequencyJobTest {
 
-  MapDriver<LongWritable, Text, Text, TextIntPairWritable> mapDriver;
-  ReduceDriver<Text, TextIntPairWritable, Text, TextIntIntIntWritable> reduceDriver;
-  MapReduceDriver<LongWritable, Text, Text, TextIntPairWritable, Text, TextIntIntIntWritable> mapReduceDriver;
+  static MapDriver<LongWritable, Text, Text, TextIntPairWritable> mapDriver;
+  static ReduceDriver<Text, TextIntPairWritable, Text, TextIntIntIntWritable> reduceDriver;
+  static MapReduceDriver<LongWritable, Text, Text, TextIntPairWritable, Text, TextIntIntIntWritable> mapReduceDriver;
 
-  String toDedup = "this this is a text about how i used lower case and and duplicate words words";
-  HashMultiset<String> tokenFrequency = HashMultiset.create(Arrays
+  static String toDedup = "this this is a text about how i used lower case and and duplicate words words";
+  static HashMultiset<String> tokenFrequency = HashMultiset.create(Arrays
       .asList(new StandardTokenizer().tokenize(toDedup)));
 
-  @Override
-  @Before
-  public void setUp() {
+  @BeforeClass
+  public static void setUp() {
     toDedup = "ID123\t" + toDedup;
     TokenMapper mapper = new TokenMapper();
     DocumentSumReducer reducer = new DocumentSumReducer();

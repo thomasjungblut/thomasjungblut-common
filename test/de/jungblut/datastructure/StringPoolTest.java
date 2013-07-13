@@ -1,10 +1,10 @@
 package de.jungblut.datastructure;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class StringPoolTest extends TestCase {
+public class StringPoolTest {
 
   @Test
   public void testStringPooling() {

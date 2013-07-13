@@ -1,32 +1,33 @@
 package de.jungblut.classification.regression;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
 import de.jungblut.classification.Classifier;
-import de.jungblut.classification.Evaluator;
-import de.jungblut.classification.Evaluator.EvaluationResult;
+import de.jungblut.classification.eval.Evaluator;
+import de.jungblut.classification.eval.Evaluator.EvaluationResult;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
-import de.jungblut.math.tuple.Tuple;
 import de.jungblut.reader.CsvDatasetReader;
+import de.jungblut.reader.Dataset;
 
-public class LogisticRegressionTest extends TestCase {
+public class LogisticRegressionTest {
 
   private static DoubleVector[] features;
-  private static DenseDoubleVector[] outcome;
+  private static DoubleVector[] outcome;
   private static DenseDoubleVector y;
   private static DenseDoubleMatrix x;
 
   static {
     LogisticRegression.SEED = 0L;
-    Tuple<DoubleVector[], DenseDoubleVector[]> readCsv = CsvDatasetReader
-        .readCsv("files/logreg/ex2data1.txt", ',', null, 2, 2);
-    features = readCsv.getFirst();
-    outcome = readCsv.getSecond();
+    Dataset readCsv = CsvDatasetReader.readCsv("files/logreg/ex2data1.txt",
+        ',', null, 2, 2);
+    features = readCsv.getFeatures();
+    outcome = readCsv.getOutcomes();
     double[] classes = new double[outcome.length];
     for (int i = 0; i < outcome.length; i++) {
       classes[i] = outcome[i].get(0);
@@ -57,7 +58,7 @@ public class LogisticRegressionTest extends TestCase {
     DoubleVector predict = reg.predict(x, 0.5d);
 
     double wrongPredictions = predict.subtract(y).abs().sum();
-    assertEquals(11.0d, wrongPredictions);
+    assertEquals(11.0d, wrongPredictions, 1e-4);
     double trainAccuracy = (y.getLength() - wrongPredictions) / y.getLength();
 
     assertTrue(trainAccuracy > 0.85);
@@ -81,8 +82,8 @@ public class LogisticRegressionTest extends TestCase {
     Classifier clf = new LogisticRegression(1.0d, new Fmincg(), 1000, false);
     EvaluationResult eval = Evaluator.evaluateClassifier(clf, features,
         outcome, 2, 0.9f, false, 0.5d);
-    assertEquals(1d, eval.getPrecision());
-    assertEquals(9, eval.getTestSize());
-    assertEquals(91, eval.getTrainSize());
+    assertEquals(1d, eval.getPrecision(), 1e-4);
+    assertEquals(10, eval.getTestSize());
+    assertEquals(90, eval.getTrainSize());
   }
 }

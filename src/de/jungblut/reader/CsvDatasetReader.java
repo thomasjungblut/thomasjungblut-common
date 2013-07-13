@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import au.com.bytecode.opencsv.CSVReader;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Binary dataset reader from CSVs.
@@ -29,10 +28,10 @@ public final class CsvDatasetReader {
    * @param quote the quote, null if none present
    * @param numFeatures the number of features to expect
    * @param outcomeIndex the index of the outcome
-   * @return a tuple with features and outcomes.
+   * @return a new dataset.
    */
-  public static Tuple<DoubleVector[], DenseDoubleVector[]> readCsv(String path,
-      char separator, Character quote, int numFeatures, int outcomeIndex) {
+  public static Dataset readCsv(String path, char separator, Character quote,
+      int numFeatures, int outcomeIndex) {
     ArrayList<DoubleVector> featureList = new ArrayList<>();
     ArrayList<DenseDoubleVector> outcomeList = new ArrayList<>();
     // really Java7? You can't add an expression into try/catch?
@@ -61,9 +60,9 @@ public final class CsvDatasetReader {
 
     DoubleVector[] features = featureList.toArray(new DoubleVector[featureList
         .size()]);
-    DenseDoubleVector[] outcome = outcomeList
-        .toArray(new DenseDoubleVector[outcomeList.size()]);
-    return new Tuple<>(features, outcome);
+    DoubleVector[] outcome = outcomeList.toArray(new DoubleVector[outcomeList
+        .size()]);
+    return new Dataset(features, outcome);
 
   }
 }

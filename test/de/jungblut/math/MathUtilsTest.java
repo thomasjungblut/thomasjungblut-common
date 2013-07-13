@@ -1,16 +1,17 @@
 package de.jungblut.math;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
+import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
 
-public class MathUtilsTest extends TestCase {
+public class MathUtilsTest {
 
   @Test
   public void testMeanNormalizeRows() {
@@ -57,13 +58,13 @@ public class MathUtilsTest extends TestCase {
         new double[][] { { 0d, 1d, 0.5d, Double.NaN, 0.2d,
             Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY } });
     DoubleMatrix mat = MathUtils.logMatrix(y);
-    assertEquals(-10d, mat.get(0, 0));
-    assertEquals(0d, mat.get(0, 1));
-    assertEquals(-0.6931471805599453, mat.get(0, 2));
-    assertEquals(0d, mat.get(0, 3));
-    assertEquals(-1.6094379124341003, mat.get(0, 4));
-    assertEquals(0d, mat.get(0, 5));
-    assertEquals(0d, mat.get(0, 6));
+    assertEquals(-10d, mat.get(0, 0), 1e-4);
+    assertEquals(0d, mat.get(0, 1), 1e-4);
+    assertEquals(-0.6931471805599453, mat.get(0, 2), 1e-4);
+    assertEquals(0d, mat.get(0, 3), 1e-4);
+    assertEquals(-1.6094379124341003, mat.get(0, 4), 1e-4);
+    assertEquals(0d, mat.get(0, 5), 1e-4);
+    assertEquals(0d, mat.get(0, 6), 1e-4);
   }
 
   @Test
@@ -104,26 +105,26 @@ public class MathUtilsTest extends TestCase {
     // the derivative is f'(x,y) = 2x+2y
     final CostFunction inlineFunction = new CostFunction() {
       @Override
-      public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+      public CostGradientTuple evaluateCost(DoubleVector input) {
 
         double cost = Math.pow(input.get(0), 2) + Math.pow(input.get(1), 2);
         DenseDoubleVector gradient = new DenseDoubleVector(new double[] {
             input.get(0) * 2, input.get(1) * 2 });
 
-        return new Tuple<Double, DoubleVector>(cost, gradient);
+        return new CostGradientTuple(cost, gradient);
       }
     };
     DenseDoubleVector v = new DenseDoubleVector(new double[] { 0, 1 });
-    Tuple<Double, DoubleVector> cost = inlineFunction.evaluateCost(v);
+    CostGradientTuple cost = inlineFunction.evaluateCost(v);
     DoubleVector numericalGradient = MathUtils.numericalGradient(v,
         inlineFunction);
-    assertSmallDiff(numericalGradient, cost.getSecond());
+    assertSmallDiff(numericalGradient, cost.getGradient());
 
     v = new DenseDoubleVector(new double[] { -15, 100 });
     cost = inlineFunction.evaluateCost(v);
 
     numericalGradient = MathUtils.numericalGradient(v, inlineFunction);
-    assertSmallDiff(numericalGradient, cost.getSecond());
+    assertSmallDiff(numericalGradient, cost.getGradient());
   }
 
   private void assertSmallDiff(DoubleVector v1, DoubleVector v2) {

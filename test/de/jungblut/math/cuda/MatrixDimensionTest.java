@@ -1,12 +1,12 @@
 package de.jungblut.math.cuda;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.dense.DenseDoubleMatrix;
 
-public class MatrixDimensionTest extends TestCase {
+public class MatrixDimensionTest {
 
   @Test
   public void testDimensionalityNoTranspose() {

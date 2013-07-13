@@ -2,7 +2,6 @@ package de.jungblut.math.minimize;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Minimize a continuous differentialble multivariate function. Starting point <br/>
@@ -101,9 +100,9 @@ public final class Fmincg extends AbstractMinimizer {
     int ls_failed = 0; // no previous line search has failed
     // what we return as fX get function value and gradient
     DenseDoubleVector fX = new DenseDoubleVector(0);
-    final Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(input);
-    double f1 = evaluateCost.getFirst();
-    DoubleVector df1 = evaluateCost.getSecond();
+    final CostGradientTuple evaluateCost = f.evaluateCost(input);
+    double f1 = evaluateCost.getCost();
+    DoubleVector df1 = evaluateCost.getGradient();
     i = i + (length < 0 ? 1 : 0);
     // search direction is steepest
     DoubleVector s = df1.multiply(-1.0d);
@@ -119,9 +118,9 @@ public final class Fmincg extends AbstractMinimizer {
       DoubleVector df0 = df1.deepCopy();
       // begin line search
       input = input.add(s.multiply(z1));
-      final Tuple<Double, DoubleVector> evaluateCost2 = f.evaluateCost(input);
-      double f2 = evaluateCost2.getFirst();
-      DoubleVector df2 = evaluateCost2.getSecond();
+      final CostGradientTuple evaluateCost2 = f.evaluateCost(input);
+      double f2 = evaluateCost2.getCost();
+      DoubleVector df2 = evaluateCost2.getGradient();
 
       i = i + (length < 0 ? 1 : 0); // count epochs
       double d2 = df2.dot(s);
@@ -164,10 +163,9 @@ public final class Fmincg extends AbstractMinimizer {
           // update the step
           z1 = z1 + z2;
           input = input.add(s.multiply(z2));
-          final Tuple<Double, DoubleVector> evaluateCost3 = f
-              .evaluateCost(input);
-          f2 = evaluateCost3.getFirst();
-          df2 = evaluateCost3.getSecond();
+          final CostGradientTuple evaluateCost3 = f.evaluateCost(input);
+          f2 = evaluateCost3.getCost();
+          df2 = evaluateCost3.getGradient();
           M = M - 1;
           i = i + (length < 0 ? 1 : 0); // count epochs
           d2 = df2.dot(s);
@@ -215,9 +213,9 @@ public final class Fmincg extends AbstractMinimizer {
         z1 = z1 + z2;
         // update current estimates
         input = input.add(s.multiply(z2));
-        final Tuple<Double, DoubleVector> evaluateCost3 = f.evaluateCost(input);
-        f2 = evaluateCost3.getFirst();
-        df2 = evaluateCost3.getSecond();
+        final CostGradientTuple evaluateCost3 = f.evaluateCost(input);
+        f2 = evaluateCost3.getCost();
+        df2 = evaluateCost3.getGradient();
         M = M - 1;
         i = i + (length < 0 ? 1 : 0); // count epochs?!
         d2 = df2.dot(s);

@@ -8,8 +8,8 @@ import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
+import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.minimize.DenseMatrixFolder;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Conditional likelihood cost function, used in a maximum entropy markov model
@@ -36,7 +36,7 @@ public final class ConditionalLikelihoodCostFunction implements CostFunction {
   }
 
   @Override
-  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+  public CostGradientTuple evaluateCost(DoubleVector input) {
     // TODO if you are really caring about performance and memory usage, you can
     // implement some methods to translate the indices from matrices to vectors,
     // so you don't have to copy all that memory.
@@ -82,7 +82,7 @@ public final class ConditionalLikelihoodCostFunction implements CostFunction {
     // now add the prior and finalize the derivative
     cost += computeLogPrior(input, foldGradient);
 
-    return new Tuple<Double, DoubleVector>(cost, foldGradient);
+    return new CostGradientTuple(cost, foldGradient);
   }
 
   // checks if the prediction is correct, by comparing the index of the

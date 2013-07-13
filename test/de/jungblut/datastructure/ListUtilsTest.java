@@ -1,15 +1,15 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
-public class ListUtilsTest extends TestCase {
+public class ListUtilsTest {
 
   List<Integer> list1 = new ArrayList<>();
   List<Integer> list2 = new ArrayList<>();

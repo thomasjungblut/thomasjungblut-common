@@ -5,7 +5,6 @@ import java.util.Arrays;
 import com.google.common.base.Preconditions;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Gradient descent implementation with some neat features like momentum,
@@ -180,13 +179,13 @@ public final class GradientDescent extends AbstractMinimizer {
     DoubleVector theta = pInput;
     double alpha = this.alpha;
     for (int iteration = 0; iteration < maxIterations; iteration++) {
-      Tuple<Double, DoubleVector> evaluateCost = f.evaluateCost(theta);
+      CostGradientTuple evaluateCost = f.evaluateCost(theta);
       if (verbose) {
         System.out.print("Iteration " + iteration + " | Cost: "
-            + evaluateCost.getFirst() + "\r");
+            + evaluateCost.getCost() + "\r");
       }
       shiftLeft(lastCosts);
-      lastCosts[lastIndex] = evaluateCost.getFirst();
+      lastCosts[lastIndex] = evaluateCost.getCost();
       // break if we converged below the limit
       if (converged(lastCosts, breakDifference)) {
         break;
@@ -196,7 +195,7 @@ public final class GradientDescent extends AbstractMinimizer {
         break;
       }
 
-      DoubleVector gradient = evaluateCost.getSecond();
+      DoubleVector gradient = evaluateCost.getGradient();
       // check the bold driver
       if (boldDriver) {
         if (lastGradient != null) {
@@ -232,7 +231,7 @@ public final class GradientDescent extends AbstractMinimizer {
         // both theta vectors
         theta = theta.add((lastTheta.subtract(theta)).multiply(momentum));
       }
-      onIterationFinished(iteration, evaluateCost.getFirst(), theta);
+      onIterationFinished(iteration, evaluateCost.getCost(), theta);
     }
 
     return theta;

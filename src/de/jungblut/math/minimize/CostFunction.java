@@ -1,7 +1,6 @@
 package de.jungblut.math.minimize;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Cost function interface to be implemented when using with a optimizer like
@@ -19,6 +18,6 @@ public interface CostFunction {
    * @return a tuple consists of J (cost) and a vector X which is the gradient
    *         of the input.
    */
-  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input);
+  public CostGradientTuple evaluateCost(DoubleVector input);
 
 }

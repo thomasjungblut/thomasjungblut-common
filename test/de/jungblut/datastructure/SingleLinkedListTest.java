@@ -1,10 +1,10 @@
 package de.jungblut.datastructure;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class SingleLinkedListTest extends TestCase {
+public class SingleLinkedListTest {
 
   @Test
   public void testInserts() throws Exception {

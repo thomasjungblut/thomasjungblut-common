@@ -1,11 +1,11 @@
 package de.jungblut.writable;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -13,7 +13,7 @@ import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 
-public class MatrixWritableTest extends TestCase {
+public class MatrixWritableTest {
 
   @Test
   public void testDenseSerDe() throws Exception {
@@ -29,7 +29,7 @@ public class MatrixWritableTest extends TestCase {
     DataInputStream in = new DataInputStream(bais);
     DoubleMatrix readMat = MatrixWritable.readDenseMatrix(in);
 
-    assertEquals(0.0d, mat.subtract(readMat).sum());
+    assertEquals(0.0d, mat.subtract(readMat).sum(), 1e-4);
 
   }
 
@@ -48,7 +48,7 @@ public class MatrixWritableTest extends TestCase {
     DataInputStream in = new DataInputStream(bais);
     DoubleMatrix readMat = MatrixWritable.readSparseMatrix(in);
 
-    assertEquals(0.0d, mat.subtract(readMat).sum());
+    assertEquals(0.0d, mat.subtract(readMat).sum(), 1e-4);
 
   }
 

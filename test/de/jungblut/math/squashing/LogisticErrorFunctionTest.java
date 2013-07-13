@@ -1,13 +1,13 @@
 package de.jungblut.math.squashing;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 
-public class LogisticErrorFunctionTest extends TestCase {
+public class LogisticErrorFunctionTest {
 
   @Test
   public void testSigmoidError() {
@@ -16,7 +16,7 @@ public class LogisticErrorFunctionTest extends TestCase {
     DoubleMatrix hypothesis = new DenseDoubleMatrix(new double[] { 0d, 0d, 0d,
         1d, 0d }, 1, 5);
     double error = new LogisticErrorFunction().calculateError(y, hypothesis);
-    assertEquals(10d, error);
+    assertEquals(10d, error, 1e-4);
   }
 
 }

@@ -332,7 +332,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       getWeights()[i].setWeights(unfoldMatrices[i]);
     }
 
-    return costFunction.evaluateCost(theta).getFirst();
+    return costFunction.evaluateCost(theta).getCost();
   }
 
   /**

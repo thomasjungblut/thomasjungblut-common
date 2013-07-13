@@ -1,16 +1,18 @@
 package de.jungblut.nlp;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
 import com.google.common.base.Optional;
 
-public class MarkovChainTest extends TestCase {
+public class MarkovChainTest {
 
   static List<int[]> trainingSet = new ArrayList<>();
   static {
@@ -31,11 +33,11 @@ public class MarkovChainTest extends TestCase {
     // transition 2-1, even if 1-2 is very probable
     assertTrue(0.01 < p);
     p = chain.getProbabilityForSequence(new int[] { 1, 2 });
-    assertEquals(1d, p);
+    assertEquals(1d, p, 1e-4);
     p = chain.getProbabilityForSequence(new int[] { 3, 4 });
-    assertEquals(1d, p);
+    assertEquals(1d, p, 1e-4);
     p = chain.getProbabilityForSequence(new int[] { 2, 3 });
-    assertEquals(1d, p);
+    assertEquals(1d, p, 1e-4);
     p = chain.getProbabilityForSequence(new int[] { 2, 3, 3 });
     assertEquals(0.333d, p, 1e-3);
   }

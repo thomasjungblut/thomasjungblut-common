@@ -1,12 +1,12 @@
 package de.jungblut.clustering;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ import de.jungblut.distance.ManhattanDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class AgglomerativeClusteringTest extends TestCase {
+public class AgglomerativeClusteringTest {
 
   @Test
   public void testClustering() {

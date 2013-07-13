@@ -1,6 +1,6 @@
 package de.jungblut.classification.knn;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
-public class SparseKNearestNeighboursTest extends TestCase {
+public class SparseKNearestNeighboursTest {
 
   @Test
   public void testSparseKNN() {

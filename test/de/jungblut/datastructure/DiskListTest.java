@@ -1,13 +1,15 @@
 package de.jungblut.datastructure;
 
-import java.io.IOException;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
-import junit.framework.TestCase;
+import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
 import org.junit.Test;
 
-public class DiskListTest extends TestCase {
+public class DiskListTest {
 
   @Test
   public void testReadWrite() throws IOException {

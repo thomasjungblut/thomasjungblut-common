@@ -129,9 +129,9 @@ public final class MathUtils {
     for (int i = 0; i < vector.getLength(); i++) {
       double stepSize = EPS * (Math.abs(vector.get(i)) + 1d);
       tmp.set(i, vector.get(i) + stepSize);
-      double add = f.evaluateCost(tmp).getFirst().doubleValue();
+      double add = f.evaluateCost(tmp).getCost();
       tmp.set(i, vector.get(i) - stepSize);
-      double diff = f.evaluateCost(tmp).getFirst().doubleValue();
+      double diff = f.evaluateCost(tmp).getCost();
       gradient.set(i, (add - diff) / (2d * stepSize));
     }
     return gradient;

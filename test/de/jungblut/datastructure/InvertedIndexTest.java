@@ -1,10 +1,10 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -18,7 +18,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.nlp.TokenizerUtils;
 
-public class InvertedIndexTest extends TestCase {
+public class InvertedIndexTest {
 
   private static final List<String> phrases = Arrays.asList("I eat the dog",
       "You like the dog", "this is the best I have ever seen");

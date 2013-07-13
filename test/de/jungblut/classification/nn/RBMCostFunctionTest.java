@@ -1,6 +1,6 @@
 package de.jungblut.classification.nn;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -8,11 +8,16 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.SigmoidActivationFunction;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.GradientDescent;
-import de.jungblut.math.tuple.Tuple;
 
-public class RBMCostFunctionTest extends TestCase {
+public class RBMCostFunctionTest {
+
+  static int hiddenUnits = 2;
+  static {
+    MultilayerPerceptron.SEED = 0L;
+  }
 
   // testcase from
   // https://github.com/echen/restricted-boltzmann-machines
@@ -24,13 +29,6 @@ public class RBMCostFunctionTest extends TestCase {
       new DenseDoubleVector(new double[] { 1, 0, 0, 0, 1, 0, 1 }),
       new DenseDoubleVector(new double[] { 1, 0, 0, 0, 1, 1, 1 }) };
 
-  static int hiddenUnits = 2;
-
-  @Override
-  protected void setUp() throws Exception {
-    MultilayerPerceptron.SEED = 0L;
-  }
-
   @Test
   public void testGradient() {
     WeightMatrix pInput = new WeightMatrix(test[0].getDimension(),
@@ -41,9 +39,9 @@ public class RBMCostFunctionTest extends TestCase {
         new SigmoidActivationFunction(), TrainingType.CPU, 0d,
         MultilayerPerceptron.SEED, false);
 
-    Tuple<Double, DoubleVector> evaluateCost = fnc.evaluateCost(foldMatrices);
+    CostGradientTuple evaluateCost = fnc.evaluateCost(foldMatrices);
 
-    assertEquals(10.62, evaluateCost.getFirst().doubleValue(), 1e-2);
+    assertEquals(10.62, evaluateCost.getCost(), 1e-2);
     DoubleVector target = new DenseDoubleVector(new double[] { 0.0,
         0.027379415757720366, 0.029102968186221934, -0.38090575317687425,
         -0.27799120250510584, -0.05453365605307239, 0.028442797042677864,
@@ -54,7 +52,7 @@ public class RBMCostFunctionTest extends TestCase {
         0.052146356412991667, 0.04730987967580811, -0.08117434385333744,
         -0.006743308468200778, 0.03846403112496833 });
 
-    assertEquals(0d, evaluateCost.getSecond().subtract(target).sum(), 1e-4);
+    assertEquals(0d, evaluateCost.getGradient().subtract(target).sum(), 1e-4);
 
   }
 
@@ -67,8 +65,8 @@ public class RBMCostFunctionTest extends TestCase {
     RBMCostFunction fnc = new RBMCostFunction(test, 0, 1, hiddenUnits,
         new SigmoidActivationFunction(), TrainingType.CPU, 0.1d,
         MultilayerPerceptron.SEED, false);
-    Tuple<Double, DoubleVector> evaluateCost = fnc.evaluateCost(foldMatrices);
-    assertEquals(10.62, evaluateCost.getFirst().doubleValue(), 1e-2);
+    CostGradientTuple evaluateCost = fnc.evaluateCost(foldMatrices);
+    assertEquals(10.62, evaluateCost.getCost(), 1e-2);
     DoubleVector target = new DenseDoubleVector(new double[] { 0.0,
         0.02692309216175836, 0.028617918716451567, -0.38090575317687425,
         -0.2733580157966874, -0.05362476178552118, 0.028442797042677864,
@@ -79,7 +77,7 @@ public class RBMCostFunctionTest extends TestCase {
         0.05127725047277514, 0.04652138168121131, -0.08117434385333744,
         -0.006630919993730764, 0.037822963939552194 });
 
-    assertEquals(0d, evaluateCost.getSecond().subtract(target).sum(), 1e-4);
+    assertEquals(0d, evaluateCost.getGradient().subtract(target).sum(), 1e-4);
   }
 
   @Test

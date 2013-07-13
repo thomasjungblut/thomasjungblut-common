@@ -1,13 +1,13 @@
 package de.jungblut.nlp;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.nlp.MinHash.HashType;
 
-public class MinHashTest extends TestCase {
+public class MinHashTest {
 
   @Test
   public void testMinHashing() throws Exception {
@@ -30,7 +30,7 @@ public class MinHashTest extends TestCase {
     // we just differ by a single place, so it should still be 1.0 similarity
     double similarity = minHash
         .measureSimilarity(minHashVector, minHashVector2);
-    assertEquals(1.0d, similarity);
+    assertEquals(1.0d, similarity, 1e-5);
   }
 
   @Test
@@ -54,7 +54,7 @@ public class MinHashTest extends TestCase {
     // we just differ by a single place, so it should still be 1.0 similarity
     double similarity = minHash
         .measureSimilarity(minHashVector, minHashVector2);
-    assertEquals(1.0d, similarity);
+    assertEquals(1.0d, similarity, 1e-5);
   }
 
   @Test
@@ -78,7 +78,7 @@ public class MinHashTest extends TestCase {
     // we just differ by a single place, so it should still be 1.0 similarity
     double similarity = minHash
         .measureSimilarity(minHashVector, minHashVector2);
-    assertEquals(1.0d, similarity);
+    assertEquals(1.0d, similarity, 1e-5);
   }
 
 }

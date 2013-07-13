@@ -1,8 +1,9 @@
 package de.jungblut.clustering;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-import junit.framework.TestCase;
+import java.util.ArrayList;
 
 import org.junit.Test;
 
@@ -10,7 +11,7 @@ import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class KMeansClusteringTest extends TestCase {
+public class KMeansClusteringTest {
 
   @Test
   public void testKMeansClustering() {
@@ -21,10 +22,10 @@ public class KMeansClusteringTest extends TestCase {
     ArrayList<DoubleVector>[] assignments = clusterer.cluster(100, dist, 0.1d,
         false);
     DoubleVector[] centers = clusterer.getCenters();
-    assertEquals(49.5, centers[0].get(0));
-    assertEquals(24.5, centers[0].get(1));
-    assertEquals(49.5, centers[1].get(0));
-    assertEquals(74.5, centers[1].get(1));
+    assertEquals(49.5, centers[0].get(0), 1e-4);
+    assertEquals(24.5, centers[0].get(1), 1e-4);
+    assertEquals(49.5, centers[1].get(0), 1e-4);
+    assertEquals(74.5, centers[1].get(1), 1e-4);
 
     // the centers should partition the space in half
     assertEquals(2, assignments.length);

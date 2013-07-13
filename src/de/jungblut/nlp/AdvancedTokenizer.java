@@ -14,8 +14,6 @@ public final class AdvancedTokenizer implements Tokenizer {
     String[] wordTokenize = TokenizerUtils.wordTokenize(toTokenize
         .toLowerCase().trim());
     wordTokenize = TokenizerUtils.addStartAndEndTags(wordTokenize);
-    wordTokenize = TokenizerUtils.removeMatchingRegex("[»«\"'®™]", "",
-        wordTokenize, true);
     wordTokenize = TokenizerUtils.deduplicateTokens(wordTokenize);
     return wordTokenize;
   }

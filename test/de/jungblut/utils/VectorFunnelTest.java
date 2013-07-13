@@ -1,6 +1,6 @@
 package de.jungblut.utils;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ import com.google.common.hash.Hashing;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
-public class VectorFunnelTest extends TestCase {
+public class VectorFunnelTest {
 
   @Test
   public void testDenseFunneling() {

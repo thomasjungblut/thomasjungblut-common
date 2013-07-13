@@ -9,11 +9,11 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
+import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.minimize.Minimizer;
 import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.squashing.ErrorFunction;
 import de.jungblut.math.squashing.LogisticErrorFunction;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Logistic regression cost function to optimize with an arbitrary
@@ -50,7 +50,7 @@ public final class LogisticRegressionCostFunction implements CostFunction {
   }
 
   @Override
-  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+  public CostGradientTuple evaluateCost(DoubleVector input) {
 
     double reg = input.slice(1, input.getLength()).pow(2).sum() * lambda
         / (2.0d * m);
@@ -65,6 +65,6 @@ public final class LogisticRegressionCostFunction implements CostFunction {
         .multiplyVectorRow(hypo.subtract(y).getRowVector(0)).add(regGradient)
         .divide(m);
 
-    return new Tuple<>(j, gradient);
+    return new CostGradientTuple(j, gradient);
   }
 }

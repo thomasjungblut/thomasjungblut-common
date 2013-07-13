@@ -1,13 +1,13 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import junit.framework.TestCase;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
@@ -16,7 +16,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.WritableUtils;
 import org.junit.Test;
 
-public class MergerTest extends TestCase {
+public class MergerTest {
 
   private static final String TMP_SORTED_FILES = "/tmp/merger/";
   private static final String OUTPUT = "/tmp/merger/merged.bin";

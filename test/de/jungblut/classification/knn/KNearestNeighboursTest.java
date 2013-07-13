@@ -1,25 +1,24 @@
 package de.jungblut.classification.knn;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
+import de.jungblut.reader.Dataset;
 import de.jungblut.reader.MushroomReader;
 
-public class KNearestNeighboursTest extends TestCase {
+public class KNearestNeighboursTest {
 
   private static final int TEST_SET_SIZE = 100;
 
   @Test
   public void testKNN() throws Exception {
-    Tuple<DoubleVector[], DenseDoubleVector[]> mushroom = MushroomReader
+    Dataset mushroom = MushroomReader
         .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
-    DoubleVector[] fullFeatures = mushroom.getFirst();
-    DenseDoubleVector[] fullOutcome = mushroom.getSecond();
+    DoubleVector[] fullFeatures = mushroom.getFeatures();
+    DoubleVector[] fullOutcome = mushroom.getOutcomes();
 
     DoubleVector[] testFeatures = ArrayUtils.subArray(fullFeatures,
         fullFeatures.length - TEST_SET_SIZE, fullFeatures.length - 1);
@@ -30,7 +29,7 @@ public class KNearestNeighboursTest extends TestCase {
     DoubleVector[] trainFeatures = ArrayUtils.subArray(fullFeatures,
         fullFeatures.length - TEST_SET_SIZE);
 
-    DenseDoubleVector[] trainOutcome = ArrayUtils.subArray(fullOutcome,
+    DoubleVector[] trainOutcome = ArrayUtils.subArray(fullOutcome,
         fullOutcome.length - TEST_SET_SIZE);
 
     KNearestNeighbours knn = new KNearestNeighbours(2, 10);

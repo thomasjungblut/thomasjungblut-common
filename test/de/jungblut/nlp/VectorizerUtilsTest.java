@@ -1,5 +1,7 @@
 package de.jungblut.nlp;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -7,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -20,7 +20,7 @@ import com.google.common.collect.Multiset.Entry;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
-public class VectorizerUtilsTest extends TestCase {
+public class VectorizerUtilsTest {
 
   List<String> documents = Lists.newArrayList("this is doc 1", // 0
       "this doc 2", // 1

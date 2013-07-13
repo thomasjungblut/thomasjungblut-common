@@ -1,7 +1,6 @@
 package de.jungblut.math.minimize;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Negated cost function to implement maximization problems. It simply negates
@@ -20,11 +19,10 @@ public final class NegatedCostFunction implements CostFunction {
   }
 
   @Override
-  public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
-    Tuple<Double, DoubleVector> evaluateCost = minableCostFunction
-        .evaluateCost(input);
-    return new Tuple<>(-evaluateCost.getFirst(), evaluateCost.getSecond()
-        .multiply(-1));
+  public CostGradientTuple evaluateCost(DoubleVector input) {
+    CostGradientTuple evaluateCost = minableCostFunction.evaluateCost(input);
+    return new CostGradientTuple(-evaluateCost.getCost(), evaluateCost
+        .getGradient().multiply(-1));
   }
 
 }

@@ -1,13 +1,16 @@
 package de.jungblut.datastructure;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.util.Arrays;
 import java.util.Random;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
-public class ArrayUtilsTest extends TestCase {
+public class ArrayUtilsTest {
 
   @Test
   public void testFind() {

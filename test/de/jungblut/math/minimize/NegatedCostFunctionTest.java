@@ -1,14 +1,13 @@
 package de.jungblut.math.minimize;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
-public class NegatedCostFunctionTest extends TestCase {
+public class NegatedCostFunctionTest {
 
   @Test
   public void testMaximize() {
@@ -19,18 +18,18 @@ public class NegatedCostFunctionTest extends TestCase {
     DoubleVector minimizeFunction = Fmincg.minimizeFunction(
         new NegatedCostFunction(new CostFunction() {
           @Override
-          public Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+          public CostGradientTuple evaluateCost(DoubleVector input) {
             double cost = -Math.pow(input.get(0), 2)
                 - Math.pow(input.get(1), 2);
             DenseDoubleVector gradient = new DenseDoubleVector(new double[] {
                 -2 * input.get(0), -2 * input.get(1) });
 
-            return new Tuple<Double, DoubleVector>(cost, gradient);
+            return new CostGradientTuple(cost, gradient);
           }
         }), theta, 10, false);
 
-    assertEquals(0d, minimizeFunction.get(0));
-    assertEquals(0d, minimizeFunction.get(1));
+    assertEquals(0d, minimizeFunction.get(0), 1e-5);
+    assertEquals(0d, minimizeFunction.get(1), 1e-5);
   }
 
 }

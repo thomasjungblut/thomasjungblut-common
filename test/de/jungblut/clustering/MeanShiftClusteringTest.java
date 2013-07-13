@@ -1,10 +1,11 @@
 package de.jungblut.clustering;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import org.apache.commons.math3.random.RandomDataImpl;
 import org.apache.commons.math3.random.Well1024a;
@@ -16,7 +17,7 @@ import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class MeanShiftClusteringTest extends TestCase {
+public class MeanShiftClusteringTest {
 
   @Test
   public void testKDLookup() {

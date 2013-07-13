@@ -63,7 +63,7 @@ public final class ParticleSwarmOptimization extends AbstractMinimizer {
             + particlePositions[i].get(j) * random.nextDouble());
       }
       particlePersonalBestCost[i] = f.evaluateCost(particlePositions[i])
-          .getFirst();
+          .getCost();
     }
 
     Set<Range> boundaries = new BlockPartitioner().partition(numThreads,
@@ -72,7 +72,7 @@ public final class ParticleSwarmOptimization extends AbstractMinimizer {
     // everything else will be seeded to the start position
     DoubleVector[] particlePersonalBestPositions = new DoubleVector[numParticles];
     Arrays.fill(particlePersonalBestPositions, pInput);
-    double globalCost = f.evaluateCost(pInput).getFirst();
+    double globalCost = f.evaluateCost(pInput).getCost();
 
     // loop as long as we haven't reached our max iterations
     for (int iteration = 0; iteration < maxIterations; iteration++) {
@@ -159,7 +159,7 @@ public final class ParticleSwarmOptimization extends AbstractMinimizer {
           vec.set(index, value);
         }
         particlePositions[particleIndex] = vec;
-        double cost = f.evaluateCost(vec).getFirst();
+        double cost = f.evaluateCost(vec).getCost();
         // check if we have a personal best
         if (cost < particlePersonalBestCost[particleIndex]) {
           particlePersonalBestCost[particleIndex] = cost;

@@ -130,7 +130,7 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
   }
 
   @Override
-  public final Tuple<Double, DoubleVector> evaluateCost(DoubleVector input) {
+  public final CostGradientTuple evaluateCost(DoubleVector input) {
 
     ExecutorCompletionService<Tuple<Double, DoubleVector>> completionService = new ExecutorCompletionService<>(
         pool);
@@ -166,10 +166,10 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
     }
     if (submittedBatches != 1) {
       // just return an average over the batches
-      return new Tuple<>(costSum / submittedBatches,
+      return new CostGradientTuple(costSum / submittedBatches,
           gradientSum.divide(submittedBatches));
     } else {
-      return new Tuple<>(costSum, gradientSum);
+      return new CostGradientTuple(costSum, gradientSum);
     }
   }
 

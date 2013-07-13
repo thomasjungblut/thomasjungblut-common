@@ -1,5 +1,10 @@
 package de.jungblut.crawl.extraction;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -10,15 +15,13 @@ import java.util.Iterator;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import junit.framework.TestCase;
-
 import org.junit.Test;
 
 import com.google.common.collect.Sets;
 
 import de.jungblut.crawl.FetchResult;
 
-public class OutlinkExtractorTest extends TestCase {
+public class OutlinkExtractorTest {
 
   private static final String HOME = "http://people.apache.org/~tjungblut/downloads/test.html";
   private static final String HOME2 = "http://people.apache.org/~tjungblut/downloads/test2.html";

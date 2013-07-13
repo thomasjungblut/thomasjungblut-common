@@ -1,6 +1,6 @@
 package de.jungblut.datastructure;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
-public class ArrayJoinerTest extends TestCase {
+public class ArrayJoinerTest {
 
   @Rule
   public ExpectedException exception = ExpectedException.none();

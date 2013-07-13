@@ -1,12 +1,12 @@
 package de.jungblut.datastructure;
 
-import java.util.ArrayList;
+import static org.junit.Assert.assertEquals;
 
-import junit.framework.TestCase;
+import java.util.ArrayList;
 
 import org.junit.Test;
 
-public class CollectionInputProviderTest extends TestCase {
+public class CollectionInputProviderTest {
 
   @Test
   public void testCollectionInputProvider() {

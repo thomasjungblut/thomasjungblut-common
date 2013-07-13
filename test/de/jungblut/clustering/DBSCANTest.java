@@ -1,9 +1,9 @@
 package de.jungblut.clustering;
 
+import static org.junit.Assert.assertEquals;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import junit.framework.TestCase;
 
 import org.junit.Test;
 
@@ -11,7 +11,7 @@ import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class DBSCANTest extends TestCase {
+public class DBSCANTest {
 
   @Test
   public void testDBSCAN() {

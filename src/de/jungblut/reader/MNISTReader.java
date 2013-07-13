@@ -8,7 +8,6 @@ import java.util.List;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * MNIST CSV reader from kaggle: www.kaggle.com/c/digit-recognizer/
@@ -22,8 +21,7 @@ public final class MNISTReader {
     throw new IllegalAccessError();
   }
 
-  public static Tuple<DoubleVector[], DenseDoubleVector[]> readMNISTTrainImages(
-      String path) {
+  public static Dataset readMNISTTrainImages(String path) {
     List<DoubleVector> features = new ArrayList<>();
     List<DenseDoubleVector> prediction = new ArrayList<>();
     String line = null;
@@ -54,7 +52,7 @@ public final class MNISTReader {
       e.printStackTrace();
     }
 
-    return new Tuple<>(features.toArray(new DoubleVector[features.size()]),
+    return new Dataset(features.toArray(new DoubleVector[features.size()]),
         prediction.toArray(new DenseDoubleVector[features.size()]));
   }
 }

@@ -1,10 +1,10 @@
 package de.jungblut.datastructure;
 
-import junit.framework.TestCase;
+import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-public class LimitedPriorityQueueTest extends TestCase {
+public class LimitedPriorityQueueTest {
 
   @Test
   public void testLimitedDrop() throws Exception {

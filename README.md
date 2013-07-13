@@ -7,10 +7,13 @@ this is my code-sink for mainly java files.
 - Datastructures & Algorithms
 - Apache Hadoop
 - Apache Hama
-- Machine learning (Clustering, Classification, Optimization algorithms)
+- Machine learning (clustering, classification, optimization algorithms)
 - [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
 - [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")
 - JCuda experiments
+
+Please notice that this is in fact no framework, much rather a common library for my everyday usage. 
+I won't bother about backward compatibility, extensive documentation and full test coverage- although I try my best to at least fulfill the last two.
 
 License
 -------
@@ -38,10 +41,6 @@ You can simply build with:
 
 > mvn clean package install
 
-The created jar contains debuggable code + sources.
-
-Note that there may be an issue to retrieve MRUnit-0.9.0-incubating, therefore you can simply download it and install it manually via Maven.
-
-E.G. like this: 
-
-> mvn install:install-file -DgroupId=org.apache.mrunit -DartifactId=mrunit -Dversion=1.0.0 -Dpackaging=jar -Dfile=~/Downloads/mrunit-1.0.0-hadoop1.jar
+The created jar contains debuggable code + sources. On the unfortunate event of failing testcases you can skip them:
+ 
+> mvn clean package install -DskipTests
