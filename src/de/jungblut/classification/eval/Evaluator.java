@@ -90,7 +90,6 @@ public final class Evaluator {
     }
 
     public void add(EvaluationResult res) {
-      numLabels += res.numLabels;
       correct += res.correct;
       trainSize += res.trainSize;
       testSize += res.testSize;
@@ -98,7 +97,9 @@ public final class Evaluator {
       falsePositive += res.falsePositive;
       trueNegative += res.trueNegative;
       falseNegative += res.falseNegative;
-      if (this.confusionMatrix != null && res.confusionMatrix != null) {
+      if (this.confusionMatrix == null && res.confusionMatrix != null) {
+        this.confusionMatrix = res.confusionMatrix;
+      } else if (this.confusionMatrix != null && res.confusionMatrix != null) {
         for (int i = 0; i < numLabels; i++) {
           for (int j = 0; j < numLabels; j++) {
             this.confusionMatrix[i][j] += res.confusionMatrix[i][j];
@@ -109,7 +110,6 @@ public final class Evaluator {
 
     public void average(int pn) {
       final double n = pn;
-      numLabels /= n;
       correct /= n;
       trainSize /= n;
       testSize /= n;
@@ -395,6 +395,7 @@ public final class Evaluator {
     ArrayUtils.multiShuffle(features, outcome);
 
     EvaluationResult averagedModel = new EvaluationResult();
+    averagedModel.numLabels = numLabels;
     final int m = features.length;
     // compute the split ranges by blocks, so we have range from 0 to the next
     // partition index end that will be our testset, and so on.

@@ -45,7 +45,7 @@ public class EvaluationListenerTest {
     };
 
     EvaluationListener<MultilayerPerceptron> cb = new EvaluationListener<MultilayerPerceptron>(
-        new MultilayerPerceptronWeightMapper(factory), 1, split) {
+        new MultilayerPerceptronWeightMapper(factory), 2, split) {
       @Override
       protected void onResult(int iteration, double cost,
           EvaluationResult trainEval, EvaluationResult testEval) {
