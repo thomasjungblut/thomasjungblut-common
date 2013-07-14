@@ -7,6 +7,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.StringTokenizer;
 
+import com.google.common.base.Preconditions;
+
+import de.jungblut.datastructure.StringPool;
+
 /**
  * Nifty text utility for majorly tokenizing tasks.
  * 
@@ -64,10 +68,25 @@ public final class TokenizerUtils {
   }
 
   /**
-   * N-shingles tokenizer. That are nGramms based on characters. If you want to
-   * use normal word tokenizers, then use {@link #wordTokenize(String)} for
-   * unigrams. To generate bigrams out of it you need to call
-   * {@link #buildNGramms(String[], int)}.
+   * q-gram tokenizer, which is basically a proxy to
+   * {@link #nShinglesTokenize(String, int)}. These are nGrams based on
+   * characters. If you want to use normal word tokenizers, then use
+   * {@link #wordTokenize(String)} for unigrams. To generate bigrams out of it
+   * you need to call {@link #buildNGrams(String[], int)}.
+   * 
+   * @param key
+   * @param size
+   * @return
+   */
+  public static String[] qGramTokenize(String key, int size) {
+    return nShinglesTokenize(key, size);
+  }
+
+  /**
+   * N-shingles tokenizer. N-Shingles are nGrams based on characters. If you
+   * want to use normal word tokenizers, then use {@link #wordTokenize(String)}
+   * for unigrams. To generate bigrams out of it you need to call
+   * {@link #buildNGrams(String[], int)}.
    */
   public static String[] nShinglesTokenize(String key, int size) {
     if (key.length() < size) {
@@ -176,16 +195,16 @@ public final class TokenizerUtils {
    * This tokenizer first splits on whitespaces and then concatenates the words
    * based on size.
    */
-  public static String[] whiteSpaceTokenizeNGramms(String text, int size) {
+  public static String[] whiteSpaceTokenizeNGrams(String text, int size) {
     String[] whiteSpaceTokenize = whiteSpaceTokenize(text);
-    return buildNGramms(whiteSpaceTokenize, size);
+    return buildNGrams(whiteSpaceTokenize, size);
   }
 
   /**
    * This tokenizer uses the given tokens and then concatenates the words based
    * on size.
    */
-  public static String[] buildNGramms(String[] tokens, int size) {
+  public static String[] buildNGrams(String[] tokens, int size) {
     if (tokens.length < size) {
       return tokens;
     }
@@ -200,6 +219,34 @@ public final class TokenizerUtils {
       list.add(tkn);
     }
     return list.toArray(new String[list.size()]);
+  }
+
+  /**
+   * Interns the given strings inplace.
+   * 
+   * @param strings the strings to intern.
+   * @return an interned string array.
+   */
+  public static String[] internStrings(String[] strings) {
+    for (int i = 0; i < strings.length; i++) {
+      strings[i] = strings[i].intern();
+    }
+    return strings;
+  }
+
+  /**
+   * Interns the given strings inplace with the given pool.
+   * 
+   * @param strings the strings to intern.
+   * @param pool the string pool to use.
+   * @return an interned string array.
+   */
+  public static String[] internStrings(String[] strings, StringPool pool) {
+    Preconditions.checkNotNull(pool, "Pool shouldn't be null!");
+    for (int i = 0; i < strings.length; i++) {
+      strings[i] = pool.pool(strings[i]);
+    }
+    return strings;
   }
 
   /**

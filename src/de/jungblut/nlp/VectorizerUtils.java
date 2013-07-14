@@ -248,7 +248,9 @@ public final class VectorizerUtils {
    * 
    * @param tokenizedDocuments the documents to vectorize.
    * @param dictionary the dictionary extracted.
-   * @param termDocumentCount the document count per token.
+   * @param termDocumentCount the document count per token. The information can
+   *          be retrieved through
+   *          {@link #buildInvertedIndexDocumentCount(List, String[])}.
    * @return a list of sparse tf-idf weighted vectors.
    */
   public static List<DoubleVector> tfIdfVectorize(

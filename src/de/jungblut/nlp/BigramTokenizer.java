@@ -1,13 +1,13 @@
 package de.jungblut.nlp;
 
 /**
- * Advanced tokenizer that lowercases, removes several not needed characters and
- * deduplicates tokens.
+ * Advanced tokenizer that lowercases, adds start and end tags, deduplicates
+ * tokens and builds bigrams.
  * 
  * @author thomas.jungblut
  * 
  */
-public final class AdvancedTokenizer implements Tokenizer {
+public final class BigramTokenizer implements Tokenizer {
 
   @Override
   public String[] tokenize(String toTokenize) {
@@ -15,6 +15,7 @@ public final class AdvancedTokenizer implements Tokenizer {
         .toLowerCase().trim());
     wordTokenize = TokenizerUtils.addStartAndEndTags(wordTokenize);
     wordTokenize = TokenizerUtils.deduplicateTokens(wordTokenize);
+    wordTokenize = TokenizerUtils.buildNGrams(wordTokenize, 2);
     return wordTokenize;
   }
 

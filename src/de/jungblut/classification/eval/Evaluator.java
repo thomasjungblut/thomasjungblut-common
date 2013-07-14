@@ -36,6 +36,7 @@ public final class Evaluator {
   public static class EvaluationResult {
     int numLabels, correct, trainSize, testSize, truePositive, falsePositive,
         trueNegative, falseNegative;
+    int[][] confusionMatrix;
 
     public double getPrecision() {
       return ((double) truePositive) / (truePositive + falsePositive);
@@ -79,6 +80,10 @@ public final class Evaluator {
       return testSize;
     }
 
+    public int[][] getConfusionMatrix() {
+      return this.confusionMatrix;
+    }
+
     public boolean isBinary() {
       return numLabels == 2;
     }
@@ -92,6 +97,13 @@ public final class Evaluator {
       falsePositive += res.falsePositive;
       trueNegative += res.trueNegative;
       falseNegative += res.falseNegative;
+      if (this.confusionMatrix != null && res.confusionMatrix != null) {
+        for (int i = 0; i < numLabels; i++) {
+          for (int j = 0; j < numLabels; j++) {
+            this.confusionMatrix[i][j] += res.confusionMatrix[i][j];
+          }
+        }
+      }
     }
 
     public void average(int pn) {
@@ -104,6 +116,13 @@ public final class Evaluator {
       falsePositive /= n;
       trueNegative /= n;
       falseNegative /= n;
+      if (this.confusionMatrix != null) {
+        for (int i = 0; i < numLabels; i++) {
+          for (int j = 0; j < numLabels; j++) {
+            this.confusionMatrix[i][j] /= n;
+          }
+        }
+      }
     }
 
     public int getTruePositive() {
@@ -136,6 +155,36 @@ public final class Evaluator {
         System.out.println("Precision: " + getPrecision());
         System.out.println("Recall: " + getRecall());
         System.out.println("F1 Score: " + getF1Score());
+      } else {
+        printConfusionMatrix();
+      }
+    }
+
+    public void printConfusionMatrix() {
+      printConfusionMatrix(null);
+    }
+
+    public void printConfusionMatrix(String[] classNames) {
+      Preconditions.checkNotNull(this.confusionMatrix,
+          "No confusion matrix found.");
+
+      System.out.println("\nConfusion matrix:\n");
+      for (int i = 0; i < getNumLabels(); i++) {
+        System.out.format("%5d", i);
+      }
+      System.out.println(" <- SUM\tCLASS\n");
+
+      for (int i = 0; i < getNumLabels(); i++) {
+        int sum = 0;
+        for (int j = 0; j < getNumLabels(); j++) {
+          if (i != j) {
+            sum += confusionMatrix[i][j];
+          }
+          System.out.format("%5d", confusionMatrix[i][j]);
+        }
+        String clz = classNames != null ? "\t" + i + " (" + classNames[i] + ")"
+            : "\t" + i;
+        System.out.println(" <- " + sum + clz);
       }
     }
   }
@@ -268,29 +317,27 @@ public final class Evaluator {
           if (prediction == 1) {
             result.truePositive++; // "Correct result"
           } else {
-            // System.out.println("False Negative: " +
-            // testFeatures[i].getName());
             result.falseNegative++; // "Missing the correct result"
           }
         } else if (outcomeClass == 0) {
           if (prediction == 0) {
             result.trueNegative++; // "Correct absence of result"
           } else {
-            // System.out.println("False Positive: " +
-            // testFeatures[i].getName());
             result.falsePositive++; // "Unexpected result"
           }
         }
       }
     } else {
+      int[][] confusionMatrix = new int[numLabels][numLabels];
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = testOutcome[i].maxIndex();
         int prediction = classifier.getPredictedClass(testFeatures[i]);
+        confusionMatrix[outcomeClass][prediction]++;
         if (outcomeClass == prediction) {
           result.correct++;
         }
       }
-      // TODO confusion matrix
+      result.confusionMatrix = confusionMatrix;
     }
     return result;
   }

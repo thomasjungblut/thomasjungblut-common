@@ -94,17 +94,17 @@ public class TokenizerUtilsTest {
         "is a test", "a test for", "test for the", "for the tokenizer",
         "the tokenizer function!" };
 
-    String[] result = TokenizerUtils.whiteSpaceTokenizeNGramms(s, 1);
+    String[] result = TokenizerUtils.whiteSpaceTokenizeNGrams(s, 1);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredUniGramResult[i], result[i]);
     }
 
-    result = TokenizerUtils.whiteSpaceTokenizeNGramms(s, 2);
+    result = TokenizerUtils.whiteSpaceTokenizeNGrams(s, 2);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredBiGramResult[i], result[i]);
     }
 
-    result = TokenizerUtils.whiteSpaceTokenizeNGramms(s, 3);
+    result = TokenizerUtils.whiteSpaceTokenizeNGrams(s, 3);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredTriGramResult[i], result[i]);
     }
