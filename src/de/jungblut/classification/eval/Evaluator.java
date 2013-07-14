@@ -1,5 +1,6 @@
 package de.jungblut.classification.eval;
 
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -168,11 +169,12 @@ public final class Evaluator {
       Preconditions.checkNotNull(this.confusionMatrix,
           "No confusion matrix found.");
 
-      System.out.println("\nConfusion matrix:\n");
+      System.out
+          .println("\nConfusion matrix (real outcome on rows, prediction in columns)\n");
       for (int i = 0; i < getNumLabels(); i++) {
         System.out.format("%5d", i);
       }
-      System.out.println(" <- SUM\tCLASS\n");
+      System.out.format(" <- %5s %5s\t%s\n", "sum", "perc", "class");
 
       for (int i = 0; i < getNumLabels(); i++) {
         int sum = 0;
@@ -182,9 +184,11 @@ public final class Evaluator {
           }
           System.out.format("%5d", confusionMatrix[i][j]);
         }
-        String clz = classNames != null ? "\t" + i + " (" + classNames[i] + ")"
-            : "\t" + i;
-        System.out.println(" <- " + sum + clz);
+        float falsePercentage = sum / (float) (sum + confusionMatrix[i][i]);
+        String clz = classNames != null ? " " + i + " (" + classNames[i] + ")"
+            : " " + i;
+        System.out.format(" <- %5s %5s\t%s\n", sum, NumberFormat
+            .getPercentInstance().format(falsePercentage), clz);
       }
     }
   }
