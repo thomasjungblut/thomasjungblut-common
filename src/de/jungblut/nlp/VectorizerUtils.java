@@ -92,9 +92,13 @@ public final class VectorizerUtils {
       }
     }
 
-    set.removeAll(toRemove);
-
     Set<String> elementSet = set.elementSet();
+    // note that a call to removeAll will traverse the whole toRemove list for
+    // every item in the set, which is slow + not what you usually expect from
+    // such a method. Thus we will manually remove.
+    for (String removal : toRemove) {
+      elementSet.remove(removal);
+    }
     String[] array = elementSet.toArray(new String[elementSet.size()]);
     elementSet = null;
     set = null;
