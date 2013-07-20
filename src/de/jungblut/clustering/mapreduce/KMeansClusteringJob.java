@@ -45,14 +45,17 @@ public class KMeansClusteringJob {
 
     FileInputFormat.addInputPath(job, in);
     FileSystem fs = FileSystem.get(conf);
-    if (fs.exists(out))
+    if (fs.exists(out)) {
       fs.delete(out, true);
+    }
 
-    if (fs.exists(center))
+    if (fs.exists(center)) {
       fs.delete(out, true);
+    }
 
-    if (fs.exists(in))
-      fs.delete(out, true);
+    if (fs.exists(in)) {
+      fs.delete(in, true);
+    }
 
     writeExampleCenters(conf, center, fs);
 
