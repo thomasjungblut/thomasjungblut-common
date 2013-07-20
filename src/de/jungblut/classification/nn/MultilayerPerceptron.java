@@ -39,18 +39,22 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * 
    */
   public static final class MultilayerPerceptronBuilder {
-    final Minimizer minimizer;
-    final int maxIterations;
-    final int[] layer;
-    final ActivationFunction[] activationFunctions;
-    final ErrorFunction error;
+    private final Minimizer minimizer;
+    private final int maxIterations;
+    private final int[] layer;
+    private final ActivationFunction[] activationFunctions;
+    private final ErrorFunction error;
 
-    TrainingType type = TrainingType.CPU;
-    double lambda = 0d;
-    boolean verbose = false;
-    double hiddenDropoutProbability = 0d;
-    double visibleDropoutProbability = 0d;
-    WeightMatrix[] weights;
+    private TrainingType type = TrainingType.CPU;
+    private double lambda = 0d;
+    private boolean verbose = false;
+    private double hiddenDropoutProbability = 0d;
+    private double visibleDropoutProbability = 0d;
+    private WeightMatrix[] weights;
+
+    private boolean stochastic = false;
+    private int miniBatchSize;
+    private int batchParallelism = Runtime.getRuntime().availableProcessors();
 
     private MultilayerPerceptronBuilder(int[] layer,
         ActivationFunction[] activations, Minimizer minimizer,
@@ -120,6 +124,40 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     }
 
     /**
+     * @param size the minibatch size to use. Batches are calculated in parallel
+     *          on every cpu core if not overridden by
+     *          {@link #batchParallelism(int)}.
+     */
+    public MultilayerPerceptronBuilder miniBatchSize(int size) {
+      this.miniBatchSize = size;
+      return this;
+    }
+
+    /**
+     * @param numThreads set the number of threads where batches should be
+     *          calculated in parallel.
+     */
+    public MultilayerPerceptronBuilder batchParallelism(int numThreads) {
+      this.batchParallelism = numThreads;
+      return this;
+    }
+
+    /**
+     * Sets the training mode to stochastic.
+     */
+    public MultilayerPerceptronBuilder stochastic() {
+      return stochastic(true);
+    }
+
+    /**
+     * If verbose is true, stochastic training will be used.
+     */
+    public MultilayerPerceptronBuilder stochastic(boolean stochastic) {
+      this.stochastic = stochastic;
+      return this;
+    }
+
+    /**
      * @return a new {@link MultilayerPerceptron} with the given configuration.
      */
     public MultilayerPerceptron build() {
@@ -161,6 +199,9 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   private TrainingType type = TrainingType.CPU;
   private boolean verbose;
   private ErrorFunction error;
+  private boolean stochastic = false;
+  private int miniBatchSize;
+  private int batchParallelism = Runtime.getRuntime().availableProcessors();
 
   private MultilayerPerceptron(MultilayerPerceptronBuilder conf) {
 
@@ -173,6 +214,9 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     this.visibleDropoutProbability = conf.visibleDropoutProbability;
     this.verbose = conf.verbose;
     this.error = conf.error;
+    this.stochastic = conf.stochastic;
+    this.miniBatchSize = conf.miniBatchSize;
+    this.batchParallelism = conf.batchParallelism;
 
     // if the activations are not supplied, we are using standard linear-sigmoid
     // functions
@@ -216,7 +260,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * Predicts the outcome of the given input by doing a forward pass.
    */
   @Override
-  public DenseDoubleVector predict(DoubleVector xi) {
+  public DoubleVector predict(DoubleVector xi) {
     DoubleVector activationVector = addBias(xi);
     final int len = layers.length - 1;
     for (int i = 1; i <= len; i++) {
@@ -227,7 +271,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
         activationVector = addBias(activationVector);
       }
     }
-    return (DenseDoubleVector) activationVector;
+    return activationVector;
   }
 
   /**
@@ -235,8 +279,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * binary classification by a threshold. Everything above threshold will be
    * considered as 1, the other case as 0.
    */
-  public DenseDoubleVector predict(DoubleVector xi, double threshold) {
-    DenseDoubleVector activations = predict(xi);
+  public DoubleVector predict(DoubleVector xi, double threshold) {
+    DoubleVector activations = predict(xi);
     for (int i = 0; i < activations.getLength(); i++) {
       activations.set(i, activations.get(i) > threshold ? 1.0d : 0.0d);
     }
@@ -251,32 +295,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   @Override
   public void train(DoubleVector[] features, DoubleVector[] outcome) {
-    train(new DenseDoubleMatrix(features), new DenseDoubleMatrix(outcome),
-        minimizer, maxIterations, lambda, verbose);
-  }
-
-  /**
-   * Full backpropagation training method. It performs weight finding by using a
-   * minimizer. Note that it only guarantees to find a global minimum solution
-   * in case of linear or convex problems (zero / one hidden layer), of course
-   * this is also dependend on the concrete minimizer implementation. If you
-   * have more than a single hidden layer, then it will usually trap into a
-   * local minimum.
-   * 
-   * @param x the training examples.
-   * @param y the outcomes for the training examples.
-   * @param minimizer the minimizer to use to train the neural network.
-   * @param maxIterations the number of maximum iterations to train.
-   * @param lambda the given regularization parameter.
-   * @param verbose output to console with the last given errors.
-   * @return the cost of the training.
-   */
-  public final double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
-      Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
-    CostFunction costFunction = new MultilayerPerceptronCostFunction(this, x,
-        y, lambda);
-    return trainInternal(minimizer, maxIterations, verbose, costFunction,
-        getFoldedThetaVector());
+    train(features, outcome, minimizer, maxIterations, lambda, verbose);
   }
 
   /**
@@ -288,8 +307,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * local minimum. It supplies a vector so training can be resumed from a good
    * starting point.
    * 
-   * @param x the training examples.
-   * @param y the outcomes for the training examples.
+   * @param features the training examples.
+   * @param outcome the outcomes for the training examples.
    * @param minimizer the minimizer to use to train the neural network.
    * @param maxIterations the number of maximum iterations to train.
    * @param lambda the given regularization parameter.
@@ -297,12 +316,12 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * @param theta initial spot to start the minimizations.
    * @return the cost of the training.
    */
-  public final double train(DenseDoubleMatrix x, DenseDoubleMatrix y,
-      Minimizer minimizer, int maxIterations, double lambda, boolean verbose,
-      DenseDoubleVector theta) {
-    CostFunction costFunction = new MultilayerPerceptronCostFunction(this, x,
-        y, lambda);
-    return trainInternal(minimizer, maxIterations, verbose, costFunction, theta);
+  public final double train(DoubleVector[] features, DoubleVector[] outcome,
+      Minimizer minimizer, int maxIterations, double lambda, boolean verbose) {
+    CostFunction costFunction = new MultilayerPerceptronCostFunction(this,
+        features, outcome);
+    return trainInternal(minimizer, maxIterations, verbose, costFunction,
+        getFoldedThetaVector());
   }
 
   /**
@@ -373,6 +392,22 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
   TrainingType getTrainingType() {
     return this.type;
+  }
+
+  double getLambda() {
+    return this.lambda;
+  }
+
+  int getBatchParallelism() {
+    return this.batchParallelism;
+  }
+
+  int getMiniBatchSize() {
+    return this.miniBatchSize;
+  }
+
+  boolean isStochastic() {
+    return this.stochastic;
   }
 
   /**

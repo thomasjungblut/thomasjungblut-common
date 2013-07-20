@@ -9,10 +9,10 @@ import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.AbstractMiniBatchCostFunction;
+import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
-import de.jungblut.math.tuple.Tuple;
 
 /**
  * Restricted Boltzmann machine implementation using Contrastive Divergence 1
@@ -41,7 +41,7 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
       int numThreads, int numHiddenUnits,
       ActivationFunction activationFunction, TrainingType type, double lambda,
       long seed, boolean stochastic) {
-    super(currentTrainingSet, batchSize, numThreads, stochastic);
+    super(currentTrainingSet, null, batchSize, numThreads, stochastic);
     this.activationFunction = activationFunction;
     this.type = type;
     this.lambda = lambda;
@@ -52,8 +52,8 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
   }
 
   @Override
-  protected Tuple<Double, DoubleVector> evaluateBatch(DoubleVector input,
-      DoubleMatrix data) {
+  protected CostGradientTuple evaluateBatch(DoubleVector input,
+      DoubleMatrix data, DoubleMatrix outcomeBatch) {
     // input contains the weights between the visible and the hidden units
     DenseDoubleMatrix theta = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters)[0].transpose();
@@ -106,7 +106,7 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
 
     // transpose the gradient and negate it, because we transposed theta at the
     // top and our gradient descent subtracts instead of addition.
-    return new Tuple<Double, DoubleVector>(j,
+    return new CostGradientTuple(j,
         DenseMatrixFolder.foldMatrices((DenseDoubleMatrix) thetaGradient
             .multiply(-1).transpose()));
   }

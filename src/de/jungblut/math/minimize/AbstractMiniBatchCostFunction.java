@@ -39,25 +39,27 @@ import de.jungblut.partition.Boundaries.Range;
 public abstract class AbstractMiniBatchCostFunction implements CostFunction {
 
   private final Executor pool;
-  private final List<DoubleMatrix> batches;
+  private final List<Tuple<DoubleMatrix, DoubleMatrix>> batches;
   private final boolean stochastic;
   // offset for minibatches in stochastic mode
   private int batchOffset = 0;
 
-  class CallableMiniBatch implements Callable<Tuple<Double, DoubleVector>> {
+  class CallableMiniBatch implements Callable<CostGradientTuple> {
 
-    private final DoubleMatrix inputMatrix;
     private final DoubleVector parameters;
+    private final Tuple<DoubleMatrix, DoubleMatrix> featureOutcome;
 
-    public CallableMiniBatch(DoubleMatrix inputMatrix, DoubleVector parameters) {
+    public CallableMiniBatch(Tuple<DoubleMatrix, DoubleMatrix> featureOutcome,
+        DoubleVector parameters) {
       super();
-      this.inputMatrix = inputMatrix;
+      this.featureOutcome = featureOutcome;
       this.parameters = parameters;
     }
 
     @Override
-    public Tuple<Double, DoubleVector> call() throws Exception {
-      return evaluateBatch(parameters, inputMatrix);
+    public CostGradientTuple call() throws Exception {
+      return evaluateBatch(parameters, featureOutcome.getFirst(),
+          featureOutcome.getSecond());
     }
   }
 
@@ -67,13 +69,15 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
    * 
    * @param inputMatrix the data to crunch, bias will be added while calculating
    *          the batches.
+   * @param outcomeMatrix the data that denotes the outcome of the features-
+   *          while supervised learning. Can be null for unsupervised methods.
    * @param batchSize the batch size to use, 0 denotes full batch learning by
    *          default.
    * @param numThreads the number of threads to use to calculate the batches.
    */
   public AbstractMiniBatchCostFunction(DoubleVector[] inputMatrix,
-      int batchSize, int numThreads) {
-    this(inputMatrix, batchSize, numThreads, false);
+      DoubleVector[] outcomeMatrix, int batchSize, int numThreads) {
+    this(inputMatrix, outcomeMatrix, batchSize, numThreads, false);
   }
 
   /**
@@ -81,6 +85,8 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
    * 
    * @param inputMatrix the data to crunch, bias will be added while calculating
    *          the batches.
+   * @param outcomeMatrix the data that denotes the outcome of the features-
+   *          while supervised learning. Can be null for unsupervised methods.
    * @param batchSize the batch size to use, 0 denotes full batch learning by
    *          default.
    * @param numThreads the number of threads to use to calculate the batches.
@@ -89,7 +95,8 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
    *          evaluate and calculate gradient and cost.
    */
   public AbstractMiniBatchCostFunction(DoubleVector[] inputMatrix,
-      int batchSize, int numThreads, boolean stochastic) {
+      DoubleVector[] outcomeMatrix, int batchSize, int numThreads,
+      boolean stochastic) {
     Preconditions.checkArgument(batchSize >= 0
         && batchSize <= inputMatrix.length, "Batchsize wasn't in range of 0-"
         + inputMatrix.length);
@@ -114,25 +121,32 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
         offset += batchSize;
       }
     }
-    pool = Executors.newFixedThreadPool(numThreads, factory);
+    pool = Executors.newFixedThreadPool(stochastic ? 1 : numThreads, factory);
 
     batches = new ArrayList<>();
     for (Range r : partitions) {
       int start = r.getStart();
       int end = r.getEnd(); // inclusive
-      DoubleVector[] subArray = ArrayUtils.subArray(inputMatrix, start, end);
-      DoubleMatrix mat = new DenseDoubleMatrix(subArray);
+      DoubleVector[] featureSubArray = ArrayUtils.subArray(inputMatrix, start,
+          end);
+      DoubleMatrix outcomeMat = null;
+      if (outcomeMatrix != null) {
+        DoubleVector[] outcomeSubArray = ArrayUtils.subArray(outcomeMatrix,
+            start, end);
+        outcomeMat = new DenseDoubleMatrix(outcomeSubArray);
+      }
+      DoubleMatrix featureMatrix = new DenseDoubleMatrix(featureSubArray);
       // add the bias
-      DenseDoubleVector ones = DenseDoubleVector.ones(subArray.length);
-      mat = new DenseDoubleMatrix(ones, mat);
-      batches.add(mat);
+      DenseDoubleVector ones = DenseDoubleVector.ones(featureSubArray.length);
+      featureMatrix = new DenseDoubleMatrix(ones, featureMatrix);
+      batches.add(new Tuple<>(featureMatrix, outcomeMat));
     }
   }
 
   @Override
   public final CostGradientTuple evaluateCost(DoubleVector input) {
 
-    ExecutorCompletionService<Tuple<Double, DoubleVector>> completionService = new ExecutorCompletionService<>(
+    ExecutorCompletionService<CostGradientTuple> completionService = new ExecutorCompletionService<>(
         pool);
 
     int submittedBatches = 0;
@@ -155,9 +169,9 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
     try {
       // now collect the results
       for (int i = 0; i < submittedBatches; i++) {
-        Tuple<Double, DoubleVector> result = completionService.take().get();
-        costSum += result.getFirst().doubleValue();
-        gradientSum = gradientSum.add(result.getSecond());
+        CostGradientTuple result = completionService.take().get();
+        costSum += result.getCost();
+        gradientSum = gradientSum.add(result.getGradient());
       }
     } catch (InterruptedException | ExecutionException e) {
       e.printStackTrace();
@@ -177,11 +191,12 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
    * Evaluate the batch.
    * 
    * @param theta the parameters to use.
-   * @param batch the batch matrix as input (already contains a bias!).
+   * @param featureBatch the batch matrix as input (already contains a bias!).
+   * @param outcomeBatch the batch matrix denoting the output.
    * @return the cost/gradient tuple usually used when using
    *         {@link #evaluateCost(DoubleVector)}.
    */
-  protected abstract Tuple<Double, DoubleVector> evaluateBatch(
-      DoubleVector theta, DoubleMatrix batch);
+  protected abstract CostGradientTuple evaluateBatch(DoubleVector theta,
+      DoubleMatrix featureBatch, DoubleMatrix outcomeBatch);
 
 }
