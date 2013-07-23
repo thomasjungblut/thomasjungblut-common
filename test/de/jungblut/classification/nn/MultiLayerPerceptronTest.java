@@ -21,6 +21,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.math.minimize.GradientDescent;
 import de.jungblut.math.minimize.Minimizer;
+import de.jungblut.math.minimize.ParticleSwarmOptimization;
 import de.jungblut.math.squashing.CrossEntropyErrorFunction;
 import de.jungblut.math.squashing.LogisticErrorFunction;
 import de.jungblut.math.squashing.SquaredMeanErrorFunction;
@@ -133,26 +134,26 @@ public class MultiLayerPerceptronTest {
     }
   }
 
-  // @Test
-  // public void testXORPSO() {
-  // MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
-  // .create(
-  // new int[] { 2, 4, 1 },
-  // new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-  // SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(), 100)
-  // .build();
-  // Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
-  // double error = mlp.train(sampleXOR.getFirst(), sampleXOR.getSecond(),
-  // new ParticleSwarmOptimization(1000, 2.8d, 0.2, 0.4, 4), 400, 0.0d,
-  // false);
-  // System.out.println(error);
-  // if (error < 0.01) {
-  // assertTrue(error < 0.001);
-  // validatePredictions(sampleXOR, mlp);
-  // } else {
-  // throw new RuntimeException("Test seems flaky..");
-  // }
-  // }
+  @Test
+  public void testXORPSO() {
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(
+            new int[] { 2, 4, 1 },
+            new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
+                SIGMOID.get() }, new LogisticErrorFunction(), new Fmincg(), 100)
+        .build();
+    Tuple<DoubleVector[], DoubleVector[]> sampleXOR = sampleXOR();
+    double error = mlp.train(sampleXOR.getFirst(), sampleXOR.getSecond(),
+        new ParticleSwarmOptimization(1000, 2.8d, 0.2, 0.4, 4), 400, 0.0d,
+        false);
+    System.out.println(error);
+    if (error < 0.01) {
+      assertTrue(error < 0.001);
+      validatePredictions(sampleXOR, mlp);
+    } else {
+      throw new RuntimeException("Test seems flaky..");
+    }
+  }
 
   @SuppressWarnings("resource")
   @Test
