@@ -1,7 +1,6 @@
 package de.jungblut.math.minimize;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
 
 /**
  * Minimize a continuous differentialble multivariate function. Starting point <br/>
@@ -53,6 +52,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
  * [tjungblut] Changes Made: <br/>
  * 1) translated from octave to java<br/>
  * 2) added an interface to exchange minimizers more easily <br/>
+ * 3) in preparation for the c++ translation, I removed unused fields<br/>
  * BTW "fmincg" stands for Function minimize nonlinear conjugate gradient
  */
 public final class Fmincg extends AbstractMinimizer {
@@ -98,8 +98,6 @@ public final class Fmincg extends AbstractMinimizer {
     int i = 0; // zero the run length counter
     int red = 1; // starting point
     int ls_failed = 0; // no previous line search has failed
-    // what we return as fX get function value and gradient
-    DenseDoubleVector fX = new DenseDoubleVector(0);
     final CostGradientTuple evaluateCost = f.evaluateCost(input);
     double f1 = evaluateCost.getCost();
     DoubleVector df1 = evaluateCost.getGradient();
@@ -225,7 +223,6 @@ public final class Fmincg extends AbstractMinimizer {
 
       if (success == 1) { // if line search succeeded
         f1 = f2;
-        fX = new DenseDoubleVector(fX.toArray(), f1);
         if (verbose) {
           System.out.print("Iteration " + i + " | Cost: " + f1 + "\r");
           onIterationFinished(i, f1, input);
