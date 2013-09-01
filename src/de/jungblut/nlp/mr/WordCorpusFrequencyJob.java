@@ -42,6 +42,7 @@ import de.jungblut.nlp.Tokenizer;
 public class WordCorpusFrequencyJob {
 
   public static final String DICT_OUT_PATH_KEY = "dict.out.path";
+  public static final String MIN_WORD_COUNT_KEY = "min.word.count";
   public static final String TOKENIZER_CLASS_KEY = "tokenizer.class";
 
   private static final Log LOG = LogFactory
@@ -93,6 +94,9 @@ public class WordCorpusFrequencyJob {
 
     // write the dictionary out as well
     private BufferedWriter dictWriter;
+    // ID assigned to the token
+    private int currentIndex = 0;
+    private int minWordCount = 0;
 
     @Override
     protected void setup(Context context) throws IOException,
@@ -102,27 +106,30 @@ public class WordCorpusFrequencyJob {
       this.dictWriter = new BufferedWriter(
           new OutputStreamWriter(fs.create(new Path(context.getConfiguration()
               .get(DICT_OUT_PATH_KEY)))));
+      this.minWordCount = context.getConfiguration().getInt(MIN_WORD_COUNT_KEY,
+          minWordCount);
     }
-
-    // ID assigned to the token
-    int currentIndex = 0;
 
     @Override
     protected void reduce(Text key, Iterable<TextIntPairWritable> values,
         Context context) throws IOException, InterruptedException {
 
       Map<Text, IntWritable> documents = new HashMap<>();
+      int wordCount = 0;
       for (TextIntPairWritable docId : values) {
         documents.put(new Text(docId.getFirst()), new IntWritable(docId
             .getSecond().get()));
+        wordCount += docId.getSecond().get();
       }
-      dictWriter.write(currentIndex + "\t" + key.toString() + "\n");
-      for (Entry<Text, IntWritable> entry : documents.entrySet()) {
-        context.write(entry.getKey(), new TextIntIntIntWritable(key,
-            new IntWritable(documents.size()), entry.getValue(),
-            new IntWritable(currentIndex)));
+      if (wordCount > minWordCount) {
+        dictWriter.write(currentIndex + "\t" + key.toString() + "\n");
+        for (Entry<Text, IntWritable> entry : documents.entrySet()) {
+          context.write(entry.getKey(), new TextIntIntIntWritable(key,
+              new IntWritable(documents.size()), entry.getValue(),
+              new IntWritable(currentIndex)));
+        }
+        currentIndex++;
       }
-      currentIndex++;
     }
 
     @Override

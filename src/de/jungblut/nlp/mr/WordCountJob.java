@@ -27,6 +27,8 @@ import de.jungblut.nlp.Tokenizer;
  */
 public class WordCountJob {
 
+  public static final String MIN_WORD_COUNT_KEY = "min.word.count";
+
   /**
    * Group the tokens in memory for each chunk, write it in the cleanup step.
    */
@@ -39,6 +41,7 @@ public class WordCountJob {
 
     private final HashMultiset<String> wordCountSet = HashMultiset.create();
     private Tokenizer tokenizer;
+    private int minWordCount = 0;
 
     @Override
     protected void setup(Context context) throws IOException,
@@ -46,7 +49,7 @@ public class WordCountJob {
 
       final Configuration conf = context.getConfiguration();
       tokenizer = WordCorpusFrequencyJob.getTokenizer(conf);
-
+      minWordCount = conf.getInt(MIN_WORD_COUNT_KEY, minWordCount);
     }
 
     @Override
@@ -68,11 +71,13 @@ public class WordCountJob {
       Text key = new Text();
       LongWritable value = new LongWritable();
       for (Entry<String> entry : wordCountSet.entrySet()) {
-        key.set(entry.getElement());
-        value.set(entry.getCount());
-        context.getCounter(TokenCounter.NUM_TOKENS).increment(1);
-        context.progress();
-        context.write(key, value);
+        if (entry.getCount() > minWordCount) {
+          key.set(entry.getElement());
+          value.set(entry.getCount());
+          context.getCounter(TokenCounter.NUM_TOKENS).increment(1);
+          context.progress();
+          context.write(key, value);
+        }
       }
     }
 
