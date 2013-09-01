@@ -48,6 +48,10 @@ public class WordCorpusFrequencyJob {
   private static final Log LOG = LogFactory
       .getLog(WordCorpusFrequencyJob.class);
 
+  public static enum WordCorpusCounter {
+    TOKEN_ADDED, TOKEN_DISCARDED
+  }
+
   /**
    * Write a token with its document id.
    */
@@ -129,6 +133,9 @@ public class WordCorpusFrequencyJob {
               new IntWritable(currentIndex)));
         }
         currentIndex++;
+        context.getCounter(WordCorpusCounter.TOKEN_ADDED).increment(1);
+      } else {
+        context.getCounter(WordCorpusCounter.TOKEN_DISCARDED).increment(1);
       }
     }
 
