@@ -38,7 +38,7 @@ public final class SoftMaxActivationFunction extends AbstractActivationFunction 
 
   @Override
   public double gradient(double input) {
-    return 1d;
+    return input;
   }
 
   @Override
