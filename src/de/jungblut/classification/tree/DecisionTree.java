@@ -8,6 +8,7 @@ import gnu.trove.set.hash.TIntHashSet;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -35,8 +36,10 @@ public final class DecisionTree extends AbstractClassifier {
 
   private AbstractTreeNode rootNode;
   private FeatureType[] featureTypes;
+  private int numRandomFeaturesToChoose;
+  private long seed = System.currentTimeMillis();
 
-  // do we only have two outcomes?
+  // default is binary classification 0 or 1.
   private boolean binaryClassification = true;
   private int outcomeDimension;
   private int numFeatures;
@@ -45,7 +48,7 @@ public final class DecisionTree extends AbstractClassifier {
   public void train(DoubleVector[] features, DoubleVector[] outcome) {
     Preconditions.checkArgument(features.length == outcome.length,
         "Number of examples and outcomes must match!");
-    // assume all nominal
+    // assume all nominal if nothing was set
     if (featureTypes == null) {
       featureTypes = new FeatureType[features[0].getDimension()];
       Arrays.fill(featureTypes, FeatureType.NOMINAL);
@@ -60,12 +63,7 @@ public final class DecisionTree extends AbstractClassifier {
       outcomeDimension = outcome[0].getDimension();
     }
     numFeatures = features[0].getDimension();
-
-    // all features are possible here
-    TIntHashSet possibleFeatureIndices = new TIntHashSet();
-    for (int i = 0; i < features[0].getDimension(); i++) {
-      possibleFeatureIndices.add(i);
-    }
+    TIntHashSet possibleFeatureIndices = getPossibleFeatures();
     // recursively build the tree:
     // note that we use linked lists to remove examples we don't need, linked
     // structures do not require costly copy operations after removal
@@ -91,7 +89,59 @@ public final class DecisionTree extends AbstractClassifier {
     }
   }
 
-  public AbstractTreeNode build(List<DoubleVector> features,
+  /**
+   * Sets the type of feature per index. This should match the inputted number
+   * of features in the training method. If this isn't set at all, all
+   * attributes are assumed to be nominal.
+   */
+  public void setFeatureTypes(FeatureType[] featureTypes) {
+    this.featureTypes = featureTypes;
+  }
+
+  /**
+   * Sets the number of random features to choose from all features.Zero,
+   * negative numbers or numbers greater than the really available features
+   * indicate all features to be used.
+   */
+  public void setNumRandomFeaturesToChoose(int numRandomFeaturesToChoose) {
+    this.numRandomFeaturesToChoose = numRandomFeaturesToChoose;
+  }
+
+  /**
+   * Sets the seed for a random number generator if used.
+   */
+  public void setSeed(long seed) {
+    this.seed = seed;
+  }
+
+  void setNumFeatures(int numFeatures) {
+    this.numFeatures = numFeatures;
+  }
+
+  /**
+   * @return the set of possible features
+   */
+  TIntHashSet getPossibleFeatures() {
+    // all features are possible here
+    TIntHashSet possibleFeatureIndices = new TIntHashSet();
+    for (int i = 0; i < numFeatures; i++) {
+      possibleFeatureIndices.add(i);
+    }
+    if (numRandomFeaturesToChoose > 0
+        && numRandomFeaturesToChoose < numFeatures) {
+      // we now remove the difference from the set
+      Random rnd = new Random(seed);
+      while (possibleFeatureIndices.size() > numRandomFeaturesToChoose) {
+        possibleFeatureIndices.remove(rnd.nextInt(numFeatures));
+      }
+    }
+    return possibleFeatureIndices;
+  }
+
+  /**
+   * Recursively build the decision tree in a top down fashion.
+   */
+  private AbstractTreeNode build(List<DoubleVector> features,
       List<DoubleVector> outcome, TIntHashSet possibleFeatureIndices) {
 
     int[] countOutcomeClasses = getPossibleClasses(outcome);
@@ -179,6 +229,15 @@ public final class DecisionTree extends AbstractClassifier {
     return new Tuple<>(newFeatures, newOutcomes);
   }
 
+  /**
+   * Calculates the conditional entropy given a feature.
+   * 
+   * @param featureIndex the feature index to consider.
+   * @param countOutcomeClasses the histogram over all possible outcome classes.
+   * @param features the features.
+   * @param outcome the outcomes.
+   * @return the entropy.
+   */
   private double calculateEntropyGivenFeature(int featureIndex,
       int[] countOutcomeClasses, List<DoubleVector> features,
       List<DoubleVector> outcome) {
