@@ -2,13 +2,22 @@ package de.jungblut.classification.tree;
 
 import de.jungblut.math.DoubleVector;
 
-public class NumericalNode extends AbstractTreeNode {
+public final class NumericalNode implements TreeNode {
 
-  int splitAttributeIndex;
-  int splitAttributeValue;
+  private final int splitAttributeIndex;
+  private final double splitAttributeValue;
 
-  AbstractTreeNode lower;
-  AbstractTreeNode higher;
+  private final TreeNode lower;
+  private final TreeNode higher;
+
+  public NumericalNode(int splitAttributeIndex, double splitAttributeValue,
+      TreeNode lower, TreeNode higher) {
+    super();
+    this.splitAttributeIndex = splitAttributeIndex;
+    this.splitAttributeValue = splitAttributeValue;
+    this.lower = lower;
+    this.higher = higher;
+  }
 
   @Override
   public int predict(DoubleVector features) {

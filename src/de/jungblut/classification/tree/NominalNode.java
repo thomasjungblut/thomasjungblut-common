@@ -3,12 +3,12 @@ package de.jungblut.classification.tree;
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 
-public class NominalNode extends AbstractTreeNode {
+public final class NominalNode implements TreeNode {
 
   int splitAttributeIndex;
   // this is a parallel array to the children
   int[] nominalSplitValues;
-  AbstractTreeNode[] children;
+  TreeNode[] children;
 
   @Override
   public int predict(DoubleVector features) {

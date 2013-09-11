@@ -2,9 +2,9 @@ package de.jungblut.classification.tree;
 
 import de.jungblut.math.DoubleVector;
 
-public class LeafNode extends AbstractTreeNode {
+public final class LeafNode implements TreeNode {
 
-  private int label;
+  private final int label;
 
   public LeafNode(int label) {
     this.label = label;

@@ -3,11 +3,14 @@ package de.jungblut.classification.tree;
 import static org.junit.Assert.assertEquals;
 import gnu.trove.set.hash.TIntHashSet;
 
+import java.util.Arrays;
+
 import org.junit.Test;
 
 import de.jungblut.classification.eval.Evaluator;
 import de.jungblut.classification.eval.Evaluator.EvaluationResult;
 import de.jungblut.reader.Dataset;
+import de.jungblut.reader.IrisReader;
 import de.jungblut.reader.MushroomReader;
 
 public class DecisionTreeTest {
@@ -21,6 +24,19 @@ public class DecisionTreeTest {
     EvaluationResult res = Evaluator.evaluateClassifier(tree,
         mushroom.getFeatures(), mushroom.getOutcomes(), 2, 0.9f, false);
     assertEquals(1d, res.getAccuracy(), 1e-5);
+  }
+
+  @Test
+  public void testIrisNumericalData() {
+    Dataset iris = IrisReader.readIrisDataset("files/iris/iris_dataset.csv");
+    DecisionTree tree = new DecisionTree();
+    FeatureType[] types = new FeatureType[4];
+    Arrays.fill(types, FeatureType.NUMERICAL);
+    tree.setFeatureTypes(types);
+    EvaluationResult res = Evaluator.evaluateClassifier(tree,
+        iris.getFeatures(), iris.getOutcomes(), 2, 0.9f, true);
+    res.print();
+    // TODO needs some assertions
   }
 
   @Test

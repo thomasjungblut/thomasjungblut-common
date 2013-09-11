@@ -1,8 +1,10 @@
 package de.jungblut.classification.tree;
 
+import gnu.trove.iterator.TDoubleIterator;
 import gnu.trove.iterator.TIntObjectIterator;
 import gnu.trove.map.hash.TIntIntHashMap;
 import gnu.trove.map.hash.TIntObjectHashMap;
+import gnu.trove.set.hash.TDoubleHashSet;
 import gnu.trove.set.hash.TIntHashSet;
 
 import java.util.Arrays;
@@ -34,7 +36,7 @@ public final class DecisionTree extends AbstractClassifier {
 
   private static final double LOG2 = FastMath.log(2);
 
-  private AbstractTreeNode rootNode;
+  private TreeNode rootNode;
   private FeatureType[] featureTypes;
   private int numRandomFeaturesToChoose;
   private long seed = System.currentTimeMillis();
@@ -127,6 +129,14 @@ public final class DecisionTree extends AbstractClassifier {
     for (int i = 0; i < numFeatures; i++) {
       possibleFeatureIndices.add(i);
     }
+    possibleFeatureIndices = chooseRandomFeatures(possibleFeatureIndices);
+    return possibleFeatureIndices;
+  }
+
+  /**
+   * @return a random subset of the features.
+   */
+  TIntHashSet chooseRandomFeatures(TIntHashSet possibleFeatureIndices) {
     if (numRandomFeaturesToChoose > 0
         && numRandomFeaturesToChoose < numFeatures) {
       // we now remove the difference from the set
@@ -141,8 +151,10 @@ public final class DecisionTree extends AbstractClassifier {
   /**
    * Recursively build the decision tree in a top down fashion.
    */
-  private AbstractTreeNode build(List<DoubleVector> features,
+  private TreeNode build(List<DoubleVector> features,
       List<DoubleVector> outcome, TIntHashSet possibleFeatureIndices) {
+
+    // TODO should we select a subset of features at every tree level?
 
     int[] countOutcomeClasses = getPossibleClasses(outcome);
     TIntHashSet notZeroClasses = new TIntHashSet();
@@ -167,20 +179,29 @@ public final class DecisionTree extends AbstractClassifier {
     // now we can evaluate the infogain for every possible feature and choose
     // that one that maximizes it and split on it
     double targetEntropy = getEntropy(countOutcomeClasses);
-    double[] infoGain = new double[numFeatures];
+    Split[] infoGain = new Split[numFeatures];
     for (int featureIndex : possibleFeatureIndices.toArray()) {
-      infoGain[featureIndex] = targetEntropy
-          - calculateEntropyGivenFeature(featureIndex, countOutcomeClasses,
-              features, outcome);
+      infoGain[featureIndex] = calculateInformationGain(targetEntropy,
+          featureIndex, countOutcomeClasses, features, outcome);
     }
 
     // pick the split with highest info gain
-    int bestSplitIndex = ArrayUtils.maxIndex(infoGain);
-    TIntHashSet uniqueFeatures = getNominalValues(bestSplitIndex, features);
+    int maxIndex = 0;
+    double maxGain = infoGain[maxIndex] != null ? infoGain[maxIndex]
+        .getInformationGain() : Integer.MIN_VALUE;
+    for (int i = 1; i < infoGain.length; i++) {
+      if (infoGain[i] != null && infoGain[i].getInformationGain() > maxGain) {
+        maxGain = infoGain[i].getInformationGain();
+        maxIndex = i;
+      }
+    }
+    Split bestSplit = infoGain[maxIndex];
+    int bestSplitIndex = bestSplit.getSplitAttributeIndex();
     if (featureTypes[bestSplitIndex] == FeatureType.NOMINAL) {
+      TIntHashSet uniqueFeatures = getNominalValues(bestSplitIndex, features);
       NominalNode node = new NominalNode();
       node.splitAttributeIndex = bestSplitIndex;
-      node.children = new AbstractTreeNode[uniqueFeatures.size()];
+      node.children = new TreeNode[uniqueFeatures.size()];
       node.nominalSplitValues = new int[uniqueFeatures.size()];
       int cIndex = 0;
       for (int nominalValue : uniqueFeatures.toArray()) {
@@ -189,14 +210,42 @@ public final class DecisionTree extends AbstractClassifier {
             features, outcome, bestSplitIndex, nominalValue);
         TIntHashSet newPossibleFeatures = new TIntHashSet(
             possibleFeatureIndices);
+        // remove that feature
         newPossibleFeatures.remove(bestSplitIndex);
         node.children[cIndex] = build(filtered.getFirst(),
             filtered.getSecond(), newPossibleFeatures);
         cIndex++;
       }
       return node;
+    } else if (featureTypes[bestSplitIndex] == FeatureType.NUMERICAL) {
+      TIntHashSet newPossibleFeatures = new TIntHashSet(possibleFeatureIndices);
+      Tuple<List<DoubleVector>, List<DoubleVector>> filterNumeric = filterNumericLower(
+          features, outcome, bestSplitIndex, bestSplit.getNumericalSplitValue());
+      Tuple<List<DoubleVector>, List<DoubleVector>> filterNumericHigher = filterNumericHigher(
+          features, outcome, bestSplitIndex, bestSplit.getNumericalSplitValue());
+
+      if (filterNumeric.getFirst().isEmpty()
+          || filterNumericHigher.getFirst().isEmpty()) {
+        newPossibleFeatures.remove(bestSplitIndex);
+      } else {
+        // we changed something, thus we can unselect all numerical features
+        for (int i = 0; i < featureTypes.length; i++) {
+          if (featureTypes[i] == FeatureType.NUMERICAL) {
+            newPossibleFeatures.add(i);
+          }
+        }
+        newPossibleFeatures = chooseRandomFeatures(newPossibleFeatures);
+      }
+
+      // build subtrees
+      TreeNode lower = build(filterNumeric.getFirst(),
+          filterNumeric.getSecond(), newPossibleFeatures);
+      TreeNode higher = build(filterNumericHigher.getFirst(),
+          filterNumericHigher.getSecond(), newPossibleFeatures);
+      // now we can return this completed node
+      return new NumericalNode(bestSplitIndex,
+          bestSplit.getNumericalSplitValue(), lower, higher);
     }
-    // TODO numerical features
 
     return null;
   }
@@ -230,16 +279,57 @@ public final class DecisionTree extends AbstractClassifier {
   }
 
   /**
-   * Calculates the conditional entropy given a feature.
-   * 
-   * @param featureIndex the feature index to consider.
-   * @param countOutcomeClasses the histogram over all possible outcome classes.
-   * @param features the features.
-   * @param outcome the outcomes.
-   * @return the entropy.
+   * @return the feature and outcome where the feature is strictly higher than
+   *         the split value.
    */
-  private double calculateEntropyGivenFeature(int featureIndex,
-      int[] countOutcomeClasses, List<DoubleVector> features,
+  private Tuple<List<DoubleVector>, List<DoubleVector>> filterNumericHigher(
+      List<DoubleVector> features, List<DoubleVector> outcome,
+      int bestSplitIndex, double splitValue) {
+
+    List<DoubleVector> newFeatures = Lists.newLinkedList();
+    List<DoubleVector> newOutcomes = Lists.newLinkedList();
+
+    Iterator<DoubleVector> featureIterator = features.iterator();
+    Iterator<DoubleVector> outcomeIterator = outcome.iterator();
+    while (featureIterator.hasNext()) {
+      DoubleVector feature = featureIterator.next();
+      DoubleVector out = outcomeIterator.next();
+      if (feature.get(bestSplitIndex) > splitValue) {
+        newFeatures.add(feature);
+        newOutcomes.add(out);
+      }
+    }
+
+    return new Tuple<>(newFeatures, newOutcomes);
+  }
+
+  /**
+   * @return the feature and outcome where the feature is strictly lower than or
+   *         equal to the split value.
+   */
+  private Tuple<List<DoubleVector>, List<DoubleVector>> filterNumericLower(
+      List<DoubleVector> features, List<DoubleVector> outcome,
+      int bestSplitIndex, double splitValue) {
+
+    List<DoubleVector> newFeatures = Lists.newLinkedList();
+    List<DoubleVector> newOutcomes = Lists.newLinkedList();
+
+    Iterator<DoubleVector> featureIterator = features.iterator();
+    Iterator<DoubleVector> outcomeIterator = outcome.iterator();
+    while (featureIterator.hasNext()) {
+      DoubleVector feature = featureIterator.next();
+      DoubleVector out = outcomeIterator.next();
+      if (feature.get(bestSplitIndex) <= splitValue) {
+        newFeatures.add(feature);
+        newOutcomes.add(out);
+      }
+    }
+
+    return new Tuple<>(newFeatures, newOutcomes);
+  }
+
+  private Split calculateInformationGain(double overallEntropy,
+      int featureIndex, int[] countOutcomeClasses, List<DoubleVector> features,
       List<DoubleVector> outcome) {
 
     if (featureTypes[featureIndex] == FeatureType.NOMINAL) {
@@ -251,12 +341,7 @@ public final class DecisionTree extends AbstractClassifier {
       while (featureIterator.hasNext()) {
         DoubleVector feature = featureIterator.next();
         DoubleVector out = outcomeIterator.next();
-        int classIndex = 0;
-        if (binaryClassification) {
-          classIndex = (int) out.get(0);
-        } else {
-          classIndex = out.maxIndex();
-        }
+        int classIndex = getOutcomeClassIndex(out);
         int nominalFeatureValue = (int) feature.get(featureIndex);
         int[] is = featureValueOutcomeCount.get(nominalFeatureValue);
         if (is == null) {
@@ -277,11 +362,73 @@ public final class DecisionTree extends AbstractClassifier {
             * getEntropy(outcomeCounts);
         entropySum += condEntropy;
       }
-      return entropySum;
-    }
-    // TODO what needs to be done for numerical features?
+      return new Split(featureIndex, overallEntropy - entropySum);
+    } else if (featureTypes[featureIndex] == FeatureType.NUMERICAL) {
 
-    return 0d;
+      Iterator<DoubleVector> featureIterator = features.iterator();
+      TDoubleHashSet possibleFeatureValues = new TDoubleHashSet();
+      while (featureIterator.hasNext()) {
+        DoubleVector feature = featureIterator.next();
+        possibleFeatureValues.add(feature.get(featureIndex));
+      }
+      double bestInfogain = -1;
+      double bestSplit = 0.0;
+      TDoubleIterator iterator = possibleFeatureValues.iterator();
+      while (iterator.hasNext()) {
+        double value = iterator.next();
+        double ig = computeNumericalInfogain(features, outcome, overallEntropy,
+            1d / features.size(), featureIndex, value);
+        if (ig > bestInfogain) {
+          bestInfogain = ig;
+          bestSplit = value;
+        }
+      }
+      return new Split(featureIndex, bestInfogain, bestSplit);
+    }
+
+    return null;
+  }
+
+  // TODO this can be constant if the lists are sorted on the feature value
+  private double computeNumericalInfogain(List<DoubleVector> features,
+      List<DoubleVector> outcome, double overallEntropy, double invDatasize,
+      int featureIndex, double value) {
+
+    // 0 denotes lower than or equal, 1 denotes higher
+    int[][] counts = new int[2][outcomeDimension];
+    int lowCount = 0;
+    int highCount = 0;
+    Arrays.fill(counts, new int[outcomeDimension]);
+    Iterator<DoubleVector> featureIterator = features.iterator();
+    Iterator<DoubleVector> outcomeIterator = outcome.iterator();
+    while (featureIterator.hasNext()) {
+      DoubleVector feature = featureIterator.next();
+      DoubleVector out = outcomeIterator.next();
+      int idx = getOutcomeClassIndex(out);
+      if (feature.get(featureIndex) > value) {
+        counts[1][idx]++;
+        highCount++;
+      } else {
+        counts[0][idx]++;
+        lowCount++;
+      }
+    }
+
+    // discount the lower set
+    overallEntropy -= (lowCount * invDatasize * getEntropy(counts[0]));
+    // and the higher one
+    overallEntropy -= (highCount * invDatasize * getEntropy(counts[1]));
+    return overallEntropy;
+  }
+
+  private int getOutcomeClassIndex(DoubleVector out) {
+    int classIndex = 0;
+    if (binaryClassification) {
+      classIndex = (int) out.get(0);
+    } else {
+      classIndex = out.maxIndex();
+    }
+    return classIndex;
   }
 
   /**
