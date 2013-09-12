@@ -52,6 +52,11 @@ public class DecisionTreeTest {
     tree.setNumFeatures(10);
     set = tree.chooseRandomFeatures(tree.getPossibleFeatures());
     assertEquals(3, set.size());
+
+    tree.setNumRandomFeaturesToChoose(3);
+    tree.setNumFeatures(2);
+    set = tree.chooseRandomFeatures(tree.getPossibleFeatures());
+    assertEquals(2, set.size());
   }
 
   @Test
