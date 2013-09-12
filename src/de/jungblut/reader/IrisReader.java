@@ -6,6 +6,7 @@ import java.io.IOException;
 
 import com.google.common.base.Preconditions;
 
+import de.jungblut.classification.eval.EvaluationSplit;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 
@@ -53,4 +54,40 @@ public final class IrisReader {
 
     return new Dataset(features, outcome);
   }
+
+  /**
+   * @return a split that has 40 train examples for every class and 10 test
+   *         items.
+   */
+  public static EvaluationSplit getEvaluationSplit(Dataset irisData) {
+
+    DoubleVector[] trainFeatures = new DenseDoubleVector[3 * 40];
+    DoubleVector[] trainOutcomes = new DenseDoubleVector[3 * 40];
+    DoubleVector[] testFeatures = new DenseDoubleVector[3 * 10];
+    DoubleVector[] testOutcomes = new DenseDoubleVector[3 * 10];
+
+    DoubleVector[] features = irisData.getFeatures();
+    DoubleVector[] outcomes = irisData.getOutcomes();
+
+    int[] trainSplitPoints = new int[] { 40, 90, 140 };
+    int[] trainDestStartPoints = new int[] { 0, 40, 80 };
+    int[] testDestStartPoints = new int[] { 0, 10, 20 };
+
+    for (int i = 0; i < 3; i++) {
+      int splitPoint = trainSplitPoints[i];
+      System.arraycopy(features, splitPoint - 40, trainFeatures,
+          trainDestStartPoints[i], 40);
+      System.arraycopy(outcomes, splitPoint - 40, trainOutcomes,
+          trainDestStartPoints[i], 40);
+
+      System.arraycopy(features, splitPoint, testFeatures,
+          testDestStartPoints[i], 10);
+      System.arraycopy(outcomes, splitPoint, testOutcomes,
+          testDestStartPoints[i], 10);
+    }
+
+    return new EvaluationSplit(trainFeatures, trainOutcomes, testFeatures,
+        testOutcomes);
+  }
+
 }
