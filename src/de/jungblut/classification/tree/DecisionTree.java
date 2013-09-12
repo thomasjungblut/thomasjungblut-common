@@ -7,12 +7,16 @@ import gnu.trove.map.hash.TIntObjectHashMap;
 import gnu.trove.set.hash.TDoubleHashSet;
 import gnu.trove.set.hash.TIntHashSet;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.math3.util.FastMath;
+import org.apache.hadoop.io.WritableUtils;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
@@ -45,11 +49,24 @@ public final class DecisionTree extends AbstractClassifier {
 
   // default is binary classification 0 or 1.
   private boolean binaryClassification = true;
+  private boolean compiled = false;
+  private String compiledName = null;
   private int outcomeDimension;
   private int numFeatures;
 
   // use the static factory methods!
   private DecisionTree() {
+  }
+
+  // serialization constructor
+  private DecisionTree(TreeNode rootNode, FeatureType[] featureTypes,
+      boolean binaryClassification, int numFeatures, int outcomeDimension) {
+    this.binaryClassification = binaryClassification;
+    this.rootNode = rootNode;
+    this.featureTypes = featureTypes;
+    this.numFeatures = numFeatures;
+    this.outcomeDimension = outcomeDimension;
+    this.compiled = true;
   }
 
   @Override
@@ -72,11 +89,18 @@ public final class DecisionTree extends AbstractClassifier {
     }
     numFeatures = features[0].getDimension();
     TIntHashSet possibleFeatureIndices = getPossibleFeatures();
-    // recursively build the tree:
+    // recursively build the tree...
     // note that we use linked lists to remove examples we don't need, linked
     // structures do not require costly copy operations after removal
     rootNode = build(Lists.newLinkedList(Arrays.asList(features)),
         Lists.newLinkedList(Arrays.asList(outcome)), possibleFeatureIndices);
+    if (compiled) {
+      try {
+        compileTree();
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   @Override
@@ -95,6 +119,18 @@ public final class DecisionTree extends AbstractClassifier {
       vec.set(clz, 1);
       return vec;
     }
+  }
+
+  /**
+   * Compiles this current tree representation into byte code and loads it into
+   * this class. This is considered faster, as the interpreted code can be
+   * optimized by the hotspot JVM.
+   * 
+   * @throws Exception some error might happen during compilation or loading.
+   */
+  public void compileTree() throws Exception {
+    compiledName = TreeCompiler.generateClassName();
+    this.rootNode = TreeCompiler.compileAndLoad(compiledName, rootNode);
   }
 
   /**
@@ -168,10 +204,7 @@ public final class DecisionTree extends AbstractClassifier {
     int bestSplitIndex = bestSplit.getSplitAttributeIndex();
     if (featureTypes[bestSplitIndex].isNominal()) {
       TIntHashSet uniqueFeatures = getNominalValues(bestSplitIndex, features);
-      NominalNode node = new NominalNode();
-      node.splitAttributeIndex = bestSplitIndex;
-      node.children = new TreeNode[uniqueFeatures.size()];
-      node.nominalSplitValues = new int[uniqueFeatures.size()];
+      NominalNode node = new NominalNode(bestSplitIndex, uniqueFeatures.size());
       int cIndex = 0;
       for (int nominalValue : uniqueFeatures.toArray()) {
         node.nominalSplitValues[cIndex] = nominalValue;
@@ -185,6 +218,8 @@ public final class DecisionTree extends AbstractClassifier {
             filtered.getSecond(), newPossibleFeatures);
         cIndex++;
       }
+      // make a faster lookup by sorting
+      node.sortInternal();
       return node;
     } else {
       // numerical split
@@ -476,6 +511,17 @@ public final class DecisionTree extends AbstractClassifier {
   }
 
   /**
+   * If set to true, this tree will be compiled after training time
+   * automatically.
+   * 
+   * @return this decision tree instance.
+   */
+  public DecisionTree setCompiled(boolean compiled) {
+    this.compiled = compiled;
+    return this;
+  }
+
+  /**
    * Sets the seed for a random number generator if used.
    */
   public void setSeed(long seed) {
@@ -502,6 +548,52 @@ public final class DecisionTree extends AbstractClassifier {
   }
 
   /**
+   * Writes the given tree to the output stream. Note that the stream isn't
+   * closed here.
+   */
+  public static void serialize(DecisionTree tree, DataOutput out)
+      throws IOException {
+    try {
+      out.writeBoolean(tree.binaryClassification);
+      WritableUtils.writeVInt(out, tree.outcomeDimension);
+      WritableUtils.writeVInt(out, tree.numFeatures);
+      for (int i = 0; i < tree.featureTypes.length; i++) {
+        WritableUtils.writeVInt(out, tree.featureTypes[i].ordinal());
+      }
+      String name = TreeCompiler.generateClassName();
+      out.writeUTF(name);
+      byte[] compiliaton = TreeCompiler.compileNode(name, tree.rootNode);
+      WritableUtils.writeCompressedByteArray(out, compiliaton);
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
+  }
+
+  /**
+   * Reads a new tree from the given stream. Note that the stream isn't closed
+   * here.
+   */
+  public static DecisionTree deserialize(DataInput in) throws IOException {
+    boolean binary = in.readBoolean();
+    int outcomeDimension = WritableUtils.readVInt(in);
+    int numFeatures = WritableUtils.readVInt(in);
+    FeatureType[] arr = new FeatureType[numFeatures];
+    for (int i = 0; i < numFeatures; i++) {
+      arr[i] = FeatureType.values()[WritableUtils.readVInt(in)];
+    }
+
+    String name = in.readUTF();
+    byte[] compiled = WritableUtils.readCompressedByteArray(in);
+    try {
+      TreeNode loadedRoot = TreeCompiler.load(name, compiled);
+      return new DecisionTree(loadedRoot, arr, binary, numFeatures,
+          outcomeDimension);
+    } catch (Exception e) {
+      throw new IOException(e);
+    }
+  }
+
+  /**
    * @return a default decision tree with all features beeing nominal.
    */
   public static DecisionTree create() {
@@ -518,6 +610,25 @@ public final class DecisionTree extends AbstractClassifier {
    */
   public static DecisionTree create(FeatureType[] featureTypes) {
     return new DecisionTree().setFeatureTypes(featureTypes);
+  }
+
+  /**
+   * @return a default compiled decision tree with all features beeing nominal.
+   */
+  public static DecisionTree createCompiledTree() {
+    return new DecisionTree().setCompiled(true);
+  }
+
+  /**
+   * Creates a new compiled decision tree with the given feature types.
+   * 
+   * @param featureTypes the types of the feature that must match the number of
+   *          features in length.
+   * @return a default decision tree with all features beeing set to what has
+   *         been configured in the given array.
+   */
+  public static DecisionTree createCompiledTree(FeatureType[] featureTypes) {
+    return new DecisionTree().setFeatureTypes(featureTypes).setCompiled(true);
   }
 
   /**

@@ -11,6 +11,9 @@ import java.util.Arrays;
  */
 public enum FeatureType {
 
+  /*
+   * Never ever change the order, just append!
+   */
   NOMINAL, NUMERICAL;
 
   /**

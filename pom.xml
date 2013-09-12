@@ -200,6 +200,11 @@
 			<artifactId>juniversalchardet</artifactId>
 			<version>1.0.3</version>
 		</dependency>
+		<dependency>
+			<groupId>org.ow2.asm</groupId>
+			<artifactId>asm-all</artifactId>
+			<version>4.1</version>
+		</dependency>
 	</dependencies>
 
 	<build>

@@ -3,6 +3,11 @@ package de.jungblut.classification.tree;
 import static org.junit.Assert.assertEquals;
 import gnu.trove.set.hash.TIntHashSet;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+
 import org.junit.Test;
 
 import de.jungblut.classification.eval.EvaluationSplit;
@@ -14,10 +19,14 @@ import de.jungblut.reader.MushroomReader;
 
 public class DecisionTreeTest {
 
+  static Dataset mushroom = MushroomReader
+      .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
+  static EvaluationSplit irisEvaluationSplit = IrisReader
+      .getEvaluationSplit(IrisReader
+          .readIrisDataset("files/iris/iris_dataset.csv"));
+
   @Test
   public void testMushroomNominalData() {
-    Dataset mushroom = MushroomReader
-        .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
     DecisionTree tree = DecisionTree.create();
     // nominal features are default here anyway
     EvaluationResult res = Evaluator.evaluateClassifier(tree,
@@ -27,13 +36,55 @@ public class DecisionTreeTest {
 
   @Test
   public void testIrisNumericalData() {
-    Dataset iris = IrisReader.readIrisDataset("files/iris/iris_dataset.csv");
-    EvaluationSplit evaluationSplit = IrisReader.getEvaluationSplit(iris);
     DecisionTree tree = DecisionTree.create(FeatureType.allNumerical(4));
     EvaluationResult res = Evaluator.evaluateSplit(tree, 3, null,
-        evaluationSplit);
+        irisEvaluationSplit);
     assertEquals(27, res.getCorrect()); // 27 out of 30 is really good!
     assertEquals(0.9, res.getAccuracy(), 1e-5);
+  }
+
+  @Test
+  public void testCompiledMushroomNominalData() {
+    DecisionTree tree = DecisionTree.createCompiledTree();
+    // nominal features are default here anyway
+    EvaluationResult res = Evaluator.evaluateClassifier(tree,
+        mushroom.getFeatures(), mushroom.getOutcomes(), 2, 0.9f, false);
+    assertEquals(1d, res.getAccuracy(), 1e-5);
+  }
+
+  @Test
+  public void testCompiledIrisNumericalData() {
+    DecisionTree tree = DecisionTree.createCompiledTree(FeatureType
+        .allNumerical(4));
+    EvaluationResult res = Evaluator.evaluateSplit(tree, 3, null,
+        irisEvaluationSplit);
+    assertEquals(27, res.getCorrect());
+    assertEquals(0.9, res.getAccuracy(), 1e-5);
+  }
+
+  @Test
+  public void testSerialization() throws Exception {
+    DecisionTree tree = DecisionTree.create();
+    // train
+    tree.train(mushroom.getFeatures(), mushroom.getOutcomes());
+    // uncompiled
+    EvaluationResult res = Evaluator.testClassifier(tree, 2, null,
+        mushroom.getFeatures().length, mushroom.getFeatures(),
+        mushroom.getOutcomes());
+    assertEquals(1d, res.getAccuracy(), 1e-5);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DecisionTree.serialize(tree, new DataOutputStream(baos));
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    DecisionTree deserialized = DecisionTree.deserialize(new DataInputStream(
+        bais));
+
+    // now let's eval on the train set, it should classify everything correct as
+    // it overfits the data.
+    res = Evaluator.testClassifier(deserialized, 2, null,
+        mushroom.getFeatures().length, mushroom.getFeatures(),
+        mushroom.getOutcomes());
+    assertEquals(1d, res.getAccuracy(), 1e-5);
+
   }
 
   @Test
