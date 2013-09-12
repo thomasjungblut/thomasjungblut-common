@@ -54,7 +54,7 @@ public final class NominalNode implements TreeNode {
   public int predict(DoubleVector features) {
     int categoricalValue = (int) features.get(splitAttributeIndex);
     int foundIndex = Arrays.binarySearch(nominalSplitValues, categoricalValue);
-    if (foundIndex != -1) {
+    if (foundIndex >= 0) {
       return children[foundIndex].predict(features);
     }
     return foundIndex;
