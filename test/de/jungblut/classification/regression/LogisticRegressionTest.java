@@ -70,7 +70,7 @@ public class LogisticRegressionTest {
     clf.train(features, outcome);
     double trainingError = 0d;
     for (int i = 0; i < features.length; i++) {
-      int predict = clf.getPredictedClass(features[i], 0.5d);
+      int predict = clf.predictedClass(features[i], 0.5d);
       trainingError += Math.abs(outcome[i].get(0) - predict);
     }
     assertEquals("Training error was: " + trainingError

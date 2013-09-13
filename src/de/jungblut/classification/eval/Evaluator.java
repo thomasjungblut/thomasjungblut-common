@@ -227,8 +227,8 @@ public final class Evaluator {
    *          900 items to train and 100 to evaluate.
    * @param random true if you want to perform shuffling on the data beforehand.
    * @param threshold in case of binary predictions, threshold is used to call
-   *          in {@link Classifier#getPredictedClass(DoubleVector, double)}. Can
-   *          be null, then no thresholding will be used.
+   *          in {@link Classifier#predictedClass(DoubleVector, double)}. Can be
+   *          null, then no thresholding will be used.
    * @return a new {@link EvaluationResult}.
    */
   public static EvaluationResult evaluateClassifier(Classifier classifier,
@@ -312,9 +312,9 @@ public final class Evaluator {
         DoubleVector predictedVector = classifier.predict(testFeatures[i]);
         int prediction = 0;
         if (threshold == null) {
-          prediction = classifier.predictClassInternal(predictedVector);
+          prediction = classifier.extractPredictedClass(predictedVector);
         } else {
-          prediction = classifier.predictClassInternal(predictedVector,
+          prediction = classifier.extractPredictedClass(predictedVector,
               threshold);
         }
         if (outcomeClass == 1) {
@@ -335,7 +335,7 @@ public final class Evaluator {
       int[][] confusionMatrix = new int[numLabels][numLabels];
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = testOutcome[i].maxIndex();
-        int prediction = classifier.getPredictedClass(testFeatures[i]);
+        int prediction = classifier.predictedClass(testFeatures[i]);
         confusionMatrix[outcomeClass][prediction]++;
         if (outcomeClass == prediction) {
           result.correct++;

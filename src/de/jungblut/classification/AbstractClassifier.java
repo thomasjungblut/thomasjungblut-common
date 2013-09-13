@@ -12,19 +12,25 @@ import de.jungblut.math.DoubleVector;
 public abstract class AbstractClassifier implements Classifier {
 
   @Override
-  public int getPredictedClass(DoubleVector features, double threshold) {
+  public int predictedClass(DoubleVector features, double threshold) {
     DoubleVector predict = predict(features);
-    return predictClassInternal(predict, threshold);
+    return extractPredictedClass(predict, threshold);
   }
 
   @Override
-  public int getPredictedClass(DoubleVector features) {
+  public int predictedClass(DoubleVector features) {
     DoubleVector predict = predict(features);
-    return predictClassInternal(predict);
+    return extractPredictedClass(predict);
   }
 
   @Override
-  public int predictClassInternal(DoubleVector predict) {
+  public DoubleVector predictProbability(DoubleVector features) {
+    DoubleVector predict = predict(features);
+    return predict.divide(predict.sum());
+  }
+
+  @Override
+  public int extractPredictedClass(DoubleVector predict) {
     if (predict.getLength() == 1) {
       return (int) Math.rint(predict.get(0));
     } else {
@@ -33,7 +39,7 @@ public abstract class AbstractClassifier implements Classifier {
   }
 
   @Override
-  public int predictClassInternal(DoubleVector predict, double threshold) {
+  public int extractPredictedClass(DoubleVector predict, double threshold) {
     if (predict.getLength() == 1) {
       if (predict.get(0) <= threshold) {
         return 0;

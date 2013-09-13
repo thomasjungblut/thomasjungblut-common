@@ -9,14 +9,14 @@ import org.junit.Test;
 
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.ClassifierFactory;
-import de.jungblut.classification.meta.Voting.CombiningType;
+import de.jungblut.classification.meta.Voter.CombiningType;
 import de.jungblut.classification.regression.LogisticRegression;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.minimize.Fmincg;
 import de.jungblut.reader.Dataset;
 import de.jungblut.reader.MushroomReader;
 
-public class VotingTest {
+public class VoterTest {
 
   private static ClassifierFactory<LogisticRegression> factory = new ClassifierFactory<LogisticRegression>() {
     @Override
@@ -43,16 +43,16 @@ public class VotingTest {
 
   @Test
   public void testVoting() {
-    Voting<LogisticRegression> voter = new Voting<>(CombiningType.MAJORITY,
-        factory, 20, false);
+    Voter<LogisticRegression> voter = Voter.create(20, CombiningType.MAJORITY,
+        factory);
     double trainingError = trainInternal(voter);
     assertEquals(0.002, trainingError, 0.1);
   }
 
   @Test
   public void testAverageVoting() {
-    Voting<LogisticRegression> voter = new Voting<>(CombiningType.AVERAGE,
-        factory, 20, false);
+    Voter<LogisticRegression> voter = Voter.create(20, CombiningType.AVERAGE,
+        factory);
     double trainingError = trainInternal(voter);
     assertEquals("Error of single logistic regression: "
         + logisticTrainingError + " and voted regression was higher: "
@@ -66,11 +66,11 @@ public class VotingTest {
 
     double err = 0d;
     for (int i = 0; i < features.length; i++) {
-      DoubleVector features = VotingTest.features[i];
-      DoubleVector outcome = VotingTest.outcomes[i];
+      DoubleVector features = VoterTest.features[i];
+      DoubleVector outcome = VoterTest.outcomes[i];
       DoubleVector predict = classifier.predict(features);
       err += outcome.subtract(predict).abs().sum();
     }
-    return err / VotingTest.features.length;
+    return err / VoterTest.features.length;
   }
 }

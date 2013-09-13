@@ -137,12 +137,12 @@ public final class DecisionTree extends AbstractClassifier {
    * @return a random subset of the features.
    */
   TIntHashSet chooseRandomFeatures(TIntHashSet possibleFeatureIndices) {
-    // make a copy
     if (numRandomFeaturesToChoose > 0
-        && numRandomFeaturesToChoose < numFeatures) {
+        && numRandomFeaturesToChoose < numFeatures
+        && possibleFeatureIndices.size() > numRandomFeaturesToChoose) {
+      // make a copy
       TIntHashSet set = new TIntHashSet();
       int[] arr = possibleFeatureIndices.toArray();
-      // we now remove the difference from the set
       Random rnd = new Random(seed);
       while (set.size() < numRandomFeaturesToChoose) {
         set.add(arr[rnd.nextInt(arr.length)]);

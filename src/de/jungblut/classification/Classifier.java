@@ -23,9 +23,19 @@ public interface Classifier {
   /**
    * Classifies the given features.
    * 
-   * @return the vector that contains a "probability" at the index of the class.
+   * @return the vector that contains an indicator at the index of the class.
+   *         Usually zero or 1, in some cases it is a probability or activation
+   *         value.
    */
   public DoubleVector predict(DoubleVector features);
+
+  /**
+   * Classifies the given features.
+   * 
+   * @return a vector that returns the probability of all outcomes. The output
+   *         vector should sum to one.
+   */
+  public DoubleVector predictProbability(DoubleVector features);
 
   /**
    * Classifies the given features.
@@ -35,27 +45,27 @@ public interface Classifier {
    *          0.5 to 1d and everything below (<=) to 0d.
    * @return the predicted class as an integer for the output of a classifier.
    */
-  public int getPredictedClass(DoubleVector features, double threshold);
+  public int predictedClass(DoubleVector features, double threshold);
 
   /**
    * Classifies the given features.
    * 
    * @return the predicted class as an integer for the output of a classifier.
    */
-  public int getPredictedClass(DoubleVector features);
+  public int predictedClass(DoubleVector features);
 
   /**
    * Given an already done prediction, choose the class.
    * 
    * @return the class index as integer.
    */
-  public int predictClassInternal(DoubleVector predict);
+  public int extractPredictedClass(DoubleVector predict);
 
   /**
    * Given an already done prediction, choose the class with a threshold.
    * 
    * @return the class index as integer.
    */
-  public int predictClassInternal(DoubleVector predict, double threshold);
+  public int extractPredictedClass(DoubleVector predict, double threshold);
 
 }
