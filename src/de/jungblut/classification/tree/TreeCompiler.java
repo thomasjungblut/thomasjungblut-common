@@ -125,32 +125,37 @@ public final class TreeCompiler implements Opcodes {
   /**
    * @return generate a pseudo-unique classname using the classname prefix and
    *         the timestamp in ms, because some collisions happened, a random
-   *         between 0 and 100 is appended as well.
+   *         string is appended as well.
    */
   public static synchronized String generateClassName() {
     return CLAZZ_NAME + "_" + System.currentTimeMillis() + "_"
-        + RNG.nextInt(100);
+        + Integer.toString(Math.abs(RNG.nextInt()), 36);
   }
 
   @SuppressWarnings("unchecked")
   private static <CLAZZ> Class<CLAZZ> loadClass(byte[] b, String className)
       throws Exception {
     // override classDefine (as it is protected) and define the class.
-    Class<CLAZZ> clazz = null;
     ClassLoader loader = ClassLoader.getSystemClassLoader();
     Class<CLAZZ> cls = (Class<CLAZZ>) Class.forName("java.lang.ClassLoader");
     java.lang.reflect.Method method = cls.getDeclaredMethod("defineClass",
         new Class<?>[] { String.class, byte[].class, int.class, int.class });
+
+    try {
+      Class<CLAZZ> clz = (Class<CLAZZ>) Class.forName(className);
+      return clz;
+    } catch (Exception e) {
+      // swallow.
+    }
 
     // protected method invocaton
     method.setAccessible(true);
     try {
       Object[] args = new Object[] { className, b, new Integer(0),
           new Integer(b.length) };
-      clazz = (Class<CLAZZ>) method.invoke(loader, args);
+      return (Class<CLAZZ>) method.invoke(loader, args);
     } finally {
       method.setAccessible(false);
     }
-    return clazz;
   }
 }

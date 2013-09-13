@@ -51,6 +51,7 @@ public final class DecisionTree extends AbstractClassifier {
   private boolean binaryClassification = true;
   private boolean compiled = false;
   private String compiledName = null;
+  private byte[] compiledClass = null;
   private int outcomeDimension;
   private int numFeatures;
 
@@ -129,8 +130,11 @@ public final class DecisionTree extends AbstractClassifier {
    * @throws Exception some error might happen during compilation or loading.
    */
   public void compileTree() throws Exception {
-    compiledName = TreeCompiler.generateClassName();
-    this.rootNode = TreeCompiler.compileAndLoad(compiledName, rootNode);
+    if (compiledClass == null) {
+      compiledName = TreeCompiler.generateClassName();
+      compiledClass = TreeCompiler.compileNode(compiledName, rootNode);
+      rootNode = TreeCompiler.load(compiledName, compiledClass);
+    }
   }
 
   /**
@@ -560,10 +564,11 @@ public final class DecisionTree extends AbstractClassifier {
       for (int i = 0; i < tree.featureTypes.length; i++) {
         WritableUtils.writeVInt(out, tree.featureTypes[i].ordinal());
       }
-      String name = TreeCompiler.generateClassName();
-      out.writeUTF(name);
-      byte[] compiliaton = TreeCompiler.compileNode(name, tree.rootNode);
-      WritableUtils.writeCompressedByteArray(out, compiliaton);
+      if (tree.compiledClass == null) {
+        tree.compileTree();
+      }
+      out.writeUTF(tree.compiledName);
+      WritableUtils.writeCompressedByteArray(out, tree.compiledClass);
     } catch (Exception e) {
       throw new IOException(e);
     }

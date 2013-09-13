@@ -1,10 +1,14 @@
 package de.jungblut.classification.tree;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Arrays;
 
 import com.google.common.base.Preconditions;
 
 import de.jungblut.classification.AbstractClassifier;
+import de.jungblut.classification.Classifier;
 import de.jungblut.classification.ClassifierFactory;
 import de.jungblut.classification.meta.Voter;
 import de.jungblut.classification.meta.Voter.CombiningType;
@@ -30,6 +34,11 @@ public final class RandomForest extends AbstractClassifier {
 
   private RandomForest(int numTrees) {
     this.numTrees = numTrees;
+  }
+
+  public RandomForest(int numTrees, Voter<DecisionTree> voter) {
+    this(numTrees);
+    this.trees = voter;
   }
 
   @Override
@@ -129,6 +138,37 @@ public final class RandomForest extends AbstractClassifier {
    */
   public static RandomForest create(int numTrees, FeatureType[] types) {
     return new RandomForest(numTrees).setFeatureTypes(types);
+  }
+
+  /**
+   * Writes the given forest to the output stream. Note that the stream isn't
+   * closed here.
+   */
+  public static void serialize(RandomForest tree, DataOutput out)
+      throws IOException {
+    out.writeInt(tree.numTrees);
+    for (Classifier c : tree.trees.getClassifier()) {
+      DecisionTree.serialize(((DecisionTree) c), out);
+    }
+  }
+
+  /**
+   * Reads a new forest from the given stream. Note that the stream isn't closed
+   * here.
+   */
+  public static RandomForest deserialize(DataInput in) throws IOException {
+    int numTrees = in.readInt();
+    Voter<DecisionTree> voter = Voter.create(numTrees, CombiningType.MAJORITY,
+        new ClassifierFactory<DecisionTree>() {
+          @Override
+          public DecisionTree newInstance() {
+            return null;
+          }
+        });
+    for (int i = 0; i < numTrees; i++) {
+      voter.getClassifier()[i] = DecisionTree.deserialize(in);
+    }
+    return new RandomForest(numTrees, voter);
   }
 
   private final class DecisionTreeFactory implements

@@ -2,6 +2,12 @@ package de.jungblut.classification.tree;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+
 import org.junit.Test;
 
 import de.jungblut.classification.eval.Evaluator;
@@ -27,6 +33,27 @@ public class RandomForestTest {
         mushroom.getFeatures().length, mushroom.getFeatures(),
         mushroom.getOutcomes());
 
+    assertEquals(1d, res.getAccuracy(), 0.1);
+
+  }
+
+  @Test
+  public void testSerialization() throws IOException {
+    RandomForest forest = RandomForest.create(10).setNumRandomFeaturesToChoose(
+        10);
+    forest.train(mushroom.getFeatures(), mushroom.getOutcomes());
+    EvaluationResult res = Evaluator.testClassifier(forest, 2, null,
+        mushroom.getFeatures().length, mushroom.getFeatures(),
+        mushroom.getOutcomes());
+    assertEquals(1d, res.getAccuracy(), 0.1);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    RandomForest.serialize(forest, new DataOutputStream(baos));
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    RandomForest deserialized = RandomForest.deserialize(new DataInputStream(
+        bais));
+    res = Evaluator.testClassifier(deserialized, 2, null,
+        mushroom.getFeatures().length, mushroom.getFeatures(),
+        mushroom.getOutcomes());
     assertEquals(1d, res.getAccuracy(), 0.1);
 
   }
