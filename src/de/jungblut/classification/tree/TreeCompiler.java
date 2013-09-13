@@ -1,5 +1,7 @@
 package de.jungblut.classification.tree;
 
+import java.util.Random;
+
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
@@ -23,9 +25,9 @@ import de.jungblut.math.DoubleVector;
  * 
  * The data that needs to be stored in order to compare is put into the constant
  * space of a class. Thus this is only limited to 2^16 entries on some JVMs. The
- * created class is called "CompiledNode{timestamp}" and it's {@link TreeNode}
- * {@link #compileAndLoad(TreeNode)} method throws an unsupported operation
- * exception.
+ * created class is called "CompiledNode_{timestamp}_{random}" and it's
+ * {@link TreeNode} {@link #compileAndLoad(TreeNode)} method throws an
+ * unsupported operation exception.
  * 
  * @author thomas.jungblut
  * 
@@ -33,6 +35,7 @@ import de.jungblut.math.DoubleVector;
 public final class TreeCompiler implements Opcodes {
 
   private static final String CLAZZ_NAME = "CompiledNode";
+  private static final Random RNG = new Random();
 
   /**
    * Compiles the given node and directly loads it.
@@ -121,10 +124,12 @@ public final class TreeCompiler implements Opcodes {
 
   /**
    * @return generate a pseudo-unique classname using the classname prefix and
-   *         the timestamp in ms.
+   *         the timestamp in ms, because some collisions happened, a random
+   *         between 0 and 100 is appended as well.
    */
-  public static String generateClassName() {
-    return CLAZZ_NAME + System.currentTimeMillis();
+  public static synchronized String generateClassName() {
+    return CLAZZ_NAME + "_" + System.currentTimeMillis() + "_"
+        + RNG.nextInt(100);
   }
 
   @SuppressWarnings("unchecked")

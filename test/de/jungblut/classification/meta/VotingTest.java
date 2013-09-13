@@ -46,7 +46,7 @@ public class VotingTest {
     Voting<LogisticRegression> voter = new Voting<>(CombiningType.MAJORITY,
         factory, 20, false);
     double trainingError = trainInternal(voter);
-    assertEquals(0.002, trainingError, 0.01);
+    assertEquals(0.002, trainingError, 0.1);
   }
 
   @Test
