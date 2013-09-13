@@ -83,7 +83,7 @@ public final class RandomForest extends AbstractClassifier {
   @Override
   public DoubleVector predictProbability(DoubleVector features) {
     trees.setCombiningType(CombiningType.PROBABILITY);
-    return predict(features);
+    return trees.predict(features);
   }
 
   /**
