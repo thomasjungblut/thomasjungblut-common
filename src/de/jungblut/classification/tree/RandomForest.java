@@ -76,6 +76,7 @@ public final class RandomForest extends AbstractClassifier {
   @Override
   public DoubleVector predict(DoubleVector features) {
     // just proxy to the voter
+    trees.setCombiningType(CombiningType.MAJORITY);
     return trees.predict(features);
   }
 

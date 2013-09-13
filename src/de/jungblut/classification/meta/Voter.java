@@ -127,7 +127,7 @@ public final class Voter<A extends Classifier> extends AbstractClassifier {
           histSum += d;
         }
         if (numPossibleOutcomes == 2) {
-          toReturn.set(0, histogram[ArrayUtils.maxIndex(histogram)] / histSum);
+          toReturn.set(0, histogram[1] / histSum);
         } else {
           for (int i = 0; i < histogram.length; i++) {
             toReturn.set(i, histogram[i] / histSum);
