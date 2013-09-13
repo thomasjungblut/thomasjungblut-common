@@ -1,5 +1,9 @@
 package de.jungblut.classification.tree;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
+
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -7,16 +11,19 @@ import org.objectweb.asm.Type;
 
 import de.jungblut.math.DoubleVector;
 
-public final class NumericalNode implements TreeNode {
+public final class NumericalNode extends AbstractTreeNode {
 
-  private final int splitAttributeIndex;
-  private final double splitAttributeValue;
+  private int splitAttributeIndex;
+  private double splitAttributeValue;
 
-  private final TreeNode lower;
-  private final TreeNode higher;
+  private AbstractTreeNode lower;
+  private AbstractTreeNode higher;
+
+  public NumericalNode() {
+  }
 
   public NumericalNode(int splitAttributeIndex, double splitAttributeValue,
-      TreeNode lower, TreeNode higher) {
+      AbstractTreeNode lower, AbstractTreeNode higher) {
     super();
     this.splitAttributeIndex = splitAttributeIndex;
     this.splitAttributeValue = splitAttributeValue;
@@ -64,5 +71,26 @@ public final class NumericalNode implements TreeNode {
     // execute smaller portion
     lower.transformToByteCode(visitor, returnLabel);
     visitor.visitLabel(end);
+  }
+
+  @Override
+  public void readFields(DataInput in) throws IOException {
+    splitAttributeIndex = in.readInt();
+    splitAttributeValue = in.readDouble();
+    lower = AbstractTreeNode.read(in);
+    higher = AbstractTreeNode.read(in);
+  }
+
+  @Override
+  protected void writeInternal(DataOutput out) throws IOException {
+    out.writeInt(splitAttributeIndex);
+    out.writeDouble(splitAttributeValue);
+    lower.write(out);
+    higher.write(out);
+  }
+
+  @Override
+  public byte getType() {
+    return 2;
   }
 }

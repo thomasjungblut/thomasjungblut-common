@@ -88,6 +88,31 @@ public class DecisionTreeTest {
   }
 
   @Test
+  public void testCompiledSerialization() throws Exception {
+    DecisionTree tree = DecisionTree.create();
+    tree.setCompiled(true);
+    // train
+    tree.train(mushroom.getFeatures(), mushroom.getOutcomes());
+    // uncompiled
+    EvaluationResult res = Evaluator.testClassifier(tree, 2, null,
+        mushroom.getFeatures().length, mushroom.getFeatures(),
+        mushroom.getOutcomes());
+    assertEquals(1d, res.getAccuracy(), 1e-5);
+    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+    DecisionTree.serialize(tree, new DataOutputStream(baos));
+    ByteArrayInputStream bais = new ByteArrayInputStream(baos.toByteArray());
+    DecisionTree deserialized = DecisionTree.deserialize(new DataInputStream(
+        bais));
+
+    // now let's eval on the train set, it should classify everything correct as
+    // it overfits the data.
+    res = Evaluator.testClassifier(deserialized, 2, null,
+        mushroom.getFeatures().length, mushroom.getFeatures(),
+        mushroom.getOutcomes());
+    assertEquals(1d, res.getAccuracy(), 1e-5);
+  }
+
+  @Test
   public void testPossibleFeatures() {
     DecisionTree tree = DecisionTree.create();
     tree.setNumFeatures(10);

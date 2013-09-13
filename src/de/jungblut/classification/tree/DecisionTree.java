@@ -42,14 +42,14 @@ public final class DecisionTree extends AbstractClassifier {
 
   private static final double LOG2 = FastMath.log(2);
 
-  private TreeNode rootNode;
+  private AbstractTreeNode rootNode;
   private FeatureType[] featureTypes;
   private int numRandomFeaturesToChoose;
   private long seed = System.currentTimeMillis();
 
   // default is binary classification 0 or 1.
   private boolean binaryClassification = true;
-  private boolean compiled = false;
+  private boolean compile = false;
   private String compiledName = null;
   private byte[] compiledClass = null;
   private int outcomeDimension;
@@ -60,14 +60,14 @@ public final class DecisionTree extends AbstractClassifier {
   }
 
   // serialization constructor
-  private DecisionTree(TreeNode rootNode, FeatureType[] featureTypes,
+  private DecisionTree(AbstractTreeNode rootNode, FeatureType[] featureTypes,
       boolean binaryClassification, int numFeatures, int outcomeDimension) {
     this.binaryClassification = binaryClassification;
     this.rootNode = rootNode;
     this.featureTypes = featureTypes;
     this.numFeatures = numFeatures;
     this.outcomeDimension = outcomeDimension;
-    this.compiled = true;
+    this.compile = true;
   }
 
   @Override
@@ -95,7 +95,7 @@ public final class DecisionTree extends AbstractClassifier {
     // structures do not require costly copy operations after removal
     rootNode = build(Lists.newLinkedList(Arrays.asList(features)),
         Lists.newLinkedList(Arrays.asList(outcome)), possibleFeatureIndices);
-    if (compiled) {
+    if (compile) {
       try {
         compileTree();
       } catch (Exception e) {
@@ -159,7 +159,7 @@ public final class DecisionTree extends AbstractClassifier {
   /**
    * Recursively build the decision tree in a top down fashion.
    */
-  private TreeNode build(List<DoubleVector> features,
+  private AbstractTreeNode build(List<DoubleVector> features,
       List<DoubleVector> outcome, TIntHashSet possibleFeatureIndices) {
 
     // we select a subset of features at every tree level
@@ -248,9 +248,9 @@ public final class DecisionTree extends AbstractClassifier {
       }
 
       // build subtrees
-      TreeNode lower = build(filterNumeric.getFirst(),
+      AbstractTreeNode lower = build(filterNumeric.getFirst(),
           filterNumeric.getSecond(), new TIntHashSet(newPossibleFeatures));
-      TreeNode higher = build(filterNumericHigher.getFirst(),
+      AbstractTreeNode higher = build(filterNumericHigher.getFirst(),
           filterNumericHigher.getSecond(), new TIntHashSet(newPossibleFeatures));
       // now we can return this completed node
       return new NumericalNode(bestSplitIndex,
@@ -521,7 +521,7 @@ public final class DecisionTree extends AbstractClassifier {
    * @return this decision tree instance.
    */
   public DecisionTree setCompiled(boolean compiled) {
-    this.compiled = compiled;
+    this.compile = compiled;
     return this;
   }
 
@@ -564,11 +564,15 @@ public final class DecisionTree extends AbstractClassifier {
       for (int i = 0; i < tree.featureTypes.length; i++) {
         WritableUtils.writeVInt(out, tree.featureTypes[i].ordinal());
       }
+
       if (tree.compiledClass == null) {
-        tree.compileTree();
+        out.writeBoolean(false);
+        tree.rootNode.write(out);
+      } else {
+        out.writeBoolean(true);
+        out.writeUTF(tree.compiledName);
+        WritableUtils.writeCompressedByteArray(out, tree.compiledClass);
       }
-      out.writeUTF(tree.compiledName);
-      WritableUtils.writeCompressedByteArray(out, tree.compiledClass);
     } catch (Exception e) {
       throw new IOException(e);
     }
@@ -586,15 +590,19 @@ public final class DecisionTree extends AbstractClassifier {
     for (int i = 0; i < numFeatures; i++) {
       arr[i] = FeatureType.values()[WritableUtils.readVInt(in)];
     }
-
-    String name = in.readUTF();
-    byte[] compiled = WritableUtils.readCompressedByteArray(in);
-    try {
-      TreeNode loadedRoot = TreeCompiler.load(name, compiled);
-      return new DecisionTree(loadedRoot, arr, binary, numFeatures,
-          outcomeDimension);
-    } catch (Exception e) {
-      throw new IOException(e);
+    if (in.readBoolean()) {
+      String name = in.readUTF();
+      byte[] compiled = WritableUtils.readCompressedByteArray(in);
+      try {
+        AbstractTreeNode loadedRoot = TreeCompiler.load(name, compiled);
+        return new DecisionTree(loadedRoot, arr, binary, numFeatures,
+            outcomeDimension);
+      } catch (Exception e) {
+        throw new IOException(e);
+      }
+    } else {
+      AbstractTreeNode root = AbstractTreeNode.read(in);
+      return new DecisionTree(root, arr, binary, numFeatures, outcomeDimension);
     }
   }
 

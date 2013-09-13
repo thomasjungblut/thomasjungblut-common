@@ -30,6 +30,8 @@ public final class RandomForest extends AbstractClassifier {
   private int numThreads = 1;
   private int numRandomFeaturesToChoose = 0;
   private boolean verbose;
+  private boolean compile = false;
+
   private Voter<DecisionTree> trees;
 
   private RandomForest(int numTrees) {
@@ -81,6 +83,14 @@ public final class RandomForest extends AbstractClassifier {
   public DoubleVector predictProbability(DoubleVector features) {
     trees.setCombiningType(CombiningType.PROBABILITY);
     return predict(features);
+  }
+
+  /**
+   * @return sets this instance to compile and returns it.
+   */
+  public RandomForest compile() {
+    this.compile = true;
+    return this;
   }
 
   /**
@@ -176,10 +186,14 @@ public final class RandomForest extends AbstractClassifier {
 
     @Override
     public DecisionTree newInstance() {
-      return DecisionTree.createCompiledTree(featureTypes)
-          .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose);
+      if (compile) {
+        return DecisionTree.createCompiledTree(featureTypes)
+            .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose);
+      } else {
+        return DecisionTree.create(featureTypes).setNumRandomFeaturesToChoose(
+            numRandomFeaturesToChoose);
+      }
     }
-
   }
 
 }

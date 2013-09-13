@@ -1,5 +1,8 @@
 package de.jungblut.classification.tree;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.util.Arrays;
 
 import org.objectweb.asm.Label;
@@ -9,18 +12,18 @@ import org.objectweb.asm.Type;
 
 import de.jungblut.math.DoubleVector;
 
-public final class NominalNode implements TreeNode {
+public final class NominalNode extends AbstractTreeNode {
 
-  private final int splitAttributeIndex;
+  private int splitAttributeIndex;
   // this is a parallel array to the children
-  final int[] nominalSplitValues;
-  final TreeNode[] children;
+  int[] nominalSplitValues;
+  AbstractTreeNode[] children;
 
   private class SortItem implements Comparable<SortItem> {
     final int val;
-    final TreeNode child;
+    final AbstractTreeNode child;
 
-    public SortItem(int val, TreeNode child) {
+    public SortItem(int val, AbstractTreeNode child) {
       super();
       this.val = val;
       this.child = child;
@@ -32,10 +35,13 @@ public final class NominalNode implements TreeNode {
     }
   }
 
+  public NominalNode() {
+  }
+
   public NominalNode(int splitAttributeIndex, int numCategories) {
     this.splitAttributeIndex = splitAttributeIndex;
     this.nominalSplitValues = new int[numCategories];
-    this.children = new TreeNode[numCategories];
+    this.children = new AbstractTreeNode[numCategories];
   }
 
   public void sortInternal() {
@@ -96,6 +102,34 @@ public final class NominalNode implements TreeNode {
     visitor.visitLdcInsn(-1);
     visitor.visitLabel(end);
 
+  }
+
+  @Override
+  public void readFields(DataInput in) throws IOException {
+    this.splitAttributeIndex = in.readInt();
+    int len = in.readInt();
+    this.children = new AbstractTreeNode[len];
+    this.nominalSplitValues = new int[len];
+    for (int i = 0; i < len; i++) {
+      this.nominalSplitValues[i] = in.readInt();
+      this.children[i] = AbstractTreeNode.read(in);
+    }
+
+  }
+
+  @Override
+  protected void writeInternal(DataOutput out) throws IOException {
+    out.writeInt(splitAttributeIndex);
+    out.writeInt(nominalSplitValues.length);
+    for (int i = 0; i < nominalSplitValues.length; i++) {
+      out.writeInt(nominalSplitValues[i]);
+      children[i].write(out);
+    }
+  }
+
+  @Override
+  public byte getType() {
+    return 3;
   }
 
 }

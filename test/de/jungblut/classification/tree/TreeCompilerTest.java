@@ -9,7 +9,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 
 public class TreeCompilerTest {
 
-  private TreeNode compiledRoot;
+  private AbstractTreeNode compiledRoot;
 
   @Before
   public void setup() throws Exception {
@@ -21,7 +21,7 @@ public class TreeCompilerTest {
     nd.nominalSplitValues[2] = 18;
     nd.children[2] = new LeafNode(33);
 
-    TreeNode root = new NumericalNode(0, 1, nd, new NumericalNode(1, 5,
+    AbstractTreeNode root = new NumericalNode(0, 1, nd, new NumericalNode(1, 5,
         new LeafNode(1337), new LeafNode(26)));
     compiledRoot = TreeCompiler.compileAndLoad(
         TreeCompiler.generateClassName(), root);
