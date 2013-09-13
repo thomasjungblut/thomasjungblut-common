@@ -63,7 +63,8 @@ public final class NominalNode extends AbstractTreeNode {
     if (foundIndex >= 0) {
       return children[foundIndex].predict(features);
     }
-    return foundIndex;
+    // resort to the default feature 0
+    return 0;
   }
 
   @Override
@@ -98,8 +99,8 @@ public final class NominalNode extends AbstractTreeNode {
     }
 
     visitor.visitLabel(defaultLabel);
-    // for the default item we return -1
-    visitor.visitLdcInsn(-1);
+    // for the default item we return 0
+    visitor.visitLdcInsn(0);
     visitor.visitLabel(end);
 
   }

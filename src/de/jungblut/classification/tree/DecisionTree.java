@@ -107,7 +107,7 @@ public final class DecisionTree extends AbstractClassifier {
   @Override
   public DoubleVector predict(DoubleVector features) {
     int clz = rootNode.predict(features);
-    if (clz == -1) {
+    if (clz < 0) {
       // let's assume the default case ("negative") here, instead of making NPEs
       // in other areas, as the callers aren't nullsafe
       clz = 0;
