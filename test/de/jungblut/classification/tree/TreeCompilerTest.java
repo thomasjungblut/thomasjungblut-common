@@ -31,7 +31,7 @@ public class TreeCompilerTest {
   public void testNominalSwitches() {
     DoubleVector vec = new DenseDoubleVector(new double[] { 0, 0, 0 });
     int result = compiledRoot.predict(vec);
-    Assert.assertEquals(-1, result);
+    Assert.assertEquals(0, result);
 
     vec = new DenseDoubleVector(new double[] { 1, 0, 5 });
     result = compiledRoot.predict(vec);

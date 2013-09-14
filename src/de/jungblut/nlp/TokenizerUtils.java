@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.StringTokenizer;
+import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 
@@ -24,6 +24,9 @@ public final class TokenizerUtils {
   }
 
   public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|“„";
+  private static final Pattern SEPARATORS_PATTERN = Pattern
+      .compile("[ \r\n\t\\.,;:'\"()?!\\-/|“„]");
+  private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
 
   private static final char[] CHARACTER_REPLACE_MAPPING = new char[256];
   static {
@@ -105,7 +108,7 @@ public final class TokenizerUtils {
    * Tokenizes on normal whitespaces "\s" in java regex.
    */
   public static String[] whiteSpaceTokenize(String text) {
-    return text.split("\\s+");
+    return WHITESPACE_PATTERN.split(text);
   }
 
   /**
@@ -122,7 +125,7 @@ public final class TokenizerUtils {
    * \r\n\t.,;:'\"()?!\\-/|]
    */
   public static String[] wordTokenize(String text) {
-    return wordTokenize(text, SEPARATORS);
+    return SEPARATORS_PATTERN.split(text);
   }
 
   /**
@@ -130,12 +133,7 @@ public final class TokenizerUtils {
    * given.
    */
   public static String[] wordTokenize(String text, String regex) {
-    ArrayList<String> list = new ArrayList<>();
-    StringTokenizer tokenizer = new StringTokenizer(text, regex);
-    while (tokenizer.hasMoreElements()) {
-      list.add((String) tokenizer.nextElement());
-    }
-    return list.toArray(new String[list.size()]);
+    return text.split(regex);
   }
 
   /**
