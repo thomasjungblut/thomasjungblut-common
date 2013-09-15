@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.apache.hadoop.io.WritableUtils;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -107,12 +108,12 @@ public final class NominalNode extends AbstractTreeNode {
 
   @Override
   public void readFields(DataInput in) throws IOException {
-    this.splitAttributeIndex = in.readInt();
-    int len = in.readInt();
+    this.splitAttributeIndex = WritableUtils.readVInt(in);
+    int len = WritableUtils.readVInt(in);
     this.children = new AbstractTreeNode[len];
     this.nominalSplitValues = new int[len];
     for (int i = 0; i < len; i++) {
-      this.nominalSplitValues[i] = in.readInt();
+      this.nominalSplitValues[i] = WritableUtils.readVInt(in);
       this.children[i] = AbstractTreeNode.read(in);
     }
 
@@ -120,10 +121,10 @@ public final class NominalNode extends AbstractTreeNode {
 
   @Override
   protected void writeInternal(DataOutput out) throws IOException {
-    out.writeInt(splitAttributeIndex);
-    out.writeInt(nominalSplitValues.length);
+    WritableUtils.writeVInt(out, splitAttributeIndex);
+    WritableUtils.writeVInt(out, nominalSplitValues.length);
     for (int i = 0; i < nominalSplitValues.length; i++) {
-      out.writeInt(nominalSplitValues[i]);
+      WritableUtils.writeVInt(out, nominalSplitValues[i]);
       children[i].write(out);
     }
   }

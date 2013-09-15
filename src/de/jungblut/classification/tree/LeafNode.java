@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.io.WritableUtils;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -36,12 +37,12 @@ public final class LeafNode extends AbstractTreeNode {
 
   @Override
   public void readFields(DataInput in) throws IOException {
-    label = in.readInt();
+    label = WritableUtils.readVInt(in);
   }
 
   @Override
   protected void writeInternal(DataOutput out) throws IOException {
-    out.writeInt(label);
+    WritableUtils.writeVInt(out, label);
   }
 
   @Override

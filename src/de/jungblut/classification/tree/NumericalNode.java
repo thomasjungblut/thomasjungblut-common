@@ -4,6 +4,7 @@ import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 
+import org.apache.hadoop.io.WritableUtils;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
@@ -75,7 +76,7 @@ public final class NumericalNode extends AbstractTreeNode {
 
   @Override
   public void readFields(DataInput in) throws IOException {
-    splitAttributeIndex = in.readInt();
+    splitAttributeIndex = WritableUtils.readVInt(in);
     splitAttributeValue = in.readDouble();
     lower = AbstractTreeNode.read(in);
     higher = AbstractTreeNode.read(in);
@@ -83,7 +84,7 @@ public final class NumericalNode extends AbstractTreeNode {
 
   @Override
   protected void writeInternal(DataOutput out) throws IOException {
-    out.writeInt(splitAttributeIndex);
+    WritableUtils.writeVInt(out, splitAttributeIndex);
     out.writeDouble(splitAttributeValue);
     lower.write(out);
     higher.write(out);
