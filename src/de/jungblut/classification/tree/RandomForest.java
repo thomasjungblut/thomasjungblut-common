@@ -38,7 +38,7 @@ public final class RandomForest extends AbstractClassifier {
     this.numTrees = numTrees;
   }
 
-  public RandomForest(int numTrees, Voter<DecisionTree> voter) {
+  private RandomForest(int numTrees, Voter<DecisionTree> voter) {
     this(numTrees);
     this.trees = voter;
   }
