@@ -41,8 +41,9 @@ import de.jungblut.nlp.model.ReferencedContext;
  */
 public final class VectorizerUtils {
 
+  // use constant hashing seeds
   private static final com.google.common.hash.HashFunction MURMUR = Hashing
-      .murmur3_128((int) System.currentTimeMillis());
+      .murmur3_128(1337);
 
   /**
    * Builds a sorted dictionary of tokens from a list of (tokenized) documents.
