@@ -2,67 +2,48 @@ package de.jungblut.classification.regression;
 
 import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
 
-import java.util.Collections;
+import java.util.Arrays;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
-import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.CostGradientTuple;
-import de.jungblut.math.minimize.Minimizer;
-import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.squashing.ErrorFunction;
 import de.jungblut.math.squashing.LogisticErrorFunction;
 
-/**
- * Logistic regression cost function to optimize with an arbitrary
- * {@link Minimizer}.
- * 
- * @author thomas.jungblut
- * 
- */
 public final class LogisticRegressionCostFunction implements CostFunction {
 
   private static final ErrorFunction ERROR_FUNCTION = new LogisticErrorFunction();
 
   private final DoubleMatrix x;
-  private final DenseDoubleMatrix y;
-  private final double lambda;
+  private final DoubleMatrix xTransposed;
+  private final DoubleMatrix y;
   private final int m;
 
-  private DenseDoubleMatrix eye;
-
-  public LogisticRegressionCostFunction(DoubleMatrix x, DoubleVector y,
+  /**
+   * @param x normal feature matrix, column 0 should contain the bias.
+   * @param y normal outcome matrix, for multiple classes use the one-hot
+   *          encoding. This matrix should be transposed.
+   * @param lambda reg parameter, currently not used.
+   */
+  public LogisticRegressionCostFunction(DoubleMatrix x, DoubleMatrix y,
       double lambda) {
-    if (!x.isSparse()) {
-      // add a column of ones to handle the intercept term
-      this.x = new DenseDoubleMatrix(DenseDoubleVector.ones(y.getLength()), x);
-    } else {
-      this.x = new SparseDoubleRowMatrix(DenseDoubleVector.ones(y.getLength()),
-          x);
-    }
-    this.y = new DenseDoubleMatrix(Collections.singletonList(y));
-    this.lambda = lambda;
-    this.m = y.getLength();
-    eye = DenseDoubleMatrix.eye(x.getColumnCount() + 1);
-    eye.set(0, 0, 0.0d);
+    this.x = x;
+    this.m = x.getRowCount();
+    this.xTransposed = this.x.transpose();
+    this.y = y;
   }
 
   @Override
   public CostGradientTuple evaluateCost(DoubleVector input) {
 
-    double reg = input.slice(1, input.getLength()).pow(2).sum() * lambda
-        / (2.0d * m);
-    DenseDoubleMatrix hypo = new DenseDoubleMatrix(
-        Collections.singletonList(SIGMOID.get().apply(
-            x.multiplyVectorRow(input))));
-    double sum = ERROR_FUNCTION.calculateError(y, hypo);
-    double j = (1.0d / m) * sum + reg;
-
-    DoubleVector regGradient = eye.multiply(lambda).multiplyVectorRow(input);
-    DoubleVector gradient = x.transpose()
-        .multiplyVectorRow(hypo.subtract(y).getRowVector(0)).add(regGradient)
+    DoubleVector activation = SIGMOID.get().apply(x.multiplyVectorRow(input));
+    DenseDoubleMatrix hypo = new DenseDoubleMatrix(Arrays.asList(activation));
+    double error = ERROR_FUNCTION.calculateError(y, hypo);
+    DoubleMatrix loss = hypo.subtract(y);
+    double j = error / m;
+    DoubleVector gradient = xTransposed.multiplyVectorRow(loss.getRowVector(0))
         .divide(m);
 
     return new CostGradientTuple(j, gradient);
