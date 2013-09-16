@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -20,9 +21,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
+import com.google.common.hash.Hashing;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
+import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.named.NamedDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.nlp.model.Pair;
@@ -37,9 +41,8 @@ import de.jungblut.nlp.model.ReferencedContext;
  */
 public final class VectorizerUtils {
 
-  private VectorizerUtils() {
-    throw new IllegalAccessError();
-  }
+  private static final com.google.common.hash.HashFunction MURMUR = Hashing
+      .murmur3_128((int) System.currentTimeMillis());
 
   /**
    * Builds a sorted dictionary of tokens from a list of (tokenized) documents.
@@ -435,6 +438,53 @@ public final class VectorizerUtils {
     });
 
     return list;
+  }
+
+  /**
+   * Hashes the given vector into a new representation of a new n-dimensional
+   * feature space. The hash beeing used is the Murmur128 Bit hashing function
+   * on the non-zero feature index. Thus this vectorization method should be
+   * used for text data, that has a sparse representation of its features.
+   * 
+   * @param inputFeature the (usually) sparse feature vector.
+   * @param n the target dimension of the vector.
+   * @return the new n-dimensional dense vector vectorized via the hashing
+   *         trick.
+   */
+  public static DoubleVector hashVectorize(DoubleVector inputFeature, int n) {
+    DoubleVector dense = new DenseDoubleVector(n);
+    Iterator<DoubleVectorElement> iterateNonZero = inputFeature
+        .iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
+      // get the hash as int
+      int hash = MURMUR.hashInt(next.getIndex()).asInt();
+      // abs it, as we don't want to have negative index access
+      int bucket = Math.abs(hash) % n;
+      // subtract 1 in case of negative values, else increment.
+      // this replaces the second hash function proposed by Weinberger et al.
+      dense.set(bucket, dense.get(bucket) + (hash < 0 ? -1d : 1d));
+    }
+    return dense;
+  }
+
+  /**
+   * Hashes the given vectors into a new representation of a new n-dimensional
+   * feature space. The hash beeing used is the Murmur128 Bit hashing function
+   * on the non-zero feature index. Thus this vectorization method should be
+   * used for text data, that has a sparse representation of its features.
+   * 
+   * @param seedVector the (usually) sparse feature vector.
+   * @param n the target dimension of the vector.
+   * @return the new n-dimensional dense vectors vectorized via the hashing
+   *         trick.
+   */
+  public static DoubleVector[] hashVectorize(DoubleVector[] features, int n) {
+    DoubleVector[] lst = new DoubleVector[features.length];
+    for (int i = 0; i < features.length; i++) {
+      lst[i] = hashVectorize(features[i], n);
+    }
+    return lst;
   }
 
 }
