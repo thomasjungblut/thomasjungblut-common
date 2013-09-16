@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.SigmoidActivationFunction;
 import de.jungblut.math.dense.DenseDoubleMatrix;
@@ -33,7 +34,7 @@ public class RBMCostFunctionTest {
   public void testGradient() {
     WeightMatrix pInput = new WeightMatrix(test[0].getDimension(),
         hiddenUnits + 1);
-    DenseDoubleVector foldMatrices = DenseMatrixFolder.foldMatrices(pInput
+    DoubleVector foldMatrices = DenseMatrixFolder.foldMatrices(pInput
         .getWeights());
     RBMCostFunction fnc = new RBMCostFunction(test, 0, 1, hiddenUnits,
         new SigmoidActivationFunction(), TrainingType.CPU, 0d,
@@ -60,7 +61,7 @@ public class RBMCostFunctionTest {
   public void testRegularizedGradient() {
     WeightMatrix pInput = new WeightMatrix(test[0].getDimension(),
         hiddenUnits + 1);
-    DenseDoubleVector foldMatrices = DenseMatrixFolder.foldMatrices(pInput
+    DoubleVector foldMatrices = DenseMatrixFolder.foldMatrices(pInput
         .getWeights());
     RBMCostFunction fnc = new RBMCostFunction(test, 0, 1, hiddenUnits,
         new SigmoidActivationFunction(), TrainingType.CPU, 0.1d,
@@ -96,7 +97,7 @@ public class RBMCostFunctionTest {
     int[][] pms = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(new int[] { test[0].getDimension(),
             hiddenUnits });
-    DenseDoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta, pms)[0]
+    DoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta, pms)[0]
         .transpose();
     double[][] result = new double[][] {
         { 0.3768283706784331, -0.429785280688955 },

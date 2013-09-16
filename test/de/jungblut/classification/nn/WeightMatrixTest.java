@@ -4,14 +4,14 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
-import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.DoubleMatrix;
 
 public class WeightMatrixTest {
 
   @Test
   public void testInit() {
     MultilayerPerceptron.SEED = 0l;
-    DenseDoubleMatrix mat = new WeightMatrix(2, 3).getWeights();
+    DoubleMatrix mat = new WeightMatrix(2, 3).getWeights();
 
     assertEquals(0.532915792500396, mat.get(0, 0), 1e-4);
     assertEquals(0.05996064284821445, mat.get(0, 1), 1e-4);

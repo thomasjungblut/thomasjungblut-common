@@ -63,9 +63,9 @@ public final class MultilayerPerceptronCostFunction extends
   private CostGradientTuple compute(DoubleVector input, DoubleMatrix x,
       DoubleMatrix y) {
     final int m = x.getRowCount();
-    DenseDoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
+    DoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters);
-    DenseDoubleMatrix[] thetaGradients = new DenseDoubleMatrix[thetas.length];
+    DoubleMatrix[] thetaGradients = new DoubleMatrix[thetas.length];
 
     // start forward propagation
     // we compute the aX activations for all layers
@@ -92,7 +92,7 @@ public final class MultilayerPerceptronCostFunction extends
         DenseMatrixFolder.foldMatrices(thetaGradients));
   }
 
-  public void forwardPropagate(DenseDoubleMatrix[] thetas, DoubleMatrix[] ax,
+  public void forwardPropagate(DoubleMatrix[] thetas, DoubleMatrix[] ax,
       DoubleMatrix[] zx) {
     for (int i = 1; i < layerSizes.length; i++) {
       zx[i] = multiply(ax[i - 1], thetas[i - 1], false, true);
@@ -112,7 +112,7 @@ public final class MultilayerPerceptronCostFunction extends
   }
 
   public DoubleMatrix[] backwardPropagate(DoubleMatrix y,
-      DenseDoubleMatrix[] thetas, DoubleMatrix[] ax, DoubleMatrix[] zx) {
+      DoubleMatrix[] thetas, DoubleMatrix[] ax, DoubleMatrix[] zx) {
     // now backpropagate the error backwards by calculating the deltas.
     // also here we are following the math equations and nulling out the 0th
     // entry.
@@ -130,9 +130,9 @@ public final class MultilayerPerceptronCostFunction extends
     return deltaX;
   }
 
-  public void calculateGradients(DenseDoubleMatrix[] thetas,
-      DenseDoubleMatrix[] thetaGradients, DoubleMatrix[] ax,
-      DoubleMatrix[] deltaX, final int m) {
+  public void calculateGradients(DoubleMatrix[] thetas,
+      DoubleMatrix[] thetaGradients, DoubleMatrix[] ax, DoubleMatrix[] deltaX,
+      final int m) {
     // calculate the gradients of the weights
     for (int i = 0; i < thetaGradients.length; i++) {
       DoubleMatrix gradDXA = multiply(deltaX[i + 1], ax[i], true, false);
@@ -153,11 +153,11 @@ public final class MultilayerPerceptronCostFunction extends
     }
   }
 
-  public double calculateRegularization(DenseDoubleMatrix[] thetas, final int m) {
+  public double calculateRegularization(DoubleMatrix[] thetas, final int m) {
     double regularization = 0d;
     // only calculate the regularization term if lambda is not 0
     if (lambda != 0d) {
-      for (DenseDoubleMatrix theta : thetas) {
+      for (DoubleMatrix theta : thetas) {
         regularization += (theta.slice(0, theta.getRowCount(), 1,
             theta.getColumnCount())).pow(2).sum();
       }

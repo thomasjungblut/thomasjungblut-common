@@ -8,11 +8,11 @@ import com.google.common.base.Preconditions;
 
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.classification.Classifier;
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.LinearActivationFunction;
 import de.jungblut.math.activation.SigmoidActivationFunction;
-import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
@@ -337,15 +337,15 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * @return the cost of the training.
    */
   private double trainInternal(Minimizer minimizer, int maxIterations,
-      boolean verbose, CostFunction costFunction, DenseDoubleVector initialTheta) {
+      boolean verbose, CostFunction costFunction, DoubleVector initialTheta) {
     Preconditions.checkNotNull(minimizer, "Minimizer must be supplied!");
     DoubleVector theta = minimizer.minimize(costFunction, initialTheta,
         maxIterations, verbose);
     int[][] unfoldParameters = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(layers);
 
-    DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
-        theta, unfoldParameters);
+    DoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(theta,
+        unfoldParameters);
 
     for (int i = 0; i < unfoldMatrices.length; i++) {
       getWeights()[i].setWeights(unfoldMatrices[i]);
@@ -357,9 +357,9 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   /**
    * @return the folded theta vector, seeded by the current weight matrices.
    */
-  public DenseDoubleVector getFoldedThetaVector() {
+  public DoubleVector getFoldedThetaVector() {
     // get our randomized weights into a foldable format
-    DenseDoubleMatrix[] weightMatrices = new DenseDoubleMatrix[getWeights().length];
+    DoubleMatrix[] weightMatrices = new DoubleMatrix[getWeights().length];
     for (int i = 0; i < weightMatrices.length; i++) {
       weightMatrices[i] = getWeights()[i].getWeights();
     }
@@ -424,8 +424,9 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
     WeightMatrix[] weights = new WeightMatrix[numLayers - 1];
     for (int i = 0; i < weights.length; i++) {
-      DenseDoubleMatrix weightMatrix = MatrixWritable.readDenseMatrix(in);
-      weights[i] = new WeightMatrix(weightMatrix);
+      MatrixWritable wm = new MatrixWritable();
+      wm.readFields(in);
+      weights[i] = new WeightMatrix(wm.getMatrix());
     }
 
     ActivationFunction[] funcs = new ActivationFunction[numLayers];
@@ -462,8 +463,8 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     }
     // write the weight matrices
     for (WeightMatrix mat : model.weights) {
-      DenseDoubleMatrix weights = mat.getWeights();
-      MatrixWritable.writeDenseMatrix(weights, out);
+      DoubleMatrix weights = mat.getWeights();
+      new MatrixWritable(weights).write(out);
     }
     // then write the activation classes
     for (ActivationFunction func : model.activations) {

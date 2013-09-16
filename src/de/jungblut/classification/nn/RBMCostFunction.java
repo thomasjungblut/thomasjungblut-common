@@ -55,7 +55,7 @@ public final class RBMCostFunction extends AbstractMiniBatchCostFunction {
   protected CostGradientTuple evaluateBatch(DoubleVector input,
       DoubleMatrix data, DoubleMatrix outcomeBatch) {
     // input contains the weights between the visible and the hidden units
-    DenseDoubleMatrix theta = DenseMatrixFolder.unfoldMatrices(input,
+    DoubleMatrix theta = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters)[0].transpose();
 
     /*

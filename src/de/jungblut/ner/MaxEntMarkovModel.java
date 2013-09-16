@@ -26,7 +26,7 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
   private final Minimizer minimizer;
   private final boolean verbose;
   private final int numIterations;
-  private DenseDoubleMatrix theta;
+  private DoubleMatrix theta;
   private int classes;
 
   public MaxEntMarkovModel(Minimizer minimizer, int numIterations,
@@ -76,7 +76,7 @@ public final class MaxEntMarkovModel extends AbstractClassifier {
   /**
    * @return the learned parameters.
    */
-  public DenseDoubleMatrix getTheta() {
+  public DoubleMatrix getTheta() {
     return this.theta;
   }
 

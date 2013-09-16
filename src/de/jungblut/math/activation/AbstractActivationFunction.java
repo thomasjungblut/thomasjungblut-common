@@ -25,8 +25,7 @@ public abstract class AbstractActivationFunction implements ActivationFunction {
   public DoubleVector apply(DoubleVector vector) {
     DoubleVector newInstance = newInstance(vector);
     if (vector.isSparse()) {
-      Iterator<DoubleVectorElement> iterateNonZero = newInstance
-          .iterateNonZero();
+      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
         newInstance.set(next.getIndex(), apply(next.getValue()));
@@ -44,10 +43,14 @@ public abstract class AbstractActivationFunction implements ActivationFunction {
     DoubleMatrix newInstance = newInstance(matrix);
     if (matrix.isSparse()) {
       // if we have a sparse matrix, it is more efficient to loop over the
-      // sparse column vectors
-      int[] columnIndices = newInstance.columnIndices();
-      for (int col : columnIndices) {
-        newInstance.setColumnVector(col, apply(matrix.getColumnVector(col)));
+      // sparse row vectors
+      int[] rows = matrix.rowIndices();
+      for (int row : rows) {
+        DoubleVector rowVector = matrix.getRowVector(row);
+        if (rowVector.getLength() > 0) {
+          DoubleVector apply = apply(rowVector);
+          newInstance.setRowVector(row, apply);
+        }
       }
     } else {
       // on dense matrices we can be faster by directly looping over the items
@@ -64,8 +67,7 @@ public abstract class AbstractActivationFunction implements ActivationFunction {
   public DoubleVector gradient(DoubleVector vector) {
     DoubleVector newInstance = newInstance(vector);
     if (vector.isSparse()) {
-      Iterator<DoubleVectorElement> iterateNonZero = newInstance
-          .iterateNonZero();
+      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
         newInstance.set(next.getIndex(), gradient(next.getValue()));
@@ -84,7 +86,7 @@ public abstract class AbstractActivationFunction implements ActivationFunction {
     if (matrix.isSparse()) {
       // if we have a sparse matrix, it is more efficient to loop over the
       // sparse column vectors
-      int[] columnIndices = newInstance.columnIndices();
+      int[] columnIndices = matrix.columnIndices();
       for (int col : columnIndices) {
         newInstance.setColumnVector(col, gradient(matrix.getColumnVector(col)));
       }

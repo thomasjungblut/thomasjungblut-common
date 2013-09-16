@@ -1,7 +1,10 @@
 package de.jungblut.math.activation;
 
+import java.util.Iterator;
+
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
 
 /**
  * Softmax activation that only works on vectors, because it needs to sum and
@@ -21,8 +24,16 @@ public final class SoftMaxActivationFunction extends AbstractActivationFunction 
   public DoubleVector apply(DoubleVector vector) {
     double max = vector.max();
     DoubleVector subtract = vector.subtract(max);
-    for (int i = 0; i < subtract.getLength(); i++) {
-      subtract.set(i, Math.exp(subtract.get(i)));
+    if (vector.isSparse()) {
+      Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
+        subtract.set(next.getIndex(), Math.exp(subtract.get(next.getIndex())));
+      }
+    } else {
+      for (int i = 0; i < subtract.getLength(); i++) {
+        subtract.set(i, Math.exp(subtract.get(i)));
+      }
     }
     return subtract.divide(subtract.sum());
   }
@@ -31,7 +42,10 @@ public final class SoftMaxActivationFunction extends AbstractActivationFunction 
   public DoubleMatrix apply(DoubleMatrix matrix) {
     DoubleMatrix dm = newInstance(matrix);
     for (int row = 0; row < matrix.getRowCount(); row++) {
-      dm.setRowVector(row, apply(matrix.getRowVector(row)));
+      DoubleVector apply = apply(matrix.getRowVector(row));
+      if (apply.getLength() != 0) {
+        dm.setRowVector(row, apply);
+      }
     }
     return dm;
   }

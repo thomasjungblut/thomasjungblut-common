@@ -4,6 +4,8 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Test;
 
+import de.jungblut.math.DoubleMatrix;
+import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 
@@ -18,11 +20,11 @@ public class DenseMatrixFolderTest {
     DenseDoubleMatrix mat2 = new DenseDoubleMatrix(new double[][] {
         { 7, 8, 9 }, { 10, 11, 12 } });
 
-    DenseDoubleVector foldMatrices = DenseMatrixFolder.foldMatrices(mat1, mat2);
+    DoubleVector foldMatrices = DenseMatrixFolder.foldMatrices(mat1, mat2);
     assertEquals(12, foldMatrices.getLength());
     assertEquals(0.0d, referenceFold.subtract(foldMatrices).sum(), 1e-5);
 
-    DenseDoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
+    DoubleMatrix[] unfoldMatrices = DenseMatrixFolder.unfoldMatrices(
         foldMatrices, new int[][] { { 2, 3 }, { 2, 3 } });
 
     assertEquals(0.0d, unfoldMatrices[0].subtract(mat1).sum(), 1e-5);

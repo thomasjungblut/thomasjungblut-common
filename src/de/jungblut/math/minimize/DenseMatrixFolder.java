@@ -1,5 +1,6 @@
 package de.jungblut.math.minimize;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -9,15 +10,15 @@ public abstract class DenseMatrixFolder {
   /**
    * Folds the given matrices column-wise into a single vector.
    */
-  public static DenseDoubleVector foldMatrices(DenseDoubleMatrix... matrices) {
+  public static DoubleVector foldMatrices(DoubleMatrix... matrices) {
     int length = 0;
-    for (DenseDoubleMatrix matrix : matrices) {
+    for (DoubleMatrix matrix : matrices) {
       length += matrix.getRowCount() * matrix.getColumnCount();
     }
 
     DenseDoubleVector v = new DenseDoubleVector(length);
     int index = 0;
-    for (DenseDoubleMatrix matrix : matrices) {
+    for (DoubleMatrix matrix : matrices) {
       for (int j = 0; j < matrix.getColumnCount(); j++) {
         for (int i = 0; i < matrix.getRowCount(); i++) {
           v.set(index++, matrix.get(i, j));
@@ -35,9 +36,9 @@ public abstract class DenseMatrixFolder {
    * Example: sizeArray = {{2,3},{3,2}} will unfold into matrix 0 with 2 rows
    * and 3 columns and matrix 1 with 3 rows and 2 columns.
    */
-  public static DenseDoubleMatrix[] unfoldMatrices(DoubleVector vector,
+  public static DoubleMatrix[] unfoldMatrices(DoubleVector vector,
       int[][] sizeArray) {
-    DenseDoubleMatrix[] arr = new DenseDoubleMatrix[sizeArray.length];
+    DoubleMatrix[] arr = new DoubleMatrix[sizeArray.length];
     for (int i = 0; i < sizeArray.length; i++) {
       arr[i] = new DenseDoubleMatrix(sizeArray[i][0], sizeArray[i][1]);
     }
@@ -64,9 +65,9 @@ public abstract class DenseMatrixFolder {
    * @param cols the number of columns the target matrix needs to have.
    * @return a matrix with the contents of the vector, row split.
    */
-  public static DenseDoubleMatrix unfoldMatrix(DoubleVector vector, int rows,
+  public static DoubleMatrix unfoldMatrix(DoubleVector vector, int rows,
       int cols) {
-    DenseDoubleMatrix mat = new DenseDoubleMatrix(rows, cols);
+    DoubleMatrix mat = new DenseDoubleMatrix(rows, cols);
 
     int index = 0;
     for (int i = 0; i < rows; i++) {
@@ -81,8 +82,8 @@ public abstract class DenseMatrixFolder {
   /**
    * Folds a single matrix into a single vector by rows.
    */
-  public static DenseDoubleVector foldMatrix(DenseDoubleMatrix mat) {
-    DenseDoubleVector vec = new DenseDoubleVector(mat.getRowCount()
+  public static DoubleVector foldMatrix(DoubleMatrix mat) {
+    DoubleVector vec = new DenseDoubleVector(mat.getRowCount()
         * mat.getColumnCount());
     int index = 0;
     for (int i = 0; i < mat.getRowCount(); i++) {

@@ -5,6 +5,7 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Random;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
@@ -151,7 +152,7 @@ public final class RBM {
   }
 
   private final int[] layerSizes;
-  private final DenseDoubleMatrix[] weights;
+  private final DoubleMatrix[] weights;
   private final ActivationFunction activationFunction;
 
   private TrainingType type = TrainingType.CPU;
@@ -228,7 +229,7 @@ public final class RBM {
       DenseDoubleMatrix start = new DenseDoubleMatrix(layerSizes[i] + 1,
           currentTrainingSet[0].getDimension() + 1, new Random(seed))
           .multiply(0.1d);
-      DenseDoubleVector folded = DenseMatrixFolder.foldMatrices(start);
+      DoubleVector folded = DenseMatrixFolder.foldMatrices(start);
       start = null;
       // now do the real training
       RBMCostFunction fnc = new RBMCostFunction(currentTrainingSet,
@@ -237,7 +238,7 @@ public final class RBM {
       DoubleVector theta = minimizer.minimize(fnc, folded, numIterations,
           verbose);
       // get back our weights as a matrix
-      DenseDoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta,
+      DoubleMatrix thetaMat = DenseMatrixFolder.unfoldMatrices(theta,
           fnc.getUnfoldParameters())[0];
       weights[i] = thetaMat;
       // now we can get our new training set for the next stack
@@ -288,7 +289,7 @@ public final class RBM {
   /**
    * @return the weight matrices.
    */
-  public DenseDoubleMatrix[] getWeights() {
+  public DoubleMatrix[] getWeights() {
     return this.weights;
   }
 
@@ -300,7 +301,7 @@ public final class RBM {
   }
 
   private DoubleVector computeHiddenActivations(DoubleVector input,
-      DenseDoubleMatrix theta) {
+      DoubleMatrix theta) {
     // add the bias to the input
     DoubleVector biased = new DenseDoubleVector(1d, input.toArray());
     return activationFunction.apply(theta.multiplyVectorRow(biased));
@@ -315,8 +316,8 @@ public final class RBM {
       out.writeInt(layer);
     }
 
-    for (DenseDoubleMatrix mat : model.weights) {
-      MatrixWritable.writeDenseMatrix(mat, out);
+    for (DoubleMatrix mat : model.weights) {
+      new MatrixWritable(mat).write(out);
     }
 
     out.writeUTF(model.activationFunction.getClass().getName());
@@ -333,9 +334,11 @@ public final class RBM {
       sizes[i] = in.readInt();
     }
 
-    DenseDoubleMatrix[] array = new DenseDoubleMatrix[layers];
+    DoubleMatrix[] array = new DoubleMatrix[layers];
     for (int i = 0; i < layers; i++) {
-      array[i] = MatrixWritable.readDenseMatrix(in);
+      MatrixWritable mv = new MatrixWritable();
+      mv.readFields(in);
+      array[i] = mv.getMatrix();
     }
     ActivationFunction func = null;
     try {

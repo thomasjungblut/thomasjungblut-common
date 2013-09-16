@@ -6,7 +6,6 @@ import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleMatrix;
-import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.minimize.DenseMatrixFolder;
@@ -40,7 +39,7 @@ public final class ConditionalLikelihoodCostFunction implements CostFunction {
     // TODO if you are really caring about performance and memory usage, you can
     // implement some methods to translate the indices from matrices to vectors,
     // so you don't have to copy all that memory.
-    DenseDoubleMatrix theta = DenseMatrixFolder.unfoldMatrix(input, classes,
+    DoubleMatrix theta = DenseMatrixFolder.unfoldMatrix(input, classes,
         (int) (input.getLength() / (double) classes));
     DenseDoubleMatrix gradient = new DenseDoubleMatrix(theta.getRowCount(),
         theta.getColumnCount());
@@ -77,7 +76,7 @@ public final class ConditionalLikelihoodCostFunction implements CostFunction {
       }
     }
 
-    DenseDoubleVector foldGradient = DenseMatrixFolder.foldMatrix(gradient);
+    DoubleVector foldGradient = DenseMatrixFolder.foldMatrix(gradient);
 
     // now add the prior and finalize the derivative
     cost += computeLogPrior(input, foldGradient);

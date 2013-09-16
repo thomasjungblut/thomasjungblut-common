@@ -2,6 +2,7 @@ package de.jungblut.classification.nn;
 
 import org.apache.commons.math3.random.RandomDataImpl;
 
+import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 
 /**
@@ -12,7 +13,7 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
  */
 public final class WeightMatrix {
 
-  private DenseDoubleMatrix weights;
+  private DoubleMatrix weights;
 
   /**
    * Creates a [unitsRightLayer x (unitsLeftLayer + 1)] matrix of weights and
@@ -45,15 +46,15 @@ public final class WeightMatrix {
     return rnd;
   }
 
-  public WeightMatrix(DenseDoubleMatrix weights) {
+  public WeightMatrix(DoubleMatrix weights) {
     this.weights = weights;
   }
 
-  public DenseDoubleMatrix getWeights() {
+  public DoubleMatrix getWeights() {
     return weights;
   }
 
-  public void setWeights(DenseDoubleMatrix weights) {
+  public void setWeights(DoubleMatrix weights) {
     this.weights = weights;
   }
 
