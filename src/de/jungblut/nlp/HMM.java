@@ -273,10 +273,9 @@ public final class HMM extends AbstractClassifier implements Writable {
           Iterator<DoubleVectorElement> iterateNonZero = features[t + 1]
               .iterateNonZero();
           while (iterateNonZero.hasNext()) {
-            sum += beta.get(t + 1, j)
-                * transitionProbabilityMatrix.get(i, j)
-                * emissionProbabilityMatrix.get(j, iterateNonZero.next()
-                    .getIndex());
+            DoubleVectorElement next = iterateNonZero.next();
+            sum += beta.get(t + 1, j) * transitionProbabilityMatrix.get(i, j)
+                * emissionProbabilityMatrix.get(j, next.getIndex());
           }
         }
         beta.set(t, i, sum);

@@ -41,7 +41,7 @@ public class LogisticRegressionTest {
       trainingError += Math.abs(outcome[i].get(0) - predict);
     }
     assertEquals("Training error was: " + trainingError
-        + " and should have been between 9 and 13.", trainingError, 11, 2d);
+        + " and should have been between 9 and 13.", 11, trainingError, 2d);
   }
 
   @Test

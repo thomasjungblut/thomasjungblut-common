@@ -152,14 +152,7 @@ public final class JCUDAMatrixUtils {
    */
   public static Pointer memcpyMatrix(DenseDoubleMatrix a) {
     int matrixSizeA = a.getColumnCount() * a.getRowCount();
-
-    double[] matrix = new double[matrixSizeA];
-    // store in column major format
-    for (int i = 0; i < a.getColumnCount(); i++) {
-      double[] column = a.getColumn(i);
-      System.arraycopy(column, 0, matrix, i * column.length, column.length);
-    }
-
+    double[] matrix = a.getColumnMajorMatrix();
     Pointer deviceMatrixA = new Pointer();
     JCuda.cudaMalloc(deviceMatrixA, matrixSizeA * Sizeof.DOUBLE);
     if (CUBLAS2_AVAILABLE) {
