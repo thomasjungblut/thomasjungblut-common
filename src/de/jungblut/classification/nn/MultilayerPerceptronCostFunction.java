@@ -137,13 +137,13 @@ public final class MultilayerPerceptronCostFunction extends
     for (int i = 0; i < thetaGradients.length; i++) {
       DoubleMatrix gradDXA = multiply(deltaX[i + 1], ax[i], true, false);
       if (m != 1) {
-        thetaGradients[i] = (DenseDoubleMatrix) gradDXA.divide(m);
+        thetaGradients[i] = gradDXA.divide(m);
       } else {
-        thetaGradients[i] = (DenseDoubleMatrix) gradDXA;
+        thetaGradients[i] = gradDXA;
       }
       if (lambda != 0d) {
-        thetaGradients[i] = (DenseDoubleMatrix) thetaGradients[i]
-            .add((thetas[i].multiply(lambda / m)));
+        thetaGradients[i] = thetaGradients[i].add((thetas[i].multiply(lambda
+            / m)));
         // subtract the regularized bias
         DoubleVector regBias = thetas[i]
             .slice(0, thetas[i].getRowCount(), 0, 1).multiply(lambda / m)
