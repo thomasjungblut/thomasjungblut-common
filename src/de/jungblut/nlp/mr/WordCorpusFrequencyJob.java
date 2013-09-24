@@ -188,8 +188,8 @@ public class WordCorpusFrequencyJob {
   }
 
   /**
-   * Gets the counter of the reduce input groups, in this case it should be the
-   * number of tokens.
+   * Gets the counter of the reduce output values. This determines the
+   * dictionary sizes.
    * 
    * @param finishedJob the job that has successfully finished.
    * @return the number of map input records / number of documents.
@@ -197,8 +197,9 @@ public class WordCorpusFrequencyJob {
   public static long getNumberOfTokens(Job finishedJob) throws IOException {
     return finishedJob
         .getCounters()
-        .findCounter("org.apache.hadoop.mapred.Task$Counter",
-            "REDUCE_INPUT_GROUPS").getValue();
+        .findCounter(
+            "de.jungblut.nlp.mr.WordCorpusFrequencyJob$WordCorpusCounter",
+            "TOKEN_ADDED").getValue();
   }
 
   /**
