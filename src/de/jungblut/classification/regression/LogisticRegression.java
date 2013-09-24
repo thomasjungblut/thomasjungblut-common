@@ -81,7 +81,7 @@ public final class LogisticRegression extends AbstractClassifier {
         y, lambda);
 
     // random init theta
-    theta = new DenseDoubleVector((x.getColumnCount() + 1) * y.getColumnCount());
+    theta = new DenseDoubleVector(x.getColumnCount() * y.getRowCount());
     for (int i = 0; i < theta.getDimension(); i++) {
       theta.set(i, (random.nextDouble() * 2) - 1d);
     }

@@ -31,7 +31,7 @@ public class LogisticRegressionTest {
 
   @Test
   public void testRegressionInterface() {
-    LogisticRegression clf = new LogisticRegression(1.0d, new Fmincg(), 1000,
+    LogisticRegression clf = new LogisticRegression(0d, new Fmincg(), 1000,
         false);
     clf.setRandom(new Random(0));
     clf.train(features, outcome);
@@ -45,8 +45,23 @@ public class LogisticRegressionTest {
   }
 
   @Test
+  public void testRegressionInterfaceRegularized() {
+    LogisticRegression clf = new LogisticRegression(0.1d, new Fmincg(), 1000,
+        false);
+    clf.setRandom(new Random(0));
+    clf.train(features, outcome);
+    double trainingError = 0d;
+    for (int i = 0; i < features.length; i++) {
+      int predict = clf.predictedClass(features[i], 0.5d);
+      trainingError += Math.abs(outcome[i].get(0) - predict);
+    }
+    assertEquals("Training error was: " + trainingError
+        + " and should have been between 9 and 13!", 11, trainingError, 2d);
+  }
+
+  @Test
   public void testRegressionEvaluation() {
-    LogisticRegression clf = new LogisticRegression(1.0d, new Fmincg(), 1000,
+    LogisticRegression clf = new LogisticRegression(0d, new Fmincg(), 1000,
         false);
     clf.setRandom(new Random(0));
     EvaluationResult eval = Evaluator.evaluateClassifier(clf, features,

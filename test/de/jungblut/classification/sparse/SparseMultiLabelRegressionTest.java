@@ -36,7 +36,31 @@ public class SparseMultiLabelRegressionTest {
     }
 
     assertEquals(1, loss, 1e-5);
+  }
 
+  @Test
+  public void testRegularizedTraining() {
+
+    ArrayList<Tuple<DoubleVector, DoubleVector>> data = getData();
+    SparseMultiLabelRegression reg = new SparseMultiLabelRegression(5, 0.1, 5,
+        5).setLambda(0.8);
+    reg.train(data);
+
+    double loss = 0d;
+    for (Tuple<DoubleVector, DoubleVector> dx : data) {
+      DoubleVector prediction = reg.predict(dx.getFirst());
+      prediction = new DenseDoubleVector(
+          prediction.apply(new DoubleVectorFunction() {
+
+            @Override
+            public double calculate(int index, double value) {
+              return value > 0.5 ? 1d : 0d;
+            }
+          }));
+      loss += dx.getSecond().subtract(prediction).abs().sum();
+    }
+
+    assertEquals(1, loss, 1e-5);
   }
 
   public ArrayList<Tuple<DoubleVector, DoubleVector>> getData() {

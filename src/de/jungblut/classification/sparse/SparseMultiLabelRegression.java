@@ -15,7 +15,9 @@ import de.jungblut.math.tuple.Tuple;
 /**
  * Online regression for multi label prediction. It uses stochastic gradient
  * descent to optimize the hamming loss. If a weight value drops below 1e-6, it
- * will consider the weight as zero- thus sparsifiying the matrix on the fly.
+ * will consider the weight as zero- thus sparsifiying the matrix on the fly. In
+ * addition, there is a sparsity parameter "lambda" that decays the weight by a
+ * mixture of L1 lasso and L2 ridge norm: lambda * L1 + (1-lambda) * L2.
  * 
  * @author thomas.jungblut
  * 
@@ -29,6 +31,8 @@ public final class SparseMultiLabelRegression {
   private final double alpha;
   private final int epochs;
   private DoubleMatrix weights;
+
+  private double lambda;
 
   private int reportInterval = 500;
   private double nearZeroLimit = 1e-6;
@@ -72,12 +76,17 @@ public final class SparseMultiLabelRegression {
         while (featureIterator.hasNext()) {
           DoubleVectorElement next = featureIterator.next();
           DoubleVector rowVector = theta.getRowVector(next.getIndex());
+          double l2 = rowVector.pow(2d).sum();
           Iterator<DoubleVectorElement> diffIterator = activationDifference
               .iterateNonZero();
           while (diffIterator.hasNext()) {
             DoubleVectorElement diffElement = diffIterator.next();
             double val = rowVector.get(diffElement.getIndex());
             val = val - diffElement.getValue() * alpha;
+            // apply the decay
+            if (lambda != 0d) {
+              val -= ((lambda * val) + (1d - lambda) * l2);
+            }
             if (Math.abs(val) < nearZeroLimit) {
               val = 0;
             }
@@ -114,6 +123,14 @@ public final class SparseMultiLabelRegression {
    */
   public SparseMultiLabelRegression setReportInterval(int reportInterval) {
     this.reportInterval = reportInterval;
+    return this;
+  }
+
+  /**
+   * @param lambda the l_1 + l^2_2 combination parameter.
+   */
+  public SparseMultiLabelRegression setLambda(double lambda) {
+    this.lambda = lambda;
     return this;
   }
 
