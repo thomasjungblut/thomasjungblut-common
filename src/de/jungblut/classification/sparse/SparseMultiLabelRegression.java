@@ -57,7 +57,7 @@ public final class SparseMultiLabelRegression {
     DoubleMatrix theta = this.weights;
     initWeights(dataStream, theta);
     for (int epoch = 0; epoch < epochs; epoch++) {
-      double avgLoss = 0d;
+      double lossSum = 0d;
       int localItems = 0;
       for (Tuple<DoubleVector, DoubleVector> tuple : dataStream) {
         localItems++;
@@ -68,7 +68,7 @@ public final class SparseMultiLabelRegression {
         double loss = LOSS.calculateError(
             new SparseDoubleRowMatrix(Arrays.asList(outcome)),
             new SparseDoubleRowMatrix(Arrays.asList(activations)));
-        avgLoss += loss;
+        lossSum += loss;
         DoubleVector activationDifference = activations.subtract(outcome);
         // update theta by a smarter sparsity algorithm
         Iterator<DoubleVectorElement> featureIterator = feature
@@ -82,25 +82,27 @@ public final class SparseMultiLabelRegression {
           while (diffIterator.hasNext()) {
             DoubleVectorElement diffElement = diffIterator.next();
             double val = rowVector.get(diffElement.getIndex());
-            val = val - diffElement.getValue() * alpha;
-            // apply the decay
-            if (lambda != 0d) {
-              val -= ((lambda * val) + (1d - lambda) * l2);
+            if (val != 0) {
+              val = val - diffElement.getValue() * alpha;
+              // apply the decay
+              if (lambda != 0d) {
+                val -= ((lambda * val) + (1d - lambda) * l2);
+              }
+              if (Math.abs(val) < nearZeroLimit) {
+                val = 0;
+              }
+              rowVector.set(diffElement.getIndex(), val);
             }
-            if (Math.abs(val) < nearZeroLimit) {
-              val = 0;
-            }
-            rowVector.set(diffElement.getIndex(), val);
           }
         }
         if (verbose && localItems % reportInterval == 0) {
           System.out.format(" Item %d | AVG Loss: %f\r", localItems,
-              (avgLoss / localItems));
+              (lossSum / localItems));
         }
       }
-      avgLoss /= localItems;
       if (verbose) {
-        System.out.format("\nEpoch %d | AVG Loss: %f\n", epoch, avgLoss);
+        System.out.format("\nEpoch %d | AVG Loss: %f\n", epoch,
+            (lossSum / localItems));
       }
     }
 
