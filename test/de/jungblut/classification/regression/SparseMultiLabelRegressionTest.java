@@ -1,4 +1,4 @@
-package de.jungblut.classification.sparse;
+package de.jungblut.classification.regression;
 
 import static org.junit.Assert.assertEquals;
 
@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
+import de.jungblut.classification.regression.SparseMultiLabelRegression;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.function.DoubleVectorFunction;

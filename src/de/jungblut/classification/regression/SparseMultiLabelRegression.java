@@ -1,4 +1,4 @@
-package de.jungblut.classification.sparse;
+package de.jungblut.classification.regression;
 
 import java.util.Arrays;
 import java.util.Iterator;
