@@ -5,6 +5,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.math3.util.FastMath;
+
 import com.google.common.base.Optional;
 
 import de.jungblut.math.DoubleMatrix;
@@ -68,7 +70,7 @@ public final class MarkovChain {
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement columnElement = iterateNonZero.next();
         int columnIndex = columnElement.getIndex();
-        double probability = Math.log(columnElement.getValue() / sum);
+        double probability = FastMath.log(columnElement.getValue() / sum);
         transitionProbabilities.set(rowIndex, columnIndex, probability);
       }
     }
@@ -93,7 +95,16 @@ public final class MarkovChain {
       probabilitySum += normalizedProbability;
     }
     // no we can exp them to get the real probability
-    return Math.exp(probabilitySum);
+    return FastMath.exp(probabilitySum);
+  }
+
+  /**
+   * @return the average transition probability of the given sequence.
+   */
+  public double averageTransitionProbability(int[] sequence) {
+    DoubleVector distribution = getTransitionProbabilities(sequence);
+    return FastMath.exp(distribution.sum()
+        / Math.max(1d, distribution.getLength()));
   }
 
   /**
