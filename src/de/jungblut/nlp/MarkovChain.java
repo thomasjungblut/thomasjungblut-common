@@ -36,9 +36,6 @@ public final class MarkovChain {
 
   private MarkovChain(int numStates, DoubleMatrix mat) {
     this.numStates = numStates;
-    if (mat instanceof SparseDoubleRowMatrix) {
-      mat = new SparseDoubleRowMatrix(mat);
-    }
     this.transitionProbabilities = mat;
   }
 
