@@ -19,11 +19,10 @@ import de.jungblut.datastructure.StringPool;
  */
 public final class TokenizerUtils {
 
-  private TokenizerUtils() {
-    throw new IllegalAccessError();
-  }
-
+  public static final String END_TAG = "<END>";
+  public static final String START_TAG = "<START>";
   public static final String SEPARATORS = " \r\n\t.,;:'\"()?!\\-/|“„";
+
   private static final Pattern SEPARATORS_PATTERN = Pattern
       .compile("[ \r\n\t\\.,;:'\"()?!\\-/|“„]");
   private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
@@ -52,6 +51,10 @@ public final class TokenizerUtils {
     for (char i = 'a'; i <= 'z'; i++) {
       CHARACTER_REPLACE_MAPPING[i] = i;
     }
+  }
+
+  private TokenizerUtils() {
+    throw new IllegalAccessError();
   }
 
   /**
@@ -253,8 +256,8 @@ public final class TokenizerUtils {
   public static String[] addStartAndEndTags(String[] unigram) {
     String[] tmp = new String[unigram.length + 2];
     System.arraycopy(unigram, 0, tmp, 1, unigram.length);
-    tmp[0] = "<START>";
-    tmp[tmp.length - 1] = "<END>";
+    tmp[0] = START_TAG;
+    tmp[tmp.length - 1] = END_TAG;
     return tmp;
   }
 

@@ -4,7 +4,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,13 +34,15 @@ public class VectorizerUtilsTest {
 
   @Test
   public void testBuildDictionary() {
-    String[] expectedResults = new String[] { "1", "2", "a", "doc", "document",
-        "dont", "i", "is", "that", "think", "this", "totally", "unrelated" };
+    String[] expectedResults = new String[] { "1", "2",
+        VectorizerUtils.OUT_OF_VOCABULARY, "a", "doc", "document", "dont", "i",
+        "is", "that", "think", "this", "totally", "unrelated" };
     String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
     assertArrayEquals(expectedResults, dict);
 
     // test with spam detector and 50% threshold
-    expectedResults = new String[] { "1", "2", "a", "document", "dont", "i",
+    expectedResults = new String[] { "1", "2",
+        VectorizerUtils.OUT_OF_VOCABULARY, "a", "document", "dont", "i",
         "that", "think", "this", "totally", "unrelated" };
     dict = VectorizerUtils.buildDictionary(tokenizedDocuments, 0.5f, 0);
     assertArrayEquals(expectedResults, dict);
@@ -90,7 +91,7 @@ public class VectorizerUtilsTest {
   public void testTfIdfVectorize() {
 
     String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
-    assertEquals(13, dict.length);
+    assertEquals(14, dict.length);
     int[] docCount = VectorizerUtils.buildInvertedIndexDocumentCount(
         tokenizedDocuments, dict);
 
@@ -137,81 +138,6 @@ public class VectorizerUtilsTest {
     assertEquals(0d, tfIdfVectorize.get(2).subtract(v3).sum(), 1e-5);
     assertEquals(0d, tfIdfVectorize.get(3).subtract(v4).sum(), 1e-5);
 
-  }
-
-  @Test
-  public void testPointwiseMutualInformationVectorize() {
-    String[] tokens = new String[] { "the", "cat", "eats", "the", "dog" };
-    List<String[]> docs = Collections.singletonList(tokens);
-    String[] dict = Arrays.copyOf(tokens, tokens.length);
-    Arrays.sort(dict);
-    List<DoubleVector> vectors = VectorizerUtils
-        .pointwiseMutualInformationVectorize(docs, dict, 1, false);
-
-    // NamedDoubleVector [name=the, vector={0=0.22314355131420976}]
-    DoubleVector v1 = new SparseDoubleVector(13);
-    v1.set(0, 0.22314355131420976);
-    // NamedDoubleVector [name=cat, vector={3=0.5108256237659906,
-    // 2=0.9162907318741551}]
-    DoubleVector v2 = new SparseDoubleVector(13);
-    v2.set(2, 0.9162907318741551);
-    v2.set(3, 0.5108256237659906);
-    // NamedDoubleVector [name=eats, vector={3=0.5108256237659906,
-    // 0=0.9162907318741551}]
-    DoubleVector v3 = new SparseDoubleVector(13);
-    v3.set(0, 0.9162907318741551);
-    v3.set(3, 0.5108256237659906);
-    // NamedDoubleVector [name=the, vector={2=0.22314355131420976,
-    // 1=0.9162907318741551}]
-    DoubleVector v4 = new SparseDoubleVector(13);
-    v4.set(1, 0.9162907318741551);
-    v4.set(2, 0.22314355131420976);
-    // NamedDoubleVector [name=dog, vector={3=0.5108256237659906}]]
-    DoubleVector v5 = new SparseDoubleVector(13);
-    v5.set(3, 0.5108256237659906);
-
-    List<DoubleVector> result = Arrays.asList(v1, v2, v3, v4, v5);
-    assertEquals(5, vectors.size());
-
-    for (int i = 0; i < 5; i++) {
-      assertEquals(0d, vectors.get(i).subtract(result.get(i)).sum(), 1e-5);
-    }
-  }
-
-  @Test
-  public void testPointwiseMutualInformationVectorizeUnique() {
-    String[] tokens = new String[] { "the", "cat", "eats", "the", "dog" };
-    List<String[]> docs = Collections.singletonList(tokens);
-    String[] dict = Arrays.copyOf(tokens, tokens.length);
-    Arrays.sort(dict);
-    List<DoubleVector> vectors = VectorizerUtils
-        .pointwiseMutualInformationVectorize(docs, dict, 1, true);
-
-    // NamedDoubleVector [name=the, vector={2=0.6931471805599453,
-    // 1=1.3862943611198906, 0=0.6931471805599453}]
-    DoubleVector v1 = new SparseDoubleVector(13);
-    v1.set(0, 0.6931471805599453);
-    v1.set(1, 1.3862943611198906);
-    v1.set(2, 0.6931471805599453);
-    // NamedDoubleVector [name=cat, vector={3=0.28768207245178085,
-    // 2=0.6931471805599453}]
-    DoubleVector v2 = new SparseDoubleVector(13);
-    v2.set(2, 0.6931471805599453);
-    v2.set(3, 0.28768207245178085);
-    // NamedDoubleVector [name=eats, vector={3=0.28768207245178085,
-    // 0=0.6931471805599453}]
-    DoubleVector v3 = new SparseDoubleVector(13);
-    v3.set(0, 0.6931471805599453);
-    v3.set(3, 0.28768207245178085);
-    // NamedDoubleVector [name=dog, vector={3=0.28768207245178085}]
-    DoubleVector v5 = new SparseDoubleVector(13);
-    v5.set(3, 0.28768207245178085);
-
-    List<DoubleVector> result = Arrays.asList(v1, v2, v3, v5);
-    assertEquals(4, vectors.size());
-    for (int i = 0; i < 4; i++) {
-      assertEquals(0d, vectors.get(i).subtract(result.get(i)).sum(), 1e-5);
-    }
   }
 
   @Test

@@ -31,7 +31,7 @@ public class MarkovChainTest {
     double p = chain.getProbabilityForSequence(new int[] { 1, 2, 1 });
     // this sequence is not very probable, because we have never seen the
     // transition 2-1, even if 1-2 is very probable
-    assertTrue(0.01 < p);
+    assertTrue("P was " + p + " expected small value of > 0.01", 0.01 < p);
     p = chain.getProbabilityForSequence(new int[] { 1, 2 });
     assertEquals(1d, p, 1e-4);
     p = chain.getProbabilityForSequence(new int[] { 3, 4 });
