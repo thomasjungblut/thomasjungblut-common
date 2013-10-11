@@ -1,10 +1,10 @@
 package de.jungblut.crawl;
 
 import java.io.IOException;
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletionService;
@@ -89,7 +89,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
   @Override
   public final void process(String... seedUrls) throws InterruptedException,
       ExecutionException {
-    final Deque<String> linksToCrawl = new ArrayDeque<>();
+    final Deque<String> linksToCrawl = new LinkedList<>();
     BloomFilter<CharSequence> visited = BloomFilter.create(
         Funnels.stringFunnel(), fetches);
     ExecutorService threadPool = Executors.newFixedThreadPool(poolSize);
