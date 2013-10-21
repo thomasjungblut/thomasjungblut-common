@@ -19,6 +19,7 @@ import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.sparse.SparseDoubleRowMatrix;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.partition.Boundaries.Range;
 
@@ -129,17 +130,19 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
       int end = r.getEnd(); // inclusive
       DoubleVector[] featureSubArray = ArrayUtils.subArray(inputMatrix, start,
           end);
+      boolean sparse = featureSubArray[0].isSparse();
       DoubleMatrix outcomeMat = null;
       if (outcomeMatrix != null) {
         DoubleVector[] outcomeSubArray = ArrayUtils.subArray(outcomeMatrix,
             start, end);
         outcomeMat = new DenseDoubleMatrix(outcomeSubArray);
       }
-      DoubleMatrix featureMatrix = new DenseDoubleMatrix(featureSubArray);
-      // add the bias
-      DenseDoubleVector ones = DenseDoubleVector.ones(featureSubArray.length);
-      featureMatrix = new DenseDoubleMatrix(ones, featureMatrix);
-      batches.add(new Tuple<>(featureMatrix, outcomeMat));
+      DenseDoubleVector bias = DenseDoubleVector.ones(featureSubArray.length);
+      DoubleMatrix featureMatrix = sparse ? new SparseDoubleRowMatrix(
+          featureSubArray) : new DenseDoubleMatrix(featureSubArray);
+      DoubleMatrix featuresWithBias = sparse ? new SparseDoubleRowMatrix(bias,
+          featureMatrix) : new DenseDoubleMatrix(bias, featureMatrix);
+      batches.add(new Tuple<>(featuresWithBias, outcomeMat));
     }
   }
 

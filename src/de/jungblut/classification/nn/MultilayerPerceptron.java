@@ -239,6 +239,18 @@ public final class MultilayerPerceptron extends AbstractClassifier {
       }
     } else {
       this.weights = conf.weights;
+      for (int i = 0; i < weights.length; i++) {
+        Preconditions.checkArgument(
+            this.weights[i].getWeights().getRowCount() == layers[i + 1],
+            "Number of rows must match the layer size of the following layer. Given: "
+                + this.weights[i].getWeights().getRowCount() + ". Expected: "
+                + layers[i + 1]);
+        Preconditions.checkArgument(this.weights[i].getWeights()
+            .getColumnCount() == (layers[i] + 1),
+            "Number of columns must match the layer size of the current layer. Given: "
+                + this.weights[i].getWeights().getColumnCount()
+                + ". Expected: " + (layers[i] + 1));
+      }
     }
   }
 

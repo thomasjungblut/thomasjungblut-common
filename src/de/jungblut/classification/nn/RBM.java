@@ -36,8 +36,6 @@ public final class RBM {
 
     private TrainingType type = TrainingType.CPU;
     private double lambda;
-    private double hiddenDropoutProbability;
-    private double visibleDropoutProbability;
     private boolean verbose = false;
     private boolean stochastic = false;
     private int miniBatchSize;
@@ -115,22 +113,6 @@ public final class RBM {
     }
 
     /**
-     * Sets the hidden layer dropout probability.
-     */
-    public RBMBuilder hiddenLayerDropout(double d) {
-      this.hiddenDropoutProbability = d;
-      return this;
-    }
-
-    /**
-     * Sets the input layer dropout probability.
-     */
-    public RBMBuilder inputLayerDropout(double d) {
-      this.visibleDropoutProbability = d;
-      return this;
-    }
-
-    /**
      * Creates a new {@link RBMBuilder} from an activation function and
      * layersizes.
      * 
@@ -158,12 +140,6 @@ public final class RBM {
   private TrainingType type = TrainingType.CPU;
   private double lambda;
 
-  // TODO discriminative fine tuning with backprop and dropout
-  @SuppressWarnings("unused")
-  private double hiddenDropoutProbability;
-  @SuppressWarnings("unused")
-  private double visibleDropoutProbability;
-
   private boolean stochastic;
   private boolean verbose;
   // if zero, the complete batch learning will be used
@@ -186,8 +162,6 @@ public final class RBM {
   private RBM(RBMBuilder rbmBuilder) {
     this(rbmBuilder.layerSizes, rbmBuilder.function, rbmBuilder.type);
     this.lambda = rbmBuilder.lambda;
-    this.hiddenDropoutProbability = rbmBuilder.hiddenDropoutProbability;
-    this.visibleDropoutProbability = rbmBuilder.visibleDropoutProbability;
     this.verbose = rbmBuilder.verbose;
     this.miniBatchSize = rbmBuilder.miniBatchSize;
     this.batchParallelism = rbmBuilder.batchParallelism;
@@ -291,6 +265,29 @@ public final class RBM {
    */
   public DoubleMatrix[] getWeights() {
     return this.weights;
+  }
+
+  /**
+   * Creates a weight matrix that can be used for unsupervised weight
+   * initialization in the {@link MultilayerPerceptron}.
+   * 
+   * @param outputLayerSize the size of the classification layer on top of this
+   *          RBM.
+   * @return the {@link WeightMatrix} that maps layers to the weights.
+   */
+  public WeightMatrix[] getNeuralNetworkWeights(int outputLayerSize) {
+    WeightMatrix[] toReturn = new WeightMatrix[this.weights.length + 1];
+
+    // translate the matrices
+    for (int i = 0; i < weights.length; i++) {
+      toReturn[i] = new WeightMatrix(this.weights[i].slice(1,
+          weights[i].getRowCount(), 0, weights[i].getColumnCount()));
+    }
+    // add a last layer on top of it
+    toReturn[toReturn.length - 1] = new WeightMatrix(
+        toReturn[toReturn.length - 2].getWeights().getRowCount(),
+        outputLayerSize);
+    return toReturn;
   }
 
   /**

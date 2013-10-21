@@ -2,6 +2,8 @@ package de.jungblut.classification.nn;
 
 import java.util.Random;
 
+import com.google.common.base.Preconditions;
+
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
@@ -62,6 +64,10 @@ public final class MultilayerPerceptronCostFunction extends
    */
   private CostGradientTuple compute(DoubleVector input, DoubleMatrix x,
       DoubleMatrix y) {
+    Preconditions.checkArgument(
+        x.getColumnCount() - 1 == layerSizes[0],
+        "Input layer size must match the given vector dimension! Given: "
+            + (x.getColumnCount() - 1) + ", expected: " + layerSizes[0]);
     final int m = x.getRowCount();
     DoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
         unfoldParameters);
