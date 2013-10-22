@@ -45,6 +45,7 @@ public final class DecisionTree extends AbstractClassifier {
   private AbstractTreeNode rootNode;
   private FeatureType[] featureTypes;
   private int numRandomFeaturesToChoose;
+  private int maxHeight = 25;
   private long seed = System.currentTimeMillis();
 
   // default is binary classification 0 or 1.
@@ -94,7 +95,7 @@ public final class DecisionTree extends AbstractClassifier {
     // note that we use linked lists to remove examples we don't need, linked
     // structures do not require costly copy operations after removal
     rootNode = build(Lists.newLinkedList(Arrays.asList(features)),
-        Lists.newLinkedList(Arrays.asList(outcome)), possibleFeatureIndices);
+        Lists.newLinkedList(Arrays.asList(outcome)), possibleFeatureIndices, 0);
     if (compile) {
       try {
         compileTree();
@@ -160,7 +161,7 @@ public final class DecisionTree extends AbstractClassifier {
    * Recursively build the decision tree in a top down fashion.
    */
   private AbstractTreeNode build(List<DoubleVector> features,
-      List<DoubleVector> outcome, TIntHashSet possibleFeatureIndices) {
+      List<DoubleVector> outcome, TIntHashSet possibleFeatureIndices, int level) {
 
     // we select a subset of features at every tree level
     possibleFeatureIndices = chooseRandomFeatures(possibleFeatureIndices);
@@ -179,9 +180,9 @@ public final class DecisionTree extends AbstractClassifier {
       return new LeafNode(notZeroClasses.iterator().next());
     }
 
-    // if we don't have anymore features to split on, we will use the majority
-    // class and predict it
-    if (possibleFeatureIndices.isEmpty()) {
+    // if we don't have anymore features to split on or reached the max height,
+    // we will use the majority class and predict it
+    if (possibleFeatureIndices.isEmpty() || level >= maxHeight) {
       return new LeafNode(ArrayUtils.maxIndex(countOutcomeClasses));
     }
 
@@ -219,7 +220,7 @@ public final class DecisionTree extends AbstractClassifier {
         // remove that feature
         newPossibleFeatures.remove(bestSplitIndex);
         node.children[cIndex] = build(filtered.getFirst(),
-            filtered.getSecond(), newPossibleFeatures);
+            filtered.getSecond(), newPossibleFeatures, level + 1);
         cIndex++;
       }
       // make a faster lookup by sorting
@@ -249,9 +250,11 @@ public final class DecisionTree extends AbstractClassifier {
 
       // build subtrees
       AbstractTreeNode lower = build(filterNumeric.getFirst(),
-          filterNumeric.getSecond(), new TIntHashSet(newPossibleFeatures));
+          filterNumeric.getSecond(), new TIntHashSet(newPossibleFeatures),
+          level + 1);
       AbstractTreeNode higher = build(filterNumericHigher.getFirst(),
-          filterNumericHigher.getSecond(), new TIntHashSet(newPossibleFeatures));
+          filterNumericHigher.getSecond(),
+          new TIntHashSet(newPossibleFeatures), level + 1);
       // now we can return this completed node
       return new NumericalNode(bestSplitIndex,
           bestSplit.getNumericalSplitValue(), lower, higher);
@@ -526,10 +529,21 @@ public final class DecisionTree extends AbstractClassifier {
   }
 
   /**
+   * Sets the maximum height of this tree.
+   * 
+   * @return this instance.
+   */
+  public DecisionTree setMaxHeight(int max) {
+    this.maxHeight = max;
+    return this;
+  }
+
+  /**
    * Sets the seed for a random number generator if used.
    */
-  public void setSeed(long seed) {
+  public DecisionTree setSeed(long seed) {
     this.seed = seed;
+    return this;
   }
 
   /*

@@ -29,6 +29,7 @@ public final class RandomForest extends AbstractClassifier {
   private FeatureType[] featureTypes;
   private int numThreads = 1;
   private int numRandomFeaturesToChoose = 0;
+  private int maxHeight = Integer.MAX_VALUE;
   private boolean verbose;
   private boolean compile = false;
 
@@ -106,6 +107,16 @@ public final class RandomForest extends AbstractClassifier {
    */
   public RandomForest verbose(boolean verb) {
     this.verbose = verb;
+    return this;
+  }
+
+  /**
+   * Sets the maximum height of this random forest.
+   * 
+   * @return this instance.
+   */
+  public RandomForest setMaxHeight(int max) {
+    this.maxHeight = max;
     return this;
   }
 
@@ -189,10 +200,12 @@ public final class RandomForest extends AbstractClassifier {
     public DecisionTree newInstance() {
       if (compile) {
         return DecisionTree.createCompiledTree(featureTypes)
-            .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose);
+            .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose)
+            .setMaxHeight(maxHeight);
       } else {
-        return DecisionTree.create(featureTypes).setNumRandomFeaturesToChoose(
-            numRandomFeaturesToChoose);
+        return DecisionTree.create(featureTypes)
+            .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose)
+            .setMaxHeight(maxHeight);
       }
     }
   }
