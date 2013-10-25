@@ -10,7 +10,7 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.apache.hadoop.mrunit.types.Pair;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 
 import de.jungblut.nlp.mr.TfIdfCalculatorJob.DocumentVectorizerReducer;
@@ -18,10 +18,10 @@ import de.jungblut.writable.VectorWritable;
 
 public class TfIdfCalculatorJobTest {
 
-  static ReduceDriver<Text, TextIntIntIntWritable, Text, VectorWritable> reduceDriver;
+  ReduceDriver<Text, TextIntIntIntWritable, Text, VectorWritable> reduceDriver;
 
-  @BeforeClass
-  public static void setUp() {
+  @Before
+  public void setUp() {
     DocumentVectorizerReducer reducer = new DocumentVectorizerReducer();
     reduceDriver = ReduceDriver.newReduceDriver(reducer);
     reduceDriver.getConfiguration().setInt(
@@ -43,5 +43,21 @@ public class TfIdfCalculatorJobTest {
     Pair<Text, VectorWritable> pair = res.get(0);
     assertEquals("ID2012", pair.getFirst().toString());
     assertEquals(3.2188758248682006d, pair.getSecond().getVector().get(1), 1e-4);
+  }
+
+  @Test
+  public void testWordVectorizerReducer() throws IOException {
+    reduceDriver.getConfiguration().set(
+        TfIdfCalculatorJob.WORD_COUNT_OUTPUT_KEY, "true");
+    reduceDriver.setInput(new Text("ID2012"), Arrays
+        .asList(new TextIntIntIntWritable(new Text("this"), new IntWritable(4),
+            new IntWritable(2), new IntWritable(1))));
+
+    List<Pair<Text, VectorWritable>> res = reduceDriver.run();
+    assertEquals(1, res.size());
+
+    Pair<Text, VectorWritable> pair = res.get(0);
+    assertEquals("ID2012", pair.getFirst().toString());
+    assertEquals(2, pair.getSecond().getVector().get(1), 1e-4);
   }
 }

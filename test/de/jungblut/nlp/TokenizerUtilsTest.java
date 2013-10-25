@@ -71,6 +71,13 @@ public class TokenizerUtilsTest {
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }
+
+    desiredResult = new String[] { "Hi", "this", "is", ".", "a", ",", "test",
+        "for", "the", "tokenizer", "?", "function" };
+    result = TokenizerUtils.wordTokenize(s, true);
+    for (int i = 0; i < result.length; i++) {
+      assertEquals(desiredResult[i], result[i]);
+    }
   }
 
   @Test

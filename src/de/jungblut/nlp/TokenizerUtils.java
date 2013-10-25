@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
@@ -108,7 +109,7 @@ public final class TokenizerUtils {
   }
 
   /**
-   * Tokenizes on normal whitespaces "\s" in java regex.
+   * Tokenizes on normal whitespaces "\\s+" in java regex.
    */
   public static String[] whiteSpaceTokenize(String text) {
     return WHITESPACE_PATTERN.split(text);
@@ -128,7 +129,29 @@ public final class TokenizerUtils {
    * \r\n\t.,;:'\"()?!\\-/|]
    */
   public static String[] wordTokenize(String text) {
-    return SEPARATORS_PATTERN.split(text);
+    return wordTokenize(text, false);
+  }
+
+  /**
+   * Tokenizes like {@link #wordTokenize(String)} does, but keeps the seperators
+   * as their own token if the argument is true.
+   */
+  public static String[] wordTokenize(String text, boolean keepSeperators) {
+    if (keepSeperators) {
+      StringTokenizer tkns = new StringTokenizer(text, SEPARATORS, true);
+      int countTokens = tkns.countTokens();
+      String[] toReturn = new String[countTokens];
+      int i = 0;
+      while (countTokens-- > 0) {
+        toReturn[i] = tkns.nextToken();
+        if (toReturn[i].charAt(0) > ' ') {
+          i++;
+        }
+      }
+      return Arrays.copyOf(toReturn, i);
+    } else {
+      return SEPARATORS_PATTERN.split(text);
+    }
   }
 
   /**

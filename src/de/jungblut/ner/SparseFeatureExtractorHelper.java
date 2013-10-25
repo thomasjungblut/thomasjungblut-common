@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.dense.SingleEntryDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
 
@@ -195,10 +195,11 @@ public final class SparseFeatureExtractorHelper<K> {
           features[i].set(index, 1d);
         }
       }
-      outcome[i] = new DenseDoubleVector(classes == 2 ? 1 : classes);
+
       if (classes == 2) {
-        outcome[i].set(0, labels.get(i));
+        outcome[i] = new SingleEntryDoubleVector(labels.get(i));
       } else {
+        outcome[i] = new SparseDoubleVector(classes);
         outcome[i].set(labels.get(i), 1d);
       }
     }

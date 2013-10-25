@@ -2,6 +2,7 @@ package de.jungblut.nlp.mr;
 
 import java.io.IOException;
 
+import org.apache.commons.math3.util.FastMath;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
@@ -29,6 +30,7 @@ public class TfIdfCalculatorJob {
   public static final String NUMBER_OF_DOCUMENTS_KEY = "documents.num";
   public static final String NUMBER_OF_TOKENS_KEY = "tokens.num";
   public static final String SPAM_DOCUMENT_PERCENTAGE_KEY = "spam.percentage";
+  public static final String WORD_COUNT_OUTPUT_KEY = "wordcount.output";
 
   /**
    * Calculate the sparse vector with TF-IDF.
@@ -39,6 +41,7 @@ public class TfIdfCalculatorJob {
     private long numDocs;
     private long documentThreshold;
     private int numTokens;
+    private boolean wordCount;
 
     @Override
     protected void setup(Context context) throws IOException,
@@ -46,7 +49,9 @@ public class TfIdfCalculatorJob {
       numDocs = context.getConfiguration().getLong(NUMBER_OF_DOCUMENTS_KEY, 1);
       numTokens = context.getConfiguration().getInt(NUMBER_OF_TOKENS_KEY, 1);
       documentThreshold = (long) (numDocs * context.getConfiguration()
-          .getFloat(SPAM_DOCUMENT_PERCENTAGE_KEY, 0.8f));
+          .getFloat(SPAM_DOCUMENT_PERCENTAGE_KEY, 0.5f));
+      wordCount = context.getConfiguration().getBoolean(WORD_COUNT_OUTPUT_KEY,
+          false);
     }
 
     /**
@@ -60,9 +65,14 @@ public class TfIdfCalculatorJob {
       SparseDoubleVector vector = new SparseDoubleVector(numTokens);
       for (TextIntIntIntWritable pair : values) {
         if (documentThreshold > pair.getSecond().get()) {
-          double tfIdf = pair.getThird().get()
-              * Math.log(numDocs / (double) pair.getSecond().get());
-          vector.set(pair.getFourth().get(), tfIdf);
+          double val = 0d;
+          if (wordCount) {
+            val = pair.getThird().get();
+          } else {
+            val = pair.getThird().get()
+                * FastMath.log(numDocs / (double) pair.getSecond().get());
+          }
+          vector.set(pair.getFourth().get(), val);
         }
       }
 
