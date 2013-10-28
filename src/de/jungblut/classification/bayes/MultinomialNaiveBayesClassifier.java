@@ -101,8 +101,9 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
         // don't care about not occuring words, we honor them with a very small
         // probability later on.
         if (currentWordCount != 0) {
-          double logProbability = Math.log(currentWordCount
-              / (tokenPerClass[row] + probabilityMatrix.getColumnCount() - 1));
+          double logProbability = FastMath.log(currentWordCount)
+              - FastMath.log(tokenPerClass[row]
+                  + probabilityMatrix.getColumnCount() - 1);
           probabilityMatrix.set(row, tokenColumn, logProbability);
         }
       }
@@ -110,8 +111,9 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
 
     classProbability = new DenseDoubleVector(numDistinctClasses);
     for (int i = 0; i < numDistinctClasses; i++) {
-      classProbability.set(i, (numDocumentsPerClass[i])
-          / (double) features.length);
+      double prior = FastMath.log(numDocumentsPerClass[i])
+          - FastMath.log(features.length);
+      classProbability.set(i, prior);
     }
   }
 
@@ -158,8 +160,8 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
     // we normalize it back
     for (int i = 0; i < numClasses; i++) {
       double probability = distribution.get(i);
-      double normalizedProbability = Math.exp(probability - maxProbability)
-          * classProbability.get(i);
+      double normalizedProbability = FastMath.exp(probability - maxProbability
+          + classProbability.get(i));
       distribution.set(i, normalizedProbability);
       probabilitySum += normalizedProbability;
     }

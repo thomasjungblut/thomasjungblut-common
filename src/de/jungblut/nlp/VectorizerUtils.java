@@ -328,7 +328,8 @@ public final class VectorizerUtils {
       int index = Arrays.binarySearch(dictionary, token);
       if (index >= 0) {
         double tfIdf = termFrequencySet.count(token)
-            * FastMath.log(numDocuments / (double) termDocumentCount[index]);
+            * (FastMath.log(numDocuments) - FastMath
+                .log(termDocumentCount[index]));
         vector.set(index, tfIdf);
       } else {
         int bs = Arrays.binarySearch(dictionary, OUT_OF_VOCABULARY);

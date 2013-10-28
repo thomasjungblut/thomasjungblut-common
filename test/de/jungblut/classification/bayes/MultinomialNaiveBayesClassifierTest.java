@@ -9,6 +9,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.util.Arrays;
 
+import org.apache.commons.math3.util.FastMath;
 import org.junit.Test;
 
 import de.jungblut.math.DoubleMatrix;
@@ -42,8 +43,8 @@ public class MultinomialNaiveBayesClassifierTest {
 
   public void internalChecks(MultinomialNaiveBayesClassifier classifier) {
     DoubleVector classProbability = classifier.getClassProbability();
-    assertEquals(classProbability.get(0), 2d / 5d, 0.01d);
-    assertEquals(classProbability.get(1), 3d / 5d, 0.01d);
+    assertEquals(FastMath.log(2d / 5d), classProbability.get(0), 0.01d);
+    assertEquals(FastMath.log(3d / 5d), classProbability.get(1), 0.01d);
 
     DoubleMatrix mat = classifier.getProbabilityMatrix();
     double[] realFirstRow = new double[] { 0.0, 0.0, -2.1972245773362196,
@@ -54,26 +55,26 @@ public class MultinomialNaiveBayesClassifierTest {
     double[] firstRow = mat.getRowVector(0).toArray();
     assertEquals(realFirstRow.length, firstRow.length);
     for (int i = 0; i < firstRow.length; i++) {
-      assertEquals("" + Arrays.toString(firstRow), firstRow[i],
-          realFirstRow[i], 0.05d);
+      assertEquals("" + Arrays.toString(firstRow), realFirstRow[i],
+          firstRow[i], 0.05d);
     }
 
     double[] secondRow = mat.getRowVector(1).toArray();
     assertEquals(realSecondRow.length, secondRow.length);
     for (int i = 0; i < firstRow.length; i++) {
-      assertEquals("" + Arrays.toString(secondRow), secondRow[i],
-          realSecondRow[i], 0.05d);
+      assertEquals("" + Arrays.toString(secondRow), realSecondRow[i],
+          secondRow[i], 0.05d);
     }
 
     DoubleVector claz = classifier.predict(new DenseDoubleVector(new double[] {
         1, 0, 0, 0, 0 }));
-    assertEquals("" + claz, claz.get(0), 0, 0.05d);
-    assertEquals("" + claz, claz.get(1), 1, 0.05d);
+    assertEquals("" + claz, 0, claz.get(0), 0.05d);
+    assertEquals("" + claz, 1, claz.get(1), 0.05d);
 
     claz = classifier.predict(new DenseDoubleVector(new double[] { 0, 0, 0, 1,
         1 }));
-    assertEquals("" + claz, claz.get(0), 1, 0.05d);
-    assertEquals("" + claz, claz.get(1), 0, 0.05d);
+    assertEquals("" + claz, 1, claz.get(0), 0.05d);
+    assertEquals("" + claz, 0, claz.get(1), 0.05d);
   }
 
   public MultinomialNaiveBayesClassifier getTrainedClassifier() {

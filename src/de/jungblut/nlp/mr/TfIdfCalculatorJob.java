@@ -70,7 +70,7 @@ public class TfIdfCalculatorJob {
             val = pair.getThird().get();
           } else {
             val = pair.getThird().get()
-                * FastMath.log(numDocs / (double) pair.getSecond().get());
+                * (FastMath.log(numDocs) - FastMath.log(pair.getSecond().get()));
           }
           vector.set(pair.getFourth().get(), val);
         }
