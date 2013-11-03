@@ -1,5 +1,7 @@
 package de.jungblut.classification;
 
+import java.util.Arrays;
+
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 
@@ -10,6 +12,17 @@ import de.jungblut.math.DoubleVector;
  * 
  */
 public abstract class AbstractClassifier implements Classifier {
+
+  @Override
+  public void train(DoubleVector[] features, DoubleVector[] outcome) {
+    train(Arrays.asList(features), Arrays.asList(outcome));
+  }
+
+  @Override
+  public void train(Iterable<DoubleVector> features,
+      Iterable<DoubleVector> outcome) {
+    throw new UnsupportedOperationException("Not yet implemented!");
+  }
 
   @Override
   public int predictedClass(DoubleVector features, double threshold) {

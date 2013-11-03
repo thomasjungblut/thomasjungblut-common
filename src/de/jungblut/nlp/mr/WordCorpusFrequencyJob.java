@@ -119,14 +119,15 @@ public class WordCorpusFrequencyJob {
         Context context) throws IOException, InterruptedException {
 
       Map<Text, IntWritable> documents = new HashMap<>();
-      int wordCount = 0;
+      long wordCount = 0;
       for (TextIntPairWritable docId : values) {
         documents.put(new Text(docId.getFirst()), new IntWritable(docId
             .getSecond().get()));
         wordCount += docId.getSecond().get();
       }
       if (wordCount > minWordCount) {
-        dictWriter.write(currentIndex + "\t" + key.toString() + "\n");
+        dictWriter.write(currentIndex + "\t" + key.toString() + "\t"
+            + wordCount + "\n");
         for (Entry<Text, IntWritable> entry : documents.entrySet()) {
           context.write(entry.getKey(), new TextIntIntIntWritable(key,
               new IntWritable(documents.size()), entry.getValue(),

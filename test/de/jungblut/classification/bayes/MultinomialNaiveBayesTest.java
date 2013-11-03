@@ -17,17 +17,17 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
-public class MultinomialNaiveBayesClassifierTest {
+public class MultinomialNaiveBayesTest {
 
   @Test
   public void testSerDe() throws Exception {
-    MultinomialNaiveBayesClassifier classifier = getTrainedClassifier();
+    MultinomialNaiveBayes classifier = getTrainedClassifier();
     File tmp = File.createTempFile("bayes", ".tmp");
     try (DataOutputStream out = new DataOutputStream(new FileOutputStream(tmp))) {
-      MultinomialNaiveBayesClassifier.serialize(classifier, out);
+      MultinomialNaiveBayes.serialize(classifier, out);
     }
     try (DataInputStream in = new DataInputStream(new FileInputStream(tmp))) {
-      classifier = MultinomialNaiveBayesClassifier.deserialize(in);
+      classifier = MultinomialNaiveBayes.deserialize(in);
 
     }
     internalChecks(classifier);
@@ -36,12 +36,12 @@ public class MultinomialNaiveBayesClassifierTest {
   @Test
   public void testNaiveBayes() {
 
-    MultinomialNaiveBayesClassifier classifier = getTrainedClassifier();
+    MultinomialNaiveBayes classifier = getTrainedClassifier();
 
     internalChecks(classifier);
   }
 
-  public void internalChecks(MultinomialNaiveBayesClassifier classifier) {
+  public void internalChecks(MultinomialNaiveBayes classifier) {
     DoubleVector classProbability = classifier.getClassProbability();
     assertEquals(FastMath.log(2d / 5d), classProbability.get(0), 0.01d);
     assertEquals(FastMath.log(3d / 5d), classProbability.get(1), 0.01d);
@@ -77,8 +77,8 @@ public class MultinomialNaiveBayesClassifierTest {
     assertEquals("" + claz, 0, claz.get(1), 0.05d);
   }
 
-  public MultinomialNaiveBayesClassifier getTrainedClassifier() {
-    MultinomialNaiveBayesClassifier classifier = new MultinomialNaiveBayesClassifier();
+  public MultinomialNaiveBayes getTrainedClassifier() {
+    MultinomialNaiveBayes classifier = new MultinomialNaiveBayes();
 
     DoubleVector[] features = new DoubleVector[] {
         new SparseDoubleVector(new double[] { 1, 0, 0, 0, 0 }),

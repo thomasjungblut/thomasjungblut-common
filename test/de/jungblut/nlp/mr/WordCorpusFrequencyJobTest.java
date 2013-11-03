@@ -79,7 +79,7 @@ public class WordCorpusFrequencyJobTest {
     Path path = FileSystems.getDefault().getPath(p);
     List<String> lines = Files.readAllLines(path, Charset.defaultCharset());
     assertEquals(1, lines.size());
-    assertEquals("0\tthis", lines.get(0));
+    assertEquals("0\tthis\t4", lines.get(0));
     FileSystems.getDefault().provider().delete(path);
     FileSystems.getDefault().provider()
         .delete(FileSystems.getDefault().getPath("/tmp/.dict.txt.crc"));

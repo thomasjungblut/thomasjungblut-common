@@ -28,7 +28,7 @@ import de.jungblut.writable.VectorWritable;
  * @author thomas.jungblut
  * 
  */
-public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
+public final class MultinomialNaiveBayes extends AbstractClassifier {
 
   private static final double LOW_PROBABILITY = FastMath.log(1e-8);
 
@@ -38,7 +38,7 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
   /**
    * Default constructor to construct this classifier.
    */
-  public MultinomialNaiveBayesClassifier() {
+  public MultinomialNaiveBayes() {
   }
 
   /**
@@ -48,7 +48,7 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
    * @param probabilityMatrix the probability matrix.
    * @param classProbability the prior class probabilities.
    */
-  private MultinomialNaiveBayesClassifier(DoubleMatrix probabilityMatrix,
+  private MultinomialNaiveBayes(DoubleMatrix probabilityMatrix,
       DoubleVector classProbability) {
     super();
     this.probabilityMatrix = probabilityMatrix;
@@ -190,18 +190,18 @@ public final class MultinomialNaiveBayesClassifier extends AbstractClassifier {
    * Deserializes a new MultinomialNaiveBayesClassifier from the given input
    * stream. Note that "in" will not be closed by this method.
    */
-  public static MultinomialNaiveBayesClassifier deserialize(DataInput in)
+  public static MultinomialNaiveBayes deserialize(DataInput in)
       throws IOException {
     MatrixWritable matrixWritable = new MatrixWritable();
     matrixWritable.readFields(in);
     DoubleVector classProbability = VectorWritable.readVector(in);
 
-    return new MultinomialNaiveBayesClassifier(matrixWritable.getMatrix(),
+    return new MultinomialNaiveBayes(matrixWritable.getMatrix(),
         classProbability);
   }
 
-  public static void serialize(MultinomialNaiveBayesClassifier model,
-      DataOutput out) throws IOException {
+  public static void serialize(MultinomialNaiveBayes model, DataOutput out)
+      throws IOException {
     new MatrixWritable(model.probabilityMatrix).write(out);
     VectorWritable.writeVector(model.classProbability, out);
   }
