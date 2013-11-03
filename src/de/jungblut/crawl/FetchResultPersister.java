@@ -3,6 +3,8 @@ package de.jungblut.crawl;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 
 /**
@@ -17,6 +19,8 @@ import org.apache.hadoop.conf.Configuration;
  */
 public final class FetchResultPersister<T extends FetchResult> implements
     Runnable {
+
+  private static final Log LOG = LogFactory.getLog(FetchResultPersister.class);
 
   private volatile boolean running = true;
 
@@ -69,7 +73,7 @@ public final class FetchResultPersister<T extends FetchResult> implements
           resWriter.write(poll);
           retrieved++;
           if (retrieved % 100 == 0) {
-            System.out.println("Retrieved " + retrieved + " sites!");
+            LOG.info("Retrieved " + retrieved + " sites!");
           }
         } catch (IOException e) {
           e.printStackTrace();
@@ -96,11 +100,11 @@ public final class FetchResultPersister<T extends FetchResult> implements
     try {
       while (!queue.isEmpty()) {
         final T poll = queue.poll();
-        System.out.println(toWrite-- + " results to write before stopping...");
+        LOG.info(toWrite-- + " results to write before stopping...");
         resWriter.write(poll);
         retrieved++;
         if (retrieved % 100 == 0) {
-          System.out.println("Retrieved " + retrieved + " sites!");
+          LOG.info("Retrieved " + retrieved + " sites!");
         }
       }
     } catch (IOException e) {
@@ -114,7 +118,7 @@ public final class FetchResultPersister<T extends FetchResult> implements
         }
       }
     }
-    System.out.println("Retrieved " + retrieved + " sites in total!");
+    LOG.info("Retrieved " + retrieved + " sites in total!");
   }
 
 }

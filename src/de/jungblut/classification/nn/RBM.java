@@ -5,6 +5,9 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Random;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
@@ -28,6 +31,8 @@ import de.jungblut.writable.MatrixWritable;
  * 
  */
 public final class RBM {
+
+  private static final Log LOG = LogFactory.getLog(RBM.class);
 
   public static class RBMBuilder {
 
@@ -197,7 +202,7 @@ public final class RBM {
     // start with greedy layerwise training
     for (int i = 0; i < layerSizes.length; i++) {
       if (verbose) {
-        System.out.println("Training stack at height: " + i);
+        LOG.info("Training stack at height: " + i);
       }
       // add the bias to hidden and visible layer, random init with 0.1*randn
       DenseDoubleMatrix start = new DenseDoubleMatrix(layerSizes[i] + 1,

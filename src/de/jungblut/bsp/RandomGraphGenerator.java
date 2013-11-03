@@ -9,6 +9,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -40,6 +42,8 @@ import org.apache.hadoop.mapreduce.lib.partition.HashPartitioner;
  * 
  */
 public class RandomGraphGenerator {
+
+  private static final Log LOG = LogFactory.getLog(RandomGraphGenerator.class);
 
   /**
    * An input format that assigns ranges of longs to each mapper.
@@ -151,7 +155,7 @@ public class RandomGraphGenerator {
         numSplits = 1;
       }
       long rowsPerSplit = totalRows / numSplits;
-      System.out.println("Generating " + totalRows + " using " + numSplits
+      LOG.info("Generating " + totalRows + " using " + numSplits
           + " maps with step of " + rowsPerSplit);
       InputSplit[] splits = new InputSplit[numSplits];
       long currentRow = 0;
@@ -199,7 +203,7 @@ public class RandomGraphGenerator {
           .println("USAGE: <Number of vertices> <Number of edges per vertex> <Number of partitions> <Outpath>");
       return;
     }
-    System.out.println(Arrays.toString(args));
+    LOG.info("Arguments: " + Arrays.toString(args));
     Configuration conf = new Configuration();
     conf.setInt("hama.num.vertices", Integer.parseInt(args[0]));
     conf.setInt("hama.num.partitions", Integer.parseInt(args[2]));

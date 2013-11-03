@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.hadoop.io.Writable;
 
@@ -31,6 +33,8 @@ import de.jungblut.writable.VectorWritable;
  * 
  */
 public final class HMM extends AbstractClassifier implements Writable {
+
+  private static final Log LOG = LogFactory.getLog(HMM.class);
 
   private int numVisibleStates;
   private int numHiddenStates;
@@ -233,7 +237,7 @@ public final class HMM extends AbstractClassifier implements Writable {
           + this.getHiddenPriorProbability().subtract(hiddenPriorProbability)
               .pow(2).sum();
       if (verbose) {
-        System.out.print("Iteration " + iteration + " | Model difference: "
+        LOG.info("Iteration " + iteration + " | Model difference: "
             + difference + "\r");
       }
       // set the new model to our fields

@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Set;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -28,6 +30,8 @@ import com.google.common.collect.Multiset.Entry;
  */
 public final class WordCountBSP extends
     BSP<LongWritable, Text, Text, LongWritable, LongMessage> {
+
+  private static final Log LOG = LogFactory.getLog(WordCountBSP.class);
 
   /**
    * The plan:<br/>
@@ -87,7 +91,7 @@ public final class WordCountBSP extends
 
   public static void main(String[] args) throws Exception {
     if (args.length != 2) {
-      System.out.println("Usage: <input paths> <output path>");
+      LOG.fatal("Usage: <input paths> <output path>");
       System.exit(1);
     }
     Configuration conf = new Configuration();

@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.util.FastMath;
 
 import de.jungblut.datastructure.KDTree;
@@ -20,6 +22,8 @@ import de.jungblut.math.dense.DenseDoubleVector;
  * 
  */
 public final class MeanShiftClustering {
+
+  private static final Log LOG = LogFactory.getLog(MeanShiftClustering.class);
 
   private static final double SQRT_2_PI = FastMath.sqrt(2 * Math.PI);
 
@@ -59,9 +63,8 @@ public final class MeanShiftClustering {
       // merge if centers are within the mergeWindow
       merge(centers, mergeWindow);
       if (verbose) {
-        System.out.println("Iteration: " + i
-            + " | Remaining centers converging: " + converged + "/"
-            + centers.size());
+        LOG.info("Iteration: " + i + " | Remaining centers converging: "
+            + converged + "/" + centers.size());
       }
       if (converged == 0) {
         break;
@@ -158,7 +161,7 @@ public final class MeanShiftClustering {
           DoubleVector newCenter = center.divide(added);
           centers.add(newCenter);
           if (verbose && centers.size() % 1000 == 0) {
-            System.out.println("#Centers found: " + centers.size());
+            LOG.info("#Centers found: " + centers.size());
           }
         }
       }

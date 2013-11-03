@@ -11,6 +11,10 @@ import jcuda.jcublas.cublasOperation;
 import jcuda.jcublas.cublasPointerMode;
 import jcuda.runtime.JCuda;
 import jcuda.runtime.cudaDeviceProp;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.math.dense.DenseDoubleMatrix;
 
 /**
@@ -26,6 +30,8 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
  * 
  */
 public final class JCUDAMatrixUtils {
+
+  private static final Log LOG = LogFactory.getLog(JCUDAMatrixUtils.class);
 
   public static boolean EXCEPTIONS_ENABLED = false;
   public static boolean CUBLAS2_AVAILABLE = false;
@@ -69,7 +75,7 @@ public final class JCUDAMatrixUtils {
         }
       });
 
-      System.out.println("Using device " + cudaDeviceProp.getName()
+      LOG.info("Using device " + cudaDeviceProp.getName()
           + " with total RAM of "
           + humanReadableByteCount(cudaDeviceProp.totalGlobalMem, false)
           + ". Compute capability: " + cudaDeviceProp.major + "."
@@ -77,7 +83,7 @@ public final class JCUDAMatrixUtils {
 
     } catch (Throwable e) {
       // e.printStackTrace();
-      System.out.println(e.getLocalizedMessage());
+      LOG.error(e.getLocalizedMessage());
     }
   }
 
@@ -216,6 +222,9 @@ public final class JCUDAMatrixUtils {
     return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
+  /*
+   * Simple benchmarking between CPU and GPU.
+   */
   public static void main(String[] args) {
 
     int n = 40000;
@@ -226,14 +235,11 @@ public final class JCUDAMatrixUtils {
     DenseDoubleMatrix b = new DenseDoubleMatrix(k, m, new Random());
     long start = System.currentTimeMillis();
     DenseDoubleMatrix multiplyGPU = multiply(a, b);
-    System.out.println("GPU took: " + (System.currentTimeMillis() - start)
-        / 1000f + "s!");
+    LOG.info("GPU took: " + (System.currentTimeMillis() - start) / 1000f + "s!");
     start = System.currentTimeMillis();
     DenseDoubleMatrix multiplyCPU = (DenseDoubleMatrix) a.multiply(b);
-    System.out.println("CPU took: " + (System.currentTimeMillis() - start)
-        / 1000f + "s!");
-    System.out.println("Matrix difference: "
-        + multiplyCPU.subtract(multiplyGPU).sum());
+    LOG.info("CPU took: " + (System.currentTimeMillis() - start) / 1000f + "s!");
+    LOG.info("Matrix difference: " + multiplyCPU.subtract(multiplyGPU).sum());
   }
 
 }

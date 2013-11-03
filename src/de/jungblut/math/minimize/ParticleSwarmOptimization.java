@@ -10,6 +10,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.tuple.Tuple;
@@ -29,6 +32,9 @@ import de.jungblut.partition.Boundaries.Range;
  * 
  */
 public final class ParticleSwarmOptimization extends AbstractMinimizer {
+
+  private static final Log LOG = LogFactory
+      .getLog(ParticleSwarmOptimization.class);
 
   private final int numParticles;
   private final double alpha;
@@ -103,8 +109,7 @@ public final class ParticleSwarmOptimization extends AbstractMinimizer {
       }
 
       if (verbose) {
-        System.out.print("Iteration " + iteration + " | Cost: " + globalCost
-            + "\r");
+        LOG.info("Iteration " + iteration + " | Cost: " + globalCost + "\r");
         onIterationFinished(iteration, globalCost, globalBestPosition);
       }
     }

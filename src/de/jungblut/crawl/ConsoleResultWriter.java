@@ -2,6 +2,9 @@ package de.jungblut.crawl;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 /**
  * Simple class that outputs to console.
  * 
@@ -11,8 +14,10 @@ import java.io.IOException;
 public class ConsoleResultWriter<T extends FetchResult> extends
     ResultWriterAdapter<T> {
 
+  private static final Log LOG = LogFactory.getLog(ConsoleResultWriter.class);
+
   @Override
   public void write(T result) throws IOException {
-    System.out.println(result);
+    LOG.info(result);
   }
 }

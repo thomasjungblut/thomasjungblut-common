@@ -1,5 +1,8 @@
 package de.jungblut.classification.eval;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.eval.Evaluator.EvaluationResult;
 import de.jungblut.math.DoubleVector;
@@ -21,6 +24,8 @@ import de.jungblut.math.minimize.Minimizer;
  */
 public class EvaluationListener<A extends Classifier> implements
     IterationCompletionListener {
+
+  private static final Log LOG = LogFactory.getLog(EvaluationListener.class);
 
   protected final int numLabels;
   protected final EvaluationSplit split;
@@ -87,7 +92,7 @@ public class EvaluationListener<A extends Classifier> implements
    */
   protected void print(int iteration, double cost,
       EvaluationResult trainEvaluation, EvaluationResult testEvaluation) {
-    System.out.println("Iteration " + iteration + " | Validation accuracy: "
+    LOG.info("Iteration " + iteration + " | Validation accuracy: "
         + testEvaluation.getAccuracy() + " | Training accuracy: "
         + trainEvaluation.getAccuracy());
   }

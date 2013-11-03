@@ -9,6 +9,9 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.ClassifierFactory;
@@ -26,6 +29,8 @@ import de.jungblut.partition.Boundaries.Range;
  * 
  */
 public final class Voter<A extends Classifier> extends AbstractClassifier {
+
+  private static final Log LOG = LogFactory.getLog(Voter.class);
 
   public static enum CombiningType {
     MAJORITY, AVERAGE, PROBABILITY
@@ -82,8 +87,8 @@ public final class Voter<A extends Classifier> extends AbstractClassifier {
       for (int i = 0; i < classifier.length; i++) {
         completionService.take();
         if (verbose) {
-          System.out.println("Finished with training classifier " + (i + 1)
-              + " of " + classifier.length);
+          LOG.info("Finished with training classifier " + (i + 1) + " of "
+              + classifier.length);
         }
 
       }
@@ -93,7 +98,7 @@ public final class Voter<A extends Classifier> extends AbstractClassifier {
       pool.shutdownNow();
     }
     if (verbose) {
-      System.out.println("Successfully finished training!");
+      LOG.info("Successfully finished training!");
     }
 
   }
@@ -238,8 +243,8 @@ public final class Voter<A extends Classifier> extends AbstractClassifier {
     splitRanges[classifier.length] = features.length - 1;
 
     if (verbose) {
-      System.out.println("Computed split ranges for 0-" + features.length
-          + ": " + Arrays.toString(splitRanges) + "\n");
+      LOG.info("Computed split ranges for 0-" + features.length + ": "
+          + Arrays.toString(splitRanges) + "\n");
     }
 
     for (int i = 0; i < classifier.length; i++) {

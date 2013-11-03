@@ -2,6 +2,8 @@ package de.jungblut.nlp.mr;
 
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -26,6 +28,8 @@ import de.jungblut.nlp.Tokenizer;
  * 
  */
 public class WordCountJob {
+
+  private static final Log LOG = LogFactory.getLog(WordCountJob.class);
 
   public static final String MIN_WORD_COUNT_KEY = "min.word.count";
 
@@ -109,7 +113,7 @@ public class WordCountJob {
 
   public static void main(String[] args) throws Exception {
     if (args.length != 2) {
-      System.out.println("Usage: <Comma separated input paths> <Output path>");
+      LOG.fatal("Usage: <Comma separated input paths> <Output path>");
       System.exit(1);
     }
     Configuration conf = new Configuration();

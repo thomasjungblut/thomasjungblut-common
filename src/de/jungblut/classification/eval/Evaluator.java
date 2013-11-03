@@ -11,6 +11,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -29,6 +32,8 @@ import de.jungblut.partition.Boundaries.Range;
  * 
  */
 public final class Evaluator {
+
+  private static final Log LOG = LogFactory.getLog(Evaluator.class);
 
   private Evaluator() {
     throw new IllegalAccessError();
@@ -143,19 +148,23 @@ public final class Evaluator {
     }
 
     public void print() {
-      System.out.println("Number of labels: " + getNumLabels());
-      System.out.println("Trainingset size: " + getTrainSize());
-      System.out.println("Testset size: " + getTestSize());
-      System.out.println("Correctly classified: " + getCorrect());
-      System.out.println("Accuracy: " + getAccuracy());
+      print(LOG);
+    }
+
+    public void print(Log log) {
+      log.info("Number of labels: " + getNumLabels());
+      log.info("Trainingset size: " + getTrainSize());
+      log.info("Testset size: " + getTestSize());
+      log.info("Correctly classified: " + getCorrect());
+      log.info("Accuracy: " + getAccuracy());
       if (isBinary()) {
-        System.out.println("TP: " + truePositive);
-        System.out.println("FP: " + falsePositive);
-        System.out.println("TN: " + trueNegative);
-        System.out.println("FN: " + falseNegative);
-        System.out.println("Precision: " + getPrecision());
-        System.out.println("Recall: " + getRecall());
-        System.out.println("F1 Score: " + getF1Score());
+        log.info("TP: " + truePositive);
+        log.info("FP: " + falsePositive);
+        log.info("TN: " + trueNegative);
+        log.info("FN: " + falseNegative);
+        log.info("Precision: " + getPrecision());
+        log.info("Recall: " + getRecall());
+        log.info("F1 Score: " + getF1Score());
       } else {
         printConfusionMatrix();
       }
@@ -410,8 +419,7 @@ public final class Evaluator {
     splitRanges[numFolds - 1] = splitRanges[numFolds - 1] - 1;
 
     if (verbose) {
-      System.out.println("Computed split ranges: "
-          + Arrays.toString(splitRanges) + "\n");
+      LOG.info("Computed split ranges: " + Arrays.toString(splitRanges) + "\n");
     }
     final ExecutorService pool = Executors.newFixedThreadPool(numThreads,
         new ThreadFactoryBuilder().setDaemon(true).build());
@@ -431,9 +439,9 @@ public final class Evaluator {
         take = completionService.take();
         EvaluationResult foldSplit = take.get();
         if (verbose) {
-          System.out.println("Fold: " + (fold + 1));
+          LOG.info("Fold: " + (fold + 1));
           foldSplit.print();
-          System.out.println();
+          LOG.info("");
         }
         averagedModel.add(foldSplit);
       } catch (InterruptedException e) {

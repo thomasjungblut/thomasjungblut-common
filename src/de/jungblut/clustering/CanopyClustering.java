@@ -5,6 +5,9 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.google.common.base.Preconditions;
 
 import de.jungblut.distance.DistanceMeasurer;
@@ -16,6 +19,7 @@ import de.jungblut.math.DoubleVector;
  * @author thomas.jungblut
  */
 public final class CanopyClustering {
+  private static final Log LOG = LogFactory.getLog(CanopyClustering.class);
 
   /**
    * Creates a list of canopies. Make sure that t1 > t2!
@@ -64,7 +68,7 @@ public final class CanopyClustering {
         canopy = canopy.divide(assigned);
       }
       canopyList.add(canopy);
-      System.out.println(points.size()
+      LOG.info(points.size()
           + " vectors remaining to cluster | Found canopies: "
           + canopyList.size() + " | Took "
           + (System.currentTimeMillis() - start) + "ms!");

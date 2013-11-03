@@ -1,5 +1,8 @@
 package de.jungblut.math.minimize;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.math.DoubleVector;
 
 /**
@@ -56,6 +59,8 @@ import de.jungblut.math.DoubleVector;
  * BTW "fmincg" stands for Function minimize nonlinear conjugate gradient
  */
 public final class Fmincg extends AbstractMinimizer {
+
+  private static final Log LOG = LogFactory.getLog(Fmincg.class);
 
   // extrapolate maximum 3 times the current bracket.
   // this can be set higher for bigger extrapolations
@@ -224,7 +229,7 @@ public final class Fmincg extends AbstractMinimizer {
       if (success == 1) { // if line search succeeded
         f1 = f2;
         if (verbose) {
-          System.out.print("Iteration " + i + " | Cost: " + f1 + "\r");
+          LOG.info("Iteration " + i + " | Cost: " + f1 + "\r");
           onIterationFinished(i, f1, input);
         }
         // Polack-Ribiere direction: s =

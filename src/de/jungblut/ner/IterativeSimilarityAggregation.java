@@ -1,6 +1,10 @@
 package de.jungblut.ner;
 
 import gnu.trove.list.array.TIntArrayList;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.distance.CosineDistance;
 import de.jungblut.distance.DistanceMeasurer;
@@ -20,6 +24,9 @@ import de.jungblut.math.tuple.Tuple;
  * 
  */
 public final class IterativeSimilarityAggregation {
+
+  private static final Log LOG = LogFactory
+      .getLog(IterativeSimilarityAggregation.class);
 
   private final double alpha;
   // similarity between the term nodes are defined by the similarity of their
@@ -80,7 +87,7 @@ public final class IterativeSimilarityAggregation {
       if (find >= 0) {
         list.add(find);
       } else {
-        System.out.println("Seed token \"" + token
+        LOG.info("Seed token \"" + token
             + "\" could not be found in the term list!");
       }
     }
@@ -122,7 +129,7 @@ public final class IterativeSimilarityAggregation {
       }
 
       if (verbose) {
-        System.out.println(iteration + " | Top ranked item size: "
+        LOG.info(iteration + " | Top ranked item size: "
             + topRankedItems.length);
       }
 

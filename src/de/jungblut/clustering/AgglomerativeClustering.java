@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.math.DoubleVector;
 
@@ -38,6 +41,9 @@ import de.jungblut.math.DoubleVector;
  * 
  */
 public final class AgglomerativeClustering {
+
+  private static final Log LOG = LogFactory
+      .getLog(AgglomerativeClustering.class);
 
   /**
    * Starts the clustering process.
@@ -119,8 +125,8 @@ public final class AgglomerativeClustering {
         }
       }
       if (verbose) {
-        System.out.println(iteration + " | Current level contains "
-            + nextLevel.size() + " elements.");
+        LOG.info(iteration + " | Current level contains " + nextLevel.size()
+            + " elements.");
       }
       levels.add(nextLevel);
       currentLevel = nextLevel;

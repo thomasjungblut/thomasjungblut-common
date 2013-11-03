@@ -17,6 +17,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
@@ -39,6 +41,8 @@ import org.apache.hadoop.util.ReflectionUtils;
 @SuppressWarnings("rawtypes")
 public final class SortedFile<M extends WritableComparable> implements
     IndexedSortable, Closeable {
+
+  private static final Log LOG = LogFactory.getLog(SortedFile.class);
 
   private static final float SPILL_TRIGGER_BUFFER_FILL_PERCENTAGE = 0.9f;
   private static final IndexedSorter SORTER = new QuickSort();
@@ -229,9 +233,8 @@ public final class SortedFile<M extends WritableComparable> implements
     }
     if (mergeFiles) {
       try {
-        System.out.println("Starting"
-            + (intermediateMerge ? " intermediate" : "") + " merge of "
-            + files.size() + " files.");
+        LOG.info("Starting" + (intermediateMerge ? " intermediate" : "")
+            + " merge of " + files.size() + " files.");
         Merger.<M> merge(msgClass, intermediateMerge, new File(
             destinationFileName), files);
       } finally {

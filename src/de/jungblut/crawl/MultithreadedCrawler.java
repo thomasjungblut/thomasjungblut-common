@@ -14,6 +14,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
 
@@ -34,6 +37,8 @@ import de.jungblut.crawl.extraction.OutlinkExtractor;
  */
 public final class MultithreadedCrawler<T extends FetchResult> implements
     Crawler<T> {
+
+  private static final Log LOG = LogFactory.getLog(MultithreadedCrawler.class);
 
   private static final int THREAD_POOL_SIZE = 32;
   private static final int BATCH_SIZE = 10;
@@ -98,7 +103,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
 
     long appStart = System.currentTimeMillis();
 
-    System.out.println("Num sites to fetch " + fetches);
+    LOG.info("Num sites to fetch " + fetches);
 
     int currentRunningThreads = 0;
     // seed our to crawl set with the start url
@@ -160,8 +165,8 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
     persister.stop();
     persisterThread.join();
     threadPool.shutdownNow();
-    System.out.println("Took overall time of "
-        + (System.currentTimeMillis() - appStart) / 1000 + "s.");
+    LOG.info("Took overall time of " + (System.currentTimeMillis() - appStart)
+        / 1000 + "s.");
   }
 
   public static void main(String[] args) throws InterruptedException,

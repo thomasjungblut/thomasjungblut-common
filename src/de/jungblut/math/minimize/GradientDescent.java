@@ -2,6 +2,9 @@ package de.jungblut.math.minimize;
 
 import java.util.Arrays;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 import com.google.common.base.Preconditions;
 
 import de.jungblut.math.DoubleVector;
@@ -16,6 +19,8 @@ import de.jungblut.math.DoubleVector;
  * 
  */
 public final class GradientDescent extends AbstractMinimizer {
+
+  private static final Log LOG = LogFactory.getLog(GradientDescent.class);
 
   private static final int COST_HISTORY = 3;
 
@@ -181,7 +186,7 @@ public final class GradientDescent extends AbstractMinimizer {
     for (int iteration = 0; iteration < maxIterations; iteration++) {
       CostGradientTuple evaluateCost = f.evaluateCost(theta);
       if (verbose) {
-        System.out.print("Iteration " + iteration + " | Cost: "
+        LOG.info("Iteration " + iteration + " | Cost: "
             + evaluateCost.getCost() + "\r");
       }
       shiftLeft(lastCosts);
@@ -211,8 +216,7 @@ public final class GradientDescent extends AbstractMinimizer {
             alpha -= (alpha * boldIncreasePercentage);
           }
           if (verbose) {
-            System.out.print("Iteration " + iteration + " | Alpha: " + alpha
-                + "\n");
+            LOG.info("Iteration " + iteration + " | Alpha: " + alpha + "\n");
           }
         }
         lastGradient = gradient;

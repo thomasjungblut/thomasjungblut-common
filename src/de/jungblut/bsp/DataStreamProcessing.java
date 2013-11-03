@@ -5,6 +5,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hama.HamaConfiguration;
 import org.apache.hama.bsp.BSP;
@@ -25,6 +27,8 @@ import twitter4j.TwitterFactory;
  */
 public class DataStreamProcessing extends
     BSP<NullWritable, NullWritable, NullWritable, NullWritable, LongMessage> {
+
+  private static final Log LOG = LogFactory.getLog(DataStreamProcessing.class);
 
   private Twitter twitter;
   private String userName;
@@ -65,8 +69,8 @@ public class DataStreamProcessing extends
           List<Status> statuses = twitter.getUserTimeline(userName);
           for (Status s : statuses) {
             if (alreadyProcessedStatusses.add(s)) {
-              System.out.println("Got new status from: "
-                  + s.getUser().getName() + " with message " + s.getText());
+              LOG.info("Got new status from: " + s.getUser().getName()
+                  + " with message " + s.getText());
               // we distribute messages to the other peers for
               // processing via user id partitioning
               // so a task gets all messages for a user
@@ -94,7 +98,7 @@ public class DataStreamProcessing extends
         bspPeer.sync();
         LongMessage message;
         while ((message = bspPeer.getCurrentMessage()) != null) {
-          System.out.println("Got work in form of text: " + message.getData()
+          LOG.info("Got work in form of text: " + message.getData()
               + " for the userid: " + message.getTag());
         }
       }
