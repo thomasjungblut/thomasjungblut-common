@@ -6,7 +6,7 @@ import org.junit.Test;
 
 import de.jungblut.distance.CosineDistance;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.dense.SingleEntryDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
 public class SparseKNearestNeighboursTest {
@@ -18,8 +18,8 @@ public class SparseKNearestNeighboursTest {
         new CosineDistance());
 
     // we seperate stuff in two dimensions each
-    DoubleVector left = new DenseDoubleVector(new double[] { 0d });
-    DoubleVector right = new DenseDoubleVector(new double[] { 1d });
+    DoubleVector left = new SingleEntryDoubleVector(0d);
+    DoubleVector right = new SingleEntryDoubleVector(1d);
     DoubleVector v1 = new SparseDoubleVector(4);
     v1.set(0, 1d);
     v1.set(1, 1d);

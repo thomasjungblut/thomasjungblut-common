@@ -145,13 +145,6 @@ public final class MultinomialNaiveBayes extends AbstractClassifier {
     }
   }
 
-  /**
-   * Returns the maximum likely class.
-   */
-  public int classify(DoubleVector document) {
-    return getProbabilityDistribution(document).maxIndex();
-  }
-
   @Override
   public DoubleVector predict(DoubleVector features) {
     return getProbabilityDistribution(features);

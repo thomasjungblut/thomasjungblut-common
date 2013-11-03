@@ -97,6 +97,7 @@ public class MathUtilsTest {
         { 2, 4, 5, 25 }, { 5, 25, 1, 1 }, { 7, 49, 25, 625 } });
     DenseDoubleMatrix polys = MathUtils.createPolynomials(mat, 2);
     assertEquals(polys.subtract(expected).sum(), 0, 1E-5);
+    assertEquals(mat, MathUtils.createPolynomials(mat, 1));
   }
 
   @Test

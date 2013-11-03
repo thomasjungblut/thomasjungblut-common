@@ -6,6 +6,7 @@ import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.dense.SingleEntryDoubleVector;
 
 /**
  * K nearest neighbour classification algorithm that is seeded with a "database"
@@ -52,10 +53,19 @@ public abstract class AbstractKNearestNeighbours extends AbstractClassifier {
       outcomeHistogram.set(classIndex, outcomeHistogram.get(classIndex) + 1);
     }
     if (numOutcomes == 2) {
-      return new DenseDoubleVector(new double[] { outcomeHistogram.maxIndex() });
+      return new SingleEntryDoubleVector(outcomeHistogram.maxIndex());
     } else {
       return outcomeHistogram;
     }
+  }
+
+  @Override
+  public DoubleVector predictProbability(DoubleVector features) {
+    DoubleVector prediction = predict(features);
+    if (numOutcomes != 2) {
+      prediction = prediction.divide(prediction.sum());
+    }
+    return prediction;
   }
 
   /**
