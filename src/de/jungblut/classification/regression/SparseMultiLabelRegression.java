@@ -26,7 +26,7 @@ public final class SparseMultiLabelRegression {
 
   private static final SigmoidActivationFunction SIGMOID = new SigmoidActivationFunction();
   private static final HammingLossFunction LOSS = new HammingLossFunction(0.5);
-  private static final Random RANDOM = new Random();
+  private Random random = new Random();
 
   private final double alpha;
   private final int epochs;
@@ -158,6 +158,10 @@ public final class SparseMultiLabelRegression {
     return SIGMOID.apply(weights.multiplyVectorColumn(vec));
   }
 
+  void setRandom(Random random) {
+    this.random = random;
+  }
+
   private void initWeights(
       Iterable<Tuple<DoubleVector, DoubleVector>> dataStream, DoubleMatrix theta) {
     for (Tuple<DoubleVector, DoubleVector> tuple : dataStream) {
@@ -171,7 +175,7 @@ public final class SparseMultiLabelRegression {
             .iterateNonZero();
         while (outcomeIterator.hasNext()) {
           DoubleVectorElement out = outcomeIterator.next();
-          theta.set(feat.getIndex(), out.getIndex(), RANDOM.nextDouble());
+          theta.set(feat.getIndex(), out.getIndex(), random.nextDouble());
         }
       }
     }

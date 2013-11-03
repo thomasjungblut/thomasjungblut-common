@@ -3,6 +3,7 @@ package de.jungblut.classification.regression;
 import static org.junit.Assert.assertEquals;
 
 import java.util.ArrayList;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -19,6 +20,7 @@ public class SparseMultiLabelRegressionTest {
     ArrayList<Tuple<DoubleVector, DoubleVector>> data = getData();
     SparseMultiLabelRegression reg = new SparseMultiLabelRegression(5, 0.1, 5,
         5);
+    reg.setRandom(new Random(0));
     reg.train(data);
 
     double loss = 0d;
@@ -44,6 +46,7 @@ public class SparseMultiLabelRegressionTest {
     ArrayList<Tuple<DoubleVector, DoubleVector>> data = getData();
     SparseMultiLabelRegression reg = new SparseMultiLabelRegression(5, 0.1, 5,
         5).setLambda(0.8);
+    reg.setRandom(new Random(0));
     reg.train(data);
 
     double loss = 0d;
