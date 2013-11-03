@@ -1,8 +1,7 @@
 package de.jungblut.classification.knn;
 
+import java.util.Iterator;
 import java.util.List;
-
-import com.google.common.base.Preconditions;
 
 import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
@@ -12,7 +11,8 @@ import de.jungblut.math.DoubleVector;
  * K nearest neighbour classification algorithm that is seeded with a "database"
  * of known examples and predicts based on the k-nearest neighbours majority
  * vote for a class. A KD tree is used internally to speedup the searches, thus
- * the distance metric is restricted to the EuclidianDistance.
+ * the distance metric is restricted to the EuclidianDistance. <br/>
+ * TODO maybe we can add a sampling facility for larger data.
  * 
  */
 public final class KNearestNeighbours extends AbstractKNearestNeighbours {
@@ -32,16 +32,16 @@ public final class KNearestNeighbours extends AbstractKNearestNeighbours {
   }
 
   @Override
-  public void train(DoubleVector[] features, DoubleVector[] outcome) {
-    Preconditions.checkArgument(features.length == outcome.length,
-        "Features and outcome length didn't match: " + features.length + "!="
-            + outcome.length);
-    Preconditions.checkArgument(features.length > 0,
-        "You need at least a single item in your classifier!");
+  public void train(Iterable<DoubleVector> features,
+      Iterable<DoubleVector> outcome) {
 
-    for (int i = 0; i < features.length; i++) {
-      tree.add(features[i], outcome[i]);
+    Iterator<DoubleVector> featIterator = features.iterator();
+    Iterator<DoubleVector> outIterator = outcome.iterator();
+
+    while (featIterator.hasNext()) {
+      tree.add(featIterator.next(), outIterator.next());
     }
+
   }
 
   @Override

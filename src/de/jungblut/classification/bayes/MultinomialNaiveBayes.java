@@ -7,14 +7,14 @@ import java.util.Iterator;
 
 import org.apache.commons.math3.util.FastMath;
 
-import com.google.common.base.Preconditions;
-
 import de.jungblut.classification.AbstractClassifier;
+import de.jungblut.datastructure.Iterables;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleRowMatrix;
+import de.jungblut.math.tuple.Tuple;
 import de.jungblut.writable.MatrixWritable;
 import de.jungblut.writable.VectorWritable;
 
@@ -33,12 +33,22 @@ public final class MultinomialNaiveBayes extends AbstractClassifier {
   private static final double LOW_PROBABILITY = FastMath.log(1e-8);
 
   private DoubleMatrix probabilityMatrix;
-  private DoubleVector classProbability;
+  private DoubleVector classPriorProbability;
+
+  private boolean verbose;
 
   /**
    * Default constructor to construct this classifier.
    */
   public MultinomialNaiveBayes() {
+  }
+
+  /**
+   * Pass true if this classifier should output some progress information to
+   * STDOUT.
+   */
+  public MultinomialNaiveBayes(boolean verbose) {
+    this.verbose = verbose;
   }
 
   /**
@@ -52,68 +62,86 @@ public final class MultinomialNaiveBayes extends AbstractClassifier {
       DoubleVector classProbability) {
     super();
     this.probabilityMatrix = probabilityMatrix;
-    this.classProbability = classProbability;
+    this.classPriorProbability = classProbability;
   }
 
   @Override
-  public void train(DoubleVector[] features, DoubleVector[] outcome) {
-    Preconditions.checkArgument(features.length > 0,
-        "Features must contain at least a single item!");
-    Preconditions.checkArgument(features.length == outcome.length,
-        "There must be an equal amount of features and prediction outcomes!");
-    int numDistinctClasses = outcome[0].getDimension();
+  public void train(Iterable<DoubleVector> features,
+      Iterable<DoubleVector> outcome) {
+
+    Iterator<DoubleVector> featureIterator = features.iterator();
+    Iterator<DoubleVector> outcomeIterator = outcome.iterator();
+    Tuple<DoubleVector, DoubleVector> first = Iterables.consumeNext(
+        featureIterator, outcomeIterator);
+
+    int numDistinctClasses = first.getSecond().getDimension();
     // respect the binary case
     numDistinctClasses = numDistinctClasses == 1 ? 2 : numDistinctClasses;
     // sparse row representations, so every class has the features as a hashset
     // of values. This gives good compression for many class problems.
-    probabilityMatrix = new SparseDoubleRowMatrix(numDistinctClasses,
-        features[0].getDimension());
+    probabilityMatrix = new SparseDoubleRowMatrix(numDistinctClasses, first
+        .getFirst().getDimension());
 
     int[] tokenPerClass = new int[numDistinctClasses];
     int[] numDocumentsPerClass = new int[numDistinctClasses];
 
     // init the probability with the document length = word count for each token
-    for (int columnIndex = 0; columnIndex < features.length; columnIndex++) {
-      final DoubleVector document = features[columnIndex];
-      int predictedClass = outcome[columnIndex].maxIndex();
-      if (numDistinctClasses == 2) {
-        predictedClass = (int) outcome[columnIndex].get(0);
-      }
-      tokenPerClass[predictedClass] += document.getLength();
-      numDocumentsPerClass[predictedClass]++;
-
-      Iterator<DoubleVectorElement> iterateNonZero = document.iterateNonZero();
-      while (iterateNonZero.hasNext()) {
-        DoubleVectorElement next = iterateNonZero.next();
-        double currentCount = probabilityMatrix.get(predictedClass,
-            next.getIndex());
-        probabilityMatrix.set(predictedClass, next.getIndex(), currentCount
-            + next.getValue());
-      }
+    // observe our first example, then loop until we have observed everything
+    observe(first.getFirst(), first.getSecond(), numDistinctClasses,
+        tokenPerClass, numDocumentsPerClass);
+    int numDocumentsSeen = 1;
+    while ((first = Iterables.consumeNext(featureIterator, outcomeIterator)) != null) {
+      observe(first.getFirst(), first.getSecond(), numDistinctClasses,
+          tokenPerClass, numDocumentsPerClass);
+      numDocumentsSeen++;
     }
 
     // know we know the token distribution per class, we can calculate the
     // probability. It is intended for them to be negative in some cases
     for (int row = 0; row < numDistinctClasses; row++) {
-      for (int tokenColumn = 0; tokenColumn < probabilityMatrix
-          .getColumnCount(); tokenColumn++) {
-        double currentWordCount = probabilityMatrix.get(row, tokenColumn);
-        // don't care about not occuring words, we honor them with a very small
-        // probability later on.
-        if (currentWordCount != 0) {
-          double logProbability = FastMath.log(currentWordCount)
-              - FastMath.log(tokenPerClass[row]
-                  + probabilityMatrix.getColumnCount() - 1);
-          probabilityMatrix.set(row, tokenColumn, logProbability);
-        }
+      // we can quite efficiently iterate over the non-zero row vectors now
+      DoubleVector rowVector = probabilityMatrix.getRowVector(row);
+      // don't care about not occuring words, we honor them with a very small
+      // probability later on when predicting, here we save a lot space.
+      Iterator<DoubleVectorElement> iterateNonZero = rowVector.iterateNonZero();
+      double normalizer = FastMath.log(tokenPerClass[row]
+          + probabilityMatrix.getColumnCount() - 1);
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
+        double currentWordCount = next.getValue();
+        double logProbability = FastMath.log(currentWordCount) - normalizer;
+        probabilityMatrix.set(row, next.getIndex(), logProbability);
+      }
+      if (verbose) {
+        System.out
+            .println("Computed " + row + " / " + numDistinctClasses + "!");
       }
     }
 
-    classProbability = new DenseDoubleVector(numDistinctClasses);
+    classPriorProbability = new DenseDoubleVector(numDistinctClasses);
     for (int i = 0; i < numDistinctClasses; i++) {
       double prior = FastMath.log(numDocumentsPerClass[i])
-          - FastMath.log(features.length);
-      classProbability.set(i, prior);
+          - FastMath.log(numDocumentsSeen);
+      classPriorProbability.set(i, prior);
+    }
+  }
+
+  private void observe(DoubleVector document, DoubleVector outcome,
+      int numDistinctClasses, int[] tokenPerClass, int[] numDocumentsPerClass) {
+    int predictedClass = outcome.maxIndex();
+    if (numDistinctClasses == 2) {
+      predictedClass = (int) outcome.get(0);
+    }
+    tokenPerClass[predictedClass] += document.getLength();
+    numDocumentsPerClass[predictedClass]++;
+
+    Iterator<DoubleVectorElement> iterateNonZero = document.iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
+      double currentCount = probabilityMatrix.get(predictedClass,
+          next.getIndex());
+      probabilityMatrix.set(predictedClass, next.getIndex(), currentCount
+          + next.getValue());
     }
   }
 
@@ -147,7 +175,7 @@ public final class MultinomialNaiveBayes extends AbstractClassifier {
 
   private DenseDoubleVector getProbabilityDistribution(DoubleVector document) {
 
-    int numClasses = classProbability.getLength();
+    int numClasses = classPriorProbability.getLength();
     DenseDoubleVector distribution = new DenseDoubleVector(numClasses);
     // loop through all classes and get the max probable one
     for (int i = 0; i < numClasses; i++) {
@@ -161,7 +189,7 @@ public final class MultinomialNaiveBayes extends AbstractClassifier {
     for (int i = 0; i < numClasses; i++) {
       double probability = distribution.get(i);
       double normalizedProbability = FastMath.exp(probability - maxProbability
-          + classProbability.get(i));
+          + classPriorProbability.get(i));
       distribution.set(i, normalizedProbability);
       probabilitySum += normalizedProbability;
     }
@@ -176,7 +204,7 @@ public final class MultinomialNaiveBayes extends AbstractClassifier {
    * @return the internal prior class probability.
    */
   DoubleVector getClassProbability() {
-    return this.classProbability;
+    return this.classPriorProbability;
   }
 
   /**
@@ -203,7 +231,7 @@ public final class MultinomialNaiveBayes extends AbstractClassifier {
   public static void serialize(MultinomialNaiveBayes model, DataOutput out)
       throws IOException {
     new MatrixWritable(model.probabilityMatrix).write(out);
-    VectorWritable.writeVector(model.classProbability, out);
+    VectorWritable.writeVector(model.classPriorProbability, out);
   }
 
 }

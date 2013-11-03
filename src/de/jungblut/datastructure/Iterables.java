@@ -9,7 +9,11 @@ import de.jungblut.math.tuple.Tuple;
  * 
  * @author thomas.jungblut
  */
-public abstract class Iterables {
+public final class Iterables {
+
+  private Iterables() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * @return a new iterable that returns the given iterator.

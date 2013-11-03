@@ -1,30 +1,30 @@
 package de.jungblut.classification.knn;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import gnu.trove.map.hash.TIntObjectHashMap;
 
-import com.google.common.base.Preconditions;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 import de.jungblut.datastructure.DistanceResult;
 import de.jungblut.datastructure.InvertedIndex;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.named.KeyedDoubleVector;
 
 /**
  * K nearest neighbour classification algorithm that is seeded with a "database"
  * of known examples and predicts based on the k-nearest neighbours majority
  * vote for a class. An Inverted Index is used internally to speedup the
- * searches.
+ * searches.<br/>
+ * TODO maybe we can add a sampling facility for larger data.
  * 
  */
 public final class SparseKNearestNeighbours extends AbstractKNearestNeighbours {
 
   private final InvertedIndex<DoubleVector, Integer> index;
-  private final Map<DoubleVector, DoubleVector> featureOutcomeMap = new HashMap<>();
+  private final TIntObjectHashMap<DoubleVector> featureOutcomeMap = new TIntObjectHashMap<>();
 
   /**
    * Constructs a new knn classifier.
@@ -41,16 +41,20 @@ public final class SparseKNearestNeighbours extends AbstractKNearestNeighbours {
   }
 
   @Override
-  public void train(DoubleVector[] features, DoubleVector[] outcome) {
-    Preconditions.checkArgument(features.length == outcome.length,
-        "Features and outcome length didn't match: " + features.length + "!="
-            + outcome.length);
-    Preconditions.checkArgument(features.length > 0,
-        "You need at least a single item in your classifier!");
-    index.build(Arrays.asList(features));
-    for (int i = 0; i < features.length; i++) {
-      featureOutcomeMap.put(features[i], outcome[i]);
+  public void train(Iterable<DoubleVector> features,
+      Iterable<DoubleVector> outcome) {
+
+    List<DoubleVector> featureList = new ArrayList<>();
+    Iterator<DoubleVector> featIterator = features.iterator();
+    Iterator<DoubleVector> outIterator = outcome.iterator();
+
+    int id = 0;
+    while (featIterator.hasNext()) {
+      featureList.add(new KeyedDoubleVector(id, featIterator.next()));
+      featureOutcomeMap.put(id, outIterator.next());
+      id++;
     }
+    index.build(featureList);
   }
 
   @Override
@@ -61,8 +65,9 @@ public final class SparseKNearestNeighbours extends AbstractKNearestNeighbours {
         Double.MAX_VALUE);
     // now we need to join the features with its outcome
     for (DistanceResult<DoubleVector> res : result) {
+      KeyedDoubleVector resValue = (KeyedDoubleVector) res.get();
       neighbours.add(new VectorDistanceTuple<>(res.get(), featureOutcomeMap
-          .get(res.get()), res.getDistance()));
+          .get(resValue.getKey()), res.getDistance()));
     }
     return neighbours;
   }
