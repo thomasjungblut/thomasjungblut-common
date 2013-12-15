@@ -148,7 +148,18 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
 
   @Override
   public final CostGradientTuple evaluateCost(DoubleVector input) {
-
+    // single batch case, take the low overhead route
+    if (batches.size() == 1) {
+      CallableMiniBatch batch = new CallableMiniBatch(batches.get(0), input);
+      try {
+        return batch.call();
+      } catch (Exception e) {
+        e.printStackTrace();
+        // return null so minimizers should fast-fail
+        return null;
+      }
+    }
+    // multiple batches
     ExecutorCompletionService<CostGradientTuple> completionService = new ExecutorCompletionService<>(
         pool);
 
@@ -181,13 +192,9 @@ public abstract class AbstractMiniBatchCostFunction implements CostFunction {
       // return null so minimizers should fast-fail
       return null;
     }
-    if (submittedBatches != 1) {
-      // just return an average over the batches
-      return new CostGradientTuple(costSum / submittedBatches,
-          gradientSum.divide(submittedBatches));
-    } else {
-      return new CostGradientTuple(costSum, gradientSum);
-    }
+    // just return an average over the batches
+    return new CostGradientTuple(costSum / submittedBatches,
+        gradientSum.divide(submittedBatches));
   }
 
   /**

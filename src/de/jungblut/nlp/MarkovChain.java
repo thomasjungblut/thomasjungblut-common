@@ -70,7 +70,8 @@ public final class MarkovChain {
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement columnElement = iterateNonZero.next();
         int columnIndex = columnElement.getIndex();
-        double probability = FastMath.log(columnElement.getValue() / sum);
+        double probability = FastMath.log(columnElement.getValue())
+            - FastMath.log(sum);
         transitionProbabilities.set(rowIndex, columnIndex, probability);
       }
     }
