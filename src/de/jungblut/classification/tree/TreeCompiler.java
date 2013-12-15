@@ -79,11 +79,11 @@ public final class TreeCompiler implements Opcodes {
     // add the constructor
     {
       MethodVisitor mv = cw.visitMethod(ACC_PUBLIC, "<init>", "()"
-          + Type.VOID_TYPE.getReturnType(), null, null);
+          + Type.VOID_TYPE.getDescriptor(), null, null);
       mv.visitVarInsn(ALOAD, 0);
       mv.visitMethodInsn(INVOKESPECIAL,
           Type.getInternalName(AbstractTreeNode.class), "<init>", "()"
-              + Type.VOID_TYPE.getReturnType());
+              + Type.VOID_TYPE.getDescriptor());
       mv.visitInsn(RETURN);
       mv.visitMaxs(1, 1);
       mv.visitEnd();

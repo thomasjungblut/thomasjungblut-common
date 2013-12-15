@@ -133,7 +133,7 @@ public class TfIdfCalculatorJob {
     conf.setLong(NUMBER_OF_DOCUMENTS_KEY, numberOfDocuments);
     conf.setLong(NUMBER_OF_TOKENS_KEY, numberOfTokens);
 
-    Job job = new Job(conf, "TF-IDF Calculator");
+    Job job = Job.getInstance(conf, "TF-IDF Calculator");
 
     job.setInputFormatClass(SequenceFileInputFormat.class);
     job.setOutputFormatClass(SequenceFileOutputFormat.class);

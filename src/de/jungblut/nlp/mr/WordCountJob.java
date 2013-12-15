@@ -134,7 +134,7 @@ public class WordCountJob {
    */
   public static Job createJob(String in, String out, Configuration conf)
       throws IOException {
-    Job job = new Job(conf, "Token Frequency Calculator");
+    Job job = Job.getInstance(conf, "Token Frequency Calculator");
 
     job.setInputFormatClass(TextInputFormat.class);
     job.setOutputFormatClass(TextOutputFormat.class);
@@ -152,5 +152,4 @@ public class WordCountJob {
     job.setNumReduceTasks(1);
     return job;
   }
-
 }

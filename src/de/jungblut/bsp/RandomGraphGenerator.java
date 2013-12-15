@@ -208,7 +208,7 @@ public class RandomGraphGenerator {
     conf.setInt("hama.num.vertices", Integer.parseInt(args[0]));
     conf.setInt("hama.num.partitions", Integer.parseInt(args[2]));
     conf.setInt("number.edges", Integer.parseInt(args[1]));
-    Job job = new Job(conf);
+    Job job = Job.getInstance(conf);
 
     Path generated = new Path(new Path(args[3]).getParent(), "generated");
     FileOutputFormat.setOutputPath(job, generated);
@@ -223,7 +223,7 @@ public class RandomGraphGenerator {
 
     job.waitForCompletion(true);
     conf.setInt("max.id", Integer.valueOf(args[0]));
-    job = new Job(conf);
+    job = Job.getInstance(conf);
 
     FileOutputFormat.setOutputPath(job, new Path(args[3]));
     FileSystem.get(conf).delete(new Path(args[3]), true);

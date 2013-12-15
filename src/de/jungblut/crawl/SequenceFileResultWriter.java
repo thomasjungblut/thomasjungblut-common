@@ -26,8 +26,10 @@ public class SequenceFileResultWriter<T extends FetchResult> implements
     FileSystem fs = FileSystem.get(conf);
     Path outputPath = getOutputPath();
     fs.delete(outputPath, true);
-    writer = new SequenceFile.Writer(fs, conf, outputPath, Text.class,
-        Text.class);
+    writer = SequenceFile.createWriter(conf,
+        SequenceFile.Writer.file(outputPath),
+        SequenceFile.Writer.keyClass(Text.class),
+        SequenceFile.Writer.valueClass(Text.class));
   }
 
   @Override

@@ -216,7 +216,7 @@ public class WordCorpusFrequencyJob {
   public static Job createJob(String in, String dictOut, String out,
       Configuration conf) throws IOException {
     conf.set(DICT_OUT_PATH_KEY, dictOut);
-    Job job = new Job(conf, "Token Document Frequency Calculator");
+    Job job = Job.getInstance(conf, "Token Document Frequency Calculator");
 
     job.setInputFormatClass(TextInputFormat.class);
     job.setOutputFormatClass(SequenceFileOutputFormat.class);

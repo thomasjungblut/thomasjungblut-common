@@ -6,7 +6,6 @@ this is my code-sink for mainly java files.
 
 - Datastructures & Algorithms
 - Apache Hadoop
-- Apache Hama
 - Machine learning (clustering, classification, optimization algorithms)
 - [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
 - [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")

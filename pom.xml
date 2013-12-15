@@ -13,9 +13,27 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<hadoop.version>2.2.0</hadoop.version>
+		<hama.version>0.6.3</hama.version>
 	</properties>
 
 	<dependencies>
+		<!-- hadoop -->
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-common</artifactId>
+			<version>${hadoop.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-hdfs</artifactId>
+			<version>${hadoop.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-mapreduce-client-jobclient</artifactId>
+			<version>${hadoop.version}</version>
+		</dependency>
 		<!-- my math library -->
 		<dependency>
 			<groupId>de.jungblut.math</groupId>
@@ -52,14 +70,7 @@
 			<groupId>org.apache.mrunit</groupId>
 			<artifactId>mrunit</artifactId>
 			<version>1.0.0</version>
-			<classifier>hadoop1</classifier>
-			<exclusions>
-				<!-- remove hsqldb as it annoys me -->
-				<exclusion>
-					<groupId>hsqldb</groupId>
-					<artifactId>hsqldb</artifactId>
-				</exclusion>
-			</exclusions>
+			<classifier>hadoop2</classifier>
 		</dependency>
 		<dependency>
 			<groupId>net.sf.trove4j</groupId>
@@ -145,21 +156,6 @@
 			<groupId>de.l3s.boilerpipe</groupId>
 			<artifactId>boilerpipe</artifactId>
 			<version>1.1.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hadoop</groupId>
-			<artifactId>hadoop-core</artifactId>
-			<version>1.0.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hama</groupId>
-			<artifactId>hama-core</artifactId>
-			<version>0.6.0</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.hama</groupId>
-			<artifactId>hama-graph</artifactId>
-			<version>0.6.0</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-logging</groupId>
