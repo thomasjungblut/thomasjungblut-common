@@ -229,7 +229,7 @@ public final class Fmincg extends AbstractMinimizer {
       if (success == 1) { // if line search succeeded
         f1 = f2;
         if (verbose) {
-          LOG.info("Iteration " + i + " | Cost: " + f1 + "\r");
+          LOG.info("Iteration " + i + " | Cost: " + f1);
           onIterationFinished(i, f1, input);
         }
         // Polack-Ribiere direction: s =

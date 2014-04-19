@@ -109,7 +109,7 @@ public final class ParticleSwarmOptimization extends AbstractMinimizer {
       }
 
       if (verbose) {
-        LOG.info("Iteration " + iteration + " | Cost: " + globalCost + "\r");
+        LOG.info("Iteration " + iteration + " | Cost: " + globalCost);
         onIterationFinished(iteration, globalCost, globalBestPosition);
       }
     }

@@ -187,7 +187,7 @@ public final class GradientDescent extends AbstractMinimizer {
       CostGradientTuple evaluateCost = f.evaluateCost(theta);
       if (verbose) {
         LOG.info("Iteration " + iteration + " | Cost: "
-            + evaluateCost.getCost() + "\r");
+            + evaluateCost.getCost());
       }
       shiftLeft(lastCosts);
       lastCosts[lastIndex] = evaluateCost.getCost();
