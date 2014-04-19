@@ -19,7 +19,6 @@ import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multiset.Entry;
-import com.google.common.hash.Hashing;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
@@ -37,10 +36,6 @@ import de.jungblut.math.sparse.SparseDoubleVector;
 public final class VectorizerUtils {
 
   public static final String OUT_OF_VOCABULARY = "@__OOV__@";
-
-  // use constant hashing seeds
-  private static final com.google.common.hash.HashFunction MURMUR = Hashing
-      .murmur3_128(1337);
 
   /**
    * Builds a sorted dictionary of tokens from a list of (tokenized) documents.
@@ -385,17 +380,20 @@ public final class VectorizerUtils {
    * 
    * @param inputFeature the (usually) sparse feature vector.
    * @param n the target dimension of the vector.
+   * @param hashFunction the hashfunction to use. For example:
+   *          Hashing.murmur3_128().
    * @return the new n-dimensional dense vector vectorized via the hashing
    *         trick.
    */
-  public static DoubleVector hashVectorize(DoubleVector inputFeature, int n) {
+  public static DoubleVector hashVectorize(DoubleVector inputFeature, int n,
+      com.google.common.hash.HashFunction hashFunction) {
     DoubleVector dense = new DenseDoubleVector(n);
     Iterator<DoubleVectorElement> iterateNonZero = inputFeature
         .iterateNonZero();
     while (iterateNonZero.hasNext()) {
       DoubleVectorElement next = iterateNonZero.next();
       // get the hash as int
-      int hash = MURMUR.hashInt(next.getIndex()).asInt();
+      int hash = hashFunction.hashInt(next.getIndex()).asInt();
       // abs it, as we don't want to have negative index access
       int bucket = Math.abs(hash) % n;
       // subtract 1 in case of negative values, else increment.
@@ -413,13 +411,16 @@ public final class VectorizerUtils {
    * 
    * @param seedVector the (usually) sparse feature vector.
    * @param n the target dimension of the vector.
+   * @param hashFunction the hashfunction to use. For example:
+   *          Hashing.murmur3_128().
    * @return the new n-dimensional dense vectors vectorized via the hashing
    *         trick.
    */
-  public static DoubleVector[] hashVectorize(DoubleVector[] features, int n) {
+  public static DoubleVector[] hashVectorize(DoubleVector[] features, int n,
+      com.google.common.hash.HashFunction hashFunction) {
     DoubleVector[] lst = new DoubleVector[features.length];
     for (int i = 0; i < features.length; i++) {
-      lst[i] = hashVectorize(features[i], n);
+      lst[i] = hashVectorize(features[i], n, hashFunction);
     }
     return lst;
   }
