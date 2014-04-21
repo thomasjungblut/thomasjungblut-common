@@ -13,6 +13,7 @@ import com.google.common.collect.HashMultimap;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.dense.SingleEntryDoubleVector;
 
 /**
  * Dataset vectorizer for the mushroom dataset. Parses the nominal values into
@@ -81,12 +82,12 @@ public final class MushroomReader {
     }
 
     DoubleVector[] features = new DoubleVector[list.size()];
-    DenseDoubleVector[] outcome = new DenseDoubleVector[list.size()];
+    DoubleVector[] outcome = new DoubleVector[list.size()];
     for (int i = 0; i < list.size(); i++) {
       DoubleVector doubleVector = list.get(i);
       features[i] = doubleVector.slice(doubleVector.getLength() - 1);
-      outcome[i] = (DenseDoubleVector) doubleVector.slice(
-          doubleVector.getLength() - 1, doubleVector.getLength());
+      outcome[i] = new SingleEntryDoubleVector(doubleVector.get(doubleVector
+          .getLength() - 1));
     }
 
     return new Dataset(features, outcome);

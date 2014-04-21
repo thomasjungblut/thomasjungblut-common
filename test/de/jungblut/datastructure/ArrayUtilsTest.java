@@ -12,12 +12,35 @@ import org.junit.Test;
 
 public class ArrayUtilsTest {
 
+  @Test(expected = IllegalAccessException.class)
+  public void testAccessError() throws Exception {
+    ArrayUtils.class.newInstance();
+  }
+
   @Test
   public void testFind() {
     String[] terms = new String[] { "A", "B", "C", "D", "E", "F" };
     int find = ArrayUtils.find(terms, "C");
     assertEquals(2, find);
     find = ArrayUtils.find(terms, "lol");
+    assertEquals(-1, find);
+  }
+
+  @Test
+  public void testFindInt() {
+    int[] terms = new int[] { 1, 2, -3, 6, -1, 3 };
+    int find = ArrayUtils.find(terms, -3);
+    assertEquals(2, find);
+    find = ArrayUtils.find(terms, 8);
+    assertEquals(-1, find);
+  }
+
+  @Test
+  public void testFindLong() {
+    long[] terms = new long[] { 1, 2, -3, 6, -1, 3 };
+    int find = ArrayUtils.find(terms, -3);
+    assertEquals(2, find);
+    find = ArrayUtils.find(terms, 8);
     assertEquals(-1, find);
   }
 
@@ -29,6 +52,93 @@ public class ArrayUtilsTest {
     for (int i = 0; i < 11; i++) {
       assertEquals(i, concat[i]);
     }
+  }
+
+  @Test
+  public void testConcatString() {
+    String[] arr1 = new String[] { "a", "b", "c", "d", "e", "f" };
+    String[] arr2 = new String[] { "g", "h", "i", "j", "k" };
+    String[] concat = ArrayUtils.concat(arr1, arr2);
+    for (int i = 0; i < 11; i++) {
+      String expected = ((char) (i + 'a')) + "";
+      assertEquals(expected, concat[i]);
+    }
+  }
+
+  @Test
+  public void testCopyInt() {
+    int[] toCopy = new int[] { 1, 2, 3 };
+    int[] copy = ArrayUtils.copy(toCopy);
+    for (int i = 0; i < 3; i++) {
+      assertEquals(i + 1, copy[i]);
+    }
+  }
+
+  @Test
+  public void testCopyLong() {
+    long[] toCopy = new long[] { 1, 2, 3 };
+    long[] copy = ArrayUtils.copy(toCopy);
+    for (int i = 0; i < 3; i++) {
+      assertEquals(i + 1, copy[i]);
+    }
+  }
+
+  @Test
+  public void testCopyDouble() {
+    double[] toCopy = new double[] { 1, 2, 3 };
+    double[] copy = ArrayUtils.copy(toCopy);
+    for (int i = 0; i < 3; i++) {
+      assertEquals(i + 1, copy[i], 1e-6);
+    }
+  }
+
+  @Test
+  public void testCopyString() {
+    String[] toCopy = new String[] { "a", "b", "c" };
+    String[] copy = ArrayUtils.copy(toCopy);
+    for (int i = 0; i < 3; i++) {
+      assertEquals(toCopy[i], copy[i]);
+    }
+  }
+
+  @Test
+  public void testSwapInt() {
+    int[] arr = new int[] { 1, 2 };
+    ArrayUtils.swap(arr, 0, 1);
+    assertEquals(2, arr[0]);
+    assertEquals(1, arr[1]);
+  }
+
+  @Test
+  public void testSwapLong() {
+    long[] arr = new long[] { 1, 2 };
+    ArrayUtils.swap(arr, 0, 1);
+    assertEquals(2, arr[0]);
+    assertEquals(1, arr[1]);
+  }
+
+  @Test
+  public void testSwapDouble() {
+    double[] arr = new double[] { 1, 2 };
+    ArrayUtils.swap(arr, 0, 1);
+    assertEquals(2, arr[0], 1e-6);
+    assertEquals(1, arr[1], 1e-6);
+  }
+
+  @Test
+  public void testSwapBoolean() {
+    boolean[] arr = new boolean[] { false, true };
+    ArrayUtils.swap(arr, 0, 1);
+    assertEquals(true, arr[0]);
+    assertEquals(false, arr[1]);
+  }
+
+  @Test
+  public void testSwapString() {
+    String[] arr = new String[] { "a", "b" };
+    ArrayUtils.swap(arr, 0, 1);
+    assertEquals("b", arr[0]);
+    assertEquals("a", arr[1]);
   }
 
   @Test
@@ -97,7 +207,7 @@ public class ArrayUtilsTest {
   }
 
   @Test
-  public void testFromUpTo() {
+  public void testFromUpToInt() {
     int[] fromUpTo = ArrayUtils.fromUpTo(0, 100, 1);
     for (int i = 0; i < 100; i++) {
       assertEquals(i, fromUpTo[i]);
@@ -108,7 +218,34 @@ public class ArrayUtilsTest {
     for (int i = 0; i < 100; i += 2) {
       assertEquals(i, fromUpTo[index++]);
     }
+  }
 
+  @Test
+  public void testFromUpToLong() {
+    long[] fromUpTo = ArrayUtils.fromUpTo(0l, 100l, 1l);
+    for (int i = 0; i < 100; i++) {
+      assertEquals(i, fromUpTo[i]);
+    }
+
+    fromUpTo = ArrayUtils.fromUpTo(0l, 100l, 2l);
+    int index = 0;
+    for (int i = 0; i < 100; i += 2) {
+      assertEquals(i, fromUpTo[index++]);
+    }
+  }
+
+  @Test
+  public void testFromUpToDouble() {
+    double[] fromUpTo = ArrayUtils.fromUpTo(0d, 100d, 1d);
+    for (int i = 0; i < 100; i++) {
+      assertEquals(i, fromUpTo[i], 1e-6);
+    }
+
+    fromUpTo = ArrayUtils.fromUpTo(0d, 100d, 2d);
+    int index = 0;
+    for (int i = 0; i < 100; i += 2) {
+      assertEquals(i, fromUpTo[index++], 1e-6);
+    }
   }
 
   @Test
@@ -139,6 +276,36 @@ public class ArrayUtilsTest {
 
     for (int i = 0; i < 99; i++) {
       assertTrue(randomInput[i] <= randomInput[i + 1]);
+    }
+  }
+
+  @Test
+  public void testQuickSortLong() {
+    long[] randomInput = getRandomInputLongs(100);
+    ArrayUtils.quickSort(randomInput);
+
+    for (int i = 0; i < 99; i++) {
+      assertTrue(randomInput[i] <= randomInput[i + 1]);
+    }
+  }
+
+  @Test
+  public void testQuickSortDouble() {
+    double[] randomInput = getRandomInputDoubles(100);
+    ArrayUtils.quickSort(randomInput);
+
+    for (int i = 0; i < 99; i++) {
+      assertTrue(randomInput[i] <= randomInput[i + 1]);
+    }
+  }
+
+  @Test
+  public void testQuickSortStrings() {
+    String[] input = new String[] { "b", "a", "z", "c", "y", "d", "x", "zz",
+        "asd" };
+    ArrayUtils.quickSort(input);
+    for (int i = 0; i < input.length - 1; i++) {
+      assertTrue(input[i].compareTo(input[i + 1]) <= 0);
     }
   }
 
@@ -220,12 +387,57 @@ public class ArrayUtilsTest {
   }
 
   @Test
-  public void testMax() {
+  public void testMinInt() {
+    int[] arr = new int[] { 0, 1, 2, -3, 5 };
+    int min = ArrayUtils.min(arr);
+    assertEquals(-3, min);
+    min = ArrayUtils.minIndex(arr);
+    assertEquals(3, min);
+  }
+
+  @Test
+  public void testMinLong() {
+    long[] arr = new long[] { 0, 1, 2, -3, 5 };
+    long min = ArrayUtils.min(arr);
+    assertEquals(-3, min);
+    min = ArrayUtils.minIndex(arr);
+    assertEquals(3, min);
+  }
+
+  @Test
+  public void testMinDouble() {
+    double[] arr = new double[] { 0, 1, 2, -3, 5 };
+    double min = ArrayUtils.min(arr);
+    assertEquals(-3, min, 1e-6);
+    min = ArrayUtils.minIndex(arr);
+    assertEquals(3, min, 1e-6);
+  }
+
+  @Test
+  public void testMaxInt() {
     int[] arr = new int[] { 0, 1, 2, 3, 5 };
     int max = ArrayUtils.max(arr);
     assertEquals(5, max);
     max = ArrayUtils.maxIndex(arr);
     assertEquals(4, max);
+  }
+
+  @Test
+  public void testMaxLong() {
+    long[] arr = new long[] { 0, 1, 2, 3, 5 };
+    long max = ArrayUtils.max(arr);
+    assertEquals(5, max);
+    max = ArrayUtils.maxIndex(arr);
+    assertEquals(4, max);
+  }
+
+  @Test
+  public void testMaxDouble() {
+    double[] arr = new double[] { 0, 1, 2, 3, 5 };
+    double max = ArrayUtils.max(arr);
+    assertEquals(5, max, 1e-6);
+    max = ArrayUtils.maxIndex(arr);
+    assertEquals(4, max, 1e-6);
   }
 
   @Test
@@ -287,13 +499,91 @@ public class ArrayUtilsTest {
   }
 
   @Test
-  public void testIsValidIndex() {
+  public void testIsValidIndexInt() {
     int[] dummy = new int[3];
     assertTrue(ArrayUtils.isValidIndex(dummy, 0));
     assertTrue(ArrayUtils.isValidIndex(dummy, 1));
     assertTrue(ArrayUtils.isValidIndex(dummy, 2));
     assertFalse(ArrayUtils.isValidIndex(dummy, -1));
     assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
+  @Test
+  public void testIsValidIndexLong() {
+    long[] dummy = new long[3];
+    assertTrue(ArrayUtils.isValidIndex(dummy, 0));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 1));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 2));
+    assertFalse(ArrayUtils.isValidIndex(dummy, -1));
+    assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
+  @Test
+  public void testIsValidIndexFloat() {
+    float[] dummy = new float[3];
+    assertTrue(ArrayUtils.isValidIndex(dummy, 0));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 1));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 2));
+    assertFalse(ArrayUtils.isValidIndex(dummy, -1));
+    assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
+  @Test
+  public void testIsValidIndexDouble() {
+    double[] dummy = new double[3];
+    assertTrue(ArrayUtils.isValidIndex(dummy, 0));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 1));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 2));
+    assertFalse(ArrayUtils.isValidIndex(dummy, -1));
+    assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
+  @Test
+  public void testIsValidIndexByte() {
+    byte[] dummy = new byte[3];
+    assertTrue(ArrayUtils.isValidIndex(dummy, 0));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 1));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 2));
+    assertFalse(ArrayUtils.isValidIndex(dummy, -1));
+    assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
+  @Test
+  public void testIsValidIndexBoolean() {
+    boolean[] dummy = new boolean[3];
+    assertTrue(ArrayUtils.isValidIndex(dummy, 0));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 1));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 2));
+    assertFalse(ArrayUtils.isValidIndex(dummy, -1));
+    assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
+  @Test
+  public void testIsValidIndexString() {
+    String[] dummy = new String[3];
+    assertTrue(ArrayUtils.isValidIndex(dummy, 0));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 1));
+    assertTrue(ArrayUtils.isValidIndex(dummy, 2));
+    assertFalse(ArrayUtils.isValidIndex(dummy, -1));
+    assertFalse(ArrayUtils.isValidIndex(dummy, 4));
+  }
+
+  static long[] getRandomInputLongs(int n) {
+    Random r = new Random();
+    long[] arr = new long[n];
+    for (int i = 0; i < n; i++) {
+      arr[i] = r.nextLong();
+    }
+    return arr;
+  }
+
+  static double[] getRandomInputDoubles(int n) {
+    Random r = new Random();
+    double[] arr = new double[n];
+    for (int i = 0; i < n; i++) {
+      arr[i] = r.nextDouble();
+    }
+    return arr;
   }
 
   static int[] getRandomInput(int n, int k) {

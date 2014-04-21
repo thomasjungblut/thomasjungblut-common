@@ -21,6 +21,11 @@ public class EvaluatorTest {
 
   private static final double EPS = 1e-3;
 
+  @Test(expected = IllegalAccessException.class)
+  public void testAccessError() throws Exception {
+    Evaluator.class.newInstance();
+  }
+
   @Test
   public void testEvaluationResult() throws Exception {
 
@@ -36,10 +41,14 @@ public class EvaluatorTest {
     assertEquals(82, evaluation.getTestSize());
     assertEquals(82, evaluation.getCorrect());
     assertEquals(1d, evaluation.getAccuracy(), EPS);
-    assertEquals(45, evaluation.truePositive);
-    assertEquals(0, evaluation.falseNegative);
-    assertEquals(0, evaluation.falsePositive);
-    assertEquals(37, evaluation.trueNegative);
+    assertEquals(45, evaluation.getTruePositive());
+    assertEquals(0, evaluation.getFalseNegative());
+    assertEquals(0, evaluation.getFalsePositive());
+    assertEquals(37, evaluation.getTrueNegative());
+    assertEquals(1d, evaluation.getAUC(), EPS);
+    assertEquals(1d, evaluation.getRecall(), EPS);
+    assertEquals(1d, evaluation.getPrecision(), EPS);
+    assertEquals(1d, evaluation.getF1Score(), EPS);
   }
 
   @Test

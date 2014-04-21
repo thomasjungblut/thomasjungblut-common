@@ -15,21 +15,51 @@ public class ArrayJoinerTest {
   public ExpectedException exception = ExpectedException.none();
 
   @Test
-  public void testCharJoin() throws Exception {
-
+  public void testIntJoin() throws Exception {
     String out = ArrayJoiner.on(',').join(new int[] { 1, 2, 3, 4 });
-
     assertEquals("1,2,3,4", out);
+  }
 
+  @Test
+  public void testCharJoin() throws Exception {
+    String out = ArrayJoiner.on(',').join(new char[] { '1', '2', '3', '4' });
+    assertEquals("1,2,3,4", out);
+  }
+
+  @Test
+  public void testByteJoin() throws Exception {
+    String out = ArrayJoiner.on(',').join(new byte[] { 1, 2, 3, 4 });
+    assertEquals("1,2,3,4", out);
+  }
+
+  @Test
+  public void testShortJoin() throws Exception {
+    String out = ArrayJoiner.on(',').join(new short[] { 1, 2, 3, 4 });
+    assertEquals("1,2,3,4", out);
+  }
+
+  @Test
+  public void testLongJoin() throws Exception {
+    String out = ArrayJoiner.on(',').join(new long[] { 1, 2, 3, 4 });
+    assertEquals("1,2,3,4", out);
+  }
+
+  @Test
+  public void testFloatJoin() throws Exception {
+    String out = ArrayJoiner.on(',').join(new float[] { 1, 2, 3, 4 });
+    assertEquals("1.0,2.0,3.0,4.0", out);
+  }
+
+  @Test
+  public void testDoubleJoin() throws Exception {
+    String out = ArrayJoiner.on(',').join(new double[] { 1, 2, 3, 4 });
+    assertEquals("1.0,2.0,3.0,4.0", out);
   }
 
   @Test
   public void testStringJoin() throws Exception {
-
     String out = ArrayJoiner.on(",.").join(new int[] { 1, 2, 3, 4 });
-
     assertEquals("1,.2,.3,.4", out);
-
   }
 
   @Test

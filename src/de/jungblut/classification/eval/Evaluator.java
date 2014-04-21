@@ -352,6 +352,11 @@ public final class Evaluator {
           } else {
             result.falsePositive++; // "Unexpected result"
           }
+        } else {
+          throw new IllegalArgumentException(
+              "Outcome class was neither 0 or 1. Was: " + outcomeClass
+                  + "; the supplied outcome value was: "
+                  + testOutcome[i].get(0));
         }
 
         // we can compute the AUC from the outcomePredictedPairs we gathered

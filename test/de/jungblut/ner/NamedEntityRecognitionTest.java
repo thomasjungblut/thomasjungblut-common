@@ -1,7 +1,6 @@
 package de.jungblut.ner;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
@@ -13,8 +12,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import de.jungblut.classification.eval.Evaluator;
-import de.jungblut.classification.eval.Evaluator.EvaluationResult;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.minimize.Fmincg;
@@ -66,9 +63,8 @@ public class NamedEntityRecognitionTest {
     Tuple<DoubleVector[], DoubleVector[]> vectorizeAdditionals = fact
         .vectorizeAdditionals(testWords, testLabels);
     DoubleVector[] testFeatures = vectorizeAdditionals.getFirst();
-    DoubleVector[] testOutcome = vectorizeAdditionals.getSecond();
 
-    MaxEntMarkovModel model = new MaxEntMarkovModel(new Fmincg(), 100, false);
+    MaxEntMarkovModel model = new MaxEntMarkovModel(new Fmincg(), 100, true);
     DoubleVector[] vectorizeEachLabel = fact.vectorizeEachLabel(testWords);
     UnrollableDoubleVector[] unrollableTestFeatures = new UnrollableDoubleVector[testFeatures.length];
     for (int i = 0; i < testFeatures.length; i++) {
@@ -82,12 +78,7 @@ public class NamedEntityRecognitionTest {
       }
     }
 
-    EvaluationResult res = Evaluator.evaluateSplit(model, 2, 0.5d, features,
-        outcome, unrollableTestFeatures, testOutcome);
-
-    assertTrue(res.getPrecision() > 0.95);
-    assertTrue(res.getAccuracy() > 0.95);
-
+    model.train(features, outcome);
     DoubleMatrix predict = model.predict(
         new SparseDoubleRowMatrix(testFeatures), new SparseDoubleRowMatrix(
             vectorizeEachLabel));

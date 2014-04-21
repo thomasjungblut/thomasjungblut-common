@@ -88,27 +88,6 @@ public final class ArrayUtils {
   }
 
   /**
-   * Finds the occurence of the given key in the given array. Linear search,
-   * worst case running time is O(n).
-   * 
-   * @param array the array to search.
-   * @param key the key to search.
-   * @return -1 if the key wasn't found nowhere, or the index where the key was
-   *         found.
-   */
-  public static int find(double[] array, double key) {
-    Preconditions.checkNotNull(key);
-    int position = -1;
-    for (int i = 0; i < array.length; i++) {
-      if (array[i] == key) {
-        position = i;
-        break;
-      }
-    }
-    return position;
-  }
-
-  /**
    * Concats the given arrays.
    * 
    * @param arrays the arrays to pass.
@@ -190,7 +169,7 @@ public final class ArrayUtils {
   }
 
   /**
-   * Swaps the given indices x with y in the array.
+   * Swaps the given index x with y in the array.
    */
   public static void swap(int[] array, int x, int y) {
     int tmpIndex = array[x];
@@ -199,7 +178,7 @@ public final class ArrayUtils {
   }
 
   /**
-   * Swaps the given indices x with y in the array.
+   * Swaps the given index x with y in the array.
    */
   public static void swap(long[] array, int x, int y) {
     long tmpIndex = array[x];
@@ -208,7 +187,7 @@ public final class ArrayUtils {
   }
 
   /**
-   * Swaps the given indices x with y in the array.
+   * Swaps the given index x with y in the array.
    */
   public static void swap(double[] array, int x, int y) {
     double tmpIndex = array[x];
@@ -217,7 +196,7 @@ public final class ArrayUtils {
   }
 
   /**
-   * Swaps the given indices x with y in the array.
+   * Swaps the given index x with y in the array.
    */
   public static void swap(boolean[] array, int x, int y) {
     boolean tmpIndex = array[x];
@@ -226,7 +205,7 @@ public final class ArrayUtils {
   }
 
   /**
-   * Swaps the given indices x with y in the array.
+   * Swaps the given index x with y in the array.
    */
   public static <T> void swap(T[] array, int x, int y) {
     T tmpIndex = array[x];
@@ -1062,6 +1041,8 @@ public final class ArrayUtils {
    * @return the min value in this array,
    */
   public static int min(int[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int minValue = array[0];
     for (int aVector : array) {
       if (minValue > aVector) {
@@ -1075,6 +1056,8 @@ public final class ArrayUtils {
    * @return the minimum index in this array,
    */
   public static int minIndex(int[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int minIndex = 0;
     for (int i = 0; i < array.length; i++) {
       if (array[minIndex] > array[i]) {
@@ -1088,6 +1071,8 @@ public final class ArrayUtils {
    * @return the minimum value in this array,
    */
   public static long min(long[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     long minValue = array[0];
     for (long aVector : array) {
       if (minValue > aVector) {
@@ -1101,6 +1086,8 @@ public final class ArrayUtils {
    * @return the minimum index in this array,
    */
   public static int minIndex(long[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int minIndex = 0;
     for (int i = 0; i < array.length; i++) {
       if (array[minIndex] > array[i]) {
@@ -1114,6 +1101,8 @@ public final class ArrayUtils {
    * @return the minimum value in this array,
    */
   public static double min(double[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     double minValue = array[0];
     for (double aVector : array) {
       if (minValue > aVector) {
@@ -1127,6 +1116,8 @@ public final class ArrayUtils {
    * @return the minimum index in this array,
    */
   public static int minIndex(double[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int minIndex = 0;
     for (int i = 0; i < array.length; i++) {
       if (array[minIndex] > array[i]) {
@@ -1140,6 +1131,8 @@ public final class ArrayUtils {
    * @return the maximum value in this array,
    */
   public static int max(int[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int maxValue = array[0];
     for (int aVector : array) {
       if (maxValue < aVector) {
@@ -1153,6 +1146,8 @@ public final class ArrayUtils {
    * @return the maximum index in this array,
    */
   public static int maxIndex(int[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int maxIndex = 0;
     for (int i = 0; i < array.length; i++) {
       if (array[maxIndex] < array[i]) {
@@ -1166,6 +1161,8 @@ public final class ArrayUtils {
    * @return the maximum value in this array,
    */
   public static long max(long[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     long maxValue = array[0];
     for (long aVector : array) {
       if (maxValue < aVector) {
@@ -1179,6 +1176,8 @@ public final class ArrayUtils {
    * @return the maximum index in this array,
    */
   public static int maxIndex(long[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int maxIndex = 0;
     for (int i = 0; i < array.length; i++) {
       if (array[maxIndex] < array[i]) {
@@ -1192,6 +1191,8 @@ public final class ArrayUtils {
    * @return the maximum value in this array,
    */
   public static double max(double[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     double maxValue = array[0];
     for (double aVector : array) {
       if (maxValue < aVector) {
@@ -1205,6 +1206,8 @@ public final class ArrayUtils {
    * @return the maximum index in this array,
    */
   public static int maxIndex(double[] array) {
+    Preconditions.checkNotNull(array, "array must not be null");
+    Preconditions.checkArgument(array.length > 0, "array must not be empty");
     int maxIndex = 0;
     for (int i = 0; i < array.length; i++) {
       if (array[maxIndex] < array[i]) {

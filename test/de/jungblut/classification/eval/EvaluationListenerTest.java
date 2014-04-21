@@ -8,9 +8,11 @@ import de.jungblut.classification.ClassifierFactory;
 import de.jungblut.classification.eval.Evaluator.EvaluationResult;
 import de.jungblut.classification.nn.MultilayerPerceptron;
 import de.jungblut.classification.nn.MultilayerPerceptronWeightMapper;
+import de.jungblut.datastructure.ArrayUtils;
+import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.ActivationFunctionSelector;
-import de.jungblut.math.minimize.Fmincg;
+import de.jungblut.math.minimize.GradientDescent;
 import de.jungblut.math.squashing.LogisticErrorFunction;
 import de.jungblut.reader.Dataset;
 import de.jungblut.reader.MushroomReader;
@@ -25,10 +27,14 @@ public class EvaluationListenerTest {
     Dataset dataset = MushroomReader
         .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
 
-    final Fmincg minimizer = new Fmincg();
+    final GradientDescent minimizer = new GradientDescent(0.1, 0);
+    DoubleVector[] subsetFeature = ArrayUtils.subArray(dataset.getFeatures(),
+        10);
+    DoubleVector[] subsetOutcome = ArrayUtils.subArray(dataset.getOutcomes(),
+        10);
 
-    final EvaluationSplit split = EvaluationSplit.create(dataset.getFeatures(),
-        dataset.getOutcomes(), 0.9f, false);
+    final EvaluationSplit split = EvaluationSplit.create(subsetFeature,
+        subsetOutcome, 0.9f, false);
 
     ClassifierFactory<MultilayerPerceptron> factory = new ClassifierFactory<MultilayerPerceptron>() {
       @Override
