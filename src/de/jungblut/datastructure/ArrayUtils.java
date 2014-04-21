@@ -113,6 +113,46 @@ public final class ArrayUtils {
    * @param arrays the arrays to pass.
    * @return a single array where the given arrays content is concatenated.
    */
+  public static long[] concat(long[]... arrays) {
+    int length = 0;
+    for (long[] array1 : arrays)
+      length += array1.length;
+    long[] merged = new long[length];
+    int index = 0;
+    for (long[] array : arrays) {
+      System.arraycopy(array, 0, merged, index, array.length);
+      index += array.length;
+    }
+
+    return merged;
+  }
+
+  /**
+   * Concats the given arrays.
+   * 
+   * @param arrays the arrays to pass.
+   * @return a single array where the given arrays content is concatenated.
+   */
+  public static double[] concat(double[]... arrays) {
+    int length = 0;
+    for (double[] array1 : arrays)
+      length += array1.length;
+    double[] merged = new double[length];
+    int index = 0;
+    for (double[] array : arrays) {
+      System.arraycopy(array, 0, merged, index, array.length);
+      index += array.length;
+    }
+
+    return merged;
+  }
+
+  /**
+   * Concats the given arrays.
+   * 
+   * @param arrays the arrays to pass.
+   * @return a single array where the given arrays content is concatenated.
+   */
   @SuppressWarnings("unchecked")
   public static <T> T[] concat(T[]... arrays) {
     if (arrays.length > 0) {
@@ -1459,4 +1499,5 @@ public final class ArrayUtils {
   public static <T> boolean isValidIndex(T[] array, int index) {
     return index >= 0 && index < array.length;
   }
+
 }
