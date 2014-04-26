@@ -204,6 +204,11 @@ public final class UnrollableDoubleVector implements DoubleVector {
   }
 
   @Override
+  public boolean isSingle() {
+    return this.mainVector.isSingle();
+  }
+
+  @Override
   public boolean isNamed() {
     return this.mainVector.isNamed();
   }

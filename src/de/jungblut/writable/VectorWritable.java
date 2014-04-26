@@ -10,6 +10,7 @@ import org.apache.hadoop.io.WritableComparable;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.dense.SingleEntryDoubleVector;
 import de.jungblut.math.named.NamedDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
@@ -17,12 +18,18 @@ import de.jungblut.math.sparse.SparseDoubleVector;
  * New and updated VectorWritable class that has all the other fancy
  * combinations of vectors that are possible in my math library.<br/>
  * This class is not compatible to the one in the clustering package that has a
- * totally other byte alignment in binary files.
+ * totally different byte alignment in binary files.
  * 
  * @author thomas.jungblut
  * 
  */
 public final class VectorWritable implements WritableComparable<VectorWritable> {
+
+  // TODO if we make them distinct bits, we can add the named vector as an
+  // additional bit instead of an additional byte
+  private static final byte DENSE = 0;
+  private static final byte SPARSE = 1;
+  private static final byte SINGLE = 2;
 
   private DoubleVector vector;
 
@@ -92,9 +99,10 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
 
   public static void writeVector(DoubleVector vector, DataOutput out)
       throws IOException {
-    out.writeBoolean(vector.isSparse());
-    out.writeInt(vector.getLength());
+
     if (vector.isSparse()) {
+      out.writeByte(SPARSE);
+      out.writeInt(vector.getLength());
       out.writeInt(vector.getDimension());
       Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
       while (iterateNonZero.hasNext()) {
@@ -102,11 +110,22 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
         out.writeInt(next.getIndex());
         out.writeDouble(next.getValue());
       }
-    } else {
+    } else if (vector.isSingle()) {
+      // single vectors are also dense, thus we will put it before the dense
+      // condition in order to save 4 bytes for the length encoding
+      out.writeByte(SINGLE);
+      out.writeDouble(vector.get(0));
+    } else if (!vector.isSparse()) {
+      out.writeByte(DENSE);
+      out.writeInt(vector.getLength());
       for (int i = 0; i < vector.getDimension(); i++) {
         out.writeDouble(vector.get(i));
       }
+    } else {
+      throw new IllegalArgumentException("Can't serialize vector of type: "
+          + vector.getClass());
     }
+
     if (vector.isNamed() && vector.getName() != null) {
       out.writeBoolean(true);
       out.writeUTF(vector.getName());
@@ -116,23 +135,35 @@ public final class VectorWritable implements WritableComparable<VectorWritable> 
   }
 
   public static DoubleVector readVector(DataInput in) throws IOException {
-    boolean sparse = in.readBoolean();
-    int length = in.readInt();
+
+    int typeByte = in.readByte();
     DoubleVector vector = null;
-    if (sparse) {
-      int dim = in.readInt();
-      vector = new SparseDoubleVector(dim);
-      for (int i = 0; i < length; i++) {
-        int index = in.readInt();
-        double value = in.readDouble();
-        vector.set(index, value);
-      }
-    } else {
-      vector = new DenseDoubleVector(length);
-      for (int i = 0; i < length; i++) {
-        vector.set(i, in.readDouble());
-      }
+    switch (typeByte) {
+      case SPARSE:
+        int length = in.readInt();
+        int dim = in.readInt();
+        vector = new SparseDoubleVector(dim);
+        for (int i = 0; i < length; i++) {
+          int index = in.readInt();
+          double value = in.readDouble();
+          vector.set(index, value);
+        }
+        break;
+      case DENSE:
+        length = in.readInt();
+        vector = new DenseDoubleVector(length);
+        for (int i = 0; i < length; i++) {
+          vector.set(i, in.readDouble());
+        }
+        break;
+      case SINGLE:
+        vector = new SingleEntryDoubleVector(in.readDouble());
+        break;
+      default:
+        throw new IllegalArgumentException(
+            "Can't deserialize vector of type byte: " + typeByte);
     }
+
     if (in.readBoolean()) {
       vector = new NamedDoubleVector(in.readUTF(), vector);
     }

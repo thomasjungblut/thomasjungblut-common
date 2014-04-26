@@ -13,6 +13,7 @@ import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.dense.SingleEntryDoubleVector;
 import de.jungblut.math.named.NamedDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
@@ -30,6 +31,13 @@ public class VectorWritableTest {
     SparseDoubleVector vec = new SparseDoubleVector(new double[] { 1, 2, 3 });
     DoubleVector check = check(vec);
     assertTrue(check instanceof SparseDoubleVector);
+  }
+
+  @Test
+  public void testSingleSerDe() throws Exception {
+    SingleEntryDoubleVector vec = new SingleEntryDoubleVector(1d);
+    DoubleVector check = check(vec);
+    assertTrue(check instanceof SingleEntryDoubleVector);
   }
 
   @Test
