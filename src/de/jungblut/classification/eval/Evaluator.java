@@ -3,8 +3,6 @@ package de.jungblut.classification.eval;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -23,7 +21,8 @@ import de.jungblut.classification.Classifier;
 import de.jungblut.classification.ClassifierFactory;
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.tuple.Tuple;
+import de.jungblut.math.MathUtils;
+import de.jungblut.math.MathUtils.PredictionOutcomePair;
 import de.jungblut.partition.BlockPartitioner;
 import de.jungblut.partition.Boundaries.Range;
 
@@ -333,12 +332,12 @@ public final class Evaluator {
     result.testSize = testOutcome.length;
     // check the binary case to calculate special metrics
     if (result.isBinary()) {
-      List<Tuple<Integer, Double>> outcomePredictedPairs = new ArrayList<>();
+      List<PredictionOutcomePair> outcomePredictedPairs = new ArrayList<>();
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = ((int) testOutcome[i].get(0));
         DoubleVector predictedVector = classifier.predict(testFeatures[i]);
-        outcomePredictedPairs.add(new Tuple<>(outcomeClass, predictedVector
-            .get(0)));
+        outcomePredictedPairs.add(PredictionOutcomePair.from(outcomeClass,
+            predictedVector.get(0)));
         int prediction = 0;
         if (threshold == null) {
           prediction = classifier.extractPredictedClass(predictedVector);
@@ -366,7 +365,7 @@ public final class Evaluator {
         }
 
         // we can compute the AUC from the outcomePredictedPairs we gathered
-        result.auc = computeAUC(outcomePredictedPairs);
+        result.auc = MathUtils.computeAUC(outcomePredictedPairs);
       }
     } else {
       int[][] confusionMatrix = new int[result.numLabels][result.numLabels];
@@ -381,60 +380,6 @@ public final class Evaluator {
       result.confusionMatrix = confusionMatrix;
     }
     return result;
-  }
-
-  /**
-   * This is actually taken from Kaggle's C# implementation: {@link https
-   * ://www.kaggle.com/c/SemiSupervisedFeatureLearning
-   * /forums/t/919/auc-implementation/6136#post6136}.
-   * 
-   * Package-visible for testing reasons.
-   * 
-   * @param outcomePredictedPairs the list of tuples: class (0 or 1) ->
-   *          predicted value
-   * @return the AUC value.
-   */
-  static double computeAUC(List<Tuple<Integer, Double>> outcomePredictedPairs) {
-
-    // order by the predicted value
-    Collections.sort(outcomePredictedPairs,
-        new Comparator<Tuple<Integer, Double>>() {
-          @Override
-          public int compare(Tuple<Integer, Double> o1,
-              Tuple<Integer, Double> o2) {
-            return Double.compare(o1.getSecond(), o2.getSecond());
-          }
-        });
-    int n = outcomePredictedPairs.size();
-    int numOnes = 0;
-    for (Tuple<Integer, Double> tuple : outcomePredictedPairs) {
-      if (tuple.getFirst() == 1) {
-        numOnes++;
-      }
-    }
-
-    if (numOnes == 0 || numOnes == n) {
-      return 1d;
-    }
-
-    long tp0, tn;
-    long truePos = tp0 = numOnes;
-    long accum = tn = 0;
-    double threshold = outcomePredictedPairs.get(0).getSecond();
-    for (int i = 0; i < n; i++) {
-      double actualValue = outcomePredictedPairs.get(i).getFirst();
-      double predictedValue = outcomePredictedPairs.get(i).getSecond();
-      if (predictedValue != threshold) { // threshold changes
-        threshold = predictedValue;
-        accum += tn * (truePos + tp0); // 2* the area of trapezoid
-        tp0 = truePos;
-        tn = 0;
-      }
-      tn += 1 - actualValue; // x-distance between adjacent points
-      truePos -= actualValue;
-    }
-    accum += tn * (truePos + tp0); // 2 * the area of trapezoid
-    return (double) accum / (2 * numOnes * (n - numOnes));
   }
 
   /**

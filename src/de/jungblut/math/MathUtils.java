@@ -1,6 +1,11 @@
 package de.jungblut.math;
 
+import java.util.Collections;
+import java.util.List;
+
 import org.apache.commons.math3.util.FastMath;
+
+import com.google.common.base.Preconditions;
 
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -224,6 +229,85 @@ public final class MathUtils {
     } else {
       return FastMath.log(input);
     }
+  }
+
+  /**
+   * This is actually taken from Kaggle's C# implementation: {@link https
+   * ://www.kaggle.com/c/SemiSupervisedFeatureLearning
+   * /forums/t/919/auc-implementation/6136#post6136}.
+   * 
+   * @param outcomePredictedPairs the list of PredictionOutcomePair: class (0 or
+   *          1) -> predicted value
+   * @return the AUC value.
+   */
+  public static double computeAUC(
+      List<PredictionOutcomePair> outcomePredictedPairs) {
+
+    // order by the predicted value
+    Collections.sort(outcomePredictedPairs);
+
+    int n = outcomePredictedPairs.size();
+    int numOnes = 0;
+    for (PredictionOutcomePair tuple : outcomePredictedPairs) {
+      if (tuple.getOutcomeClass() == 1) {
+        numOnes++;
+      }
+    }
+
+    if (numOnes == 0 || numOnes == n) {
+      return 1d;
+    }
+
+    long tp0, tn;
+    long truePos = tp0 = numOnes;
+    long accum = tn = 0;
+    double threshold = outcomePredictedPairs.get(0).getPrediction();
+    for (int i = 0; i < n; i++) {
+      double actualValue = outcomePredictedPairs.get(i).getOutcomeClass();
+      double predictedValue = outcomePredictedPairs.get(i).getPrediction();
+      if (predictedValue != threshold) { // threshold changes
+        threshold = predictedValue;
+        accum += tn * (truePos + tp0); // 2* the area of trapezoid
+        tp0 = truePos;
+        tn = 0;
+      }
+      tn += 1 - actualValue; // x-distance between adjacent points
+      truePos -= actualValue;
+    }
+    accum += tn * (truePos + tp0); // 2 * the area of trapezoid
+    return (double) accum / (2 * numOnes * (n - numOnes));
+  }
+
+  public static class PredictionOutcomePair implements
+      Comparable<PredictionOutcomePair> {
+
+    private final int outcomeClass;
+    private final double prediction;
+
+    private PredictionOutcomePair(int outcomeClass, double prediction) {
+      this.outcomeClass = outcomeClass;
+      this.prediction = prediction;
+    }
+
+    public static PredictionOutcomePair from(int outcomeClass, double prediction) {
+      Preconditions.checkArgument(outcomeClass == 0 || outcomeClass == 1,
+          "Outcome class must be 0 or 1! Supplied: " + outcomeClass);
+      return new PredictionOutcomePair(outcomeClass, prediction);
+    }
+
+    @Override
+    public int compareTo(PredictionOutcomePair o) {
+      return Double.compare(prediction, o.prediction);
+    }
+
+    public int getOutcomeClass() {
+      return this.outcomeClass;
+    }
+
+    public double getPrediction() {
+      return this.prediction;
+    }
+
   }
 
 }

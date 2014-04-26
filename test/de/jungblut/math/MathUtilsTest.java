@@ -2,8 +2,13 @@ package de.jungblut.math;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 import org.junit.Test;
 
+import de.jungblut.math.MathUtils.PredictionOutcomePair;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
@@ -126,6 +131,34 @@ public class MathUtilsTest {
 
     numericalGradient = MathUtils.numericalGradient(v, inlineFunction);
     assertSmallDiff(numericalGradient, cost.getGradient());
+  }
+
+  @Test
+  public void testAucComputationAllZeros() throws Exception {
+    List<PredictionOutcomePair> outcomePredictedPairs = generateData(1000, 0.9);
+    double aucValue = MathUtils.computeAUC(outcomePredictedPairs);
+    assertEquals(0.5, aucValue, 1e-6);
+  }
+
+  @Test
+  public void testAucComputationAllOnes() throws Exception {
+    List<PredictionOutcomePair> outcomePredictedPairs = generateData(1000, 0d);
+    double aucValue = MathUtils.computeAUC(outcomePredictedPairs);
+    assertEquals(1, aucValue, 1e-6);
+  }
+
+  public List<PredictionOutcomePair> generateData(int numItems,
+      double negativePercentage) {
+
+    Random rand = new Random();
+    List<PredictionOutcomePair> outcomePredictedPairs = new ArrayList<>(
+        numItems);
+
+    for (int i = 0; i < numItems; i++) {
+      outcomePredictedPairs.add(PredictionOutcomePair.from(
+          rand.nextDouble() < negativePercentage ? 1 : 0, 0d));
+    }
+    return outcomePredictedPairs;
   }
 
   private void assertSmallDiff(DoubleVector v1, DoubleVector v2) {

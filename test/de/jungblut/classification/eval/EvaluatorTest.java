@@ -2,10 +2,7 @@ package de.jungblut.classification.eval;
 
 import static org.junit.Assert.assertEquals;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
 
 import org.junit.Test;
 
@@ -13,7 +10,6 @@ import de.jungblut.classification.ClassifierFactory;
 import de.jungblut.classification.eval.Evaluator.EvaluationResult;
 import de.jungblut.classification.knn.KNearestNeighbours;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.tuple.Tuple;
 import de.jungblut.reader.Dataset;
 import de.jungblut.reader.MushroomReader;
 
@@ -70,34 +66,6 @@ public class EvaluatorTest {
     assertEquals(2, evaluation.getNumLabels());
     assertEquals(true, evaluation.isBinary());
     assertEquals(50, evaluation.getTestSize());
-  }
-
-  @Test
-  public void testAucComputationAllZeros() throws Exception {
-    List<Tuple<Integer, Double>> outcomePredictedPairs = generateData(1000, 0.9);
-    double aucValue = Evaluator.computeAUC(outcomePredictedPairs);
-    assertEquals(0.5, aucValue, 1e-6);
-  }
-
-  @Test
-  public void testAucComputationAllOnes() throws Exception {
-    List<Tuple<Integer, Double>> outcomePredictedPairs = generateData(1000, 0d);
-    double aucValue = Evaluator.computeAUC(outcomePredictedPairs);
-    assertEquals(1, aucValue, 1e-6);
-  }
-
-  public List<Tuple<Integer, Double>> generateData(int numItems,
-      double negativePercentage) {
-
-    Random rand = new Random();
-    List<Tuple<Integer, Double>> outcomePredictedPairs = new ArrayList<>(
-        numItems);
-
-    for (int i = 0; i < numItems; i++) {
-      outcomePredictedPairs.add(new Tuple<>(
-          rand.nextDouble() < negativePercentage ? 1 : 0, 0d));
-    }
-    return outcomePredictedPairs;
   }
 
 }
