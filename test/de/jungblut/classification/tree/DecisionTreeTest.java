@@ -30,15 +30,14 @@ public class DecisionTreeTest {
     DecisionTree tree = DecisionTree.create();
     // nominal features are default here anyway
     EvaluationResult res = Evaluator.evaluateClassifier(tree,
-        mushroom.getFeatures(), mushroom.getOutcomes(), 2, 0.9f, false);
+        mushroom.getFeatures(), mushroom.getOutcomes(), 0.9f, false);
     assertEquals(1d, res.getAccuracy(), 1e-5);
   }
 
   @Test
   public void testIrisNumericalData() {
     DecisionTree tree = DecisionTree.create(FeatureType.allNumerical(4));
-    EvaluationResult res = Evaluator.evaluateSplit(tree, 3, null,
-        irisEvaluationSplit);
+    EvaluationResult res = Evaluator.evaluateSplit(tree, irisEvaluationSplit);
     assertEquals(27, res.getCorrect()); // 27 out of 30 is really good!
     assertEquals(0.9, res.getAccuracy(), 1e-5);
   }
@@ -48,7 +47,7 @@ public class DecisionTreeTest {
     DecisionTree tree = DecisionTree.createCompiledTree();
     // nominal features are default here anyway
     EvaluationResult res = Evaluator.evaluateClassifier(tree,
-        mushroom.getFeatures(), mushroom.getOutcomes(), 2, 0.9f, false);
+        mushroom.getFeatures(), mushroom.getOutcomes(), 0.9f, false);
     assertEquals(1d, res.getAccuracy(), 1e-5);
   }
 
@@ -56,8 +55,7 @@ public class DecisionTreeTest {
   public void testCompiledIrisNumericalData() {
     DecisionTree tree = DecisionTree.createCompiledTree(FeatureType
         .allNumerical(4));
-    EvaluationResult res = Evaluator.evaluateSplit(tree, 3, null,
-        irisEvaluationSplit);
+    EvaluationResult res = Evaluator.evaluateSplit(tree, irisEvaluationSplit);
     assertEquals(27, res.getCorrect());
     assertEquals(0.9, res.getAccuracy(), 1e-5);
   }
@@ -68,9 +66,8 @@ public class DecisionTreeTest {
     // train
     tree.train(mushroom.getFeatures(), mushroom.getOutcomes());
     // uncompiled
-    EvaluationResult res = Evaluator.testClassifier(tree, 2, null,
-        mushroom.getFeatures().length, mushroom.getFeatures(),
-        mushroom.getOutcomes());
+    EvaluationResult res = Evaluator.testClassifier(tree,
+        mushroom.getFeatures(), mushroom.getOutcomes());
     assertEquals(1d, res.getAccuracy(), 1e-5);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     DecisionTree.serialize(tree, new DataOutputStream(baos));
@@ -80,8 +77,7 @@ public class DecisionTreeTest {
 
     // now let's eval on the train set, it should classify everything correct as
     // it overfits the data.
-    res = Evaluator.testClassifier(deserialized, 2, null,
-        mushroom.getFeatures().length, mushroom.getFeatures(),
+    res = Evaluator.testClassifier(deserialized, mushroom.getFeatures(),
         mushroom.getOutcomes());
     assertEquals(1d, res.getAccuracy(), 1e-5);
 
@@ -94,9 +90,8 @@ public class DecisionTreeTest {
     // train
     tree.train(mushroom.getFeatures(), mushroom.getOutcomes());
     // uncompiled
-    EvaluationResult res = Evaluator.testClassifier(tree, 2, null,
-        mushroom.getFeatures().length, mushroom.getFeatures(),
-        mushroom.getOutcomes());
+    EvaluationResult res = Evaluator.testClassifier(tree,
+        mushroom.getFeatures(), mushroom.getOutcomes());
     assertEquals(1d, res.getAccuracy(), 1e-5);
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     DecisionTree.serialize(tree, new DataOutputStream(baos));
@@ -106,8 +101,7 @@ public class DecisionTreeTest {
 
     // now let's eval on the train set, it should classify everything correct as
     // it overfits the data.
-    res = Evaluator.testClassifier(deserialized, 2, null,
-        mushroom.getFeatures().length, mushroom.getFeatures(),
+    res = Evaluator.testClassifier(deserialized, mushroom.getFeatures(),
         mushroom.getOutcomes());
     assertEquals(1d, res.getAccuracy(), 1e-5);
   }

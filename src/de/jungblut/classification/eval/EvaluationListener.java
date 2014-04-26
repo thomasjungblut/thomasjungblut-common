@@ -54,10 +54,8 @@ public class EvaluationListener<A extends Classifier> implements
     if (iteration % runInterval == 0) {
       A classifier = mapper.mapWeights(currentWeights);
       EvaluationResult testEval = Evaluator.testClassifier(classifier,
-          numLabels, null, split.getTrainFeatures().length,
           split.getTestFeatures(), split.getTestOutcome());
       EvaluationResult trainEval = Evaluator.testClassifier(classifier,
-          numLabels, null, split.getTrainFeatures().length,
           split.getTrainFeatures(), split.getTrainOutcome());
       onResult(iteration, cost, trainEval, testEval);
       print(iteration, cost, trainEval, testEval);

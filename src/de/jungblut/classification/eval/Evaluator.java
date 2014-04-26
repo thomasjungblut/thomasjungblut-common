@@ -43,7 +43,7 @@ public final class Evaluator {
   }
 
   public static class EvaluationResult {
-    int numLabels, correct, trainSize, testSize, truePositive, falsePositive,
+    int numLabels, correct, testSize, truePositive, falsePositive,
         trueNegative, falseNegative;
     int[][] confusionMatrix;
     double auc;
@@ -86,10 +86,6 @@ public final class Evaluator {
       return numLabels;
     }
 
-    public int getTrainSize() {
-      return trainSize;
-    }
-
     public int getTestSize() {
       return testSize;
     }
@@ -104,7 +100,6 @@ public final class Evaluator {
 
     public void add(EvaluationResult res) {
       correct += res.correct;
-      trainSize += res.trainSize;
       testSize += res.testSize;
       truePositive += res.truePositive;
       falsePositive += res.falsePositive;
@@ -125,7 +120,6 @@ public final class Evaluator {
     public void average(int pn) {
       final double n = pn;
       correct /= n;
-      trainSize /= n;
       testSize /= n;
       truePositive /= n;
       falsePositive /= n;
@@ -163,7 +157,6 @@ public final class Evaluator {
 
     public void print(Log log) {
       log.info("Number of labels: " + getNumLabels());
-      log.info("Trainingset size: " + getTrainSize());
       log.info("Testset size: " + getTestSize());
       log.info("Correctly classified: " + getCorrect());
       log.info("Accuracy: " + getAccuracy());
@@ -219,8 +212,6 @@ public final class Evaluator {
    * @param classifier the classifier to train and evaluate.
    * @param features the features to split.
    * @param outcome the outcome to split.
-   * @param numLabels the number of labels that are used. (e.G. 2 in binary
-   *          classification).
    * @param splitFraction a value between 0f and 1f that sets the size of the
    *          trainingset. With 1k items, a splitFraction of 0.9f will result in
    *          900 items to train and 100 to evaluate.
@@ -228,10 +219,10 @@ public final class Evaluator {
    * @return a new {@link EvaluationResult}.
    */
   public static EvaluationResult evaluateClassifier(Classifier classifier,
-      DoubleVector[] features, DoubleVector[] outcome, int numLabels,
-      float splitFraction, boolean random) {
-    return evaluateClassifier(classifier, features, outcome, numLabels,
-        splitFraction, random, null);
+      DoubleVector[] features, DoubleVector[] outcome, float splitFraction,
+      boolean random) {
+    return evaluateClassifier(classifier, features, outcome, splitFraction,
+        random, null);
   }
 
   /**
@@ -252,81 +243,96 @@ public final class Evaluator {
    * @return a new {@link EvaluationResult}.
    */
   public static EvaluationResult evaluateClassifier(Classifier classifier,
-      DoubleVector[] features, DoubleVector[] outcome, int numLabels,
-      float splitFraction, boolean random, Double threshold) {
-
-    Preconditions.checkArgument(numLabels > 1,
-        "The number of labels should be greater than 1!");
-
+      DoubleVector[] features, DoubleVector[] outcome, float splitFraction,
+      boolean random, Double threshold) {
     EvaluationSplit split = EvaluationSplit.create(features, outcome,
         splitFraction, random);
-
-    return evaluateSplit(classifier, numLabels, threshold, split);
+    return evaluateSplit(classifier, split, threshold);
   }
 
   /**
    * Evaluates a given train/test split with the given classifier.
    * 
    * @param classifier the classifier to train on the train split.
-   * @param numLabels the number of labels that can be classified.
-   * @param threshold the threshold for predicting a specific class by
-   *          probability (if not provided = null).
    * @param split the {@link EvaluationSplit} that contains the test and train
    *          data.
    * @return a fresh evalation result filled with the evaluated metrics.
    */
   public static EvaluationResult evaluateSplit(Classifier classifier,
-      int numLabels, Double threshold, EvaluationSplit split) {
-    return evaluateSplit(classifier, numLabels, threshold,
-        split.getTrainFeatures(), split.getTrainOutcome(),
-        split.getTestFeatures(), split.getTestOutcome());
+      EvaluationSplit split) {
+    return evaluateSplit(classifier, split.getTrainFeatures(),
+        split.getTrainOutcome(), split.getTestFeatures(),
+        split.getTestOutcome(), null);
   }
 
   /**
    * Evaluates a given train/test split with the given classifier.
    * 
    * @param classifier the classifier to train on the train split.
-   * @param numLabels the number of labels that can be classified.
+   * @param split the {@link EvaluationSplit} that contains the test and train
+   *          data.
    * @param threshold the threshold for predicting a specific class by
    *          probability (if not provided = null).
+   * @return a fresh evalation result filled with the evaluated metrics.
+   */
+  public static EvaluationResult evaluateSplit(Classifier classifier,
+      EvaluationSplit split, Double threshold) {
+    return evaluateSplit(classifier, split.getTrainFeatures(),
+        split.getTrainOutcome(), split.getTestFeatures(),
+        split.getTestOutcome(), threshold);
+  }
+
+  /**
+   * Evaluates a given train/test split with the given classifier.
+   * 
+   * @param classifier the classifier to train on the train split.
    * @param trainFeatures the features to train with.
    * @param trainOutcome the outcomes to train with.
    * @param testFeatures the features to test with.
    * @param testOutcome the outcome to test with.
+   * @param threshold the threshold for predicting a specific class by
+   *          probability (if not provided = null).
    * @return a fresh evalation result filled with the evaluated metrics.
    */
   public static EvaluationResult evaluateSplit(Classifier classifier,
-      int numLabels, Double threshold, DoubleVector[] trainFeatures,
-      DoubleVector[] trainOutcome, DoubleVector[] testFeatures,
-      DoubleVector[] testOutcome) {
+      DoubleVector[] trainFeatures, DoubleVector[] trainOutcome,
+      DoubleVector[] testFeatures, DoubleVector[] testOutcome, Double threshold) {
 
     classifier.train(trainFeatures, trainOutcome);
 
-    return testClassifier(classifier, numLabels, threshold,
-        trainOutcome.length, testFeatures, testOutcome);
+    return testClassifier(classifier, testFeatures, testOutcome, threshold);
   }
 
   /**
    * Tests the given classifier without actually training it.
    * 
    * @param classifier the classifier to evaluate on the test split.
-   * @param numLabels the number of labels that can be classified.
-   * @param threshold the threshold for predicting a specific class by
-   *          probability (if not provided = null).
-   * @param trainingSetSize the size of the training set (just for reference).
    * @param testFeatures the features to test with.
    * @param testOutcome the outcome to test with.
    * @return a fresh evalation result filled with the evaluated metrics.
    */
   public static EvaluationResult testClassifier(Classifier classifier,
-      int numLabels, Double threshold, int trainingSetSize,
       DoubleVector[] testFeatures, DoubleVector[] testOutcome) {
+    return testClassifier(classifier, testFeatures, testOutcome, null);
+  }
+
+  /**
+   * Tests the given classifier without actually training it.
+   * 
+   * @param classifier the classifier to evaluate on the test split.
+   * @param testFeatures the features to test with.
+   * @param testOutcome the outcome to test with.
+   * @param threshold the threshold for predicting a specific class by
+   *          probability (if not provided = null).
+   * @return a fresh evalation result filled with the evaluated metrics.
+   */
+  public static EvaluationResult testClassifier(Classifier classifier,
+      DoubleVector[] testFeatures, DoubleVector[] testOutcome, Double threshold) {
     EvaluationResult result = new EvaluationResult();
-    result.numLabels = numLabels;
+    result.numLabels = Math.max(2, testOutcome[0].getDimension());
     result.testSize = testOutcome.length;
-    result.trainSize = trainingSetSize;
     // check the binary case to calculate special metrics
-    if (numLabels == 2) {
+    if (result.isBinary()) {
       List<Tuple<Integer, Double>> outcomePredictedPairs = new ArrayList<>();
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = ((int) testOutcome[i].get(0));
@@ -363,7 +369,7 @@ public final class Evaluator {
         result.auc = computeAUC(outcomePredictedPairs);
       }
     } else {
-      int[][] confusionMatrix = new int[numLabels][numLabels];
+      int[][] confusionMatrix = new int[result.numLabels][result.numLabels];
       for (int i = 0; i < testFeatures.length; i++) {
         int outcomeClass = testOutcome[i].maxIndex();
         int prediction = classifier.predictedClass(testFeatures[i]);
@@ -505,7 +511,7 @@ public final class Evaluator {
     // build the models fold for fold
     for (int fold = 0; fold < folds; fold++) {
       completionService.submit(new CallableEvaluation<>(fold, splitRanges, m,
-          classifierFactory, features, outcome, numLabels, folds, threshold));
+          classifierFactory, features, outcome, folds, threshold));
     }
 
     // retrieve the results
@@ -583,19 +589,17 @@ public final class Evaluator {
     private final DoubleVector[] features;
     private final DoubleVector[] outcome;
     private final ClassifierFactory<A> classifierFactory;
-    private final int numLabels;
     private final Double threshold;
 
     public CallableEvaluation(int fold, int[] splitRanges, int m,
         ClassifierFactory<A> classifierFactory, DoubleVector[] features,
-        DoubleVector[] outcome, int numLabels, int folds, Double threshold) {
+        DoubleVector[] outcome, int folds, Double threshold) {
       this.fold = fold;
       this.splitRanges = splitRanges;
       this.m = m;
       this.classifierFactory = classifierFactory;
       this.features = features;
       this.outcome = outcome;
-      this.numLabels = numLabels;
       this.threshold = threshold;
     }
 
@@ -616,8 +620,8 @@ public final class Evaluator {
         }
       }
 
-      return evaluateSplit(classifierFactory.newInstance(), numLabels,
-          threshold, featureTrain, outcomeTrain, featureTest, outcomeTest);
+      return evaluateSplit(classifierFactory.newInstance(), featureTrain,
+          outcomeTrain, featureTest, outcomeTest, threshold);
     }
 
   }

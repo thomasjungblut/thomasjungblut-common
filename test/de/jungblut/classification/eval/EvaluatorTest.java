@@ -34,10 +34,9 @@ public class EvaluatorTest {
         .readMushroomDataset("files/mushroom/mushroom_dataset.csv");
     EvaluationResult evaluation = Evaluator.evaluateClassifier(
         new KNearestNeighbours(2, 10), dataset.getFeatures(),
-        dataset.getOutcomes(), 2, 0.99f, false);
+        dataset.getOutcomes(), 0.99f, false);
     assertEquals(2, evaluation.getNumLabels());
     assertEquals(true, evaluation.isBinary());
-    assertEquals(8042, evaluation.getTrainSize());
     assertEquals(82, evaluation.getTestSize());
     assertEquals(82, evaluation.getCorrect());
     assertEquals(1d, evaluation.getAccuracy(), EPS);
@@ -70,7 +69,6 @@ public class EvaluatorTest {
             }, features, outcome, 2, null, false);
     assertEquals(2, evaluation.getNumLabels());
     assertEquals(true, evaluation.isBinary());
-    assertEquals(449, evaluation.getTrainSize());
     assertEquals(50, evaluation.getTestSize());
   }
 

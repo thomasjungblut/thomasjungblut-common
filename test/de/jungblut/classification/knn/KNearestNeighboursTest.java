@@ -24,7 +24,7 @@ public class KNearestNeighboursTest {
 
     KNearestNeighbours knn = new KNearestNeighbours(2, 10);
     EvaluationResult res = Evaluator.evaluateClassifier(knn,
-        mushroom.getFeatures(), mushroom.getOutcomes(), 2, 0.99f, false);
+        mushroom.getFeatures(), mushroom.getOutcomes(), 0.99f, false);
 
     // assert that everything is correct
     assertEquals(1d, res.getAccuracy(), 1e-5);

@@ -65,9 +65,8 @@ public class LogisticRegressionTest {
         false);
     clf.setRandom(new Random(0));
     EvaluationResult eval = Evaluator.evaluateClassifier(clf, features,
-        outcome, 2, 0.9f, false, 0.5d);
+        outcome, 0.9f, false);
     assertEquals(1d, eval.getPrecision(), 1e-4);
     assertEquals(10, eval.getTestSize());
-    assertEquals(90, eval.getTrainSize());
   }
 }
