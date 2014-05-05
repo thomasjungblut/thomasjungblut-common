@@ -23,35 +23,29 @@ import de.jungblut.math.squashing.ErrorFunction;
 public final class MultilayerPerceptronCostFunction extends
     AbstractMiniBatchCostFunction {
 
-  private final double lambda;
-  private final int[] layerSizes;
-  private final int[][] unfoldParameters;
-  private final ActivationFunction[] activations;
-  private final ErrorFunction error;
-  private final TrainingType trainingType;
-  private final double visibleDropoutProbability;
-  private final double hiddenDropoutProbability;
-  private final Random rnd;
+  private final NetworkConfiguration configuration = new NetworkConfiguration();
 
   public MultilayerPerceptronCostFunction(MultilayerPerceptron network,
       DoubleVector[] features, DoubleVector[] outcome) {
     super(features, outcome, network.getMiniBatchSize(), network
         .getBatchParallelism(), network.isStochastic());
-    this.lambda = network.getLambda();
-    this.layerSizes = network.getLayers();
-    this.unfoldParameters = computeUnfoldParameters(layerSizes);
-    this.activations = network.getActivations();
-    this.error = network.getErrorFunction();
-    this.trainingType = network.getTrainingType();
-    this.visibleDropoutProbability = network.getVisibleDropoutProbability();
-    this.hiddenDropoutProbability = network.getHiddenDropoutProbability();
-    this.rnd = new Random();
+    this.configuration.lambda = network.getLambda();
+    this.configuration.layerSizes = network.getLayers();
+    this.configuration.unfoldParameters = computeUnfoldParameters(configuration.layerSizes);
+    this.configuration.activations = network.getActivations();
+    this.configuration.error = network.getErrorFunction();
+    this.configuration.trainingType = network.getTrainingType();
+    this.configuration.visibleDropoutProbability = network
+        .getVisibleDropoutProbability();
+    this.configuration.hiddenDropoutProbability = network
+        .getHiddenDropoutProbability();
+    this.configuration.rnd = new Random();
   }
 
   @Override
   protected CostGradientTuple evaluateBatch(DoubleVector theta,
       DoubleMatrix featureBatch, DoubleMatrix outcomeBatch) {
-    return compute(theta, featureBatch, outcomeBatch);
+    return computeNextStep(theta, featureBatch, outcomeBatch, configuration);
   }
 
   /**
@@ -62,131 +56,136 @@ public final class MultilayerPerceptronCostFunction extends
    * @param y the outcome.
    * @return a tuple of cost and gradient.
    */
-  private CostGradientTuple compute(DoubleVector input, DoubleMatrix x,
-      DoubleMatrix y) {
+  public static CostGradientTuple computeNextStep(DoubleVector input,
+      DoubleMatrix x, DoubleMatrix y, NetworkConfiguration conf) {
     Preconditions.checkArgument(
-        x.getColumnCount() - 1 == layerSizes[0],
+        x.getColumnCount() - 1 == conf.layerSizes[0],
         "Input layer size must match the given vector dimension! Given: "
-            + (x.getColumnCount() - 1) + ", expected: " + layerSizes[0]);
+            + (x.getColumnCount() - 1) + ", expected: " + conf.layerSizes[0]);
     final int m = x.getRowCount();
     DoubleMatrix[] thetas = DenseMatrixFolder.unfoldMatrices(input,
-        unfoldParameters);
+        conf.unfoldParameters);
     DoubleMatrix[] thetaGradients = new DoubleMatrix[thetas.length];
 
     // start forward propagation
     // we compute the aX activations for all layers
-    DoubleMatrix[] ax = new DoubleMatrix[layerSizes.length];
+    DoubleMatrix[] ax = new DoubleMatrix[conf.layerSizes.length];
     // for zX we constantly null the zero index, since it has no use.
     // zX are the values before activation
-    DoubleMatrix[] zx = new DoubleMatrix[layerSizes.length];
+    DoubleMatrix[] zx = new DoubleMatrix[conf.layerSizes.length];
 
-    dropoutVisibleLayer(x, ax);
+    dropoutVisibleLayer(x, ax, conf);
 
-    forwardPropagate(thetas, ax, zx);
+    forwardPropagate(thetas, ax, zx, conf);
 
-    double regularization = calculateRegularization(thetas, m);
+    double regularization = calculateRegularization(thetas, m, conf);
 
-    DoubleMatrix[] deltaX = backwardPropagate(y, thetas, ax, zx);
+    DoubleMatrix[] deltaX = backwardPropagate(y, thetas, ax, zx, conf);
 
-    calculateGradients(thetas, thetaGradients, ax, deltaX, m);
+    calculateGradients(thetas, thetaGradients, ax, deltaX, m, conf);
 
     // calculate our cost (error in the last layer)
-    double j = (1.0d / m) * error.calculateError(y, ax[layerSizes.length - 1])
+    double j = (1.0d / m)
+        * conf.error.calculateError(y, ax[conf.layerSizes.length - 1])
         + regularization;
 
     return new CostGradientTuple(j,
         DenseMatrixFolder.foldMatrices(thetaGradients));
   }
 
-  public void forwardPropagate(DoubleMatrix[] thetas, DoubleMatrix[] ax,
-      DoubleMatrix[] zx) {
-    for (int i = 1; i < layerSizes.length; i++) {
-      zx[i] = multiply(ax[i - 1], thetas[i - 1], false, true);
+  public static void forwardPropagate(DoubleMatrix[] thetas, DoubleMatrix[] ax,
+      DoubleMatrix[] zx, NetworkConfiguration conf) {
+    for (int i = 1; i < conf.layerSizes.length; i++) {
+      zx[i] = multiply(ax[i - 1], thetas[i - 1], false, true, conf);
 
-      if (i < (layerSizes.length - 1)) {
+      if (i < (conf.layerSizes.length - 1)) {
         ax[i] = new DenseDoubleMatrix(DenseDoubleVector.ones(zx[i]
-            .getRowCount()), activations[i].apply(zx[i]));
-        if (hiddenDropoutProbability > 0d) {
+            .getRowCount()), conf.activations[i].apply(zx[i]));
+        if (conf.hiddenDropoutProbability > 0d) {
           // compute dropout for ax[i]
-          dropout(rnd, ax[i], hiddenDropoutProbability);
+          dropout(conf.rnd, ax[i], conf.hiddenDropoutProbability);
         }
       } else {
         // the output doesn't need a bias
-        ax[i] = activations[i].apply(zx[i]);
+        ax[i] = conf.activations[i].apply(zx[i]);
       }
     }
   }
 
-  public DoubleMatrix[] backwardPropagate(DoubleMatrix y,
-      DoubleMatrix[] thetas, DoubleMatrix[] ax, DoubleMatrix[] zx) {
+  public static DoubleMatrix[] backwardPropagate(DoubleMatrix y,
+      DoubleMatrix[] thetas, DoubleMatrix[] ax, DoubleMatrix[] zx,
+      NetworkConfiguration conf) {
     // now backpropagate the error backwards by calculating the deltas.
     // also here we are following the math equations and nulling out the 0th
     // entry.
-    DoubleMatrix[] deltaX = new DoubleMatrix[layerSizes.length];
+    DoubleMatrix[] deltaX = new DoubleMatrix[conf.layerSizes.length];
     // set the last delta to the difference of outcome and prediction
-    deltaX[deltaX.length - 1] = ax[layerSizes.length - 1].subtract(y);
+    deltaX[deltaX.length - 1] = ax[conf.layerSizes.length - 1].subtract(y);
     // compute the deltas onto the input layer
-    for (int i = (layerSizes.length - 2); i > 0; i--) {
+    for (int i = (conf.layerSizes.length - 2); i > 0; i--) {
       DoubleMatrix slice = thetas[i].slice(0, thetas[i].getRowCount(), 1,
           thetas[i].getColumnCount());
-      deltaX[i] = multiply(deltaX[i + 1], slice, false, false);
+      deltaX[i] = multiply(deltaX[i + 1], slice, false, false, conf);
       // apply the gradient of the activations
-      deltaX[i] = deltaX[i].multiplyElementWise(activations[i].gradient(zx[i]));
+      deltaX[i] = deltaX[i].multiplyElementWise(conf.activations[i]
+          .gradient(zx[i]));
     }
     return deltaX;
   }
 
-  public void calculateGradients(DoubleMatrix[] thetas,
+  public static void calculateGradients(DoubleMatrix[] thetas,
       DoubleMatrix[] thetaGradients, DoubleMatrix[] ax, DoubleMatrix[] deltaX,
-      final int m) {
+      final int m, NetworkConfiguration conf) {
     // calculate the gradients of the weights
     for (int i = 0; i < thetaGradients.length; i++) {
-      DoubleMatrix gradDXA = multiply(deltaX[i + 1], ax[i], true, false);
+      DoubleMatrix gradDXA = multiply(deltaX[i + 1], ax[i], true, false, conf);
       if (m != 1) {
         thetaGradients[i] = gradDXA.divide(m);
       } else {
         thetaGradients[i] = gradDXA;
       }
-      if (lambda != 0d) {
-        thetaGradients[i] = thetaGradients[i].add((thetas[i].multiply(lambda
-            / m)));
+      if (conf.lambda != 0d) {
+        thetaGradients[i] = thetaGradients[i].add((thetas[i]
+            .multiply(conf.lambda / m)));
         // subtract the regularized bias
         DoubleVector regBias = thetas[i]
-            .slice(0, thetas[i].getRowCount(), 0, 1).multiply(lambda / m)
+            .slice(0, thetas[i].getRowCount(), 0, 1).multiply(conf.lambda / m)
             .getColumnVector(0);
         thetaGradients[i].setColumnVector(0, regBias);
       }
     }
   }
 
-  public double calculateRegularization(DoubleMatrix[] thetas, final int m) {
+  public static double calculateRegularization(DoubleMatrix[] thetas,
+      final int m, NetworkConfiguration conf) {
     double regularization = 0d;
     // only calculate the regularization term if lambda is not 0
-    if (lambda != 0d) {
+    if (conf.lambda != 0d) {
       for (DoubleMatrix theta : thetas) {
         regularization += (theta.slice(0, theta.getRowCount(), 1,
             theta.getColumnCount())).pow(2).sum();
       }
-      regularization = (lambda / (2.0d * m)) * regularization;
+      regularization = (conf.lambda / (2.0d * m)) * regularization;
     }
     return regularization;
   }
 
-  public void dropoutVisibleLayer(DoubleMatrix x, DoubleMatrix[] ax) {
+  public static void dropoutVisibleLayer(DoubleMatrix x, DoubleMatrix[] ax,
+      NetworkConfiguration conf) {
     // for the first weights, we don't need to compute Z
-    if (visibleDropoutProbability > 0d) {
+    if (conf.visibleDropoutProbability > 0d) {
       // compute dropout for ax[0], copy X to not alter internal
       // representation
       ax[0] = x.deepCopy();
-      dropout(rnd, ax[0], visibleDropoutProbability);
+      dropout(conf.rnd, ax[0], conf.visibleDropoutProbability);
     } else {
       ax[0] = x;
     }
   }
 
-  private DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,
-      boolean a1Transpose, boolean a2Transpose) {
-    switch (trainingType) {
+  private static DoubleMatrix multiply(DoubleMatrix a1, DoubleMatrix a2,
+      boolean a1Transpose, boolean a2Transpose, NetworkConfiguration conf) {
+    switch (conf.trainingType) {
       case CPU:
         return multiplyCPU(a1, a2, a1Transpose, a2Transpose);
       case GPU:
@@ -249,6 +248,18 @@ public final class MultilayerPerceptronCostFunction extends
         }
       }
     }
+  }
+
+  public class NetworkConfiguration {
+    public double lambda;
+    public int[] layerSizes;
+    public int[][] unfoldParameters;
+    public ActivationFunction[] activations;
+    public ErrorFunction error;
+    public TrainingType trainingType;
+    public double visibleDropoutProbability;
+    public double hiddenDropoutProbability;
+    public Random rnd;
   }
 
 }
