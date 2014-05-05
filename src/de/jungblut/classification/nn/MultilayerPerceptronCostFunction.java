@@ -250,7 +250,7 @@ public final class MultilayerPerceptronCostFunction extends
     }
   }
 
-  public class NetworkConfiguration {
+  public static class NetworkConfiguration {
     public double lambda;
     public int[] layerSizes;
     public int[][] unfoldParameters;
