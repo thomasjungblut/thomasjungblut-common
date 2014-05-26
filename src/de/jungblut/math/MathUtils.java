@@ -87,8 +87,7 @@ public final class MathUtils {
       toReturn.setColumn(col, column.toArray());
     }
 
-    return new Tuple3<DoubleMatrix, DoubleVector, DoubleVector>(toReturn,
-        meanVector, stddevVector);
+    return new Tuple3<>(toReturn, meanVector, stddevVector);
   }
 
   /**

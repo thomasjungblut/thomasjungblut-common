@@ -34,10 +34,10 @@ public final class CsvDatasetReader {
       int numFeatures, int outcomeIndex) {
     ArrayList<DoubleVector> featureList = new ArrayList<>();
     ArrayList<DenseDoubleVector> outcomeList = new ArrayList<>();
-    // really Java7? You can't add an expression into try/catch?
-    try (@SuppressWarnings("resource")
-    CSVReader reader = (quote != null ? new CSVReader(new FileReader(path),
-        separator, quote) : new CSVReader(new FileReader(path), separator))) {
+
+    try (CSVReader reader = (quote != null ? new CSVReader(
+        new FileReader(path), separator, quote) : new CSVReader(new FileReader(
+        path), separator))) {
 
       String[] line;
       while ((line = reader.readNext()) != null) {

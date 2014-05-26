@@ -1,6 +1,7 @@
 package de.jungblut.crawl;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Deque;
@@ -96,7 +97,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
       ExecutionException {
     final Deque<String> linksToCrawl = new LinkedList<>();
     BloomFilter<CharSequence> visited = BloomFilter.create(
-        Funnels.stringFunnel(), fetches);
+        Funnels.stringFunnel(Charset.defaultCharset()), fetches);
     ExecutorService threadPool = Executors.newFixedThreadPool(poolSize);
     final CompletionService<Set<T>> completionService = new ExecutorCompletionService<>(
         threadPool);

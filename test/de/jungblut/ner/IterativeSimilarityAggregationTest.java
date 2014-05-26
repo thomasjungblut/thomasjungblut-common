@@ -60,8 +60,7 @@ public final class IterativeSimilarityAggregationTest {
         { 0.89, 0.4, 0.1 }, // E
         { 0.88, 0.4, 0.1 } // F
         });
-    Tuple<String[], DoubleMatrix> bipartiteGraph = new Tuple<String[], DoubleMatrix>(
-        terms, weights);
+    Tuple<String[], DoubleMatrix> bipartiteGraph = new Tuple<>(terms, weights);
 
     IterativeSimilarityAggregation aggregation = new IterativeSimilarityAggregation(
         seedStringSet, bipartiteGraph);
