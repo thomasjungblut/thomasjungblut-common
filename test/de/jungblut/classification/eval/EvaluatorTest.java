@@ -36,10 +36,10 @@ public class EvaluatorTest {
     assertEquals(82, evaluation.getTestSize());
     assertEquals(82, evaluation.getCorrect());
     assertEquals(1d, evaluation.getAccuracy(), EPS);
-    assertEquals(45, evaluation.getTruePositive());
+    assertEquals(37, evaluation.getTruePositive());
     assertEquals(0, evaluation.getFalseNegative());
     assertEquals(0, evaluation.getFalsePositive());
-    assertEquals(37, evaluation.getTrueNegative());
+    assertEquals(45, evaluation.getTrueNegative());
     assertEquals(1d, evaluation.getAUC(), EPS);
     assertEquals(1d, evaluation.getRecall(), EPS);
     assertEquals(1d, evaluation.getPrecision(), EPS);
