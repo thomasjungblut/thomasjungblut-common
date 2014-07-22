@@ -19,7 +19,12 @@ import de.jungblut.math.DoubleVector;
  * @author thomas.jungblut
  */
 public final class CanopyClustering {
+
   private static final Log LOG = LogFactory.getLog(CanopyClustering.class);
+
+  private CanopyClustering() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * Creates a list of canopies. Make sure that t1 > t2!
