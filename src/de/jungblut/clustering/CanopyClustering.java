@@ -73,10 +73,13 @@ public final class CanopyClustering {
         canopy = canopy.divide(assigned);
       }
       canopyList.add(canopy);
-      LOG.info(points.size()
-          + " vectors remaining to cluster | Found canopies: "
-          + canopyList.size() + " | Took "
-          + (System.currentTimeMillis() - start) + "ms!");
+
+      if (verbose) {
+        LOG.info(points.size()
+            + " vectors remaining to cluster | Found canopies: "
+            + canopyList.size() + " | Took "
+            + (System.currentTimeMillis() - start) + "ms!");
+      }
       start = System.currentTimeMillis();
     }
     return canopyList;
