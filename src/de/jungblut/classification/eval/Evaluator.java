@@ -59,6 +59,11 @@ public final class Evaluator {
       return ((double) truePositive) / (truePositive + falseNegative);
     }
 
+    // fall-out
+    public double getFalsePositiveRate() {
+      return ((double) falsePositive) / (falsePositive + trueNegative);
+    }
+
     public double getAccuracy() {
       if (isBinary()) {
         return ((double) truePositive + trueNegative)
