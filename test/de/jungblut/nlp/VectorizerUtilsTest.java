@@ -165,6 +165,15 @@ public class VectorizerUtilsTest {
     assertEquals(0, expectedResults.size());
   }
 
+  @Test
+  public void testBuildTransitionVector() {
+    String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
+    int[] transitionVector = VectorizerUtils.buildTransitionVector(dict,
+        tokenizedDocuments.get(0));
+    int[] expected = new int[] { 11, 8, 4, 0 };
+    assertArrayEquals(expected, transitionVector);
+  }
+
   static void assertArrayEquals(int[] expected, int[] actual) {
     assertEquals(expected.length, actual.length);
     for (int i = 0; i < expected.length; i++) {

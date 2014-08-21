@@ -117,7 +117,7 @@ public final class VectorizerUtils {
    * @param doc the document to build a transition.
    * @return the transition array.
    */
-  public static int[] buildTransition(String[] dict, String[] doc) {
+  public static int[] buildTransitionVector(String[] dict, String[] doc) {
     int[] toReturn = new int[doc.length];
     for (int i = 0; i < doc.length; i++) {
       int idx = Arrays.binarySearch(dict, doc[i]);
