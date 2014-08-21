@@ -19,7 +19,12 @@ import de.jungblut.math.DoubleVector;
  * @author thomas.jungblut
  */
 public final class CanopyClustering {
+
   private static final Log LOG = LogFactory.getLog(CanopyClustering.class);
+
+  private CanopyClustering() {
+    throw new IllegalAccessError();
+  }
 
   /**
    * Creates a list of canopies. Make sure that t1 > t2!
@@ -68,10 +73,13 @@ public final class CanopyClustering {
         canopy = canopy.divide(assigned);
       }
       canopyList.add(canopy);
-      LOG.info(points.size()
-          + " vectors remaining to cluster | Found canopies: "
-          + canopyList.size() + " | Took "
-          + (System.currentTimeMillis() - start) + "ms!");
+
+      if (verbose) {
+        LOG.info(points.size()
+            + " vectors remaining to cluster | Found canopies: "
+            + canopyList.size() + " | Took "
+            + (System.currentTimeMillis() - start) + "ms!");
+      }
       start = System.currentTimeMillis();
     }
     return canopyList;

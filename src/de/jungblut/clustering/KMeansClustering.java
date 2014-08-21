@@ -130,7 +130,7 @@ public final class KMeansClustering {
       }
 
       if (verbose) {
-        LOG.info("Iteration " + iteration + " | Cost: " + cost + "\r");
+        LOG.info("Iteration " + iteration + " | Cost: " + cost);
       }
       double diff = Math.abs(lastCost - cost);
       if (diff < delta) {
