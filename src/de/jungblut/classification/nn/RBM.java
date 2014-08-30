@@ -228,6 +228,10 @@ public final class RBM {
           // slice the old bias off
           currentTrainingSet[row] = currentTrainingSet[row].slice(1,
               currentTrainingSet[row].getDimension());
+          if (verbose && row % 100 == 0) {
+            LOG.info("Predicting row " + row + " / "
+                + currentTrainingSet.length);
+          }
         }
       }
     }
