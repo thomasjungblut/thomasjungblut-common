@@ -98,7 +98,7 @@ public class OWLQN extends AbstractMinimizer {
         while (costs.size() > 5) {
           costs.removeAt(0);
         }
-        double avgImprovement = first - value / costs.size();
+        double avgImprovement = (first - value) / costs.size();
         double perc = avgImprovement / Math.abs(value);
         if (perc < tol) {
           break;
