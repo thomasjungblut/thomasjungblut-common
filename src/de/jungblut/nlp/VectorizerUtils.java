@@ -319,20 +319,20 @@ public final class VectorizerUtils {
     HashMultiset<String> termFrequencySet = HashMultiset.create(Arrays
         .asList(document));
 
+    int oovIndex = Arrays.binarySearch(dictionary, OUT_OF_VOCABULARY);
+    double docLog = FastMath.log(numDocuments);
+
     for (String token : document) {
       int index = Arrays.binarySearch(dictionary, token);
       if (index >= 0) {
         double tfIdf = termFrequencySet.count(token)
-            * (FastMath.log(numDocuments) - FastMath
-                .log(termDocumentCount[index]));
+            * (docLog - FastMath.log(termDocumentCount[index]));
         vector.set(index, tfIdf);
       } else {
-        int bs = Arrays.binarySearch(dictionary, OUT_OF_VOCABULARY);
-        if (bs >= 0) {
-          vector.set(bs, 1d);
+        if (oovIndex >= 0) {
+          vector.set(oovIndex, 1d);
         }
       }
-
     }
     return vector;
   }
@@ -374,9 +374,9 @@ public final class VectorizerUtils {
 
   /**
    * Hashes the given vector into a new representation of a new n-dimensional
-   * feature space. The hash beeing used is the Murmur128 Bit hashing function
-   * on the non-zero feature index. Thus this vectorization method should be
-   * used for text data, that has a sparse representation of its features.
+   * feature space. The hash beeing is used on the non-zero feature index. Thus
+   * this vectorization method should be used for text data, that has a sparse
+   * representation of its features.
    * 
    * @param inputFeature the (usually) sparse feature vector.
    * @param n the target dimension of the vector.

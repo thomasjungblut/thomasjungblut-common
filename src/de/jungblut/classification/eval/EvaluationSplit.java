@@ -133,27 +133,45 @@ public class EvaluationSplit {
       sampleOutcome[key] = outcome[i];
     }
 
+    int splitSize = (int) (features.length * splitFraction);
     double[] samplingProbabilities = new double[multiQueues.length];
+    int[] splitIndices = new int[multiQueues.length];
+    int sum = 0;
     for (int i = 0; i < multiQueues.length; i++) {
       samplingProbabilities[i] = ((double) multiQueues[i].size())
           / features.length;
+      splitIndices[i] = (int) (splitSize * samplingProbabilities[i]);
+      Preconditions.checkArgument(splitIndices[i] > 0,
+          "Can't stratify the class " + i + " because the split size was "
+              + "too small to satisfy the sampling requirement.");
+      sum += splitIndices[i];
     }
+
+    if (sum != splitSize) {
+      // correct the difference that arises from float arithmetic
+      LOG.warn("Correcting the split size from " + splitSize + " to " + sum
+          + ", to satisfy the sampling target.");
+      splitSize = sum;
+    }
+
+    DoubleVector[] trainFeatures = new DoubleVector[splitSize];
+    DoubleVector[] trainOutcomes = new DoubleVector[splitSize];
 
     LOG.info("Sampling probabilities by class: "
         + Arrays.toString(samplingProbabilities));
 
-    final int splitSize = (int) (features.length * splitFraction);
-    DoubleVector[] trainFeatures = new DoubleVector[splitSize];
-    DoubleVector[] trainOutcomes = new DoubleVector[splitSize];
     int offset = 0;
-    for (int s = 0; s < samplingProbabilities.length; s++) {
-      int fractionIndex = (int) (splitSize * samplingProbabilities[s]);
-      for (int i = 0; i < fractionIndex; i++) {
+    for (int s = 0; s < splitIndices.length; s++) {
+      for (int i = 0; i < splitIndices[s]; i++) {
         trainFeatures[offset] = multiQueues[s].poll();
         trainOutcomes[offset] = sampleOutcome[s];
         offset++;
       }
     }
+
+    Preconditions.checkArgument(offset == trainFeatures.length,
+        "Didn't fill up the targeted split size of " + splitSize
+            + " vectors in the training set!");
 
     // poll the rest out of the queues for the test set
     DoubleVector[] testFeatures = new DoubleVector[features.length - splitSize];
@@ -162,10 +180,11 @@ public class EvaluationSplit {
     offset = 0;
     for (int i = 0; i < multiQueues.length; i++) {
       while (!multiQueues[i].isEmpty()) {
-        if (offset >= testFeatures.length) {
-          throw new IllegalArgumentException(
-              "Splits couldn't be fully stratified! One class must've been too small to be splittable.");
-        }
+
+        Preconditions
+            .checkArgument(offset < testFeatures.length,
+                "Features are overflowing the calculated testset size, stratifying failed.");
+
         testFeatures[offset] = multiQueues[i].poll();
         testOutcomes[offset] = sampleOutcome[i];
         offset++;
