@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.Test;
 
@@ -19,8 +20,7 @@ public class KMeansClusteringTest {
 
     KMeansClustering clusterer = new KMeansClustering(2, lst, false);
     EuclidianDistance dist = new EuclidianDistance();
-    ArrayList<DoubleVector>[] assignments = clusterer.cluster(100, dist, 0.1d,
-        false);
+    List<Cluster> assignments = clusterer.cluster(100, dist, 0.1d, false);
     DoubleVector[] centers = clusterer.getCenters();
     assertEquals(49.5, centers[0].get(0), 1e-4);
     assertEquals(24.5, centers[0].get(1), 1e-4);
@@ -28,16 +28,16 @@ public class KMeansClusteringTest {
     assertEquals(74.5, centers[1].get(1), 1e-4);
 
     // the centers should partition the space in half
-    assertEquals(2, assignments.length);
-    assertEquals(5000, assignments[0].size());
-    assertEquals(5000, assignments[1].size());
+    assertEquals(2, assignments.size());
+    assertEquals(5000, assignments.get(0).getAssignments().size());
+    assertEquals(5000, assignments.get(1).getAssignments().size());
     // now verify the assignments
-    for (DoubleVector v : assignments[0]) {
+    for (DoubleVector v : assignments.get(0).getAssignments()) {
       double distRightCenter = dist.measureDistance(v, centers[0]);
       double distOtherCenter = dist.measureDistance(v, centers[1]);
       assertTrue(distRightCenter < distOtherCenter);
     }
-    for (DoubleVector v : assignments[1]) {
+    for (DoubleVector v : assignments.get(1).getAssignments()) {
       double distRightCenter = dist.measureDistance(v, centers[1]);
       double distOtherCenter = dist.measureDistance(v, centers[0]);
       assertTrue(distRightCenter < distOtherCenter);

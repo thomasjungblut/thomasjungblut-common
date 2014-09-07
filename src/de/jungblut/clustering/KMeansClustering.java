@@ -3,7 +3,10 @@ package de.jungblut.clustering;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.stream.IntStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -80,66 +83,90 @@ public final class KMeansClustering {
    * @param delta is the change in the sum of distances over iterations. If the
    *          difference is lower than delta the iteration will stop.
    * @param if true, costs in each iteration will be printed.
-   * @return the assignments to a cluster, each arraylist contains the vectors
-   *         at the index of the center that can be retrieved with
-   *         {@link #getCenters()}.
+   * @return the clusters, which contain a center and the assigned vectors.
    */
-  public ArrayList<DoubleVector>[] cluster(int iterations,
+  public List<Cluster> cluster(int iterations,
       DistanceMeasurer distanceMeasurer, double delta, boolean verbose) {
 
-    @SuppressWarnings("unchecked")
-    ArrayList<DoubleVector>[] assignments = new ArrayList[k];
-    for (int i = 0; i < assignments.length; i++) {
-      assignments[i] = new ArrayList<>();
-    }
+    final Deque<DoubleVector>[] assignments = setupAssignments();
+
     double lastCost = Double.MAX_VALUE;
     // now do the main loopings
     for (int iteration = 0; iteration < iterations; iteration++) {
-      // clear current assignments
-      for (int i = 0; i < assignments.length; i++) {
-        assignments[i].clear();
-      }
-      double cost = 0d;
-      // assign the vectors again
-      for (DoubleVector v : vectors) {
-        int lowestDistantCenter = 0;
-        double lowestDistance = Double.MAX_VALUE;
-        for (int i = 0; i < centers.length; i++) {
-          final double estimatedDistance = distanceMeasurer.measureDistance(
-              centers[i], v);
-          // check if we have a can assign a new center, because we
-          // got a lower distance
-          if (estimatedDistance < lowestDistance) {
-            lowestDistance = estimatedDistance;
-            lowestDistantCenter = i;
-          }
-        }
-        cost += lowestDistance;
-        assignments[lowestDistantCenter].add(v);
-      }
+      // clear the assignments
+      Arrays.stream(assignments).forEach(Deque::clear);
+
+      // assign the vectors and accumulate the distance
+      double cost = IntStream.range(0, vectors.size()).parallel()
+          .mapToDouble((x) -> assign(distanceMeasurer, assignments, x)).sum();
+
       // calculate the new centers
-      for (int i = 0; i < assignments.length; i++) {
-        // only avg if we have something to avg
-        if (!assignments[i].isEmpty()) {
-          DoubleVector sumVector = assignments[i].get(0);
-          for (int n = 1; n < assignments[i].size(); n++) {
-            sumVector = sumVector.add(assignments[i].get(n));
-          }
-          centers[i] = sumVector.divide(assignments[i].size());
-        }
-      }
+      computeCenters(assignments);
 
       if (verbose) {
         LOG.info("Iteration " + iteration + " | Cost: " + cost);
       }
+      // did we archieve any improvement? if not, break
       double diff = Math.abs(lastCost - cost);
       if (diff < delta) {
         break;
       }
       lastCost = cost;
+    }
 
+    // clear the assignments to get a clean state
+    Arrays.stream(assignments).forEach(Deque::clear);
+    // do another assignment step to get the final clusters
+    IntStream.range(0, vectors.size()).parallel()
+        .forEach((x) -> assign(distanceMeasurer, assignments, x));
+
+    List<Cluster> lst = new ArrayList<>();
+    for (int i = 0; i < centers.length; i++) {
+      lst.add(new Cluster(centers[i], new ArrayList<>(assignments[i])));
+    }
+
+    return lst;
+  }
+
+  public void computeCenters(Deque<DoubleVector>[] assignments) {
+    IntStream.range(0, assignments.length).parallel().forEach((i) -> {
+      int len = assignments[i].size();
+      if (len > 0) {
+        DoubleVector sumVector = assignments[i].pop();
+        while (!assignments[i].isEmpty()) {
+          sumVector = sumVector.add(assignments[i].pop());
+        }
+        centers[i] = sumVector.divide(len);
+      }
+    });
+  }
+
+  public Deque<DoubleVector>[] setupAssignments() {
+    @SuppressWarnings("unchecked")
+    Deque<DoubleVector>[] assignments = new Deque[k];
+    for (int i = 0; i < assignments.length; i++) {
+      assignments[i] = new ConcurrentLinkedDeque<>();
     }
     return assignments;
+  }
+
+  public double assign(DistanceMeasurer distanceMeasurer,
+      Deque<DoubleVector>[] assignments, int vectorIndex) {
+    DoubleVector v = vectors.get(vectorIndex);
+    int lowestDistantCenter = 0;
+    double lowestDistance = Double.MAX_VALUE;
+    for (int i = 0; i < centers.length; i++) {
+      final double estimatedDistance = distanceMeasurer.measureDistance(
+          centers[i], v);
+      // check if we have a can assign a new center, because we
+      // got a lower distance
+      if (estimatedDistance < lowestDistance) {
+        lowestDistance = estimatedDistance;
+        lowestDistantCenter = i;
+      }
+    }
+    assignments[lowestDistantCenter].add(v);
+    return lowestDistance;
   }
 
   /**
