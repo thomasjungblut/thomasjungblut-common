@@ -158,6 +158,18 @@ public final class MathUtils {
   }
 
   /**
+   * @return a log'd matrix that was guarded against edge cases of the
+   *         logarithm.
+   */
+  public static DoubleVector logVector(DoubleVector input) {
+    DenseDoubleVector log = new DenseDoubleVector(input.getDimension());
+    for (int col = 0; col < log.getDimension(); col++) {
+      log.set(col, guardLogarithm(log.get(col)));
+    }
+    return log;
+  }
+
+  /**
    * Scales a matrix into the interval given by min and max.
    * 
    * @param input the input value.

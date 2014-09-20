@@ -32,37 +32,39 @@ public final class HammingLossFunction implements ErrorFunction {
     double hammingSum = 0d;
     // we now loop row-wise over the matrices
     for (int row = 0; row < y.getRowCount(); row++) {
-      double sum = 0d;
       DoubleVector yRow = y.getRowVector(row);
-      TIntHashSet visitedColumns = new TIntHashSet(yRow.getLength());
       DoubleVector hypRow = hypothesis.getRowVector(row);
-      Iterator<DoubleVectorElement> iterateNonZero = hypRow.iterateNonZero();
-      while (iterateNonZero.hasNext()) {
-        DoubleVectorElement next = iterateNonZero.next();
-        visitedColumns.add(next.getIndex());
-        if (next.getValue() > activationThreshold
-            ^ yRow.get(next.getIndex()) == 1d) {
-          sum += 1d;
-        }
-      }
-
-      iterateNonZero = yRow.iterateNonZero();
-      while (iterateNonZero.hasNext()) {
-        DoubleVectorElement next = iterateNonZero.next();
-        if (!visitedColumns.contains(next.getIndex())) {
-          visitedColumns.add(next.getIndex());
-          if (hypRow.get(next.getIndex()) > activationThreshold
-              ^ next.getValue() == 1d) {
-            sum += 1d;
-          }
-        }
-      }
-
-      hammingSum += (sum / visitedColumns.size());
-
+      hammingSum += calculateError(yRow, hypRow);
     }
 
     return hammingSum / y.getRowCount();
+  }
+
+  @Override
+  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+    double sum = 0d;
+    TIntHashSet visitedColumns = new TIntHashSet(y.getLength());
+    Iterator<DoubleVectorElement> iterateNonZero = hypothesis.iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
+      visitedColumns.add(next.getIndex());
+      if (next.getValue() > activationThreshold ^ y.get(next.getIndex()) == 1d) {
+        sum += 1d;
+      }
+    }
+
+    iterateNonZero = y.iterateNonZero();
+    while (iterateNonZero.hasNext()) {
+      DoubleVectorElement next = iterateNonZero.next();
+      if (!visitedColumns.contains(next.getIndex())) {
+        visitedColumns.add(next.getIndex());
+        if (hypothesis.get(next.getIndex()) > activationThreshold
+            ^ next.getValue() == 1d) {
+          sum += 1d;
+        }
+      }
+    }
+    return sum / visitedColumns.size();
   }
 
 }

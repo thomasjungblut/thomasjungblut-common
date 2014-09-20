@@ -1,6 +1,7 @@
 package de.jungblut.math.squashing;
 
 import de.jungblut.math.DoubleMatrix;
+import de.jungblut.math.DoubleVector;
 import de.jungblut.math.activation.LinearActivationFunction;
 
 /**
@@ -22,6 +23,16 @@ public final class SquaredMeanErrorFunction implements ErrorFunction {
       }
     }
     return sum / y.getRowCount();
+  }
+
+  @Override
+  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+    double sum = 0d;
+    for (int col = 0; col < y.getDimension(); col++) {
+      double diff = y.get(col) - hypothesis.get(col);
+      sum += (diff * diff);
+    }
+    return sum;
   };
 
 }

@@ -1,6 +1,7 @@
 package de.jungblut.math.squashing;
 
 import de.jungblut.math.DoubleMatrix;
+import de.jungblut.math.DoubleVector;
 import de.jungblut.math.MathUtils;
 
 /**
@@ -23,6 +24,20 @@ public final class LogisticErrorFunction implements ErrorFunction {
         .multiplyElementWise(negativeLogHypo);
     DoubleMatrix positivePenalty = inverseOutcome
         .multiplyElementWise(positiveLogHypo);
+
+    return (positivePenalty.subtract(negativePenalty)).sum();
+  }
+
+  @Override
+  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+
+    DoubleVector negativeOutcome = y.subtractFrom(1.0d);
+    DoubleVector inverseOutcome = y.multiply(-1d);
+    DoubleVector negativeHypo = hypothesis.subtractFrom(1d);
+    DoubleVector negativeLogHypo = MathUtils.logVector(negativeHypo);
+    DoubleVector positiveLogHypo = MathUtils.logVector(hypothesis);
+    DoubleVector negativePenalty = negativeOutcome.multiply(negativeLogHypo);
+    DoubleVector positivePenalty = inverseOutcome.multiply(positiveLogHypo);
 
     return (positivePenalty.subtract(negativePenalty)).sum();
   }
