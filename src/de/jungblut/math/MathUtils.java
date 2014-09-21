@@ -164,7 +164,7 @@ public final class MathUtils {
   public static DoubleVector logVector(DoubleVector input) {
     DenseDoubleVector log = new DenseDoubleVector(input.getDimension());
     for (int col = 0; col < log.getDimension(); col++) {
-      log.set(col, guardLogarithm(log.get(col)));
+      log.set(col, guardLogarithm(input.get(col)));
     }
     return log;
   }
