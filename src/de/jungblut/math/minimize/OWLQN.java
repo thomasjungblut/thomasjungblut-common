@@ -221,7 +221,7 @@ public class OWLQN extends AbstractMinimizer {
     if (origDirDeriv > 0d) {
       throw new RuntimeException(
           "L-BFGS chose a non-descent direction: check your gradient!");
-    } else if (origDirDeriv == 0d) {
+    } else if (origDirDeriv == 0d || Double.isNaN(origDirDeriv)) {
       LOG.info("L-BFGS apparently found the minimum. No direction to descent anymore.");
       return false;
     }
