@@ -6,10 +6,10 @@ this is my code-sink for mainly java files.
 
 - Datastructures & Algorithms
 - Apache Hadoop
-- Machine learning (clustering, classification, optimization algorithms)
-- [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
-- [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")
 - JCuda experiments
+- [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
+- [Machine learning (clustering, classification, optimization algorithms), this will partially move to "tjungblut-online-ml"](https://github.com/thomasjungblut/tjungblut-online-ml) "online machine learning")
+- [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")
 
 Please notice that this is in fact no framework, much rather a common library for my everyday usage. 
 I won't bother about backward compatibility, extensive documentation and full test coverage- although I try my best to at least fulfill the last two.
