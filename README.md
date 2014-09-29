@@ -34,10 +34,6 @@ Build
 -----
 
 You will need Java 8 first.
-
-To build this library, you will need to install [my math lib on your local computer](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib"), build instructions can be found there as well.
-Everything else shall be found on the central maven repository, or in the case of JCUDA in the jcuda path which is automagically added.
-
 You can simply build with:
 
 > mvn clean package install

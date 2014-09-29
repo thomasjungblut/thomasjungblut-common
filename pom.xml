@@ -15,6 +15,7 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<hadoop.version>2.2.0</hadoop.version>
 		<hama.version>0.6.3</hama.version>
+		<tjmath.version>1.1</tjmath.version>
 	</properties>
 
 	<dependencies>
@@ -34,12 +35,7 @@
 			<artifactId>hadoop-mapreduce-client-jobclient</artifactId>
 			<version>${hadoop.version}</version>
 		</dependency>
-		<!-- my math library -->
-		<dependency>
-			<groupId>de.jungblut.math</groupId>
-			<artifactId>tjungblut-math</artifactId>
-			<version>1.1</version>
-		</dependency>
+		
 		<!-- JCUDA is locally in the jcuda dir -->
 		<dependency>
 			<groupId>jcuda</groupId>
@@ -55,7 +51,13 @@
 			<scope>system</scope>
 			<systemPath>${project.basedir}/jcuda/jcublas-0.5.0.jar</systemPath>
 		</dependency>
+		
 		<!-- retrievable artifacts -->
+		<dependency>
+			<groupId>de.jungblut.math</groupId>
+			<artifactId>tjungblut-math</artifactId>
+			<version>${tjmath.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>org.jblas</groupId>
 			<artifactId>jblas</artifactId>
