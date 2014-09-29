@@ -8,7 +8,7 @@ this is my code-sink for mainly java files.
 - Apache Hadoop
 - JCuda experiments
 - [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
-- [Machine learning (clustering, classification, optimization algorithms), this will partially move to "tjungblut-online-ml"](https://github.com/thomasjungblut/tjungblut-online-ml) "online machine learning")
+- [Machine learning (clustering, classification, optimization algorithms, this will partially move to "tjungblut-online-ml")](https://github.com/thomasjungblut/tjungblut-online-ml)
 - [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")
 
 Please notice that this is in fact no framework, much rather a common library for my everyday usage. 
