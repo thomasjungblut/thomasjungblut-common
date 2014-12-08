@@ -33,6 +33,11 @@ public final class SquaredMeanErrorFunction implements ErrorFunction {
       sum += (diff * diff);
     }
     return sum;
-  };
+  }
+
+  @Override
+  public double calculateDerivative(DoubleVector y, DoubleVector hypothesis) {
+    return hypothesis.subtract(y).sum();
+  }
 
 }

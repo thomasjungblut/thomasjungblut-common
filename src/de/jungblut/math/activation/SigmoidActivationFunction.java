@@ -10,6 +10,8 @@ import org.apache.commons.math3.util.FastMath;
  */
 public final class SigmoidActivationFunction extends AbstractActivationFunction {
 
+  private static final double CLIP = 30d;
+
   @Override
   public double apply(double input) {
     return sigmoid(input);
@@ -21,7 +23,8 @@ public final class SigmoidActivationFunction extends AbstractActivationFunction 
   }
 
   static double sigmoid(double input) {
-    return 1.0 / (1.0 + FastMath.exp(-input));
+    return FastMath.min(CLIP,
+        FastMath.max(-CLIP, 1.0 / (1.0 + FastMath.exp(-input))));
   }
 
   static double sigmoidGradient(double input) {
