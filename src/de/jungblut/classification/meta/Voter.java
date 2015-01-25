@@ -12,6 +12,8 @@ import java.util.concurrent.Executors;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.google.common.base.Preconditions;
+
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.ClassifierFactory;
@@ -53,6 +55,13 @@ public final class Voter<A extends Classifier> extends AbstractClassifier {
     this.classifier = new Classifier[numClassifiers];
     for (int i = 0; i < numClassifiers; i++) {
       this.classifier[i] = classifierFactory.newInstance();
+    }
+  }
+
+  private Voter(List<A> classifierCollection) {
+    classifier = new Classifier[classifierCollection.size()];
+    for (int i = 0; i < classifier.length; i++) {
+      classifier[i] = Preconditions.checkNotNull(classifierCollection.get(i));
     }
   }
 
@@ -270,6 +279,17 @@ public final class Voter<A extends Classifier> extends AbstractClassifier {
   public static <K extends Classifier> Voter<K> create(int numClassifiers,
       CombiningType type, ClassifierFactory<K> classifierFactory) {
     return new Voter<>(type, numClassifiers, classifierFactory);
+  }
+
+  /**
+   * Creates a voter from the given trained models for prediction purposes.
+   * 
+   * @param classifier
+   * @return
+   */
+  public static <K extends Classifier> Voter<K> fromTrainedModels(
+      List<K> classifier) {
+    return new Voter<>(classifier);
   }
 
   final class TrainingWorker implements Callable<Boolean> {

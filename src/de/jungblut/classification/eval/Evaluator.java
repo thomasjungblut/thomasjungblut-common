@@ -19,6 +19,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.ClassifierFactory;
+import de.jungblut.classification.Predictor;
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.MathUtils;
@@ -315,7 +316,7 @@ public final class Evaluator {
    * @param testOutcome the outcome to test with.
    * @return a fresh evalation result filled with the evaluated metrics.
    */
-  public static EvaluationResult testClassifier(Classifier classifier,
+  public static EvaluationResult testClassifier(Predictor classifier,
       DoubleVector[] testFeatures, DoubleVector[] testOutcome) {
     return testClassifier(classifier, testFeatures, testOutcome, null);
   }
@@ -330,7 +331,7 @@ public final class Evaluator {
    *          probability (if not provided = null).
    * @return a fresh evalation result filled with the evaluated metrics.
    */
-  public static EvaluationResult testClassifier(Classifier classifier,
+  public static EvaluationResult testClassifier(Predictor classifier,
       DoubleVector[] testFeatures, DoubleVector[] testOutcome, Double threshold) {
     EvaluationResult result = new EvaluationResult();
     result.numLabels = Math.max(2, testOutcome[0].getDimension());

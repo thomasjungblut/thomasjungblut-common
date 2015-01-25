@@ -51,4 +51,14 @@ public interface Predictor {
    * @return the class index as integer.
    */
   public int extractPredictedClass(DoubleVector predict, double threshold);
+
+  /**
+   * Backward compatibility method to make online-ml project's predictors work
+   * with almost everything in this library.
+   * 
+   * @return an untrainable classifer, wrapping the predictor inside.
+   */
+  public default Classifier asClassifier() {
+    return new UntrainableClassifier(this);
+  }
 }

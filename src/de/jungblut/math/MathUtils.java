@@ -12,6 +12,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
+import de.jungblut.reader.Dataset;
 
 /**
  * Math utils that features normalizations and other fancy stuff.
@@ -88,6 +89,43 @@ public final class MathUtils {
     }
 
     return new Tuple3<>(toReturn, meanVector, stddevVector);
+  }
+
+  /**
+   * Normalizes the given dataset (inplace), by subtracting the mean and
+   * dividing by the stddev. Dataset will have 0 mean and stddev of 1.
+   */
+  public static void meanNormalizeColumns(Dataset dataset) {
+
+    final int numSamples = dataset.getFeatures().length;
+    DoubleVector sumVector = null;
+    for (int i = 0; i < numSamples; i++) {
+      if (i == 0) {
+        sumVector = dataset.getFeatures()[0];
+      } else {
+        sumVector = sumVector.add(dataset.getFeatures()[i]);
+      }
+    }
+
+    final DoubleVector mean = sumVector.divide(numSamples);
+    DoubleVector stdVector = null;
+    for (int i = 0; i < numSamples; i++) {
+      if (i == 0) {
+        stdVector = dataset.getFeatures()[0].subtract(mean).pow(2d);
+      } else {
+        stdVector = stdVector.add(dataset.getFeatures()[i].subtract(mean).pow(
+            2d));
+      }
+    }
+
+    stdVector = stdVector.divide(numSamples).sqrt()
+    // don't divide by 0 at any time
+        .apply((int i, double val) -> Math.max(1, val));
+
+    for (int i = 0; i < numSamples; i++) {
+      dataset.getFeatures()[i] = dataset.getFeatures()[i].subtract(mean)
+          .divide(stdVector);
+    }
   }
 
   /**

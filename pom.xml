@@ -14,8 +14,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<hadoop.version>2.2.0</hadoop.version>
-		<hama.version>0.6.3</hama.version>
 		<tjmath.version>1.1</tjmath.version>
+		<jcuda.version>0.6.5</jcuda.version>
 	</properties>
 
 	<dependencies>
@@ -35,28 +35,33 @@
 			<artifactId>hadoop-mapreduce-client-jobclient</artifactId>
 			<version>${hadoop.version}</version>
 		</dependency>
-		
+
 		<!-- JCUDA is locally in the jcuda dir -->
 		<dependency>
 			<groupId>jcuda</groupId>
 			<artifactId>jcuda</artifactId>
-			<version>0.5.0</version>
+			<version>${jcuda.version}</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/jcuda/jcuda-0.5.0.jar</systemPath>
+			<systemPath>${project.basedir}/jcuda/jcuda-${jcuda.version}.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>jcuda</groupId>
 			<artifactId>jcublas</artifactId>
-			<version>0.5.0</version>
+			<version>${jcuda.version}</version>
 			<scope>system</scope>
-			<systemPath>${project.basedir}/jcuda/jcublas-0.5.0.jar</systemPath>
+			<systemPath>${project.basedir}/jcuda/jcublas-${jcuda.version}.jar</systemPath>
 		</dependency>
-		
+
 		<!-- retrievable artifacts -->
 		<dependency>
 			<groupId>de.jungblut.math</groupId>
 			<artifactId>tjungblut-math</artifactId>
 			<version>${tjmath.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.codepoetics</groupId>
+			<artifactId>protonpack</artifactId>
+			<version>1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jblas</groupId>
@@ -108,16 +113,6 @@
 			<groupId>tomcat</groupId>
 			<artifactId>servlet-api</artifactId>
 			<version>5.5.23</version>
-		</dependency>
-		<dependency>
-			<groupId>org.twitter4j</groupId>
-			<artifactId>twitter4j-core</artifactId>
-			<version>3.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>org.twitter4j</groupId>
-			<artifactId>twitter4j-stream</artifactId>
-			<version>3.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>net.sourceforge.nekohtml</groupId>
