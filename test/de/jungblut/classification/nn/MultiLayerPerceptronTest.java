@@ -3,6 +3,7 @@ package de.jungblut.classification.nn;
 import static de.jungblut.math.activation.ActivationFunctionSelector.LINEAR;
 import static de.jungblut.math.activation.ActivationFunctionSelector.SIGMOID;
 import static de.jungblut.math.activation.ActivationFunctionSelector.SOFTMAX;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 
+import org.apache.commons.math3.random.RandomDataImpl;
 import org.junit.Test;
 
 import de.jungblut.math.DoubleVector;
@@ -93,6 +95,24 @@ public class MultiLayerPerceptronTest {
   }
 
   @Test
+  public void testSoftMaxFminCG() {
+    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
+        .create(new int[] { 2, 3 },
+            new ActivationFunction[] { LINEAR.get(), SOFTMAX.get() },
+            new CrossEntropyErrorFunction(), new Fmincg(), 100).build();
+    Tuple<DoubleVector[], DoubleVector[]> sample = sampleSoftMax();
+    double error = mlp.train(sample.getFirst(), sample.getSecond(),
+        new Fmincg(), 2000, 0.0d, false);
+    System.out.println(error);
+    if (error < 0.01) {
+      assertTrue(error < 0.01);
+      testPredictionsSoftMax(sample, mlp);
+    } else {
+      throw new RuntimeException("Test seems flaky..");
+    }
+  }
+
+  @Test
   public void testXORElliotFminCG() {
     MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
         .create(
@@ -155,7 +175,6 @@ public class MultiLayerPerceptronTest {
     }
   }
 
-  @SuppressWarnings("resource")
   @Test
   public void testSerialization() throws Exception {
     MultilayerPerceptron mlp = validateXorSigmoidNetwork(null);
@@ -286,6 +305,27 @@ public class MultiLayerPerceptronTest {
     return new Tuple<>(train, prediction);
   }
 
+  public Tuple<DoubleVector[], DoubleVector[]> sampleSoftMax() {
+    final int data = 2000;
+    DoubleVector[] train = new DoubleVector[data];
+    DoubleVector[] prediction = new DoubleVector[data];
+    final double[] means = { 25d, 50d, 100d };
+    RandomDataImpl rnd = new RandomDataImpl();
+    rnd.reSeed(0);
+
+    for (int i = 0; i < data; i++) {
+      int clz = i % means.length;
+      double mean = means[clz];
+      double stddev = 5d;
+      double[] feat = new double[] { rnd.nextGaussian(mean, stddev),
+          rnd.nextGaussian(mean, stddev), };
+      train[i] = new DenseDoubleVector(feat);
+      prediction[i] = new DenseDoubleVector(means.length);
+      prediction[i].set(clz, 1d);
+    }
+    return new Tuple<>(train, prediction);
+  }
+
   public void testPredictionsSoftMax(
       Tuple<DoubleVector[], DoubleVector[]> sampleXOR, MultilayerPerceptron mlp) {
 
@@ -294,7 +334,7 @@ public class MultiLayerPerceptronTest {
 
     for (int i = 0; i < train.length; i++) {
       DoubleVector predict = mlp.predict(train[i]);
-      assertEquals(outcome[i].get(0), Math.rint(predict.get(0)), 1e-4);
+      assertArrayEquals(outcome[i].toArray(), predict.toArray(), 0.1);
     }
   }
 

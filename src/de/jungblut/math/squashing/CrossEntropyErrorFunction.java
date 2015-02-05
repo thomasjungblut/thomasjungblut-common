@@ -25,8 +25,9 @@ public final class CrossEntropyErrorFunction implements ErrorFunction {
   }
 
   @Override
-  public double calculateDerivative(DoubleVector y, DoubleVector hypothesis) {
-    return hypothesis.subtract(y).sum();
+  public DoubleVector calculateDerivative(DoubleVector y,
+      DoubleVector hypothesis) {
+    return hypothesis.subtract(y);
   }
 
 }

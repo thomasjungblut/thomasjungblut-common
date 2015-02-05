@@ -122,7 +122,6 @@ public class AsyncBufferedOutputStreamTest {
     Arrays.fill(ones, (byte) 1);
     byte[] zeros = new byte[32];
     int numItems = 2500;
-    @SuppressWarnings("resource")
     AsyncBufferedOutputStream out = new AsyncBufferedOutputStream(
         new FileOutputStream(tempFile), 512 * 1024);
     // test write 32 bytes 1s, and 32 bytes 0s for 1gb

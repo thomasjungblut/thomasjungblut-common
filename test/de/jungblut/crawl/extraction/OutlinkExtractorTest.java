@@ -38,7 +38,6 @@ public class OutlinkExtractorTest {
 
   @Test
   public void testGetConnection() throws IOException {
-    @SuppressWarnings("resource")
     InputStream connection = OutlinkExtractor.getConnection(HOME);
     assertNotNull(connection);
     connection.close();
