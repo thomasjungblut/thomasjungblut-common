@@ -1,6 +1,12 @@
 package de.jungblut.reader;
 
+import java.util.Arrays;
+import java.util.stream.Stream;
+
+import com.codepoetics.protonpack.StreamUtils;
+
 import de.jungblut.math.DoubleVector;
+import de.jungblut.online.ml.FeatureOutcomePair;
 
 /**
  * Simplistic dataset to carry information about them. Needs vector
@@ -54,6 +60,12 @@ public class Dataset {
 
   public DoubleVector[] getOutcomes() {
     return this.outcomes;
+  }
+
+  public Stream<FeatureOutcomePair> asStream() {
+    Stream<DoubleVector> left = Arrays.stream(getFeatures());
+    Stream<DoubleVector> right = Arrays.stream(getOutcomes());
+    return StreamUtils.zip(left, right, (l, r) -> new FeatureOutcomePair(l, r));
   }
 
 }

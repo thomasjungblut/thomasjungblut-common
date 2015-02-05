@@ -23,7 +23,14 @@ public final class MNISTReader {
 
   public static Dataset readMNISTTrainImages(String path) {
     List<DoubleVector> features = new ArrayList<>();
-    List<DenseDoubleVector> prediction = new ArrayList<>();
+    List<DoubleVector> prediction = new ArrayList<>();
+
+    DoubleVector[] classes = new DoubleVector[10];
+    for (int i = 0; i < classes.length; i++) {
+      classes[i] = new DenseDoubleVector(classes.length);
+      classes[i].set(i, 1d);
+    }
+
     String line = null;
     int numLine = 0;
     try (BufferedReader br = new BufferedReader(new FileReader(path))) {
@@ -41,8 +48,7 @@ public final class MNISTReader {
           featureVector.set(i - 1, Integer.parseInt(split[i]));
         }
 
-        DenseDoubleVector predVector = new DenseDoubleVector(10);
-        predVector.set(Integer.parseInt(split[0]), 1.0d);
+        DoubleVector predVector = classes[Integer.parseInt(split[0])];
 
         features.add(featureVector);
         prediction.add(predVector);
