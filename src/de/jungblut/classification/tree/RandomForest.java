@@ -59,9 +59,9 @@ public final class RandomForest extends AbstractClassifier {
     if (numRandomFeaturesToChoose <= 0) {
       numRandomFeaturesToChoose = (int) Math.sqrt(numFeatures);
     }
-    Preconditions.checkArgument(
-        featureTypes.length == features[0].getDimension(),
-        "FeatureType length must match the dimension of the features!");
+    Preconditions.checkArgument(featureTypes.length == numFeatures,
+        "FeatureType length must match the dimension of the features! Given: "
+            + numFeatures + ", but expected: " + featureTypes.length);
     Preconditions.checkArgument(numRandomFeaturesToChoose < numFeatures,
         "Number of random features to choose must be "
             + "lower or equal than the number of features!");

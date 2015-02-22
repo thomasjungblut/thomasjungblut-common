@@ -133,6 +133,15 @@ public class EvaluationSplit {
       sampleOutcome[key] = outcome[i];
     }
 
+    for (int i = 0; i < multiQueues.length; i++) {
+      Preconditions
+          .checkNotNull(
+              multiQueues[i],
+              "Queue for class "
+                  + i
+                  + " couldn't be found. This happens when the mentioned class label doesn't exists in the given set of vectors.");
+    }
+
     int splitSize = (int) (features.length * splitFraction);
     double[] samplingProbabilities = new double[multiQueues.length];
     int[] splitIndices = new int[multiQueues.length];

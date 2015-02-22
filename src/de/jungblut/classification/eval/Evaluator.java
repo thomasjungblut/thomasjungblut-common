@@ -46,10 +46,14 @@ public final class Evaluator {
     int numLabels, correct, testSize, truePositive, falsePositive,
         trueNegative, falseNegative;
     int[][] confusionMatrix;
-    double auc;
+    double auc, logLoss;
 
     public double getAUC() {
       return auc;
+    }
+
+    public double getLogLoss() {
+      return -logLoss / testSize;
     }
 
     public double getPrecision() {
@@ -111,6 +115,7 @@ public final class Evaluator {
       trueNegative += res.trueNegative;
       falseNegative += res.falseNegative;
       auc += res.auc;
+      logLoss += res.logLoss;
       if (this.confusionMatrix == null && res.confusionMatrix != null) {
         this.confusionMatrix = res.confusionMatrix;
       } else if (this.confusionMatrix != null && res.confusionMatrix != null) {
@@ -122,8 +127,7 @@ public final class Evaluator {
       }
     }
 
-    public void average(int pn) {
-      final double n = pn;
+    public void average(int n) {
       correct /= n;
       testSize /= n;
       truePositive /= n;
@@ -131,6 +135,7 @@ public final class Evaluator {
       trueNegative /= n;
       falseNegative /= n;
       auc /= n;
+      logLoss /= n;
       if (this.confusionMatrix != null) {
         for (int i = 0; i < numLabels; i++) {
           for (int j = 0; j < numLabels; j++) {
@@ -165,6 +170,7 @@ public final class Evaluator {
       log.info("Testset size: " + getTestSize());
       log.info("Correctly classified: " + getCorrect());
       log.info("Accuracy: " + getAccuracy());
+      log.info("Log loss: " + getLogLoss());
       if (isBinary()) {
         log.info("TP: " + truePositive);
         log.info("FP: " + falsePositive);
@@ -186,6 +192,11 @@ public final class Evaluator {
     public void printConfusionMatrix(String[] classNames) {
       Preconditions.checkNotNull(this.confusionMatrix,
           "No confusion matrix found.");
+      if (classNames != null) {
+        Preconditions.checkArgument(classNames.length == getNumLabels(),
+            "Passed class names doesn't match with number of labels! Expected "
+                + getNumLabels() + " but was " + classNames.length);
+      }
 
       System.out
           .println("\nConfusion matrix (real outcome on rows, prediction in columns)\n");
@@ -340,10 +351,14 @@ public final class Evaluator {
     if (result.isBinary()) {
       List<PredictionOutcomePair> outcomePredictedPairs = new ArrayList<>();
       for (int i = 0; i < testFeatures.length; i++) {
+        DoubleVector outcomeVector = testOutcome[i];
         int outcomeClass = ((int) testOutcome[i].get(0));
         DoubleVector predictedVector = classifier.predict(testFeatures[i]);
         outcomePredictedPairs.add(PredictionOutcomePair.from(outcomeClass,
             predictedVector.get(0)));
+
+        result.logLoss += outcomeVector.multiply(
+            MathUtils.logVector(predictedVector)).sum();
         int prediction = 0;
         if (threshold == null) {
           prediction = classifier.extractPredictedClass(predictedVector);
@@ -376,8 +391,12 @@ public final class Evaluator {
     } else {
       int[][] confusionMatrix = new int[result.numLabels][result.numLabels];
       for (int i = 0; i < testFeatures.length; i++) {
-        int outcomeClass = testOutcome[i].maxIndex();
-        int prediction = classifier.predictedClass(testFeatures[i]);
+        DoubleVector predicted = classifier.predict(testFeatures[i]);
+        DoubleVector outcomeVector = testOutcome[i];
+        result.logLoss += outcomeVector
+            .multiply(MathUtils.logVector(predicted)).sum();
+        int outcomeClass = outcomeVector.maxIndex();
+        int prediction = classifier.extractPredictedClass(predicted);
         confusionMatrix[outcomeClass][prediction]++;
         if (outcomeClass == prediction) {
           result.correct++;

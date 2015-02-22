@@ -6,14 +6,12 @@ import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 
-public class MultilayerPerceptronWeightMapper implements
-    WeightMapper<MultilayerPerceptron> {
+public class MLPWeightMapper implements WeightMapper<MultilayerPerceptron> {
 
   private final int[][] unfoldParameters;
   private final MultilayerPerceptron classifier;
 
-  public MultilayerPerceptronWeightMapper(
-      ClassifierFactory<MultilayerPerceptron> factory) {
+  public MLPWeightMapper(ClassifierFactory<MultilayerPerceptron> factory) {
     this.classifier = factory.newInstance();
     unfoldParameters = MultilayerPerceptronCostFunction
         .computeUnfoldParameters(classifier.getLayers());
