@@ -2,8 +2,8 @@ package de.jungblut.math.minimize;
 
 import java.util.Arrays;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Preconditions;
 
@@ -20,7 +20,7 @@ import de.jungblut.math.DoubleVector;
  */
 public final class GradientDescent extends AbstractMinimizer {
 
-  private static final Log LOG = LogFactory.getLog(GradientDescent.class);
+  private static final Logger LOG = LogManager.getLogger(GradientDescent.class);
 
   private static final int COST_HISTORY = 3;
 

@@ -2,8 +2,6 @@ package de.jungblut.nlp.mr;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
@@ -15,6 +13,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset.Entry;
@@ -29,7 +29,7 @@ import de.jungblut.nlp.Tokenizer;
  */
 public class WordCountJob {
 
-  private static final Log LOG = LogFactory.getLog(WordCountJob.class);
+  private static final Logger LOG = LogManager.getLogger(WordCountJob.class);
 
   public static final String MIN_WORD_COUNT_KEY = "min.word.count";
 

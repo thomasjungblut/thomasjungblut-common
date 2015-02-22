@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -23,6 +21,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.HashMultiset;
 
@@ -45,8 +45,8 @@ public class WordCorpusFrequencyJob {
   public static final String MIN_WORD_COUNT_KEY = "min.word.count";
   public static final String TOKENIZER_CLASS_KEY = "tokenizer.class";
 
-  private static final Log LOG = LogFactory
-      .getLog(WordCorpusFrequencyJob.class);
+  private static final Logger LOG = LogManager
+      .getLogger(WordCorpusFrequencyJob.class);
 
   public static enum WordCorpusCounter {
     TOKEN_ADDED, TOKEN_DISCARDED

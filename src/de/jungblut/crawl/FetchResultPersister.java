@@ -3,9 +3,9 @@ package de.jungblut.crawl;
 import java.io.IOException;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Asynchronous persister thread, taking a resultwriter and handles the logic
@@ -20,7 +20,8 @@ import org.apache.hadoop.conf.Configuration;
 public final class FetchResultPersister<T extends FetchResult> implements
     Runnable {
 
-  private static final Log LOG = LogFactory.getLog(FetchResultPersister.class);
+  private static final Logger LOG = LogManager
+      .getLogger(FetchResultPersister.class);
 
   private volatile boolean running = true;
 

@@ -10,8 +10,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -33,8 +33,8 @@ import de.jungblut.partition.Boundaries.Range;
  */
 public final class ParticleSwarmOptimization extends AbstractMinimizer {
 
-  private static final Log LOG = LogFactory
-      .getLog(ParticleSwarmOptimization.class);
+  private static final Logger LOG = LogManager
+      .getLogger(ParticleSwarmOptimization.class);
 
   private final int numParticles;
   private final double alpha;

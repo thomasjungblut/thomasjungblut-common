@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.datastructure.KDTree;
 import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
@@ -23,7 +23,8 @@ import de.jungblut.math.dense.DenseDoubleVector;
  */
 public final class MeanShiftClustering {
 
-  private static final Log LOG = LogFactory.getLog(MeanShiftClustering.class);
+  private static final Logger LOG = LogManager
+      .getLogger(MeanShiftClustering.class);
 
   private static final double SQRT_2_PI = FastMath.sqrt(2 * Math.PI);
 

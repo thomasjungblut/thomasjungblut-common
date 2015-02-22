@@ -15,8 +15,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.hash.BloomFilter;
 import com.google.common.hash.Funnels;
@@ -39,7 +39,8 @@ import de.jungblut.crawl.extraction.OutlinkExtractor;
 public final class MultithreadedCrawler<T extends FetchResult> implements
     Crawler<T> {
 
-  private static final Log LOG = LogFactory.getLog(MultithreadedCrawler.class);
+  private static final Logger LOG = LogManager
+      .getLogger(MultithreadedCrawler.class);
 
   private static final int THREAD_POOL_SIZE = 32;
   private static final int BATCH_SIZE = 10;

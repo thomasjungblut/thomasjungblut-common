@@ -4,9 +4,9 @@ import gnu.trove.list.array.TDoubleArrayList;
 
 import java.util.ArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.util.FastMath;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
@@ -50,7 +50,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
  */
 public class OWLQN extends AbstractMinimizer {
 
-  private static final Log LOG = LogFactory.getLog(OWLQN.class);
+  private static final Logger LOG = LogManager.getLogger(OWLQN.class);
 
   private DoubleVector x, grad, newX, newGrad, dir;
   private DoubleVector steepestDescDir;

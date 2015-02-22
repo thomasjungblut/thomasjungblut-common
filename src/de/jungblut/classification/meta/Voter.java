@@ -9,8 +9,8 @@ import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Preconditions;
 
@@ -32,7 +32,7 @@ import de.jungblut.partition.Boundaries.Range;
  */
 public final class Voter<A extends Classifier> extends AbstractClassifier {
 
-  private static final Log LOG = LogFactory.getLog(Voter.class);
+  private static final Logger LOG = LogManager.getLogger(Voter.class);
 
   public static enum CombiningType {
     MAJORITY, AVERAGE, PROBABILITY

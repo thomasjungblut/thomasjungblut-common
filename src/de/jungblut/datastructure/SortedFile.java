@@ -17,8 +17,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.DataOutputBuffer;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
@@ -27,6 +25,8 @@ import org.apache.hadoop.util.IndexedSortable;
 import org.apache.hadoop.util.IndexedSorter;
 import org.apache.hadoop.util.QuickSort;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * A file that serializes WritableComparables to a buffer, once it hits a
@@ -42,7 +42,7 @@ import org.apache.hadoop.util.ReflectionUtils;
 public final class SortedFile<M extends WritableComparable> implements
     IndexedSortable, Closeable {
 
-  private static final Log LOG = LogFactory.getLog(SortedFile.class);
+  private static final Logger LOG = LogManager.getLogger(SortedFile.class);
 
   private static final float SPILL_TRIGGER_BUFFER_FILL_PERCENTAGE = 0.9f;
   private static final IndexedSorter SORTER = new QuickSort();

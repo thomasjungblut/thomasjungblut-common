@@ -8,10 +8,10 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.math3.util.FastMath;
 import org.apache.hadoop.io.Writable;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.classification.AbstractClassifier;
 import de.jungblut.math.DoubleMatrix;
@@ -34,7 +34,7 @@ import de.jungblut.writable.VectorWritable;
  */
 public final class HMM extends AbstractClassifier implements Writable {
 
-  private static final Log LOG = LogFactory.getLog(HMM.class);
+  private static final Logger LOG = LogManager.getLogger(HMM.class);
 
   private int numVisibleStates;
   private int numHiddenStates;

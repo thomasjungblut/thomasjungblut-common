@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.stream.IntStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.math.DoubleVector;
@@ -22,7 +22,8 @@ import de.jungblut.math.DoubleVector;
  */
 public final class KMeansClustering {
 
-  private static final Log LOG = LogFactory.getLog(KMeansClustering.class);
+  private static final Logger LOG = LogManager
+      .getLogger(KMeansClustering.class);
 
   private final DoubleVector[] centers;
   private final List<DoubleVector> vectors;

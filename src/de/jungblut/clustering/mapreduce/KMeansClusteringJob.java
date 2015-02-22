@@ -2,8 +2,6 @@ package de.jungblut.clustering.mapreduce;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -15,6 +13,8 @@ import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.clustering.model.ClusterCenter;
 import de.jungblut.clustering.model.VectorWritable;
@@ -22,7 +22,8 @@ import de.jungblut.clustering.model.VectorWritable;
 @SuppressWarnings("deprecation")
 public class KMeansClusteringJob {
 
-  private static final Log LOG = LogFactory.getLog(KMeansClusteringJob.class);
+  private static final Logger LOG = LogManager
+      .getLogger(KMeansClusteringJob.class);
 
   public static void main(String[] args) throws IOException,
       InterruptedException, ClassNotFoundException {

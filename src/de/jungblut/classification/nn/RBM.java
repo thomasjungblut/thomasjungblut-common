@@ -5,8 +5,8 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Random;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -32,7 +32,7 @@ import de.jungblut.writable.MatrixWritable;
  */
 public final class RBM {
 
-  private static final Log LOG = LogFactory.getLog(RBM.class);
+  private static final Logger LOG = LogManager.getLogger(RBM.class);
 
   public static class RBMBuilder {
 

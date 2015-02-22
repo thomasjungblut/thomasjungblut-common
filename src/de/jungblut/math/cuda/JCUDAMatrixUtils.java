@@ -12,8 +12,8 @@ import jcuda.jcublas.cublasPointerMode;
 import jcuda.runtime.JCuda;
 import jcuda.runtime.cudaDeviceProp;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.math.dense.DenseDoubleMatrix;
 
@@ -31,7 +31,8 @@ import de.jungblut.math.dense.DenseDoubleMatrix;
  */
 public final class JCUDAMatrixUtils {
 
-  private static final Log LOG = LogFactory.getLog(JCUDAMatrixUtils.class);
+  private static final Logger LOG = LogManager
+      .getLogger(JCUDAMatrixUtils.class);
 
   public static boolean EXCEPTIONS_ENABLED = false;
   public static boolean CUBLAS2_AVAILABLE = false;

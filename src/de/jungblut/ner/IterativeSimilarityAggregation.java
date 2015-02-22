@@ -2,8 +2,8 @@ package de.jungblut.ner;
 
 import gnu.trove.list.array.TIntArrayList;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.distance.CosineDistance;
@@ -25,8 +25,8 @@ import de.jungblut.math.tuple.Tuple;
  */
 public final class IterativeSimilarityAggregation {
 
-  private static final Log LOG = LogFactory
-      .getLog(IterativeSimilarityAggregation.class);
+  private static final Logger LOG = LogManager
+      .getLogger(IterativeSimilarityAggregation.class);
 
   private final double alpha;
   // similarity between the term nodes are defined by the similarity of their

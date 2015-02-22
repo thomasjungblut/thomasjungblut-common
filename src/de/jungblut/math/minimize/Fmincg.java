@@ -1,7 +1,7 @@
 package de.jungblut.math.minimize;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.math.DoubleVector;
 
@@ -60,7 +60,7 @@ import de.jungblut.math.DoubleVector;
  */
 public final class Fmincg extends AbstractMinimizer {
 
-  private static final Log LOG = LogFactory.getLog(Fmincg.class);
+  private static final Logger LOG = LogManager.getLogger(Fmincg.class);
 
   // extrapolate maximum 3 times the current bracket.
   // this can be set higher for bigger extrapolations

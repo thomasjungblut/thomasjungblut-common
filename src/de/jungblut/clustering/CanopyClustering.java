@@ -5,8 +5,8 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Preconditions;
 
@@ -20,7 +20,8 @@ import de.jungblut.math.DoubleVector;
  */
 public final class CanopyClustering {
 
-  private static final Log LOG = LogFactory.getLog(CanopyClustering.class);
+  private static final Logger LOG = LogManager
+      .getLogger(CanopyClustering.class);
 
   private CanopyClustering() {
     throw new IllegalAccessError();

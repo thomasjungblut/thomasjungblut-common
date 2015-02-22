@@ -1,7 +1,7 @@
 package de.jungblut.classification.eval;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import de.jungblut.classification.Classifier;
 import de.jungblut.classification.eval.Evaluator.EvaluationResult;
@@ -25,7 +25,8 @@ import de.jungblut.math.minimize.Minimizer;
 public class EvaluationListener<A extends Classifier> implements
     IterationCompletionListener {
 
-  private static final Log LOG = LogFactory.getLog(EvaluationListener.class);
+  private static final Logger LOG = LogManager
+      .getLogger(EvaluationListener.class);
 
   protected final int numLabels;
   protected final EvaluationSplit split;

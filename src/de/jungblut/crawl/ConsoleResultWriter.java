@@ -2,8 +2,8 @@ package de.jungblut.crawl;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Simple class that outputs to console.
@@ -14,7 +14,8 @@ import org.apache.commons.logging.LogFactory;
 public class ConsoleResultWriter<T extends FetchResult> extends
     ResultWriterAdapter<T> {
 
-  private static final Log LOG = LogFactory.getLog(ConsoleResultWriter.class);
+  private static final Logger LOG = LogManager
+      .getLogger(ConsoleResultWriter.class);
 
   @Override
   public void write(T result) throws IOException {

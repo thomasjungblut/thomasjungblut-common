@@ -11,8 +11,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
@@ -36,7 +36,7 @@ import de.jungblut.partition.Boundaries.Range;
  */
 public final class Evaluator {
 
-  private static final Log LOG = LogFactory.getLog(Evaluator.class);
+  private static final Logger LOG = LogManager.getLogger(Evaluator.class);
 
   private Evaluator() {
     throw new IllegalAccessError();
@@ -160,7 +160,7 @@ public final class Evaluator {
       print(LOG);
     }
 
-    public void print(Log log) {
+    public void print(Logger log) {
       log.info("Number of labels: " + getNumLabels());
       log.info("Testset size: " + getTestSize());
       log.info("Correctly classified: " + getCorrect());
