@@ -2,6 +2,7 @@ package de.jungblut.math;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -12,6 +13,7 @@ import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.tuple.Tuple;
 import de.jungblut.math.tuple.Tuple3;
+import de.jungblut.online.ml.FeatureOutcomePair;
 import de.jungblut.reader.Dataset;
 
 /**
@@ -94,27 +96,50 @@ public final class MathUtils {
   /**
    * Normalizes the given dataset (inplace), by subtracting the mean and
    * dividing by the stddev. Dataset will have 0 mean and stddev of 1.
+   * 
+   * @return a tuple of the mean and the stddev.
    */
-  public static void meanNormalizeColumns(Dataset dataset) {
+  public static Tuple<DoubleVector, DoubleVector> meanNormalizeColumns(
+      Dataset dataset) {
+    return meanNormalizeColumns(dataset, (x) -> true);
+  }
+
+  /**
+   * Normalizes the given dataset (inplace), by subtracting the mean and
+   * dividing by the stddev. Dataset will have 0 mean and stddev of 1.
+   * 
+   * Additionally you can supply a predicate, if you want to only execute this
+   * on a specific sub part of the dataset.
+   * 
+   * @return a tuple of the mean and the stddev.
+   */
+  public static Tuple<DoubleVector, DoubleVector> meanNormalizeColumns(
+      Dataset dataset, Predicate<FeatureOutcomePair> filterPredicate) {
 
     final int numSamples = dataset.getFeatures().length;
     DoubleVector sumVector = null;
     for (int i = 0; i < numSamples; i++) {
-      if (i == 0) {
-        sumVector = dataset.getFeatures()[0];
-      } else {
-        sumVector = sumVector.add(dataset.getFeatures()[i]);
+      if (filterPredicate.test(new FeatureOutcomePair(dataset.getFeatures()[i],
+          dataset.getOutcomes()[i]))) {
+        if (sumVector == null) {
+          sumVector = dataset.getFeatures()[i];
+        } else {
+          sumVector = sumVector.add(dataset.getFeatures()[i]);
+        }
       }
     }
 
     final DoubleVector mean = sumVector.divide(numSamples);
     DoubleVector stdVector = null;
     for (int i = 0; i < numSamples; i++) {
-      if (i == 0) {
-        stdVector = dataset.getFeatures()[0].subtract(mean).pow(2d);
-      } else {
-        stdVector = stdVector.add(dataset.getFeatures()[i].subtract(mean).pow(
-            2d));
+      if (filterPredicate.test(new FeatureOutcomePair(dataset.getFeatures()[i],
+          dataset.getOutcomes()[i]))) {
+        if (stdVector == null) {
+          stdVector = dataset.getFeatures()[i].subtract(mean).pow(2d);
+        } else {
+          stdVector = stdVector.add(dataset.getFeatures()[i].subtract(mean)
+              .pow(2d));
+        }
       }
     }
 
@@ -123,9 +148,14 @@ public final class MathUtils {
         .apply((int i, double val) -> Math.max(1, val));
 
     for (int i = 0; i < numSamples; i++) {
-      dataset.getFeatures()[i] = dataset.getFeatures()[i].subtract(mean)
-          .divide(stdVector);
+      if (filterPredicate.test(new FeatureOutcomePair(dataset.getFeatures()[i],
+          dataset.getOutcomes()[i]))) {
+        dataset.getFeatures()[i] = dataset.getFeatures()[i].subtract(mean)
+            .divide(stdVector);
+      }
     }
+
+    return new Tuple<>(mean, stdVector);
   }
 
   /**
