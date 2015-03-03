@@ -38,6 +38,8 @@ You can simply build with:
 
 > mvn clean package install
 
+If you hit an issue that my math lib (e.g. a SNAPSHOT build) is missing, pull the latest from ["tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib") and execute the build information there- then retry building this library. 
+
 The created jar contains debuggable code + sources. On the unfortunate event of failing testcases you can skip them:
  
 > mvn clean package install -DskipTests
