@@ -8,11 +8,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 import org.apache.commons.math3.util.FastMath;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Predicate;
+import com.google.common.collect.ConcurrentHashMultiset;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Iterables;
@@ -42,10 +45,12 @@ public final class VectorizerUtils {
    * It treats tokens that are contained in at least 90% of all documents as
    * spam, they won't be included in the final dictionary.
    * 
+   * This method is compatible to parallel streams.
+   * 
    * @param tokenizedDocuments the documents that are already tokenized.
    * @return a sorted String array with tokens in it.
    */
-  public static String[] buildDictionary(List<String[]> tokenizedDocuments) {
+  public static String[] buildDictionary(Stream<String[]> tokenizedDocuments) {
     return buildDictionary(tokenizedDocuments, 0.9f, 0);
   }
 
@@ -53,6 +58,8 @@ public final class VectorizerUtils {
    * Builds a sorted dictionary of tokens from a list of (tokenized) documents.
    * It treats tokens that are contained in at least "stopWordPercentage"% of
    * all documents as spam, they won't be included in the final dictionary.
+   * 
+   * This method is compatible to parallel streams.
    * 
    * @param tokenizedDocuments the documents that are the base for the
    *          dictionary.
@@ -63,23 +70,25 @@ public final class VectorizerUtils {
    *          (strict greater than supplied value)
    * @return a sorted String array with tokens in it.
    */
-  public static String[] buildDictionary(List<String[]> tokenizedDocuments,
+  public static String[] buildDictionary(Stream<String[]> tokenizedDocuments,
       float stopWordPercentage, int minFrequency) {
     Preconditions.checkArgument(stopWordPercentage >= 0f
         && stopWordPercentage <= 1f,
         "The provided stop word percentage is not between 0 and 1: "
             + stopWordPercentage);
-    HashMultiset<String> set = HashMultiset.create();
+
+    final ConcurrentHashMultiset<String> set = ConcurrentHashMultiset.create();
     set.add(OUT_OF_VOCABULARY); // add the out of vocabulary item
-    for (String[] doc : tokenizedDocuments) {
+
+    AtomicLong numDocs = new AtomicLong();
+    tokenizedDocuments.forEach((doc) -> {
+      numDocs.incrementAndGet();
       // deduplication, because we want to measure how often a token is in a
       // doc, so we have to get distinct tokens in a document.
-      final ArrayList<String> deduplicate = ArrayUtils.deduplicate(doc);
-      for (String token : deduplicate) {
-        set.add(token);
-      }
-    }
-    final int threshold = (int) (stopWordPercentage * tokenizedDocuments.size());
+        set.addAll(ArrayUtils.deduplicate(doc));
+      });
+
+    final int threshold = (int) (stopWordPercentage * numDocs.get());
     Set<String> toRemove = new HashSet<>();
     // now remove the spam
     for (Entry<String> entry : set.entrySet()) {
@@ -102,7 +111,6 @@ public final class VectorizerUtils {
 
     String[] array = elementSet.toArray(new String[elementSet.size()]);
     elementSet = null;
-    set = null;
     Arrays.sort(array);
     return array;
   }
@@ -217,11 +225,11 @@ public final class VectorizerUtils {
    * document.
    * 
    * @param tokenizedDocuments the array of documents.
-   * @return a list of sparse vectors, representing the documents as vectors
+   * @return a stream of sparse vectors, representing the documents as vectors
    *         based on word frequency.
    */
-  public static List<DoubleVector> wordFrequencyVectorize(String[]... vars) {
-    return wordFrequencyVectorize(Arrays.asList(vars));
+  public static Stream<DoubleVector> wordFrequencyVectorize(String[]... vars) {
+    return wordFrequencyVectorize(Arrays.stream(vars));
   }
 
   /**
@@ -232,11 +240,11 @@ public final class VectorizerUtils {
    * document.
    * 
    * @param tokenizedDocuments the list of documents.
-   * @return a list of sparse vectors, representing the documents as vectors
+   * @return a stream of sparse vectors, representing the documents as vectors
    *         based on word frequency.
    */
-  public static List<DoubleVector> wordFrequencyVectorize(
-      List<String[]> tokenizedDocuments) {
+  public static Stream<DoubleVector> wordFrequencyVectorize(
+      Stream<String[]> tokenizedDocuments) {
     return wordFrequencyVectorize(tokenizedDocuments,
         buildDictionary(tokenizedDocuments));
   }
@@ -250,18 +258,18 @@ public final class VectorizerUtils {
    * 
    * @param tokenizedDocuments the list of documents.
    * @param dictionary the dictionary, must be sorted.
-   * @return a list of sparse vectors, representing the documents as vectors
+   * @return a stream of sparse vectors, representing the documents as vectors
    *         based on word frequency.
    */
-  public static List<DoubleVector> wordFrequencyVectorize(
-      List<String[]> tokenizedDocuments, String[] dictionary) {
+  public static Stream<DoubleVector> wordFrequencyVectorize(
+      Stream<String[]> tokenizedDocuments, final String[] dictionary) {
 
-    List<DoubleVector> vectorList = new ArrayList<>(tokenizedDocuments.size());
     int oovIndex = Arrays.binarySearch(dictionary, OUT_OF_VOCABULARY);
-    for (String[] arr : tokenizedDocuments) {
+
+    return tokenizedDocuments.map(tokens -> {
       DoubleVector vector = new SparseDoubleVector(dictionary.length);
-      HashMultiset<String> set = HashMultiset.create(Arrays.asList(arr));
-      for (String s : arr) {
+      HashMultiset<String> set = HashMultiset.create(Arrays.asList(tokens));
+      for (String s : tokens) {
         int foundIndex = Arrays.binarySearch(dictionary, s);
         // simply ignore tokens we don't know or that are spam
         if (foundIndex >= 0) {
@@ -271,10 +279,8 @@ public final class VectorizerUtils {
           vector.set(oovIndex, 1);
         }
       }
-      vectorList.add(vector);
-    }
-
-    return vectorList;
+      return vector;
+    });
   }
 
   /**

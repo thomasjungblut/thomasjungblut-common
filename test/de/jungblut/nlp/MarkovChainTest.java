@@ -26,7 +26,7 @@ public class MarkovChainTest {
   public void testSequenceProbability() {
 
     MarkovChain chain = MarkovChain.create(5);
-    chain.train(trainingSet);
+    chain.train(trainingSet.stream());
 
     double p = chain.getProbabilityForSequence(new int[] { 1, 2, 1 });
     // this sequence is not very probable, because we have never seen the
@@ -46,7 +46,7 @@ public class MarkovChainTest {
   public void testSequenceCompletion() {
 
     MarkovChain chain = MarkovChain.create(5);
-    chain.train(trainingSet);
+    chain.train(trainingSet.stream());
     Optional<Random> absent = Optional.absent();
     int[] completeStateSequence = chain.completeStateSequence(absent,
         new int[] { -1, 2 }, 0);

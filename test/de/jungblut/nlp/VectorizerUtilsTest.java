@@ -37,14 +37,16 @@ public class VectorizerUtilsTest {
     String[] expectedResults = new String[] { "1", "2",
         VectorizerUtils.OUT_OF_VOCABULARY, "a", "doc", "document", "dont", "i",
         "is", "that", "think", "this", "totally", "unrelated" };
-    String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
+    String[] dict = VectorizerUtils
+        .buildDictionary(tokenizedDocuments.stream());
     assertArrayEquals(expectedResults, dict);
 
     // test with spam detector and 50% threshold
     expectedResults = new String[] { "1", "2",
         VectorizerUtils.OUT_OF_VOCABULARY, "a", "document", "dont", "i",
         "that", "think", "this", "totally", "unrelated" };
-    dict = VectorizerUtils.buildDictionary(tokenizedDocuments, 0.5f, 0);
+    dict = VectorizerUtils
+        .buildDictionary(tokenizedDocuments.stream(), 0.5f, 0);
     assertArrayEquals(expectedResults, dict);
   }
 
@@ -56,7 +58,7 @@ public class VectorizerUtilsTest {
         { 1 }, { 2, 3 }, { 0 }, { 3 }, { 3 }, { 0, 1, 2 }, { 2 }, { 0, 1 }, };
     HashMultimap<String, Integer> invertedIndex = VectorizerUtils
         .buildInvertedIndexMap(tokenizedDocuments,
-            VectorizerUtils.buildDictionary(tokenizedDocuments));
+            VectorizerUtils.buildDictionary(tokenizedDocuments.stream()));
 
     for (int i = 0; i < tokens.length; i++) {
       Set<Integer> set = invertedIndex.get(tokens[i]);
@@ -74,7 +76,8 @@ public class VectorizerUtilsTest {
         "that", "1", "document", "dont", "doc", "totally", "this" };
     int[][] docs = new int[][] { { 0, 2, 3 }, { 3 }, { 2 }, { 3 }, { 3 },
         { 1 }, { 2, 3 }, { 0 }, { 3 }, { 3 }, { 0, 1, 2 }, { 2 }, { 0, 1 }, };
-    String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
+    String[] dict = VectorizerUtils
+        .buildDictionary(tokenizedDocuments.stream());
     int[][] dictDocs = VectorizerUtils.buildInvertedIndexArray(
         tokenizedDocuments, dict);
 
@@ -90,7 +93,8 @@ public class VectorizerUtilsTest {
   @Test
   public void testTfIdfVectorize() {
 
-    String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
+    String[] dict = VectorizerUtils
+        .buildDictionary(tokenizedDocuments.stream());
     assertEquals(14, dict.length);
     int[] docCount = VectorizerUtils.buildInvertedIndexDocumentCount(
         tokenizedDocuments, dict);
@@ -167,7 +171,8 @@ public class VectorizerUtilsTest {
 
   @Test
   public void testBuildTransitionVector() {
-    String[] dict = VectorizerUtils.buildDictionary(tokenizedDocuments);
+    String[] dict = VectorizerUtils
+        .buildDictionary(tokenizedDocuments.stream());
     int[] transitionVector = VectorizerUtils.buildTransitionVector(dict,
         tokenizedDocuments.get(0));
     int[] expected = new int[] { 11, 8, 4, 0 };

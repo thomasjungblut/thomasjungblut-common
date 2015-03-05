@@ -2,12 +2,13 @@ package de.jungblut.nlp;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Random;
+import java.util.stream.Stream;
 
 import org.apache.commons.math3.util.FastMath;
 
 import com.google.common.base.Optional;
+import com.google.common.base.Preconditions;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -51,15 +52,17 @@ public final class MarkovChain {
    * occurrence of each following two state pairs. e.G. [ 1, 2, 3, 4 ] will
    * measure the probabilities of [1,2],[2,3],[3,4].
    */
-  public void train(List<int[]> states) {
+  public void train(Stream<int[]> states) {
+    Preconditions.checkArgument(!states.isParallel(),
+        "parallel streams are not supported");
     // loop over all state sets and set the count of the co-occurrence in the
     // transition probability matrix
-    for (int[] array : states) {
+    states.forEach((array) -> {
       for (int i = 0; i < array.length - 1; i++) {
         int count = (int) transitionProbabilities.get(array[i], array[i + 1]);
         transitionProbabilities.set(array[i], array[i + 1], ++count);
       }
-    }
+    });
 
     final int[] rowEntries = transitionProbabilities.rowIndices();
     for (int rowIndex : rowEntries) {
