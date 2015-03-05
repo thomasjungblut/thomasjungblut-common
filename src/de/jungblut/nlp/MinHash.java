@@ -150,7 +150,7 @@ public final class MinHash {
       Iterator<DoubleVectorElement> iterateNonZero = vector.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
-        int value = (int) next.getValue();
+        int value = next.getIndex();
         bytesToHash[0] = (byte) (value >> 24);
         bytesToHash[1] = (byte) (value >> 16);
         bytesToHash[2] = (byte) (value >> 8);
