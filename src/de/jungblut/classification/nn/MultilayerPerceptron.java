@@ -14,10 +14,10 @@ import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.activation.LinearActivationFunction;
 import de.jungblut.math.activation.SigmoidActivationFunction;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.loss.LossFunction;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.DenseMatrixFolder;
 import de.jungblut.math.minimize.Minimizer;
-import de.jungblut.math.squashing.ErrorFunction;
 import de.jungblut.writable.MatrixWritable;
 
 /**
@@ -43,7 +43,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     private final int maxIterations;
     private final int[] layer;
     private final ActivationFunction[] activationFunctions;
-    private final ErrorFunction error;
+    private final LossFunction error;
 
     private TrainingType type = TrainingType.CPU;
     private double lambda = 0d;
@@ -58,7 +58,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
 
     private MultilayerPerceptronBuilder(int[] layer,
         ActivationFunction[] activations, Minimizer minimizer,
-        int maxIterations, ErrorFunction error) {
+        int maxIterations, LossFunction error) {
       this.layer = layer;
       this.minimizer = minimizer;
       this.error = error;
@@ -179,7 +179,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
      * @return a brand new training configuration with the given parameters set.
      */
     public static MultilayerPerceptronBuilder create(int[] layer,
-        ActivationFunction[] activations, ErrorFunction errorFunction,
+        ActivationFunction[] activations, LossFunction errorFunction,
         Minimizer minimizer, int maxIteration) {
       return new MultilayerPerceptronBuilder(layer, activations, minimizer,
           maxIteration, errorFunction);
@@ -198,7 +198,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
   private double visibleDropoutProbability;
   private TrainingType type = TrainingType.CPU;
   private boolean verbose;
-  private ErrorFunction error;
+  private LossFunction error;
   private boolean stochastic = false;
   private int miniBatchSize;
   private int batchParallelism = Runtime.getRuntime().availableProcessors();
@@ -259,7 +259,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
    * to query the network after a training session.
    */
   private MultilayerPerceptron(int[] layers, WeightMatrix[] weights,
-      ActivationFunction[] activations, ErrorFunction error) {
+      ActivationFunction[] activations, LossFunction error) {
     this.layers = layers;
     this.weights = weights;
     this.activations = activations;
@@ -398,7 +398,7 @@ public final class MultilayerPerceptron extends AbstractClassifier {
     return this.visibleDropoutProbability;
   }
 
-  ErrorFunction getErrorFunction() {
+  LossFunction getErrorFunction() {
     return this.error;
   }
 
@@ -451,9 +451,9 @@ public final class MultilayerPerceptron extends AbstractClassifier {
         throw new RuntimeException(e);
       }
     }
-    ErrorFunction error = null;
+    LossFunction error = null;
     try {
-      error = (ErrorFunction) Class.forName(in.readUTF()).newInstance();
+      error = (LossFunction) Class.forName(in.readUTF()).newInstance();
     } catch (InstantiationException | IllegalAccessException
         | ClassNotFoundException e) {
       throw new RuntimeException(e);

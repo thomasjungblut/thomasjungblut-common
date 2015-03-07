@@ -1,4 +1,4 @@
-package de.jungblut.math.squashing;
+package de.jungblut.math.loss;
 
 import org.apache.commons.math3.util.FastMath;
 
@@ -13,10 +13,10 @@ import de.jungblut.math.dense.SingleEntryDoubleVector;
  * @author thomas.jungblut
  *
  */
-public class HingeErrorFunction implements ErrorFunction {
+public class HingeLoss implements LossFunction {
 
   @Override
-  public double calculateError(DoubleMatrix y, DoubleMatrix hypothesis) {
+  public double calculateLoss(DoubleMatrix y, DoubleMatrix hypothesis) {
     DoubleMatrix multiplyElementWise = y.multiplyElementWise(hypothesis);
     double sum = 0d;
     for (int i = 0; i < multiplyElementWise.getRowCount(); i++) {
@@ -26,7 +26,7 @@ public class HingeErrorFunction implements ErrorFunction {
   }
 
   @Override
-  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+  public double calculateLoss(DoubleVector y, DoubleVector hypothesis) {
     DoubleVector v = y.multiply(hypothesis);
     return FastMath.max(0, 1 - v.get(0));
   }

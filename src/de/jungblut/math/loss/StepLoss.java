@@ -1,4 +1,4 @@
-package de.jungblut.math.squashing;
+package de.jungblut.math.loss;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -12,15 +12,15 @@ import de.jungblut.math.dense.SingleEntryDoubleVector;
  * @author thomas.jungblut
  *
  */
-public class StepErrorFunction implements ErrorFunction {
+public class StepLoss implements LossFunction {
 
   @Override
-  public double calculateError(DoubleMatrix y, DoubleMatrix hypothesis) {
+  public double calculateLoss(DoubleMatrix y, DoubleMatrix hypothesis) {
     return y.subtract(hypothesis).sum() / y.getRowCount();
   }
 
   @Override
-  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+  public double calculateLoss(DoubleVector y, DoubleVector hypothesis) {
     return y.subtract(hypothesis).sum();
   }
 

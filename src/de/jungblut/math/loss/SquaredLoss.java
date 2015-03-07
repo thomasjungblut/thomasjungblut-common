@@ -1,4 +1,4 @@
-package de.jungblut.math.squashing;
+package de.jungblut.math.loss;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -11,10 +11,10 @@ import de.jungblut.math.activation.LinearActivationFunction;
  * @author thomas.jungblut
  * 
  */
-public final class SquaredMeanErrorFunction implements ErrorFunction {
+public final class SquaredLoss implements LossFunction {
 
   @Override
-  public double calculateError(DoubleMatrix y, DoubleMatrix hypothesis) {
+  public double calculateLoss(DoubleMatrix y, DoubleMatrix hypothesis) {
     double sum = 0d;
     for (int col = 0; col < y.getColumnCount(); col++) {
       for (int row = 0; row < y.getRowCount(); row++) {
@@ -26,7 +26,7 @@ public final class SquaredMeanErrorFunction implements ErrorFunction {
   }
 
   @Override
-  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+  public double calculateLoss(DoubleVector y, DoubleVector hypothesis) {
     double sum = 0d;
     for (int col = 0; col < y.getDimension(); col++) {
       double diff = y.get(col) - hypothesis.get(col);

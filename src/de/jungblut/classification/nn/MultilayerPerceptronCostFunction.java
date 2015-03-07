@@ -10,10 +10,10 @@ import de.jungblut.math.activation.ActivationFunction;
 import de.jungblut.math.cuda.JCUDAMatrixUtils;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.loss.LossFunction;
 import de.jungblut.math.minimize.AbstractMiniBatchCostFunction;
 import de.jungblut.math.minimize.CostGradientTuple;
 import de.jungblut.math.minimize.DenseMatrixFolder;
-import de.jungblut.math.squashing.ErrorFunction;
 
 /**
  * Neural network costfunction for a multilayer perceptron.
@@ -86,7 +86,7 @@ public final class MultilayerPerceptronCostFunction extends
 
     // calculate our cost (error in the last layer)
     double j = (1.0d / m)
-        * conf.error.calculateError(y, ax[conf.layerSizes.length - 1])
+        * conf.error.calculateLoss(y, ax[conf.layerSizes.length - 1])
         + regularization;
 
     return new CostGradientTuple(j,
@@ -255,7 +255,7 @@ public final class MultilayerPerceptronCostFunction extends
     public int[] layerSizes;
     public int[][] unfoldParameters;
     public ActivationFunction[] activations;
-    public ErrorFunction error;
+    public LossFunction error;
     public TrainingType trainingType;
     public double visibleDropoutProbability;
     public double hiddenDropoutProbability;

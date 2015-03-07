@@ -1,4 +1,4 @@
-package de.jungblut.math.squashing;
+package de.jungblut.math.loss;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -10,10 +10,10 @@ import de.jungblut.math.MathUtils;
  * @author thomas.jungblut
  * 
  */
-public final class LogisticErrorFunction implements ErrorFunction {
+public final class LogLoss implements LossFunction {
 
   @Override
-  public double calculateError(DoubleMatrix y, DoubleMatrix hypothesis) {
+  public double calculateLoss(DoubleMatrix y, DoubleMatrix hypothesis) {
 
     DoubleMatrix negativeOutcome = y.subtractBy(1.0d);
     DoubleMatrix inverseOutcome = y.multiply(-1d);
@@ -29,7 +29,7 @@ public final class LogisticErrorFunction implements ErrorFunction {
   }
 
   @Override
-  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+  public double calculateLoss(DoubleVector y, DoubleVector hypothesis) {
 
     DoubleVector negativeOutcome = y.subtractFrom(1.0d);
     DoubleVector inverseOutcome = y.multiply(-1d);

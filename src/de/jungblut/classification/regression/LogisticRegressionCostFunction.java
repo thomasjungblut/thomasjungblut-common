@@ -7,14 +7,14 @@ import java.util.Arrays;
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
+import de.jungblut.math.loss.LogLoss;
+import de.jungblut.math.loss.LossFunction;
 import de.jungblut.math.minimize.CostFunction;
 import de.jungblut.math.minimize.CostGradientTuple;
-import de.jungblut.math.squashing.ErrorFunction;
-import de.jungblut.math.squashing.LogisticErrorFunction;
 
 public final class LogisticRegressionCostFunction implements CostFunction {
 
-  private static final ErrorFunction ERROR_FUNCTION = new LogisticErrorFunction();
+  private static final LossFunction ERROR_FUNCTION = new LogLoss();
 
   private final DoubleMatrix x;
   private final DoubleMatrix xTransposed;
@@ -42,7 +42,7 @@ public final class LogisticRegressionCostFunction implements CostFunction {
 
     DoubleVector activation = SIGMOID.get().apply(x.multiplyVectorRow(theta));
     DenseDoubleMatrix hypo = new DenseDoubleMatrix(Arrays.asList(activation));
-    double error = ERROR_FUNCTION.calculateError(y, hypo);
+    double error = ERROR_FUNCTION.calculateLoss(y, hypo);
     DoubleMatrix loss = hypo.subtract(y);
     double j = error / m;
     DoubleVector gradient = xTransposed.multiplyVectorRow(loss.getRowVector(0))

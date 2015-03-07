@@ -1,4 +1,4 @@
-package de.jungblut.math.squashing;
+package de.jungblut.math.loss;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -9,7 +9,7 @@ import de.jungblut.math.DoubleVector;
  * @author thomas.jungblut
  * 
  */
-public interface ErrorFunction {
+public interface LossFunction {
 
   /**
    * Calculate the error with the given parameters.
@@ -20,7 +20,7 @@ public interface ErrorFunction {
    *          columns the predicted output.
    * @return a positive value that denotes the error between the two matrices.
    */
-  public double calculateError(DoubleMatrix y, DoubleMatrix hypothesis);
+  public double calculateLoss(DoubleMatrix y, DoubleMatrix hypothesis);
 
   /**
    * Calculate the error with the given parameters.
@@ -29,7 +29,7 @@ public interface ErrorFunction {
    * @param hypothesis the hypothesis as a vector single example.
    * @return a positive value that denotes the error between the two vectors.
    */
-  public double calculateError(DoubleVector y, DoubleVector hypothesis);
+  public double calculateLoss(DoubleVector y, DoubleVector hypothesis);
 
   /**
    * Calculate the derivative with the given parameters.

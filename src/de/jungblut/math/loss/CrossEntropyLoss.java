@@ -1,4 +1,4 @@
-package de.jungblut.math.squashing;
+package de.jungblut.math.loss;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
@@ -12,15 +12,15 @@ import de.jungblut.math.activation.SoftMaxActivationFunction;
  * @author thomas.jungblut
  * 
  */
-public final class CrossEntropyErrorFunction implements ErrorFunction {
+public final class CrossEntropyLoss implements LossFunction {
 
   @Override
-  public double calculateError(DoubleMatrix y, DoubleMatrix hypothesis) {
+  public double calculateLoss(DoubleMatrix y, DoubleMatrix hypothesis) {
     return y.multiplyElementWise(MathUtils.logMatrix(hypothesis)).sum();
   }
 
   @Override
-  public double calculateError(DoubleVector y, DoubleVector hypothesis) {
+  public double calculateLoss(DoubleVector y, DoubleVector hypothesis) {
     return y.multiply(MathUtils.logVector(hypothesis)).sum();
   }
 

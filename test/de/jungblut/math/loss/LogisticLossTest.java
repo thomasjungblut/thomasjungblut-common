@@ -1,4 +1,4 @@
-package de.jungblut.math.squashing;
+package de.jungblut.math.loss;
 
 import static org.junit.Assert.assertEquals;
 
@@ -9,7 +9,7 @@ import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleMatrix;
 import de.jungblut.math.dense.DenseDoubleVector;
 
-public class LogisticErrorFunctionTest {
+public class LogisticLossTest {
 
   @Test
   public void testSigmoidErrorMatrix() {
@@ -17,7 +17,7 @@ public class LogisticErrorFunctionTest {
         1, 5);
     DoubleMatrix hypothesis = new DenseDoubleMatrix(new double[] { 0d, 0d, 0d,
         1d, 0d }, 1, 5);
-    double error = new LogisticErrorFunction().calculateError(y, hypothesis);
+    double error = new LogLoss().calculateLoss(y, hypothesis);
     assertEquals(10d, error, 1e-4);
   }
 
@@ -26,7 +26,7 @@ public class LogisticErrorFunctionTest {
     DoubleVector y = new DenseDoubleVector(new double[] { 0d, 1d, 0d, 1d, 0d });
     DoubleVector hypothesis = new DenseDoubleVector(new double[] { 0d, 0d, 0d,
         1d, 0d });
-    double error = new LogisticErrorFunction().calculateError(y, hypothesis);
+    double error = new LogLoss().calculateLoss(y, hypothesis);
     assertEquals(10d, error, 1e-4);
   }
 
