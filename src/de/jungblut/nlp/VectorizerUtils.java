@@ -1,5 +1,6 @@
 package de.jungblut.nlp;
 
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -431,4 +432,34 @@ public final class VectorizerUtils {
     return lst;
   }
 
+  /**
+   * Uses the hashing trick to provide a sparse numeric representation of the
+   * given input. This is different from
+   * {@link #hashVectorize(DoubleVector, int, com.google.common.hash.HashFunction)}
+   * , as it takes raw tokenized documents directly and only using their hash
+   * values to find the respective index in a sparsely represented vector. The
+   * resulting sparse vector also only contains a one-hot encoding of the input
+   * space.
+   * 
+   * @param documents the tokenized documents.
+   * @param dimension the desired sparse dimensionality.
+   * @param hashFunction the hasher. This will be ignored when a parallel stream
+   *          is passed, in this case it will use the {@link String#hashCode()},
+   *          as it is thread-safe.
+   * @return a stream of SparseDoubleVectors with the given dimension.
+   */
+  public static Stream<DoubleVector> sparseHashVectorize(
+      Stream<String[]> documents, int dimension,
+      com.google.common.hash.HashFunction hashFunction) {
+    boolean parallel = documents.isParallel();
+    return documents.map((doc) -> {
+      SparseDoubleVector vec = new SparseDoubleVector(dimension);
+      for (int i = 0; i < doc.length; i++) {
+        int hash = parallel ? doc[i].hashCode() : hashFunction.hashString(
+            doc[i], Charset.defaultCharset()).asInt();
+        vec.set(FastMath.abs(hash % dimension), 1d);
+      }
+      return vec;
+    });
+  }
 }

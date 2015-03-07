@@ -384,10 +384,10 @@ public final class Evaluator {
                   + "; the supplied outcome value was: "
                   + testOutcome[i].get(0));
         }
-
-        // we can compute the AUC from the outcomePredictedPairs we gathered
-        result.auc = MathUtils.computeAUC(outcomePredictedPairs);
       }
+
+      // we can compute the AUC from the outcomePredictedPairs we gathered
+      result.auc = MathUtils.computeAUC(outcomePredictedPairs);
     } else {
       int[][] confusionMatrix = new int[result.numLabels][result.numLabels];
       for (int i = 0; i < testFeatures.length; i++) {
