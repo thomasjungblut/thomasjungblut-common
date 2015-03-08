@@ -1,9 +1,13 @@
 package de.jungblut.math.loss;
 
+import java.util.Iterator;
+
+import org.apache.commons.math3.util.FastMath;
+
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.activation.StepActivationFunction;
-import de.jungblut.math.dense.SingleEntryDoubleVector;
 
 /**
  * Calculates a step error function that can be used for
@@ -25,9 +29,18 @@ public class StepLoss implements LossFunction {
   }
 
   @Override
-  public DoubleVector calculateDerivative(DoubleVector y,
+  public DoubleVector calculateGradient(DoubleVector feature, DoubleVector y,
       DoubleVector hypothesis) {
-    return new SingleEntryDoubleVector(y.subtract(hypothesis).sum());
-  }
 
+    double error = y.subtract(hypothesis).sum();
+    DoubleVector result = feature.deepCopy();
+    if (error != 0d) {
+      Iterator<DoubleVectorElement> iterateNonZero = feature.iterateNonZero();
+      while (iterateNonZero.hasNext()) {
+        DoubleVectorElement next = iterateNonZero.next();
+        result.set(next.getIndex(), FastMath.log(next.getValue() + 1d) * error);
+      }
+    }
+    return result;
+  }
 }

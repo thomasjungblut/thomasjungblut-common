@@ -32,14 +32,14 @@ public interface LossFunction {
   public double calculateLoss(DoubleVector y, DoubleVector hypothesis);
 
   /**
-   * Calculate the derivative with the given parameters.
+   * Calculate the gradient with the given parameters.
    * 
    * @param y the real outcome as a vector single example.
    * @param hypothesis the hypothesis as a vector single example.
-   * @return a vector that denotes the derivative given the hypothesis and real
+   * @return a vector that denotes the gradient given the hypothesis and real
    *         outcome.
    */
-  public DoubleVector calculateDerivative(DoubleVector y,
+  public DoubleVector calculateGradient(DoubleVector feature, DoubleVector y,
       DoubleVector hypothesis);
 
 }

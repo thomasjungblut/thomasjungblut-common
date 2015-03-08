@@ -4,7 +4,6 @@ import org.apache.commons.math3.util.FastMath;
 
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
-import de.jungblut.math.dense.SingleEntryDoubleVector;
 
 /**
  * Hinge-loss for linear SVMs. This needs the outcome class to be -1 for a
@@ -32,14 +31,14 @@ public class HingeLoss implements LossFunction {
   }
 
   @Override
-  public DoubleVector calculateDerivative(DoubleVector y,
+  public DoubleVector calculateGradient(DoubleVector feature, DoubleVector y,
       DoubleVector hypothesis) {
 
     DoubleVector v = y.multiply(hypothesis);
     if (v.get(0) > 1) {
-      return new SingleEntryDoubleVector(0d);
+      return feature.multiply(0);
     } else {
-      return y.multiply(-1);
+      return feature.multiply(y.multiply(-1).get(0));
     }
   }
 }

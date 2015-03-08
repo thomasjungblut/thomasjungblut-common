@@ -36,9 +36,9 @@ public final class SquaredLoss implements LossFunction {
   }
 
   @Override
-  public DoubleVector calculateDerivative(DoubleVector y,
+  public DoubleVector calculateGradient(DoubleVector feature, DoubleVector y,
       DoubleVector hypothesis) {
-    return hypothesis.subtract(y);
+    return feature.multiply(hypothesis.subtract(y).get(0));
   }
 
 }

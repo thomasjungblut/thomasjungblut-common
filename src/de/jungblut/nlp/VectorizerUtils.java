@@ -28,6 +28,7 @@ import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.sparse.SequentialSparseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
 /**
@@ -446,14 +447,14 @@ public final class VectorizerUtils {
    * @param hashFunction the hasher. This will be ignored when a parallel stream
    *          is passed, in this case it will use the {@link String#hashCode()},
    *          as it is thread-safe.
-   * @return a stream of SparseDoubleVectors with the given dimension.
+   * @return a stream of SequentialSparseDoubleVector with the given dimension.
    */
   public static Stream<DoubleVector> sparseHashVectorize(
       Stream<String[]> documents, int dimension,
       com.google.common.hash.HashFunction hashFunction) {
     boolean parallel = documents.isParallel();
     return documents.map((doc) -> {
-      SparseDoubleVector vec = new SparseDoubleVector(dimension);
+      DoubleVector vec = new SequentialSparseDoubleVector(dimension);
       for (int i = 0; i < doc.length; i++) {
         int hash = parallel ? doc[i].hashCode() : hashFunction.hashString(
             doc[i], Charset.defaultCharset()).asInt();
