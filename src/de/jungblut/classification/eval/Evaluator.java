@@ -352,38 +352,13 @@ public final class Evaluator {
       List<PredictionOutcomePair> outcomePredictedPairs = new ArrayList<>();
       for (int i = 0; i < testFeatures.length; i++) {
         DoubleVector outcomeVector = testOutcome[i];
-        int outcomeClass = ((int) testOutcome[i].get(0));
         DoubleVector predictedVector = classifier.predict(testFeatures[i]);
+
+        int outcomeClass = observeBinaryClassificationElement(classifier,
+            threshold, result, outcomeVector, predictedVector);
+
         outcomePredictedPairs.add(PredictionOutcomePair.from(outcomeClass,
             predictedVector.get(0)));
-
-        result.logLoss += outcomeVector.multiply(
-            MathUtils.logVector(predictedVector)).sum();
-        int prediction = 0;
-        if (threshold == null) {
-          prediction = classifier.extractPredictedClass(predictedVector);
-        } else {
-          prediction = classifier.extractPredictedClass(predictedVector,
-              threshold);
-        }
-        if (outcomeClass == 1) {
-          if (prediction == 1) {
-            result.truePositive++; // "Correct result"
-          } else {
-            result.falseNegative++; // "Missing the correct result"
-          }
-        } else if (outcomeClass == 0) {
-          if (prediction == 0) {
-            result.trueNegative++; // "Correct absence of result"
-          } else {
-            result.falsePositive++; // "Unexpected result"
-          }
-        } else {
-          throw new IllegalArgumentException(
-              "Outcome class was neither 0 or 1. Was: " + outcomeClass
-                  + "; the supplied outcome value was: "
-                  + testOutcome[i].get(0));
-        }
       }
 
       // we can compute the AUC from the outcomePredictedPairs we gathered
@@ -405,6 +380,39 @@ public final class Evaluator {
       result.confusionMatrix = confusionMatrix;
     }
     return result;
+  }
+
+  public static int observeBinaryClassificationElement(Predictor predictor,
+      Double threshold, EvaluationResult result, DoubleVector outcomeVector,
+      DoubleVector predictedVector) {
+
+    int outcomeClass = ((int) outcomeVector.get(0));
+    result.logLoss += outcomeVector.multiply(
+        MathUtils.logVector(predictedVector)).sum();
+    int prediction = 0;
+    if (threshold == null) {
+      prediction = predictor.extractPredictedClass(predictedVector);
+    } else {
+      prediction = predictor.extractPredictedClass(predictedVector, threshold);
+    }
+    if (outcomeClass == 1) {
+      if (prediction == 1) {
+        result.truePositive++; // "Correct result"
+      } else {
+        result.falseNegative++; // "Missing the correct result"
+      }
+    } else if (outcomeClass == 0) {
+      if (prediction == 0) {
+        result.trueNegative++; // "Correct absence of result"
+      } else {
+        result.falsePositive++; // "Unexpected result"
+      }
+    } else {
+      throw new IllegalArgumentException(
+          "Outcome class was neither 0 or 1. Was: " + outcomeClass
+              + "; the supplied outcome value was: " + outcomeVector.get(0));
+    }
+    return outcomeClass;
   }
 
   /**
