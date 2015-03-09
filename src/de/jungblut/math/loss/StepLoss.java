@@ -2,12 +2,12 @@ package de.jungblut.math.loss;
 
 import java.util.Iterator;
 
-import org.apache.commons.math3.util.FastMath;
-
 import de.jungblut.math.DoubleMatrix;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
+import de.jungblut.math.MathUtils;
 import de.jungblut.math.activation.StepActivationFunction;
+import de.jungblut.math.sparse.SequentialSparseDoubleVector;
 
 /**
  * Calculates a step error function that can be used for
@@ -33,14 +33,16 @@ public class StepLoss implements LossFunction {
       DoubleVector hypothesis) {
 
     double error = y.subtract(hypothesis).sum();
-    DoubleVector result = feature.deepCopy();
     if (error != 0d) {
+      DoubleVector result = feature.deepCopy();
       Iterator<DoubleVectorElement> iterateNonZero = feature.iterateNonZero();
       while (iterateNonZero.hasNext()) {
         DoubleVectorElement next = iterateNonZero.next();
-        result.set(next.getIndex(), FastMath.log(next.getValue() + 1d) * error);
+        result.set(next.getIndex(),
+            MathUtils.guardedLogarithm(next.getValue() + 1d) * error * -1d);
       }
+      return result;
     }
-    return result;
+    return new SequentialSparseDoubleVector(feature.getDimension());
   }
 }

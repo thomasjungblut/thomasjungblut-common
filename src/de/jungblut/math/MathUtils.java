@@ -219,7 +219,7 @@ public final class MathUtils {
     for (int row = 0; row < log.getRowCount(); row++) {
       for (int col = 0; col < log.getColumnCount(); col++) {
         double d = input.get(row, col);
-        log.set(row, col, guardLogarithm(d));
+        log.set(row, col, guardedLogarithm(d));
       }
     }
     return log;
@@ -232,7 +232,7 @@ public final class MathUtils {
   public static DoubleVector logVector(DoubleVector input) {
     DenseDoubleVector log = new DenseDoubleVector(input.getDimension());
     for (int col = 0; col < log.getDimension(); col++) {
-      log.set(col, guardLogarithm(input.get(col)));
+      log.set(col, guardedLogarithm(input.get(col)));
     }
     return log;
   }
@@ -299,7 +299,7 @@ public final class MathUtils {
   /**
    * @return a log'd value of the input that is guarded.
    */
-  public static double guardLogarithm(double input) {
+  public static double guardedLogarithm(double input) {
     if (Double.isNaN(input) || Double.isInfinite(input)) {
       return 0d;
     } else if (input <= 0d || input <= -0d) {
