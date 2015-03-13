@@ -17,6 +17,7 @@ import org.apache.hadoop.mrunit.mapreduce.MapDriver;
 import org.apache.hadoop.mrunit.mapreduce.MapReduceDriver;
 import org.apache.hadoop.mrunit.mapreduce.ReduceDriver;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.collect.HashMultiset;
@@ -61,6 +62,7 @@ public class WordCorpusFrequencyJobTest {
   }
 
   @Test
+  @Ignore
   public void testReducer() throws Exception {
     String p = "/tmp/dict.txt";
     reduceDriver.getConfiguration().set(

@@ -4,7 +4,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import org.apache.hadoop.io.IntWritable;
 import org.junit.Test;
@@ -13,8 +16,10 @@ public class DiskListTest {
 
   @Test
   public void testReadWrite() throws IOException {
-
-    DiskList<IntWritable> list = new DiskList<>("/tmp/disklist.tmp");
+    Path tmpDir = Files.createTempDirectory("tmp");
+    File tempFile = File.createTempFile("disklist", "tmp", tmpDir.toFile());
+    tempFile.deleteOnExit();
+    DiskList<IntWritable> list = new DiskList<>(tempFile.toString());
     long size = 5242880;
     IntWritable instance = fill(list, size);
 
@@ -42,8 +47,10 @@ public class DiskListTest {
 
   @Test
   public void testReadWriteIterator() throws IOException {
-
-    DiskList<IntWritable> list = new DiskList<>("/tmp/disklist.tmp",
+    Path tmpDir = Files.createTempDirectory("tmp");
+    File tempFile = File.createTempFile("disklist", "tmp", tmpDir.toFile());
+    tempFile.deleteOnExit();
+    DiskList<IntWritable> list = new DiskList<>(tempFile.toString(),
         new IntWritable());
     long size = 5242880;
     fill(list, size);
