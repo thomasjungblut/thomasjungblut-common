@@ -230,8 +230,9 @@ public final class Fmincg extends AbstractMinimizer {
         f1 = f2;
         if (verbose) {
           LOG.info("Iteration " + i + " | Cost: " + f1);
-          onIterationFinished(i, f1, input);
         }
+        onIterationFinished(i, f1, input);
+
         // Polack-Ribiere direction: s =
         // (df2'*df2-df1'*df2)/(df1'*df1)*s - df2;
         final double numerator = (df2.dot(df2) - df1.dot(df2)) / df1.dot(df1);

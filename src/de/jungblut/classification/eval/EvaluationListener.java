@@ -14,7 +14,7 @@ import de.jungblut.math.minimize.Minimizer;
  * The evaluation listener is majorly used to track the overfitting of a
  * classifier while training. This is usually hooked into the {@link Minimizer}
  * of choice and will be triggered at a configurable interval of iterations
- * (through {@link #setRunIntervall(int)}). This class is designed to be
+ * (through {@link #setRunInterval(int)}). This class is designed to be
  * subclasses and enhanced with other print statements or functionality to save
  * the best performing parameters.
  * 
@@ -44,9 +44,24 @@ public class EvaluationListener<A extends Classifier> implements
    */
   public EvaluationListener(WeightMapper<A> mapper, int numLabels,
       EvaluationSplit split) {
+    this(mapper, numLabels, split, 1);
+  }
+
+  /**
+   * Initializes this listener.
+   * 
+   * @param mapper the mapper that converts the {@link DoubleVector} from the
+   *          minimizable {@link CostFunction} to a classifier.
+   * @param numLabels the number of labels the classifier can predict.
+   * @param runInterval test interval.
+   * @param split the train/test split.
+   */
+  public EvaluationListener(WeightMapper<A> mapper, int numLabels,
+      EvaluationSplit split, int runInterval) {
     this.mapper = mapper;
     this.numLabels = numLabels;
     this.split = split;
+    this.runInterval = runInterval;
   }
 
   @Override
@@ -59,7 +74,6 @@ public class EvaluationListener<A extends Classifier> implements
       EvaluationResult trainEval = Evaluator.testClassifier(classifier,
           split.getTrainFeatures(), split.getTrainOutcome());
       onResult(iteration, cost, trainEval, testEval);
-      print(iteration, cost, trainEval, testEval);
     }
   }
 
@@ -67,8 +81,8 @@ public class EvaluationListener<A extends Classifier> implements
    * Sets the run intervall of this listener. For example: if set to 5, the
    * evaluator will run only every five iterations.
    */
-  public final void setRunIntervall(int runIntervall) {
-    this.runInterval = runIntervall;
+  public final void setRunInterval(int runInterval) {
+    this.runInterval = runInterval;
   }
 
   /**
@@ -82,18 +96,9 @@ public class EvaluationListener<A extends Classifier> implements
    */
   protected void onResult(int iteration, double cost,
       EvaluationResult trainEval, EvaluationResult testEval) {
-
-  }
-
-  /**
-   * Prints information about the accuraccy. This is designed to be overridden
-   * by subclasses to e.g. log to a file or print something else.
-   */
-  protected void print(int iteration, double cost,
-      EvaluationResult trainEvaluation, EvaluationResult testEvaluation) {
     LOG.info("Iteration " + iteration + " | Validation accuracy: "
-        + testEvaluation.getAccuracy() + " | Training accuracy: "
-        + trainEvaluation.getAccuracy());
+        + trainEval.getAccuracy() + " | Training accuracy: "
+        + testEval.getAccuracy());
   }
 
 }
