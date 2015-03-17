@@ -28,7 +28,6 @@ public class EvaluationListener<A extends Classifier> implements
   private static final Logger LOG = LogManager
       .getLogger(EvaluationListener.class);
 
-  protected final int numLabels;
   protected final EvaluationSplit split;
   protected final WeightMapper<A> mapper;
 
@@ -39,12 +38,10 @@ public class EvaluationListener<A extends Classifier> implements
    * 
    * @param mapper the mapper that converts the {@link DoubleVector} from the
    *          minimizable {@link CostFunction} to a classifier.
-   * @param numLabels the number of labels the classifier can predict.
    * @param split the train/test split.
    */
-  public EvaluationListener(WeightMapper<A> mapper, int numLabels,
-      EvaluationSplit split) {
-    this(mapper, numLabels, split, 1);
+  public EvaluationListener(WeightMapper<A> mapper, EvaluationSplit split) {
+    this(mapper, split, 1);
   }
 
   /**
@@ -52,14 +49,12 @@ public class EvaluationListener<A extends Classifier> implements
    * 
    * @param mapper the mapper that converts the {@link DoubleVector} from the
    *          minimizable {@link CostFunction} to a classifier.
-   * @param numLabels the number of labels the classifier can predict.
-   * @param runInterval test interval.
    * @param split the train/test split.
+   * @param runInterval test interval.
    */
-  public EvaluationListener(WeightMapper<A> mapper, int numLabels,
-      EvaluationSplit split, int runInterval) {
+  public EvaluationListener(WeightMapper<A> mapper, EvaluationSplit split,
+      int runInterval) {
     this.mapper = mapper;
-    this.numLabels = numLabels;
     this.split = split;
     this.runInterval = runInterval;
   }
