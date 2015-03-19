@@ -25,7 +25,7 @@ public final class LogLoss implements LossFunction {
     DoubleMatrix positivePenalty = inverseOutcome
         .multiplyElementWise(positiveLogHypo);
 
-    return (positivePenalty.subtract(negativePenalty)).sum();
+    return (positivePenalty.subtract(negativePenalty)).sum() / y.getRowCount();
   }
 
   @Override

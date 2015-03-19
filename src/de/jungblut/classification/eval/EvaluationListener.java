@@ -82,7 +82,7 @@ public class EvaluationListener<A extends Classifier> implements
 
   /**
    * Will be called on a result of the evaluation. This method does nothing, is
-   * designed to be overriden though.
+   * designed to be overridden though.
    * 
    * @param iteration the current number of iteration.
    * @param cost the identified cost of the costfunction.
