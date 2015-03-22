@@ -92,10 +92,8 @@ public final class DecisionTree extends AbstractClassifier {
     numFeatures = features[0].getDimension();
     TIntHashSet possibleFeatureIndices = getPossibleFeatures();
     // recursively build the tree...
-    // note that we use linked lists to remove examples we don't need, linked
-    // structures do not require costly copy operations after removal
-    rootNode = build(Lists.newLinkedList(Arrays.asList(features)),
-        Lists.newLinkedList(Arrays.asList(outcome)), possibleFeatureIndices, 0);
+    rootNode = build(Lists.newArrayList(features), Lists.newArrayList(outcome),
+        possibleFeatureIndices, 0);
     if (compile) {
       try {
         compileTree();
@@ -273,8 +271,8 @@ public final class DecisionTree extends AbstractClassifier {
       List<DoubleVector> features, List<DoubleVector> outcome,
       int bestSplitIndex, int nominalValue) {
 
-    List<DoubleVector> newFeatures = Lists.newLinkedList();
-    List<DoubleVector> newOutcomes = Lists.newLinkedList();
+    List<DoubleVector> newFeatures = Lists.newArrayList();
+    List<DoubleVector> newOutcomes = Lists.newArrayList();
 
     Iterator<DoubleVector> featureIterator = features.iterator();
     Iterator<DoubleVector> outcomeIterator = outcome.iterator();
@@ -306,8 +304,8 @@ public final class DecisionTree extends AbstractClassifier {
       List<DoubleVector> features, List<DoubleVector> outcome,
       int bestSplitIndex, double splitValue, boolean lower) {
 
-    List<DoubleVector> newFeatures = Lists.newLinkedList();
-    List<DoubleVector> newOutcomes = Lists.newLinkedList();
+    List<DoubleVector> newFeatures = Lists.newArrayList();
+    List<DoubleVector> newOutcomes = Lists.newArrayList();
 
     Iterator<DoubleVector> featureIterator = features.iterator();
     Iterator<DoubleVector> outcomeIterator = outcome.iterator();
