@@ -16,7 +16,8 @@ public final class CrossEntropyLoss implements LossFunction {
 
   @Override
   public double calculateLoss(DoubleMatrix y, DoubleMatrix hypothesis) {
-    return y.multiplyElementWise(MathUtils.logMatrix(hypothesis)).sum();
+    return y.multiplyElementWise(MathUtils.logMatrix(hypothesis)).sum()
+        / y.getRowCount();
   }
 
   @Override

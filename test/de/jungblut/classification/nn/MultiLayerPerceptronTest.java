@@ -36,27 +36,6 @@ public class MultiLayerPerceptronTest {
   }
 
   @Test
-  public void testParableRegression() {
-    // sample a parable of points and use one hidden layer
-    MultilayerPerceptron mlp = MultilayerPerceptron.MultilayerPerceptronBuilder
-        .create(
-            new int[] { 2, 2, 1 },
-            new ActivationFunction[] { LINEAR.get(), SIGMOID.get(),
-                LINEAR.get() }, new SquaredLoss(), new Fmincg(), 10000)
-        .verbose(false).build();
-
-    // sample a parable of points
-    Tuple<DoubleVector[], DoubleVector[]> sample = sampleParable();
-
-    mlp.train(sample.getFirst(), sample.getSecond());
-    double diff = validateRegressionPredictions(sample, mlp);
-    // this actually takes some time to converge properly, so we just test for
-    // 10k epochs with a loose threshold.
-    assertEquals(63000d, diff, 1000d);
-    System.out.println(diff);
-  }
-
-  @Test
   public void testRegression() {
     // test the linear regression case
     // use a gradient descent with very small learning rate
@@ -71,7 +50,7 @@ public class MultiLayerPerceptronTest {
 
     mlp.train(sample.getFirst(), sample.getSecond());
     double diff = validateRegressionPredictions(sample, mlp);
-    assertEquals(diff, 2449d, 10d);
+    assertEquals(diff, 580, 10d);
   }
 
   @Test
@@ -261,6 +240,7 @@ public class MultiLayerPerceptronTest {
     return new Tuple<>(train, outcome);
   }
 
+  @SuppressWarnings("unused")
   private Tuple<DoubleVector[], DoubleVector[]> sampleParable() {
     // sample some points from 0 to 100
     DoubleVector[] train = new DoubleVector[100];

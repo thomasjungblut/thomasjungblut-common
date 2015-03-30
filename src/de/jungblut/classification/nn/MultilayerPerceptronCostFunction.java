@@ -85,8 +85,7 @@ public final class MultilayerPerceptronCostFunction extends
     calculateGradients(thetas, thetaGradients, ax, deltaX, m, conf);
 
     // calculate our cost (error in the last layer)
-    double j = (1.0d / m)
-        * conf.error.calculateLoss(y, ax[conf.layerSizes.length - 1])
+    double j = conf.error.calculateLoss(y, ax[conf.layerSizes.length - 1])
         + regularization;
 
     return new CostGradientTuple(j,

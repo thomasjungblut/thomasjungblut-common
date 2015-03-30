@@ -6,6 +6,8 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 import org.junit.Test;
@@ -14,8 +16,9 @@ public class AsyncBufferedOutputStreamTest {
 
   @Test
   public void testHugeWrites() throws Exception {
-    File tempFile = File.createTempFile("async_test_huge", "tmp", new File(
-        "/tmp/"));
+    Path tmpDir = Files.createTempDirectory("tmp");
+    File tempFile = File.createTempFile("async_test_huge", "tmp",
+        tmpDir.toFile());
     tempFile.deleteOnExit();
     byte[] ones = new byte[513 * 1024];
     Arrays.fill(ones, (byte) 1);

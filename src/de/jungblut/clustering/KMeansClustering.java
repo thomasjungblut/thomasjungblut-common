@@ -29,6 +29,8 @@ public final class KMeansClustering {
   private final List<DoubleVector> vectors;
   private final int k;
 
+  private double clusteringCost;
+
   /**
    * Initializes a new {@link KMeansClustering}.
    * 
@@ -115,6 +117,8 @@ public final class KMeansClustering {
       lastCost = cost;
     }
 
+    clusteringCost = lastCost;
+
     // clear the assignments to get a clean state
     Arrays.stream(assignments).forEach(Deque::clear);
     // do another assignment step to get the final clusters
@@ -129,7 +133,11 @@ public final class KMeansClustering {
     return lst;
   }
 
-  public void computeCenters(Deque<DoubleVector>[] assignments) {
+  public double getClusteringCost() {
+    return clusteringCost;
+  }
+
+  private void computeCenters(Deque<DoubleVector>[] assignments) {
     IntStream.range(0, assignments.length).parallel().forEach((i) -> {
       int len = assignments[i].size();
       if (len > 0) {
@@ -142,7 +150,7 @@ public final class KMeansClustering {
     });
   }
 
-  public Deque<DoubleVector>[] setupAssignments() {
+  private Deque<DoubleVector>[] setupAssignments() {
     @SuppressWarnings("unchecked")
     Deque<DoubleVector>[] assignments = new Deque[k];
     for (int i = 0; i < assignments.length; i++) {
@@ -151,7 +159,7 @@ public final class KMeansClustering {
     return assignments;
   }
 
-  public double assign(DistanceMeasurer distanceMeasurer,
+  private double assign(DistanceMeasurer distanceMeasurer,
       Deque<DoubleVector>[] assignments, int vectorIndex) {
     DoubleVector v = vectors.get(vectorIndex);
     int lowestDistantCenter = 0;

@@ -135,18 +135,11 @@ public final class Voter<A extends Classifier> extends AbstractClassifier {
         }
         break;
       case PROBABILITY:
-        histogram = createPredictionHistogram(result, numPossibleOutcomes);
-        double histSum = 0;
-        for (double d : histogram) {
-          histSum += d;
+        DoubleVector v = result[0];
+        for (int i = 1; i < result.length; i++) {
+          v = v.add(result[i]);
         }
-        if (numPossibleOutcomes == 2) {
-          toReturn.set(0, histogram[1] / histSum);
-        } else {
-          for (int i = 0; i < histogram.length; i++) {
-            toReturn.set(i, histogram[i] / histSum);
-          }
-        }
+        toReturn = v.divide(v.sum());
         break;
       case AVERAGE:
         for (int i = 0; i < result.length; i++) {

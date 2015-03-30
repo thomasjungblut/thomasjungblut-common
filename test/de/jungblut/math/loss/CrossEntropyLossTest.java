@@ -15,7 +15,7 @@ public class CrossEntropyLossTest {
     DoubleMatrix hypothesis = new DenseDoubleMatrix(new double[][] {
         { 0d, 0d, 0d, 1d, 0d }, { 1d, 1d, 1d, 0d, 0d } });
     double error = new CrossEntropyLoss().calculateLoss(y, hypothesis);
-    assertEquals(25d, error, 1e-4);
+    assertEquals(12.5d, error, 1e-4);
   }
 
 }
