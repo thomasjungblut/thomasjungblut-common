@@ -70,10 +70,10 @@ public final class Statistics implements Writable {
       coefficientOfVariation = standardDeviation / mean;
       // dispersion index variance/mean
       dispersionIndex = variance / mean;
+      double[] array = data.toArray();
+      Arrays.sort(array);
+      median = array[count / 2];
     }
-    double[] array = data.toArray();
-    Arrays.sort(array);
-    median = array[count / 2];
     data = null;
     finalized = true;
   }
