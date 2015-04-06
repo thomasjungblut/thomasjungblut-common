@@ -3,6 +3,7 @@ package de.jungblut.classification.nn;
 import java.io.DataInputStream;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 import org.apache.logging.log4j.LogManager;
@@ -188,17 +189,17 @@ public final class RBM {
   /**
    * Trains the RBM on the given training set.
    * 
-   * @param currentTrainingSet the training set to train on. This trainingset
-   *          will be mutated and changed during the training, so make sure you
-   *          make a defensive copy if you need the examples later on.
+   * @param trainingSet the training set to train on.
    * @param minimizer the minimizer to use. Note that the costfunction's
    *          gradient isn't the real gradient and thus can't be optimized by
    *          line searching minimizers like {@link Fmincg}.
    * @param numIterations how many iterations of training have to be done. (if
    *          converged before, it will stop training)
    */
-  public void train(DoubleVector[] currentTrainingSet, Minimizer minimizer,
+  public void train(DoubleVector[] trainingSet, Minimizer minimizer,
       int numIterations) {
+    DoubleVector[] currentTrainingSet = Arrays.copyOf(trainingSet,
+        trainingSet.length);
     // start with greedy layerwise training
     for (int i = 0; i < layerSizes.length; i++) {
       if (verbose) {
