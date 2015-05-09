@@ -72,7 +72,12 @@ public final class Statistics implements Writable {
       dispersionIndex = variance / mean;
       double[] array = data.toArray();
       Arrays.sort(array);
-      median = array[count / 2];
+      if (count % 2 != 0) {
+        median = array[count / 2];
+      } else {
+        int mid = count / 2;
+        median = (array[mid - 1] + array[mid]) / 2;
+      }
     }
     data = null;
     finalized = true;
