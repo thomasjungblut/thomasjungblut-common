@@ -14,7 +14,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<hadoop.version>2.2.0</hadoop.version>
-		<tjmath.version>1.2-SNAPSHOT</tjmath.version>
+		<tjmath.version>1.2</tjmath.version>
 		<jcuda.version>0.6.5</jcuda.version>
 	</properties>
 
