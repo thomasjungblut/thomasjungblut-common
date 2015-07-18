@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 
 import com.google.common.base.Preconditions;
 
+import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.datastructure.StringPool;
 
 /**
@@ -235,14 +236,31 @@ public final class TokenizerUtils {
     List<String> list = new ArrayList<>();
     final int endIndex = tokens.length - size + 1;
     for (int i = 0; i < endIndex; i++) {
-      String tkn = tokens[i];
+      StringBuilder tkn = new StringBuilder(tokens[i]);
       final int tokenEndIndex = (i + size);
       for (int j = i + 1; j < tokenEndIndex; j++) {
-        tkn += " " + tokens[j];
+        tkn.append(' ');
+        tkn.append(tokens[j]);
       }
-      list.add(tkn);
+      list.add(tkn.toString());
     }
     return list.toArray(new String[list.size()]);
+  }
+
+  /**
+   * Builds ngrams from a range of tokens, basically a concat of all the
+   * {@link #buildNGrams(String[], int)} calls within the range. Both start and
+   * end are inclusive.
+   */
+  public static String[] buildNGramsRange(String[] tokens, int startSize,
+      int endSize) {
+
+    String[] tkn = buildNGrams(tokens, startSize);
+    for (int i = startSize + 1; i <= endSize; i++) {
+      tkn = ArrayUtils.concat(tkn, buildNGrams(tokens, i));
+    }
+
+    return tkn;
   }
 
   /**

@@ -26,7 +26,7 @@ public class TokenizerUtilsTest {
   }
 
   @Test
-  public void testNGrammTokenize() {
+  public void testCharNGrammTokenize() {
     String s = "Hi this is a test for the tokenizer function!";
     String[] desiredResult = new String[] { "Hi ", "i t", " th", "thi", "his",
         "is ", "s i", " is", "is ", "s a", " a ", "a t", " te", "tes", "est",
@@ -34,6 +34,34 @@ public class TokenizerUtilsTest {
         " to", "tok", "oke", "ken", "eni", "niz", "ize", "zer", "er ", "r f",
         " fu", "fun", "unc", "nct", "cti", "tio", "ion", "on!" };
     String[] result = TokenizerUtils.nShinglesTokenize(s, 3);
+    assertEquals(desiredResult.length, result.length);
+    for (int i = 0; i < result.length; i++) {
+      assertEquals(desiredResult[i], result[i]);
+    }
+  }
+
+  @Test
+  public void testBiGrammTokenize() {
+    String s = "Hi this is a test for the tokenizer function";
+    String[] desiredResult = new String[] { "Hi this", "this is", "is a",
+        "a test", "test for", "for the", "the tokenizer", "tokenizer function" };
+    String[] tokens = TokenizerUtils.whiteSpaceTokenize(s);
+    String[] result = TokenizerUtils.buildNGrams(tokens, 2);
+    assertEquals(desiredResult.length, result.length);
+    for (int i = 0; i < result.length; i++) {
+      assertEquals(desiredResult[i], result[i]);
+    }
+  }
+
+  @Test
+  public void testUniPlusBiGrammTokenize() {
+    String s = "Hi this is a test for the tokenizer function";
+    String[] desiredResult = new String[] { "Hi", "this", "is", "a", "test",
+        "for", "the", "tokenizer", "function", "Hi this", "this is", "is a",
+        "a test", "test for", "for the", "the tokenizer", "tokenizer function" };
+    String[] tokens = TokenizerUtils.whiteSpaceTokenize(s);
+    String[] result = TokenizerUtils.buildNGramsRange(tokens, 1, 2);
+    assertEquals(desiredResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }
@@ -45,6 +73,7 @@ public class TokenizerUtilsTest {
     String[] desiredResult = new String[] { "Hi", "this", "is", "a", "test",
         "for", "the", "tokenizer", "function!" };
     String[] result = TokenizerUtils.whiteSpaceTokenize(s);
+    assertEquals(desiredResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }
@@ -57,6 +86,7 @@ public class TokenizerUtilsTest {
     String[] desiredResult = new String[] { "Hi", "this", "is", "a", "test",
         "for", "the", "tokenizer", "function!" };
     String[] result = TokenizerUtils.deduplicateTokens(s);
+    assertEquals(desiredResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }
@@ -68,6 +98,7 @@ public class TokenizerUtilsTest {
     String[] desiredResult = new String[] { "Hi", "this", "is", "a", "test",
         "for", "the", "tokenizer", "function" };
     String[] result = TokenizerUtils.wordTokenize(s);
+    assertEquals(desiredResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }
@@ -75,6 +106,7 @@ public class TokenizerUtilsTest {
     desiredResult = new String[] { "Hi", "this", "is", ".", "a", ",", "test",
         "for", "the", "tokenizer", "?", "function" };
     result = TokenizerUtils.wordTokenize(s, true);
+    assertEquals(desiredResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }
@@ -85,6 +117,7 @@ public class TokenizerUtilsTest {
     String[] tokens = new String[] { "", "123", "xyz" };
     String[] desiredResult = new String[] { "123", "xyz" };
     String[] result = TokenizerUtils.removeEmpty(tokens);
+    assertEquals(desiredResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredResult[i], result[i]);
     }
@@ -102,16 +135,19 @@ public class TokenizerUtilsTest {
         "the tokenizer function!" };
 
     String[] result = TokenizerUtils.whiteSpaceTokenizeNGrams(s, 1);
+    assertEquals(desiredUniGramResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredUniGramResult[i], result[i]);
     }
 
     result = TokenizerUtils.whiteSpaceTokenizeNGrams(s, 2);
+    assertEquals(desiredBiGramResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredBiGramResult[i], result[i]);
     }
 
     result = TokenizerUtils.whiteSpaceTokenizeNGrams(s, 3);
+    assertEquals(desiredTriGramResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredTriGramResult[i], result[i]);
     }
@@ -133,6 +169,7 @@ public class TokenizerUtilsTest {
     String[] result = TokenizerUtils.addStartAndEndTags(uniGram);
     String[] desiredUniGramResult = new String[] { "<START>", "Hi", "this",
         "is", "a", "test", "for", "the", "tokenizer", "function!", "<END>" };
+    assertEquals(desiredUniGramResult.length, result.length);
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredUniGramResult[i], result[i]);
     }
