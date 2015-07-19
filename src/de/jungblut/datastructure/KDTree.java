@@ -17,6 +17,7 @@ import de.jungblut.distance.EuclidianDistance;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.utils.Statistics;
 
 /**
  * Implementation of a kd-tree that handles dense vectors as well as sparse
@@ -473,12 +474,22 @@ public final class KDTree<VALUE> implements Iterable<DoubleVector> {
         return medianThreeDimensions(v, iterateNonZero.next().getIndex(),
             iterateNonZero.next().getIndex(), iterateNonZero.next().getIndex());
       } else {
-        // use the first non-zero index to split on, not a good split, but
-        // better than nothing.
-        // TODO construct a double heap like BinaryHeap and use it with a median
-        // on stream algorithm.
-        return iterateNonZero.next().getIndex();
-
+        //
+        if (v.isSparse()) {
+          // use the first non-zero index to split on, not a good split, but
+          // better than nothing.
+          return iterateNonZero.next().getIndex();
+        } else {
+          // compute the median from the numbers
+          Statistics stats = new Statistics();
+          for (double d : v.toArray()) {
+            stats.add(d);
+          }
+          stats.finalizeComputation();
+          double median = stats.getMedian();
+          // find the index closest to the median
+          return v.subtract(median).abs().minIndex();
+        }
       }
     }
   }
