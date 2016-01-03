@@ -119,7 +119,7 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
       final int length = linksToCrawl.size() > batchSize ? batchSize
           : linksToCrawl.size();
       // only schedule if we have fetches leftover
-      if (fetches > 0) {
+      if (fetches > 0 && length > 0) {
         fetches -= length;
         List<String> linkList = new ArrayList<>(length);
         for (int i = 0; i < length; i++) {
@@ -160,6 +160,9 @@ public final class MultithreadedCrawler<T extends FetchResult> implements
         Thread.sleep(1000l);
       }
       if (fetches <= 0 && currentRunningThreads == 0) {
+        break;
+      }
+      if (currentRunningThreads == 0 && linksToCrawl.size() == 0) {
         break;
       }
     }
