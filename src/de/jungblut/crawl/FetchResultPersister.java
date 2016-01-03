@@ -97,11 +97,9 @@ public final class FetchResultPersister<T extends FetchResult> implements
         }
       }
     }
-    int toWrite = queue.size();
     try {
       while (!queue.isEmpty()) {
         final T poll = queue.poll();
-        LOG.info(toWrite-- + " results to write before stopping...");
         resWriter.write(poll);
         retrieved++;
         if (retrieved % 100 == 0) {
