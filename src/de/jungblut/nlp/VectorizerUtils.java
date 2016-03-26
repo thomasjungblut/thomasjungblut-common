@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import org.apache.commons.math3.util.FastMath;
@@ -28,7 +29,6 @@ import de.jungblut.datastructure.ArrayUtils;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.DoubleVector.DoubleVectorElement;
 import de.jungblut.math.dense.DenseDoubleVector;
-import de.jungblut.math.sparse.SequentialSparseDoubleVector;
 import de.jungblut.math.sparse.SparseDoubleVector;
 
 /**
@@ -443,24 +443,49 @@ public final class VectorizerUtils {
    * space.
    * 
    * @param documents the tokenized documents.
-   * @param dimension the desired sparse dimensionality.
    * @param hashFunction the hasher. This will be ignored when a parallel stream
    *          is passed, in this case it will use the {@link String#hashCode()},
    *          as it is thread-safe.
-   * @return a stream of SequentialSparseDoubleVector with the given dimension.
+   * @param factory to create a new vector of size x
+   * @return a stream of DoubleVectors
    */
   public static Stream<DoubleVector> sparseHashVectorize(
-      Stream<String[]> documents, int dimension,
-      com.google.common.hash.HashFunction hashFunction) {
-    boolean parallel = documents.isParallel();
-    return documents.map((doc) -> {
-      DoubleVector vec = new SequentialSparseDoubleVector(dimension);
-      for (int i = 0; i < doc.length; i++) {
-        int hash = parallel ? doc[i].hashCode() : hashFunction.hashString(
-            doc[i], Charset.defaultCharset()).asInt();
-        vec.set(FastMath.abs(hash % dimension), 1d);
+      Stream<String[]> documents,
+      com.google.common.hash.HashFunction hashFunction,
+      Supplier<DoubleVector> vectorFactory) {
+    return documents.map((doc) -> sparseHashVectorize(doc,
+        documents.isParallel() ? null : hashFunction, vectorFactory));
+  }
+
+  /**
+   * Uses the hashing trick to provide a sparse numeric representation of the
+   * given input. This is different from
+   * {@link #hashVectorize(DoubleVector, int, com.google.common.hash.HashFunction)}
+   * , as it takes raw tokenized documents directly and only using their hash
+   * values to find the respective index in a sparsely represented vector. The
+   * resulting sparse vector also only contains a one-hot encoding of the input
+   * space.
+   * 
+   * @param documents the tokenized documents.
+   * @param hashFunction the hasher. If null it will use the Java hashcode for
+   *          strings.
+   * @param factory to create a new vector of size x
+   * @return a DoubleVector
+   */
+  public static DoubleVector sparseHashVectorize(String[] doc,
+      com.google.common.hash.HashFunction hashFunction,
+      Supplier<DoubleVector> vectorFactory) {
+    DoubleVector vec = vectorFactory.get();
+    for (int i = 0; i < doc.length; i++) {
+      int hash = 0;
+      if (hashFunction == null) {
+        hash = doc[i].hashCode();
+      } else {
+        hash = hashFunction.hashString(doc[i], Charset.defaultCharset())
+            .asInt();
       }
-      return vec;
-    });
+      vec.set(FastMath.abs(hash % vec.getDimension()), 1d);
+    }
+    return vec;
   }
 }
