@@ -438,9 +438,7 @@ public final class VectorizerUtils {
    * given input. This is different from
    * {@link #hashVectorize(DoubleVector, int, com.google.common.hash.HashFunction)}
    * , as it takes raw tokenized documents directly and only using their hash
-   * values to find the respective index in a sparsely represented vector. The
-   * resulting sparse vector also only contains a one-hot encoding of the input
-   * space.
+   * values to find the respective index in the newly created vector.
    * 
    * @param documents the tokenized documents.
    * @param hashFunction the hasher. This will be ignored when a parallel stream
@@ -462,9 +460,7 @@ public final class VectorizerUtils {
    * given input. This is different from
    * {@link #hashVectorize(DoubleVector, int, com.google.common.hash.HashFunction)}
    * , as it takes raw tokenized documents directly and only using their hash
-   * values to find the respective index in a sparsely represented vector. The
-   * resulting sparse vector also only contains a one-hot encoding of the input
-   * space.
+   * values to find the respective index in the newly created vector.
    * 
    * @param documents the tokenized documents.
    * @param hashFunction the hasher. If null it will use the Java hashcode for
@@ -484,7 +480,8 @@ public final class VectorizerUtils {
         hash = hashFunction.hashString(doc[i], Charset.defaultCharset())
             .asInt();
       }
-      vec.set(FastMath.abs(hash % vec.getDimension()), 1d);
+      int idx = FastMath.abs(hash % vec.getDimension());
+      vec.set(idx, vec.get(idx) + 1d);
     }
     return vec;
   }
