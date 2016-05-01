@@ -59,25 +59,6 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
   }
 
   /**
-   * Flush the internal buffer by copying a new byte array into the buffer
-   * blocking queue
-   */
-  private void flushBuffer() throws IOException {
-    if (count > 0) {
-      final byte[] copy = new byte[count];
-      System.arraycopy(buf, 0, copy, 0, copy.length);
-
-      // this call is blocking when we reached our maxBuffers size
-      try {
-        buffers.put(copy);
-      } catch (InterruptedException e) {
-        throw new IOException("interrupted flush", e);
-      }
-      count = 0;
-    }
-  }
-
-  /**
    * Writes the specified byte to this buffered output stream.
    * 
    * @param b the byte to be written.
@@ -85,10 +66,8 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    */
   @Override
   public synchronized void write(int b) throws IOException {
+    flushBufferIfSizeLimitReached();
     throwOnFlusherError();
-    if (count >= buf.length) {
-      flushBuffer();
-    }
     buf[count++] = (byte) b;
   }
 
@@ -107,31 +86,59 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    * @exception IOException if an I/O error occurs.
    */
   @Override
-  public void write(byte b[], int off, int len) throws IOException {
+  public synchronized void write(byte[] b, int off, int len) throws IOException {
     if ((off | len | (b.length - (len + off)) | (off + len)) < 0) {
       throw new IndexOutOfBoundsException();
     }
 
-    for (int i = 0; i < len; i++) {
-      write(b[off + i]);
+    int bytesWritten = 0;
+    while (bytesWritten < len) {
+      flushBufferIfSizeLimitReached();
+
+      int bytesToWrite = Math.min(len - bytesWritten, buf.length - count);
+      System.arraycopy(b, off + bytesWritten, buf, count, bytesToWrite);
+      count += bytesToWrite;
+      bytesWritten += bytesToWrite;
     }
+
+    throwOnFlusherError();
   }
 
   /**
    * Flushes this buffered output stream. It will enforce that the current
-   * buffer will be queue for asynchronous flushing.
+   * buffer will be queue for asynchronous flushing no matter what size it has.
    * 
    * @exception IOException if an I/O error occurs.
-   * @see java.io.FilterOutputStream#out
    */
   @Override
   public synchronized void flush() throws IOException {
-    flushBuffer();
+    forceFlush();
+  }
+
+  private void flushBufferIfSizeLimitReached() throws IOException {
+    if (count >= buf.length) {
+      forceFlush();
+    }
+  }
+
+  private void forceFlush() throws IOException {
+    if (count > 0) {
+      final byte[] copy = new byte[count];
+      System.arraycopy(buf, 0, copy, 0, copy.length);
+
+      // this call is blocking when we reached our maxBuffers size
+      try {
+        buffers.put(copy);
+      } catch (InterruptedException e) {
+        throw new IOException("interrupted flush", e);
+      }
+      count = 0;
+    }
   }
 
   @Override
   public synchronized void close() throws IOException {
-    flush();
+    forceFlush();
     flusher.closed = true;
     try {
       flusherThread.interrupt();
