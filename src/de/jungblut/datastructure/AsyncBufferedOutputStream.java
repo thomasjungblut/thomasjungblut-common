@@ -93,6 +93,7 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
 
     int bytesWritten = 0;
     while (bytesWritten < len) {
+      throwOnFlusherError();
       flushBufferIfSizeLimitReached();
 
       int bytesToWrite = Math.min(len - bytesWritten, buf.length - count);
@@ -100,8 +101,6 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
       count += bytesToWrite;
       bytesWritten += bytesToWrite;
     }
-
-    throwOnFlusherError();
   }
 
   /**
@@ -138,8 +137,11 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
 
   @Override
   public synchronized void close() throws IOException {
+    throwOnFlusherError();
+
     forceFlush();
     flusher.closed = true;
+
     try {
       flusherThread.interrupt();
       flusherThread.join();
