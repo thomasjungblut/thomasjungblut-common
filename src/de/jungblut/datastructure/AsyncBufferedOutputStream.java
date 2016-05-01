@@ -3,13 +3,18 @@ package de.jungblut.datastructure;
 import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * BufferedOutputStream that asynchronously flushes to disk, so callers don't
  * have to wait until the flush happens. Buffers are put into a queue that is
  * written asynchronously to disk once it is really available.
+ * 
+ * This class is thread-safe.
+ * 
+ * The error handling (as all stream ops are done asynchronously) is done during
+ * write and close. Exceptions on the asynchronous thread will be thrown to the
+ * caller either while writing or closing this stream.
  * 
  * @author thomas.jungblut
  * 
@@ -18,9 +23,7 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
 
   private final FlushThread flusher = new FlushThread();
   private final Thread flusherThread = new Thread(flusher, "FlushThread");
-  private final BlockingQueue<byte[]> buffers = new LinkedBlockingQueue<>();
-
-  private final int maxBuffers;
+  private final ArrayBlockingQueue<byte[]> buffers;
 
   private final byte[] buf;
   private int count = 0;
@@ -50,7 +53,7 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    */
   public AsyncBufferedOutputStream(OutputStream out, int bufSize, int maxBuffers) {
     super(out);
-    this.maxBuffers = maxBuffers;
+    buffers = new ArrayBlockingQueue<>(maxBuffers);
     buf = new byte[bufSize];
     flusherThread.start();
   }
@@ -61,18 +64,15 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    */
   private void flushBuffer() throws IOException {
     if (count > 0) {
-      if (buffers.size() >= maxBuffers) {
-        try {
-          while (buffers.size() >= maxBuffers) {
-            Thread.sleep(50);
-          }
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
       final byte[] copy = new byte[count];
       System.arraycopy(buf, 0, copy, 0, copy.length);
-      buffers.add(copy);
+
+      // this call is blocking when we reached our maxBuffers size
+      try {
+        buffers.put(copy);
+      } catch (InterruptedException e) {
+        throw new IOException("interrupted flush", e);
+      }
       count = 0;
     }
   }
@@ -84,11 +84,17 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    * @exception IOException if an I/O error occurs.
    */
   @Override
-  public void write(int b) throws IOException {
+  public synchronized void write(int b) throws IOException {
+    throwOnFlusherError();
     if (count >= buf.length) {
       flushBuffer();
     }
     buf[count++] = (byte) b;
+  }
+
+  @Override
+  public void write(byte[] b) throws IOException {
+    write(b, 0, b.length);
   }
 
   /**
@@ -102,8 +108,12 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    */
   @Override
   public void write(byte b[], int off, int len) throws IOException {
-    for (int i = off; i < len; i++) {
-      write(b[i]);
+    if ((off | len | (b.length - (len + off)) | (off + len)) < 0) {
+      throw new IndexOutOfBoundsException();
+    }
+
+    for (int i = 0; i < len; i++) {
+      write(b[off + i]);
     }
   }
 
@@ -115,26 +125,38 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
    * @see java.io.FilterOutputStream#out
    */
   @Override
-  public void flush() throws IOException {
+  public synchronized void flush() throws IOException {
     flushBuffer();
   }
 
   @Override
-  public void close() throws IOException {
+  public synchronized void close() throws IOException {
     flush();
     flusher.closed = true;
     try {
       flusherThread.interrupt();
       flusherThread.join();
+
+      throwOnFlusherError();
     } catch (InterruptedException e) {
       // this is expected to happen
+    } finally {
+      out.close();
     }
-    out.close();
+  }
+
+  private void throwOnFlusherError() throws IOException {
+    if (flusher != null && flusher.errorHappened) {
+      throw new IOException("caught flusher to fail writing asynchronously!",
+          flusher.caughtException);
+    }
   }
 
   class FlushThread implements Runnable {
 
     volatile boolean closed = false;
+    volatile boolean errorHappened = false;
+    volatile Exception caughtException;
 
     @Override
     public void run() {
@@ -144,19 +166,23 @@ public final class AsyncBufferedOutputStream extends FilterOutputStream {
           byte[] take = buffers.take();
           out.write(take);
         }
-      } catch (IOException e) {
-        e.printStackTrace();
       } catch (InterruptedException e) {
         // this is expected to happen
-      } finally {
-        try {
-          // write the last buffers to the streams
-          for (byte[] buf : buffers) {
-            out.write(buf);
-          }
-        } catch (IOException e) {
-          e.printStackTrace();
+      } catch (Exception e) {
+        caughtException = e;
+        errorHappened = true;
+        // yield this thread, an error happened
+        return;
+      }
+
+      try {
+        // write the last buffers to the streams
+        for (byte[] buf : buffers) {
+          out.write(buf);
         }
+      } catch (Exception e) {
+        caughtException = e;
+        errorHappened = true;
       }
     }
   }

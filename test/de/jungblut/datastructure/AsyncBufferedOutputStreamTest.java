@@ -54,8 +54,9 @@ public class AsyncBufferedOutputStreamTest {
     Arrays.fill(ones, (byte) 1);
     byte[] zeros = new byte[32];
     int numItems = 200;
+    // only 20 bytes buffered
     try (AsyncBufferedOutputStream out = new AsyncBufferedOutputStream(
-        new FileOutputStream(tempFile), 63)) {
+        new FileOutputStream(tempFile), 20)) {
 
       // test write 32 bytes 1s, and 32 bytes 0s
       for (int i = 0; i < numItems; i++) {
@@ -70,12 +71,14 @@ public class AsyncBufferedOutputStreamTest {
       for (int i = 0; i < numItems; i++) {
         int read = in.read(buf);
         assertEquals(32, read);
-        for (int x = 0; x < 32; x++)
+        for (int x = 0; x < 32; x++) {
           assertEquals(1, buf[x]);
+        }
         read = in.read(buf);
         assertEquals(32, read);
-        for (int x = 0; x < 32; x++)
+        for (int x = 0; x < 32; x++) {
           assertEquals(0, buf[x]);
+        }
       }
     }
 
@@ -90,7 +93,7 @@ public class AsyncBufferedOutputStreamTest {
     byte[] zeros = new byte[32];
     int numItems = 10000;
     try (AsyncBufferedOutputStream out = new AsyncBufferedOutputStream(
-        new FileOutputStream(tempFile), 512 * 1024)) {
+        new FileOutputStream(tempFile), 2 * 1024)) {
 
       // test write 32 bytes 1s, and 32 bytes 0s
       for (int i = 0; i < numItems; i++) {
@@ -105,12 +108,14 @@ public class AsyncBufferedOutputStreamTest {
       for (int i = 0; i < numItems; i++) {
         int read = in.read(buf);
         assertEquals(32, read);
-        for (int x = 0; x < 32; x++)
+        for (int x = 0; x < 32; x++) {
           assertEquals(1, buf[x]);
+        }
         read = in.read(buf);
         assertEquals(32, read);
-        for (int x = 0; x < 32; x++)
+        for (int x = 0; x < 32; x++) {
           assertEquals(0, buf[x]);
+        }
       }
     }
 
