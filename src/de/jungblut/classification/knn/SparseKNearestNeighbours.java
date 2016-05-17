@@ -8,8 +8,8 @@ import java.util.List;
 
 import de.jungblut.datastructure.DistanceResult;
 import de.jungblut.datastructure.InvertedIndex;
-import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.DistanceMeasurer;
+import de.jungblut.jrpt.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.named.KeyedDoubleVector;
 

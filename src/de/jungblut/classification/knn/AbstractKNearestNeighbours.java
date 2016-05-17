@@ -3,7 +3,7 @@ package de.jungblut.classification.knn;
 import java.util.List;
 
 import de.jungblut.classification.AbstractClassifier;
-import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
+import de.jungblut.jrpt.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
 import de.jungblut.math.dense.SingleEntryDoubleVector;

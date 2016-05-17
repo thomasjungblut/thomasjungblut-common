@@ -4,11 +4,14 @@ import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
-import de.jungblut.datastructure.KDTree;
-import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.EuclidianDistance;
+import de.jungblut.jrpt.KDTree;
+import de.jungblut.jrpt.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.tuple.Tuple;
 
 /**
  * A one pass exclusive clustering algorithm. As the name suggests, the
@@ -67,10 +70,11 @@ public final class OnePassExclusiveClustering {
   public List<DoubleVector> cluster(List<DoubleVector> values, boolean verbose) {
     ArrayList<DoubleVector> centers = new ArrayList<>();
     KDTree<Integer> tree = new KDTree<>();
-    int index = 0;
-    for (DoubleVector value : values) {
-      tree.add(value, index++);
-    }
+
+    Stream<Tuple<DoubleVector, Integer>> payloadStream = IntStream.range(0,
+        values.size()).mapToObj(i -> new Tuple<>(values.get(i), i));
+
+    tree.constructWithPayload(payloadStream);
     tree.balanceBySort();
 
     BitSet set = new BitSet(values.size());

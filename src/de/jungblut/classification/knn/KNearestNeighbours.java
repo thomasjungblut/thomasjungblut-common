@@ -1,11 +1,15 @@
 package de.jungblut.classification.knn;
 
-import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-import de.jungblut.datastructure.KDTree;
-import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
+import com.codepoetics.protonpack.StreamUtils;
+
+import de.jungblut.jrpt.KDTree;
+import de.jungblut.jrpt.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
+import de.jungblut.math.tuple.Tuple;
 
 /**
  * K nearest neighbour classification algorithm that is seeded with a "database"
@@ -35,13 +39,13 @@ public final class KNearestNeighbours extends AbstractKNearestNeighbours {
   public void train(Iterable<DoubleVector> features,
       Iterable<DoubleVector> outcome) {
 
-    Iterator<DoubleVector> featIterator = features.iterator();
-    Iterator<DoubleVector> outIterator = outcome.iterator();
+    // zip the streams and construct the kd tree
+    Stream<Tuple<DoubleVector, DoubleVector>> stream = StreamUtils.zip(
+        StreamSupport.stream(features.spliterator(), false),
+        StreamSupport.stream(outcome.spliterator(), false),
+        (l, r) -> new Tuple<>(l, r));
 
-    while (featIterator.hasNext()) {
-      tree.add(featIterator.next(), outIterator.next());
-    }
-
+    tree.constructWithPayload(stream);
   }
 
   @Override

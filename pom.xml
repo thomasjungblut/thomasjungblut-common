@@ -1,24 +1,26 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>de.jungblut.common</groupId>
 	<artifactId>thomasjungblut-common</artifactId>
-	<name>thomasjungblut-common</name>	
+	<name>thomasjungblut-common</name>
 	<description>This is my common library.</description>
 	<url>https://github.com/thomasjungblut/thomasjungblut-common</url>
 	<version>1.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<prerequisites>
 		<maven>3.0</maven>
-	</prerequisites>	
+	</prerequisites>
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<hadoop.version>2.2.0</hadoop.version>
 		<tjmath.version>1.2</tjmath.version>
+		<jrpt.version>0.1</jrpt.version>
 		<jcuda.version>0.6.5</jcuda.version>
 	</properties>
-	
+
 	<licenses>
 		<license>
 			<name>Apache 2</name>
@@ -39,8 +41,8 @@
 		<connection>scm:git:git@github.com:thomasjungblut/thomasjungblut-common.git</connection>
 		<developerConnection>scm:git:git@github.com:thomasjungblut/thomasjungblut-common.git</developerConnection>
 		<url>git@github.com:thomasjungblut/thomasjungblut-common.git</url>
-	  <tag>HEAD</tag>
-  </scm>
+		<tag>HEAD</tag>
+	</scm>
 
 	<distributionManagement>
 		<snapshotRepository>
@@ -88,6 +90,11 @@
 			<groupId>de.jungblut.math</groupId>
 			<artifactId>tjungblut-math</artifactId>
 			<version>${tjmath.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>de.jungblut.jrpt</groupId>
+			<artifactId>jrpt</artifactId>
+			<version>${jrpt.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.codepoetics</groupId>
@@ -332,7 +339,7 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>			
+			</plugin>
 		</plugins>
 	</build>
 

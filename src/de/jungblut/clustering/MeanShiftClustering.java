@@ -3,16 +3,19 @@ package de.jungblut.clustering;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.math3.util.FastMath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import de.jungblut.datastructure.KDTree;
-import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.EuclidianDistance;
+import de.jungblut.jrpt.KDTree;
+import de.jungblut.jrpt.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.tuple.Tuple;
 
 /**
  * Sequential Mean Shift Clustering using a gaussian kernel and euclidian
@@ -49,11 +52,11 @@ public final class MeanShiftClustering {
       double windowSize, double mergeWindow, int maxIterations, boolean verbose) {
     // initialize our lookup structure
     KDTree<Integer> kdTree = new KDTree<>();
-    // assign an index to each point
-    int index = 0;
-    for (DoubleVector v : points) {
-      kdTree.add(v, index++);
-    }
+    Stream<Tuple<DoubleVector, Integer>> payloadStream = IntStream.range(0,
+        points.size()).mapToObj(i -> new Tuple<>(points.get(i), i));
+
+    kdTree.constructWithPayload(payloadStream);
+
     kdTree.balanceBySort();
     // start observing the centers
     List<DoubleVector> centers = observeCenters(kdTree, points, windowSize,

@@ -6,16 +6,19 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.math3.random.RandomDataImpl;
 import org.apache.commons.math3.random.Well1024a;
 import org.junit.Test;
 
-import de.jungblut.datastructure.KDTree;
-import de.jungblut.datastructure.KDTree.VectorDistanceTuple;
 import de.jungblut.distance.EuclidianDistance;
+import de.jungblut.jrpt.KDTree;
+import de.jungblut.jrpt.VectorDistanceTuple;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.math.dense.DenseDoubleVector;
+import de.jungblut.math.tuple.Tuple;
 
 public class MeanShiftClusteringTest {
 
@@ -25,17 +28,18 @@ public class MeanShiftClusteringTest {
     List<DoubleVector> points = drawTwoDistinctDistributions(lefts,
         System.currentTimeMillis());
     KDTree<Integer> kdTree = new KDTree<>();
-    int index = 0;
-    for (DoubleVector v : points) {
-      kdTree.add(v, index++);
-    }
+    Stream<Tuple<DoubleVector, Integer>> payloadStream = IntStream.range(0,
+        points.size()).mapToObj(i -> new Tuple<>(points.get(i), i));
+
+    kdTree.constructWithPayload(payloadStream);
+
     double maxRadius = new EuclidianDistance().measureDistance(
         new double[] { 250 }, new double[] { 351 });
 
     List<VectorDistanceTuple<Integer>> neighbours = kdTree
         .getNearestNeighbours(new DenseDoubleVector(new double[] { 250 }),
             maxRadius);
-    for (VectorDistanceTuple<Integer> x : neighbours) {
+    for (de.jungblut.jrpt.VectorDistanceTuple<Integer> x : neighbours) {
       lefts.remove(x.getVector());
     }
     assertEquals(0, lefts.size());

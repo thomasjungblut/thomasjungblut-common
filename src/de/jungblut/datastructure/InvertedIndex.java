@@ -11,6 +11,7 @@ import com.google.common.collect.HashMultimap;
 
 import de.jungblut.distance.DistanceMeasurer;
 import de.jungblut.distance.VectorDocumentDistanceMeasurer;
+import de.jungblut.jrpt.LimitedPriorityQueue;
 import de.jungblut.math.DoubleVector;
 import de.jungblut.nlp.SparseVectorDocumentMapper;
 

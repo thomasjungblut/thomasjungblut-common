@@ -10,6 +10,7 @@ this is my code-sink for mainly java files.
 - [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
 - [Machine learning (clustering, classification, optimization algorithms, this will partially move to "tjungblut-online-ml")](https://github.com/thomasjungblut/tjungblut-online-ml)
 - [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")
+- [Approx. Nearest Neighbours (eg the KDTree: they are now in the JRPT project)](https://github.com/thomasjungblut/JRPT "Thomas' JRPT project")
 
 Please notice that this is in fact no framework, much rather a common library for my everyday usage. 
 I won't bother about backward compatibility, extensive documentation and full test coverage- although I try my best to at least fulfill the last two.
@@ -50,8 +51,6 @@ You will need Java 8 first.
 You can simply build with:
 
 > mvn clean package install
-
-If you hit an issue that my math lib (e.g. a SNAPSHOT build) is missing, pull the latest from ["tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas nifty math lib") and execute the build information there- then retry building this library. 
 
 The created jar contains debuggable code + sources. On the unfortunate event of failing testcases you can skip them:
  
