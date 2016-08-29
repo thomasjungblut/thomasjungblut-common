@@ -29,6 +29,6 @@ public abstract class AbstractClassifier extends AbstractPredictor implements
   public void train(Iterable<DoubleVector> features,
       Iterable<DoubleVector> outcome) {
     train(Iterables.toArray(features, DoubleVector.class),
-        Iterables.toArray(features, DoubleVector.class));
+        Iterables.toArray(outcome, DoubleVector.class));
   }
 }
