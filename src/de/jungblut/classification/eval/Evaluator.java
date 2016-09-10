@@ -11,6 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.commons.math3.util.FastMath;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -81,6 +82,13 @@ public final class Evaluator {
     public double getF1Score() {
       return 2d * (getPrecision() * getRecall())
           / (getPrecision() + getRecall());
+    }
+
+    public double getMatthewsCorrelationCoefficient() {
+      return ((truePositive * trueNegative) - (falsePositive * falseNegative))
+          / FastMath.sqrt((truePositive + falsePositive)
+              * (truePositive + falseNegative) * (trueNegative + falsePositive)
+              * (trueNegative + falseNegative));
     }
 
     public int getCorrect() {
@@ -180,6 +188,7 @@ public final class Evaluator {
         log.info("Recall: " + getRecall());
         log.info("F1 Score: " + getF1Score());
         log.info("AUC: " + getAUC());
+        log.info("MMC: " + getMatthewsCorrelationCoefficient());
       } else {
         printConfusionMatrix();
       }
