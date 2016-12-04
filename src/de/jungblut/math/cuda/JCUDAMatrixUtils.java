@@ -12,6 +12,7 @@ import jcuda.jcublas.cublasPointerMode;
 import jcuda.runtime.JCuda;
 import jcuda.runtime.cudaDeviceProp;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -78,7 +79,7 @@ public final class JCUDAMatrixUtils {
 
       LOG.info("Using device " + cudaDeviceProp.getName()
           + " with total RAM of "
-          + humanReadableByteCount(cudaDeviceProp.totalGlobalMem, false)
+          + FileUtils.byteCountToDisplaySize(cudaDeviceProp.totalGlobalMem)
           + ". Compute capability: " + cudaDeviceProp.major + "."
           + cudaDeviceProp.minor);
 
@@ -211,16 +212,6 @@ public final class JCUDAMatrixUtils {
     } else {
       JCublas.cublasShutdown();
     }
-  }
-
-  // thanks aioobe :)
-  private static String humanReadableByteCount(long bytes, boolean si) {
-    int unit = si ? 1000 : 1024;
-    if (bytes < unit)
-      return bytes + " B";
-    int exp = (int) (Math.log(bytes) / Math.log(unit));
-    String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-    return String.format("%.1f %sB", bytes / Math.pow(unit, exp), pre);
   }
 
   /*
