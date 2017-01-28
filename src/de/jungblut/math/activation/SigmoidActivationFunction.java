@@ -28,7 +28,8 @@ public final class SigmoidActivationFunction extends AbstractActivationFunction 
   }
 
   static double sigmoidGradient(double input) {
-    return sigmoid(input) * (1d - sigmoid(input));
+    final double s = sigmoid(input);
+    return s * (1d - s);
   }
 
 }
