@@ -80,7 +80,6 @@ public final class VectorizerUtils {
             + stopWordPercentage);
 
     final ConcurrentHashMultiset<String> set = ConcurrentHashMultiset.create();
-    set.add(OUT_OF_VOCABULARY); // add the out of vocabulary item
 
     AtomicLong numDocs = new AtomicLong();
     tokenizedDocuments.forEach((doc) -> {
@@ -110,6 +109,8 @@ public final class VectorizerUtils {
     for (String removal : toRemove) {
       elementSet.remove(removal);
     }
+    
+    set.add(OUT_OF_VOCABULARY); // add the out of vocabulary item
 
     String[] array = elementSet.toArray(new String[elementSet.size()]);
     elementSet = null;

@@ -40,13 +40,24 @@ public class VectorizerUtilsTest {
     String[] dict = VectorizerUtils
         .buildDictionary(tokenizedDocuments.stream());
     assertArrayEquals(expectedResults, dict);
+  }
 
+  @Test
+  public void testBuildDictionaryWithCutOffThreshold() {
     // test with spam detector and 50% threshold
-    expectedResults = new String[] { "1", "2",
+    String[] expectedResults = new String[] { "1", "2",
         VectorizerUtils.OUT_OF_VOCABULARY, "a", "document", "dont", "i",
         "that", "think", "this", "totally", "unrelated" };
-    dict = VectorizerUtils
-        .buildDictionary(tokenizedDocuments.stream(), 0.5f, 0);
+    String[] dict = VectorizerUtils.buildDictionary(
+        tokenizedDocuments.stream(), 0.5f, 0);
+    assertArrayEquals(expectedResults, dict);
+  }
+
+  @Test
+  public void testBuildDictionaryOovTokenremains() {
+    String[] expectedResults = new String[] { VectorizerUtils.OUT_OF_VOCABULARY };
+    String[] dict = VectorizerUtils.buildDictionary(
+        tokenizedDocuments.stream(), 1f, Integer.MAX_VALUE);
     assertArrayEquals(expectedResults, dict);
   }
 

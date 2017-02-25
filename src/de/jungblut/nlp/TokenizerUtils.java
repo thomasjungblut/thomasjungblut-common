@@ -1,5 +1,6 @@
 package de.jungblut.nlp;
 
+import java.lang.Character.UnicodeBlock;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,6 +55,12 @@ public final class TokenizerUtils {
       CHARACTER_REPLACE_MAPPING[i] = i;
     }
   }
+
+  private static final String[] EMOTICON_STRINGS = new String[] { "^^", "<3",
+      "@", "*", "❤", "☺", "™" };
+
+  private static final Pattern NUMERIC_PATTERN = Pattern.compile("[0-9]");
+  private static final CharSequence NON_BREAKING_WHITESPACE = ((char) 160) + "";
 
   private TokenizerUtils() {
     throw new IllegalAccessError();
@@ -315,6 +322,140 @@ public final class TokenizerUtils {
       }
     }
     return sb.toString();
+  }
+
+  /**
+   * Replaces all numerics with "#".
+   */
+  public static String[] numericsToHash(String[] tokens) {
+    String[] toReturn = new String[tokens.length];
+    for (int i = 0; i < tokens.length; i++) {
+      toReturn[i] = NUMERIC_PATTERN.matcher(tokens[i]).replaceAll("#");
+    }
+    return toReturn;
+  }
+
+  /**
+   * Splits the given token into a possibly larger sequence so that every
+   * emoticon is its own token.
+   * 
+   * TODO this needs some really comprehensive tests
+   */
+  public static String[] emoticonSplit(String[] tokens) {
+    ArrayList<String> toReturn = new ArrayList<>();
+    for (String token : tokens) {
+      boolean splitted = false;
+      for (String pattern : EMOTICON_STRINGS) {
+        if (token.contains(pattern)) {
+          toReturn.addAll(splitOnToken(token, pattern));
+          splitted = true;
+          break;
+        } else if (containsEmoticon(token)) {
+          toReturn.addAll(splitEmoticon(token));
+          splitted = true;
+          break;
+        }
+      }
+
+      if (!splitted) {
+        toReturn.add(token);
+      }
+    }
+
+    return toReturn.toArray(new String[toReturn.size()]);
+  }
+
+  private static List<String> splitEmoticon(String token) {
+    ArrayList<String> list = new ArrayList<>();
+
+    char[] charArray = token.toCharArray();
+    int offset = 0;
+    for (int i = 0; i < charArray.length; i++) {
+      int emoticonCharLen = emoticonCharLen(token, i);
+      if (emoticonCharLen > 0) {
+        // everything up to here is its own string, this char is a string and
+        // the rest needs to be parsed seperately
+        if (offset != i) {
+          list.add(new String(Arrays.copyOfRange(charArray, offset, i)));
+        }
+        list.add(new String(Arrays.copyOfRange(charArray, i, i
+            + emoticonCharLen)));
+        offset = i + emoticonCharLen;
+        i += emoticonCharLen - 1;
+      }
+    }
+
+    if (offset < token.length()) {
+      list.add(new String(Arrays.copyOfRange(charArray, offset, token.length())));
+    }
+
+    return list;
+  }
+
+  private static boolean containsEmoticon(String token) {
+    for (int i = 0; i < token.length(); i++) {
+      if (emoticonCharLen(token, i) > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static int emoticonCharLen(String s, int idx) {
+    if (idx < 0 || idx >= s.length() || idx + 1 >= s.length()) {
+      return -1;
+    }
+
+    if (Character.UnicodeBlock.EMOTICONS == UnicodeBlock.of(s.charAt(idx))) {
+      return 1;
+    }
+
+    char start = s.charAt(idx);
+    char end = s.charAt(idx + 1);
+    if (Character.isSurrogatePair(start, end)) {
+      int codePoint = Character.toCodePoint(start, end);
+      if (Character.UnicodeBlock.EMOTICONS == UnicodeBlock.of(codePoint)) {
+        return 2;
+      }
+    }
+
+    return -1;
+  }
+
+  private static List<String> splitOnToken(String token, String splitPattern) {
+    if (token.length() == 0) {
+      return Collections.emptyList();
+    }
+
+    int idx = token.indexOf(splitPattern);
+    if (idx >= 0) {
+      if (token.equals(splitPattern)) {
+        return Collections.singletonList(token);
+      }
+
+      ArrayList<String> list = new ArrayList<>();
+      int end = idx + splitPattern.length();
+      list.add(token.substring(idx, end));
+      // search for splits in the rest of the tokens
+      String rest = token.substring(end);
+      list.addAll(splitOnToken(rest, splitPattern));
+
+      return list;
+    }
+    return Collections.emptyList();
+  }
+
+  /**
+   * Trims the tokens using {@link String#trim()} and additionally removes
+   * non-breaking spaces.
+   */
+  public static String[] trim(String[] tokens) {
+    String[] toReturn = new String[tokens.length];
+    for (int i = 0; i < tokens.length; i++) {
+      // removes spaces and non-breaking spaces
+      toReturn[i] = tokens[i].trim().replace(NON_BREAKING_WHITESPACE, "");
+    }
+    return toReturn;
   }
 
 }

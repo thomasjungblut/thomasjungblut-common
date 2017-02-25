@@ -2,6 +2,7 @@ package de.jungblut.nlp;
 
 import static org.junit.Assert.assertEquals;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TokenizerUtilsTest {
@@ -173,7 +174,22 @@ public class TokenizerUtilsTest {
     for (int i = 0; i < result.length; i++) {
       assertEquals(desiredUniGramResult[i], result[i]);
     }
+  }
 
+  @Test
+  public void testReplaceNumerics() {
+    String[] strings = new String[] { "123", "$111", "abc" };
+    String[] expected = new String[] { "###", "$###", "abc" };
+    Assert.assertArrayEquals(expected, TokenizerUtils.numericsToHash(strings));
+  }
+
+  @Test
+  public void testTrimming() {
+    String[] strings = new String[] { "ab ", " bc", "   ",
+        ((char) 160) + "lolol" };
+    String[] expected = new String[] { "ab", "bc", "", "lolol" };
+
+    Assert.assertArrayEquals(expected, TokenizerUtils.trim(strings));
   }
 
 }
