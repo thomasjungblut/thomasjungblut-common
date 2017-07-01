@@ -23,8 +23,8 @@ public final class SigmoidActivationFunction extends AbstractActivationFunction 
   }
 
   static double sigmoid(double input) {
-    return FastMath.min(CLIP,
-        FastMath.max(-CLIP, 1.0 / (1.0 + FastMath.exp(-input))));
+    final double clipped = FastMath.min(CLIP, FastMath.max(-CLIP, input));
+    return 1.0 / (1.0 + FastMath.exp(-clipped));
   }
 
   static double sigmoidGradient(double input) {
