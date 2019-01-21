@@ -175,14 +175,6 @@
     </dependencies>
 
     <build>
-        <!-- I have a plain layout -->
-        <sourceDirectory>src/</sourceDirectory>
-        <testSourceDirectory>test/</testSourceDirectory>
-        <resources>
-            <resource>
-                <directory>src/</directory>
-            </resource>
-        </resources>
         <finalName>thomasjungblut-common-${project.version}</finalName>
         <plugins>
             <plugin>
@@ -216,6 +208,9 @@
                         <goals>
                             <goal>jar</goal>
                         </goals>
+                        <configuration>
+                            <doclint>none</doclint>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>

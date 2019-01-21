@@ -34,13 +34,6 @@ If you use maven, you can get the latest release using the following dependency:
  </dependency>
 ```
 
-Package Layout
---------------
-
-- /src -> raw source code.
-- /test -> testcases for the code in /src.
-- /files -> reserved directory for files in examples or ignored paths for output of applications.
-
 Build
 -----
 
