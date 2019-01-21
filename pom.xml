@@ -17,7 +17,6 @@
 		<hadoop.version>2.2.0</hadoop.version>
 		<tjmath.version>1.2</tjmath.version>
 		<jrpt.version>0.1</jrpt.version>
-		<jcuda.version>0.6.5</jcuda.version>
 	</properties>
 
 	<licenses>
@@ -67,24 +66,6 @@
 			<artifactId>hadoop-mapreduce-client-jobclient</artifactId>
 			<version>${hadoop.version}</version>
 		</dependency>
-
-		<!-- JCUDA is locally in the jcuda dir -->
-		<dependency>
-			<groupId>jcuda</groupId>
-			<artifactId>jcuda</artifactId>
-			<version>${jcuda.version}</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/jcuda/jcuda-${jcuda.version}.jar</systemPath>
-		</dependency>
-		<dependency>
-			<groupId>jcuda</groupId>
-			<artifactId>jcublas</artifactId>
-			<version>${jcuda.version}</version>
-			<scope>system</scope>
-			<systemPath>${project.basedir}/jcuda/jcublas-${jcuda.version}.jar</systemPath>
-		</dependency>
-
-		<!-- retrievable artifacts -->
 		<dependency>
 			<groupId>de.jungblut.math</groupId>
 			<artifactId>tjungblut-math</artifactId>
