@@ -5,8 +5,6 @@ this is my code-sink for mainly java files.
 ###Have fun to browse through many things for:
 
 - Datastructures & Algorithms
-- Apache Hadoop
-- JCuda experiments
 - [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
 - [Machine learning (clustering, classification, optimization algorithms, this will partially move to "tjungblut-online-ml")](https://github.com/thomasjungblut/tjungblut-online-ml)
 - [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")
@@ -42,13 +40,11 @@ Package Layout
 - /src -> raw source code.
 - /test -> testcases for the code in /src.
 - /files -> reserved directory for files in examples or ignored paths for output of applications.
-- /jcuda -> the cuda 3rd party libs for the de.jungblut.math.cuda package
 
 Build
 -----
 
-You will need Java 8 first.
-You can simply build with:
+You will need Java JDK 11 first. Then you can simply build with:
 
 > mvn clean package install
 
@@ -59,3 +55,13 @@ The created jar contains debuggable code + sources. On the unfortunate event of 
 If you want to skip the signing process you can do:
 
 > mvn clean package install -Dgpg.skip=true
+
+Handy maven commands
+--------------------
+
+Displays dependency updates:
+
+> mvn versions:display-dependency-updates
+
+
+
