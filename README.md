@@ -2,7 +2,7 @@ Hey all,
 
 this is my code-sink for mainly java files.
 
-###Have fun to browse through many things for:
+### Have fun to browse through many things for:
 
 - Datastructures & Algorithms
 - [Graph algorithms (they are now in the other repository called "tjungblut-graph")](https://github.com/thomasjungblut/tjungblut-graph "Thomas' nifty graph lib")
