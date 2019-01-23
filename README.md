@@ -30,7 +30,7 @@ If you use maven, you can get the latest release using the following dependency:
  <dependency>
      <groupId>de.jungblut.common</groupId>
      <artifactId>thomasjungblut-common</artifactId>
-     <version>1.1</version>
+     <version>2.0</version>
  </dependency>
 ```
 
