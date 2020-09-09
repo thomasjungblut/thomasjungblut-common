@@ -1,6 +1,8 @@
-Hey all,
+![Java CI with Maven](https://github.com/thomasjungblut/thomasjungblut-common/workflows/Java%20CI%20with%20Maven/badge.svg?branch=master)
 
-this is my code-sink for mainly java files.
+## thomasjungblut-common
+
+This is my main Java library for all kinds of datastructures, algorithms and everything else that I need.
 
 ### Have fun to browse through many things for:
 
