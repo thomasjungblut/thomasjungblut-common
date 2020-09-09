@@ -1,17 +1,11 @@
 package de.jungblut.crawl.extraction;
 
 import com.google.common.collect.Sets;
-import de.jungblut.crawl.FetchResult;
 import org.junit.Test;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Method;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.HashSet;
-import java.util.Iterator;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.*;
@@ -19,27 +13,9 @@ import static org.junit.Assert.*;
 public class OutlinkExtractorTest {
 
     private static final String HOME = "http://people.apache.org/~tjungblut/downloads/test.html";
-    private static final String HOME2 = "http://people.apache.org/~tjungblut/downloads/test2.html";
 
     @Test
-    public void testConsumeStream() throws Exception {
-        String res = "<html><head><title>Tutorial:HelloWorld</title></head><body>"
-                + "<h1>HelloWorldTutorial</h1></body></html>";
-
-        String consumeStream = OutlinkExtractor.consumeStream(
-                new URL(HOME).openStream()).replaceAll("\\s+", "");
-        assertEquals(res, consumeStream);
-    }
-
-    @Test
-    public void testGetConnection() throws IOException {
-        InputStream connection = OutlinkExtractor.getConnection(HOME);
-        assertNotNull(connection);
-        connection.close();
-    }
-
-    @Test
-    public void testExtractBaseUrl() throws IOException {
+    public void testExtractBaseUrl() {
         String connection = OutlinkExtractor.extractBaseUrl(HOME);
         assertEquals("http://people.apache.org", connection);
 
@@ -57,7 +33,7 @@ public class OutlinkExtractorTest {
     }
 
     @Test
-    public void testIsValid() throws Exception {
+    public void testIsValid() {
         assertTrue(OutlinkExtractor.isValid(HOME));
         assertFalse(OutlinkExtractor.isValid(HOME + ".png"));
         assertTrue(OutlinkExtractor
@@ -80,30 +56,11 @@ public class OutlinkExtractorTest {
     }
 
     @Test
-    public void testFilter() throws Exception {
+    public void testFilter() {
         HashSet<String> set = Sets.newHashSet("  ", "\n", "\t", "asdgg");
         HashSet<String> filter = OutlinkExtractor.filter(set,
                 Pattern.compile("\\s+"));
         assertEquals(3, filter.size());
-    }
-
-    @Test
-    public void testExtraction() throws Exception {
-        OutlinkExtractor mock = new OutlinkExtractor();
-        FetchResult extract = mock.extract(HOME2);
-        assertEquals(HOME2, extract.getUrl());
-        assertEquals(4, extract.getOutlinks().size());
-        TreeSet<String> sorted = new TreeSet<>(extract.getOutlinks());
-        Iterator<String> it = sorted.iterator();
-        assertEquals("http://people.apache.org/local.html", it.next());
-        assertEquals("http://people.apache.org/~tjungblut/downloads/local.html",
-                it.next());
-        // that is the correct html expansion
-        assertEquals(
-                "http://people.apache.org/~tjungblut/downloads/www.testlol.de/local.html",
-                it.next());
-        assertEquals("http://www.logs.de/local.html", it.next());
-
     }
 
     @Test
