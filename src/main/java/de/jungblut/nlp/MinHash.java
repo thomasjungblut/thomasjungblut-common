@@ -20,15 +20,15 @@ public final class MinHash {
      * define some hashfunctions
      */
 
-    public static enum HashType {
+    public enum HashType {
         LINEAR, MURMUR128, MD5
     }
 
     abstract class HashFunction {
 
-        protected int seed;
+        protected long seed;
 
-        public HashFunction(int seed) {
+        public HashFunction(long seed) {
             this.seed = seed;
         }
 
@@ -38,9 +38,9 @@ public final class MinHash {
 
     class LinearHashFunction extends HashFunction {
 
-        private int seed2;
+        private long seed2;
 
-        public LinearHashFunction(int seed, int seed2) {
+        public LinearHashFunction(long seed, long seed2) {
             super(seed);
             this.seed2 = seed2;
         }
@@ -52,9 +52,8 @@ public final class MinHash {
                 hashValue *= seed * byteVal;
                 hashValue += seed2;
             }
-            return Math.abs((int) (hashValue % 2147482949));
+            return (int) (hashValue % Integer.MAX_VALUE);
         }
-
     }
 
     class Murmur128HashFunction extends HashFunction {

@@ -339,7 +339,7 @@ public final class MathUtils {
         long accum = tn = 0;
         double threshold = outcomePredictedPairs.get(0).getPrediction();
         for (int i = 0; i < n; i++) {
-            double actualValue = outcomePredictedPairs.get(i).getOutcomeClass();
+            int actualValue = outcomePredictedPairs.get(i).getOutcomeClass();
             double predictedValue = outcomePredictedPairs.get(i).getPrediction();
             if (predictedValue != threshold) { // threshold changes
                 threshold = predictedValue;
@@ -347,7 +347,7 @@ public final class MathUtils {
                 tp0 = truePos;
                 tn = 0;
             }
-            tn += 1 - actualValue; // x-distance between adjacent points
+            tn += (1L - actualValue); // x-distance between adjacent points
             truePos -= actualValue;
         }
         accum += tn * (truePos + tp0); // 2 * the area of trapezoid
