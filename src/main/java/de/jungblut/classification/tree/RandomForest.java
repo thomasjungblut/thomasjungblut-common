@@ -29,7 +29,6 @@ public final class RandomForest extends AbstractClassifier {
     private int numRandomFeaturesToChoose = 0;
     private int maxHeight = Integer.MAX_VALUE;
     private boolean verbose;
-    private boolean compile = false;
 
     private Voter<DecisionTree> trees;
 
@@ -83,14 +82,6 @@ public final class RandomForest extends AbstractClassifier {
     public DoubleVector predictProbability(DoubleVector features) {
         trees.setCombiningType(CombiningType.PROBABILITY);
         return trees.predict(features);
-    }
-
-    /**
-     * @return sets this instance to compile and returns it.
-     */
-    public RandomForest compile() {
-        this.compile = true;
-        return this;
     }
 
     /**
@@ -179,12 +170,7 @@ public final class RandomForest extends AbstractClassifier {
     public static RandomForest deserialize(DataInput in) throws IOException {
         int numTrees = in.readInt();
         Voter<DecisionTree> voter = Voter.create(numTrees, CombiningType.MAJORITY,
-                new ClassifierFactory<DecisionTree>() {
-                    @Override
-                    public DecisionTree newInstance() {
-                        return null;
-                    }
-                });
+                () -> null);
         for (int i = 0; i < numTrees; i++) {
             voter.getClassifier()[i] = DecisionTree.deserialize(in);
         }
@@ -196,16 +182,9 @@ public final class RandomForest extends AbstractClassifier {
 
         @Override
         public DecisionTree newInstance() {
-            if (compile) {
-                return DecisionTree.createCompiledTree(featureTypes)
-                        .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose)
-                        .setMaxHeight(maxHeight);
-            } else {
-                return DecisionTree.create(featureTypes)
-                        .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose)
-                        .setMaxHeight(maxHeight);
-            }
+            return DecisionTree.create(featureTypes)
+                    .setNumRandomFeaturesToChoose(numRandomFeaturesToChoose)
+                    .setMaxHeight(maxHeight);
         }
     }
-
 }

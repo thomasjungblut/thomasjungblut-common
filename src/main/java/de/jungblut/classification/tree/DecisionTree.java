@@ -46,9 +46,6 @@ public final class DecisionTree extends AbstractClassifier {
 
     // default is binary classification 0 or 1.
     private boolean binaryClassification = true;
-    private boolean compile = false;
-    private String compiledName = null;
-    private byte[] compiledClass = null;
     private int outcomeDimension;
     private int numFeatures;
 
@@ -64,7 +61,6 @@ public final class DecisionTree extends AbstractClassifier {
         this.featureTypes = featureTypes;
         this.numFeatures = numFeatures;
         this.outcomeDimension = outcomeDimension;
-        this.compile = true;
     }
 
     @Override
@@ -90,13 +86,6 @@ public final class DecisionTree extends AbstractClassifier {
         // recursively build the tree...
         rootNode = build(Lists.newArrayList(features), Lists.newArrayList(outcome),
                 possibleFeatureIndices, 0);
-        if (compile) {
-            try {
-                compileTree();
-            } catch (Exception e) {
-                throw new RuntimeException(e);
-            }
-        }
     }
 
     @Override
@@ -114,21 +103,6 @@ public final class DecisionTree extends AbstractClassifier {
                     outcomeDimension) : new DenseDoubleVector(outcomeDimension);
             vec.set(clz, 1);
             return vec;
-        }
-    }
-
-    /**
-     * Compiles this current tree representation into byte code and loads it into
-     * this class. This is considered faster, as the interpreted code can be
-     * optimized by the hotspot JVM.
-     *
-     * @throws Exception some error might happen during compilation or loading.
-     */
-    public void compileTree() throws Exception {
-        if (compiledClass == null) {
-            compiledName = TreeCompiler.generateClassName();
-            compiledClass = TreeCompiler.compileNode(compiledName, rootNode);
-            rootNode = TreeCompiler.load(compiledName, compiledClass);
         }
     }
 
@@ -512,17 +486,6 @@ public final class DecisionTree extends AbstractClassifier {
     }
 
     /**
-     * If set to true, this tree will be compiled after training time
-     * automatically.
-     *
-     * @return this decision tree instance.
-     */
-    public DecisionTree setCompiled(boolean compiled) {
-        this.compile = compiled;
-        return this;
-    }
-
-    /**
      * Sets the maximum height of this tree.
      *
      * @return this instance.
@@ -572,15 +535,8 @@ public final class DecisionTree extends AbstractClassifier {
             for (int i = 0; i < tree.featureTypes.length; i++) {
                 WritableUtils.writeVInt(out, tree.featureTypes[i].ordinal());
             }
-
-            if (tree.compiledClass == null) {
-                out.writeBoolean(false);
-                tree.rootNode.write(out);
-            } else {
-                out.writeBoolean(true);
-                out.writeUTF(tree.compiledName);
-                WritableUtils.writeCompressedByteArray(out, tree.compiledClass);
-            }
+            out.writeBoolean(false);
+            tree.rootNode.write(out);
         } catch (Exception e) {
             throw new IOException(e);
         }
@@ -599,15 +555,7 @@ public final class DecisionTree extends AbstractClassifier {
             arr[i] = FeatureType.values()[WritableUtils.readVInt(in)];
         }
         if (in.readBoolean()) {
-            String name = in.readUTF();
-            byte[] compiled = WritableUtils.readCompressedByteArray(in);
-            try {
-                AbstractTreeNode loadedRoot = TreeCompiler.load(name, compiled);
-                return new DecisionTree(loadedRoot, arr, binary, numFeatures,
-                        outcomeDimension);
-            } catch (Exception e) {
-                throw new IOException(e);
-            }
+            throw new IllegalArgumentException("unable to deserialize a compiled tree with this library version.");
         } else {
             AbstractTreeNode root = AbstractTreeNode.read(in);
             return new DecisionTree(root, arr, binary, numFeatures, outcomeDimension);
@@ -631,25 +579,6 @@ public final class DecisionTree extends AbstractClassifier {
      */
     public static DecisionTree create(FeatureType[] featureTypes) {
         return new DecisionTree().setFeatureTypes(featureTypes);
-    }
-
-    /**
-     * @return a default compiled decision tree with all features beeing nominal.
-     */
-    public static DecisionTree createCompiledTree() {
-        return new DecisionTree().setCompiled(true);
-    }
-
-    /**
-     * Creates a new compiled decision tree with the given feature types.
-     *
-     * @param featureTypes the types of the feature that must match the number of
-     *                     features in length.
-     * @return a default decision tree with all features beeing set to what has
-     * been configured in the given array.
-     */
-    public static DecisionTree createCompiledTree(FeatureType[] featureTypes) {
-        return new DecisionTree().setFeatureTypes(featureTypes).setCompiled(true);
     }
 
     /**
