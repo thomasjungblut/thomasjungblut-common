@@ -12,16 +12,8 @@ This is my main Java library for all kinds of datastructures, algorithms and eve
 - [Matrix and Vector stuff (they are now in the other repository called "tjungblut-math")](https://github.com/thomasjungblut/tjungblut-math "Thomas' nifty math lib")
 - [Approx. Nearest Neighbours (eg the KDTree: they are now in the JRPT project)](https://github.com/thomasjungblut/JRPT "Thomas' JRPT project")
 
-Please notice that this is in fact no framework, much rather a common library for my everyday usage. 
+Please notice that this is in fact no framework, much rather a common library for my personal usage. 
 I won't bother about backward compatibility, extensive documentation and full test coverage- although I try my best to at least fulfill the last two.
-
-License
--------
-
-Since I am Apache committer, I consider everything inside of this repository 
-licensed by Apache 2.0 license, although I haven't put the usual header into the source files.
-
-If something is not licensed via Apache 2.0, there is a reference or an additional licence header included in the specific source file.
 
 Maven
 -----
@@ -39,7 +31,7 @@ If you use maven, you can get the latest release using the following dependency:
 Build
 -----
 
-You will need Java JDK 11 first. Then you can simply build with:
+You will need at least Java JDK 11, but it should also build fine with Java 17. Then you can simply build with:
 
 > mvn clean package install
 
@@ -50,13 +42,3 @@ The created jar contains debuggable code + sources. On the unfortunate event of 
 If you want to skip the signing process you can do:
 
 > mvn clean package install -Dgpg.skip=true
-
-Handy maven commands
---------------------
-
-Displays dependency updates:
-
-> mvn versions:display-dependency-updates
-
-
-
